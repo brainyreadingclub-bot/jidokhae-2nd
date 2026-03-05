@@ -23,7 +23,11 @@ The actual codebase lives at a separate repository (`jidokhae-web/`), which has 
 /roadmap                                       # Execution roadmap (maintained by Claude)
 ├── milestones.md                              # 6 Milestones (M1-M6) — what to achieve
 ├── work-packages.md                           # 15 Work Packages — how to execute each milestone
-└── scenarios.md                               # 140 BDD Scenarios — how to verify each WP
+└── scenarios.md                               # 146 BDD Scenarios — how to verify each WP
+
+/검토문서                                        # Review notes (post-hoc analysis)
+├── mvp 검토.md                                 # MVP review: payment reliability, Kakao in-app browser issues, webhook gaps
+└── 수정 계획.md                                 # Modification plan: 19 changes across 3 documents (applied to v1.6/v1.3/v1.3)
 ```
 
 ## Document Hierarchy (when conflicts arise)
@@ -38,7 +42,7 @@ The actual codebase lives at a separate repository (`jidokhae-web/`), which has 
 
 4. **milestones.md** — 6 Milestones with dependency chain and acceptance criteria
 5. **work-packages.md** — 15 WPs with deliverables, edge cases, verification checklists
-6. **scenarios.md** — 140 BDD Scenarios in Given/When/Then format with dependency tracking
+6. **scenarios.md** — 146 BDD Scenarios in Given/When/Then format with dependency tracking
 
 When ambiguous, return to the three usage principles from 서비스 개요:
 1. **쉬워야 한다** — 3초 안에 일정 확인, 3클릭 안에 신청 완료
@@ -79,11 +83,11 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 
 | Milestone | WPs | Scenarios | Key Deliverable |
 |-----------|:---:|:---------:|-----------------|
-| M1 프로젝트 기반 구축 | 3 | 24 | Next.js + Supabase DB + Layout |
+| M1 프로젝트 기반 구축 | 3 | 25 | Next.js + Supabase DB + Layout |
 | M2 인증 (카카오 로그인) | 2 | 16 | Kakao OAuth + Session + Access control |
 | M3 모임 일정 조회 + 운영자 CRUD | 3 | 30 | Meeting list/detail + Admin CRUD |
-| M4 결제 + 신청 | 3 | 25 | PortOne payment pipeline + Registration UX |
-| M5 취소 + 환불 | 2 | 23 | Self-cancel + Batch refund on deletion |
+| M4 결제 + 신청 | 3 | 29 | PortOne payment pipeline + Registration UX |
+| M5 취소 + 환불 | 2 | 24 | Self-cancel + Batch refund on deletion |
 | M6 통합 검증 + 출시 | 2 | 22 | E2E verification + Production deploy |
 
 ---
@@ -104,6 +108,10 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 | Registration uniqueness | `user_id + meeting_id` is NOT UNIQUE — re-registration creates new record |
 | Meeting fee | Per-meeting variable (not hardcoded 10,000원) |
 | Batch refund timeout | `Promise.allSettled` required (Vercel 10-second limit) |
+| Payment mode | popup + redirect dual path (Kakao in-app browser blocks popups → auto-fallback to redirect) |
+| Webhook backup | PortOne Webhook (`/api/webhooks/portone`) as backup when frontend callback/redirect fails. Signature verification required |
+| payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
+| Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
 
 ## Key Business Rules
 

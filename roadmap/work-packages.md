@@ -62,7 +62,7 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 | 3 | `registrations` 테이블 | `id`(UUID), `user_id`(FK→profiles), `meeting_id`(FK→meetings), `status`(confirmed/cancelled), `cancel_type`(null/user_cancelled/meeting_deleted), `payment_id`, `paid_amount`, `refunded_amount`, `attended`(nullable, MVP 미사용), `created_at`, `cancelled_at`. **user_id + meeting_id에 UNIQUE 제약 걸지 말 것** |
 | 4 | RLS 정책 | profiles: member=자기 레코드만 SELECT/UPDATE, admin=전체 SELECT. meetings: 전체 SELECT, admin만 INSERT/UPDATE/DELETE. registrations: member=자기 레코드만 SELECT, admin=전체 SELECT, INSERT/UPDATE는 API Route(service_role)에서만 |
 | 5 | DB Trigger | `auth.users` INSERT 시 → `profiles` 자동 생성. `raw_user_meta_data`에서 kakao_id, nickname, email 추출 |
-| 6 | DB Function: `confirm_registration` | `(p_user_id, p_meeting_id, p_payment_id, p_paid_amount)` → FOR UPDATE 잠금 → confirmed 수 체크 → INSERT 또는 'full' 반환. **SECURITY DEFINER** |
+| 6 | DB Function: `confirm_registration` | `(p_user_id, p_meeting_id, p_payment_id, p_paid_amount)` → FOR UPDATE 잠금 → **동일 user+meeting confirmed 중복 체크 ('already_registered' 반환)** → confirmed 수 체크 → INSERT 또는 'full' 반환. **SECURITY DEFINER** |
 | 7 | DB Function: 모임별 confirmed 수 조회 | 모임 ID 배열을 받아 각 모임의 confirmed 신청 수를 반환. **SECURITY DEFINER** (RLS 우회하여 전체 registrations 카운트) |
 
 **핵심 규칙:**
@@ -285,25 +285,29 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 | # | 작업 | 상세 |
 |---|------|------|
 | 1 | 포트원 V2 SDK 연동 | 프론트엔드에 PortOne SDK 설치. **반드시 V2 API. V1 코드 사용 금지** |
-| 2 | 결제 검증 API Route | `POST /api/registrations/confirm` — service_role key 사용 |
+| 2 | 결제 검증 API Route | `POST /api/registrations/confirm` — service_role key 사용. **payment_id로 기등록 여부 선행 체크. 이미 confirmed 존재 시 성공 반환 (멱등성, 환불 안 함)** |
 | 3 | 포트원 REST API 클라이언트 | 결제 검증 + 환불 기능을 **재사용 가능한 모듈**로 구현. M5에서 재사용 |
 | 4 | 결제 검증 로직 | ① 포트원 API로 결제 상태 확인 (paid 여부) ② 결제 금액 = meetings.fee 일치 확인 ③ meeting.status = 'active' 확인 |
 | 5 | 원자적 등록 | `confirm_registration` DB Function 호출 → 'success' 또는 'full' 반환 |
 | 6 | 정원 초과 자동 환불 | DB Function이 'full' 반환 시 → 포트원 환불 API 호출 → "마감" 응답 |
+| 7 | Webhook API Route | `/api/webhooks/portone` — 포트원 결제 완료 Webhook 수신. 서명(signature) 검증 → payment_id로 기등록 확인 → 미등록 시 결제 검증 + 등록 처리. 기존 결제 검증 모듈(산출물 3) 재사용 |
 
 **4단계 결제 흐름 (기술 스택 문서 §4-2 기준, 엄격히 준수):**
 
 ```
-① 프론트: 포트원 SDK → PG사 결제창 열기
-② 결제 완료: 포트원 → 프론트 콜백 (payment_id 전달)
-③ 프론트 → API Route: "이 결제를 검증해줘" (payment_id 전달)
-④ API Route → 포트원 REST API 검증 → DB Function → 응답
+① 프론트: 포트원 SDK → PG사 결제창 (popup 또는 redirect)
+② 결제 완료:
+   [popup] 포트원 → 프론트 콜백 (payment_id)
+   [redirect] 포트원 → returnUrl 복귀 (payment_id)
+③ API Route: payment_id 멱등성 체크 → 포트원 검증 → DB Function
+④ 응답: success / full(환불) / already_registered(환불)
+[Webhook 백업] 프론트 경로 실패 시 포트원이 /api/webhooks/portone에 직접 통지 → 동일 검증 + 등록
 ```
 
 > **핵심 규칙: 프론트의 "결제됐다"는 말을 그대로 믿지 않는다. 서버가 포트원에 직접 검증한다.**
 
 **엣지 케이스:**
-- 결제 성공 후 API Route 호출 실패 (네트워크 오류) → 결제는 완료되었으나 등록 미생성. 프론트에 안내 메시지 표시, 포트원 콘솔에서 운영자 수동 확인 (MVP 한계)
+- 결제 성공 후 프론트 콜백/redirect 복귀 실패 → Webhook 백업 경로에서 자동 복구 시도. Webhook도 실패 시 포트원 콘솔에서 운영자 수동 확인
 - 두 명이 마지막 1자리 동시 신청 → FOR UPDATE 잠금으로 직렬화. 한 명만 성공, 나머지는 자동 환불
 - 결제 금액 위변조 시도 (프론트 조작) → 서버에서 meetings.fee와 대조하여 불일치 시 거부 + 환불
 - 정원 초과 환불 API 호출 실패 → 에러 로깅 + "일시적 오류" 메시지. 포트원 콘솔에서 수동 처리
@@ -332,6 +336,8 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 | 3 | 결제 실패 처리 | PG 취소/한도 초과/오류 → 모임 상세로 복귀 + "결제가 완료되지 않았습니다. 다시 시도해주세요." 토스트 |
 | 4 | 목록 "신청완료" 뱃지 실데이터 | WP3-2에서 구현한 뱃지가 실제 registrations 데이터와 연동 확인 |
 | 5 | 마감 상태 실시간 반영 | 결제 완료로 정원이 찬 경우, 다른 사용자에게 "마감" 뱃지 표시 |
+| 6 | redirect 복귀 페이지 | 결제 완료 후 returnUrl로 돌아온 경우의 처리 페이지. URL 파라미터에서 payment_id 수신 → 결제 확인 API 호출 → 결과에 따라 확정 화면 또는 에러 표시. popup 콜백과 동일한 UX 흐름 |
+| 7 | 신청 버튼 비활성화 | "신청하기" 클릭 시 즉시 비활성화 + 로딩 표시. 결제 완료/실패까지 유지 |
 
 **3클릭 규칙 (PRD 기준):**
 
@@ -394,6 +400,7 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 | 8 | DB 상태 업데이트 | `status → cancelled`, `cancel_type → user_cancelled`, `refunded_amount`, `cancelled_at` |
 | 9 | 취소 완료 화면 | 환불 예정 금액 + 환불 소요 시간 안내 |
 | 10 | 재신청 가능 확인 | 취소 후 상세 페이지에서 자리 남으면 "신청하기" 다시 표시. 새 registrations 레코드 생성 |
+| 11 | 취소 버튼 비활성화 | 취소 확정 시 버튼 비활성화 + 로딩 표시. API 응답까지 유지 |
 
 **환불 금액 계산 (기술 스택 문서 의사코드, 반드시 준수):**
 
@@ -415,6 +422,8 @@ refund_amount = paid_amount × refund_rate
 - 0원 환불 확정: "환불 금액: 0원 (환불 불가 기간)" 명확히 표시 후 사용자 동의 받고 취소
 - 부분 환불: 포트원 V2 API의 partial refund 파라미터 확인 필수
 - 취소 후 같은 모임 재신청: 새 registrations 레코드 생성 (이전 cancelled 레코드 유지)
+- 포트원 환불 API 호출 실패 시 → registrations 상태 변경 없음 (confirmed 유지) + "환불 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." 에러 메시지 + 재시도 유도
+- 취소 API Route에서 status='confirmed' 재확인 → 이미 cancelled면 환불 없이 즉시 반환 (멱등성)
 
 **검증 기준:**
 - [ ] 3일 전 취소 → 100% 환불 확인
@@ -577,3 +586,4 @@ Promise.allSettled 병렬 = 전원 1~3초 → 안전
 | v1.0 | 2026-03-03 | milestones.md + core 3개 문서 기반 최초 Work Package 수립 (12 WP) |
 | v1.1 | 2026-03-03 | M1 Work Package 추가 (WP1-1, WP1-2, WP1-3). 총 15 WP |
 | v1.2 | 2026-03-04 | 정합성 검토 반영: WP3-1 검증 기준에 3초 로딩 추가, WP4-1 엣지 케이스에 중복 결제 방어 + 네트워크 오류 추가 |
+| v1.3 | 2026-03-05 | MVP 검토 반영 6건: WP1-2 confirm_registration 중복 체크 추가, WP4-1 Webhook+멱등성+결제 흐름 이중 경로, WP4-2 redirect 복귀+버튼 비활성화, WP5-1 환불 실패 분기+취소 멱등성+버튼 비활성화 |
