@@ -30,18 +30,18 @@ M1 → M2 → M3 → M4 → M5 → M6
 개발의 토대가 되는 프로젝트 뼈대와 인프라를 세팅한다. 이후 모든 Milestone이 이 기반 위에서 진행된다.
 
 ### 산출물
-- [ ] Next.js (App Router, TypeScript) 프로젝트 초기화
-- [ ] Vercel 연동 + GitHub push 시 자동 배포 확인
-- [ ] Supabase 프로젝트 생성 + DB 스키마 구축
+- [x] Next.js (App Router, TypeScript) 프로젝트 초기화
+- [x] Vercel 연동 + GitHub push 시 자동 배포 확인
+- [x] Supabase 프로젝트 생성 + DB 스키마 구축
   - `profiles`, `meetings`, `registrations` 테이블
   - RLS 정책 설정 (테이블별 member/admin 권한)
   - DB Function: `confirm_registration` (정원 체크 + 원자적 INSERT)
   - DB Function: 모임별 confirmed 수 조회 (SECURITY DEFINER)
   - DB Trigger: `auth.users` INSERT 시 `profiles` 자동 생성
-- [ ] 환경 변수 설정 (Supabase URL/Keys, 포트원 API Key 등)
-- [ ] Supabase Client 3종 유틸리티 (Server용/Client용 anon key, Admin용 service_role key)
-- [ ] 모바일 우선 반응형 레이아웃 기본 구조 (하단 탭: 모임 일정 / 내 신청)
-- [ ] 글로벌 스타일 시스템 (디자인 토큰, 타이포그래피)
+- [x] 환경 변수 설정 (Supabase URL/Keys, 포트원 API Key 등)
+- [x] Supabase Client 3종 유틸리티 (Server용/Client용 anon key, Admin용 service_role key)
+- [x] 모바일 우선 반응형 레이아웃 기본 구조 (하단 탭: 모임 일정 / 내 신청)
+- [x] 글로벌 스타일 시스템 (디자인 토큰, 타이포그래피)
 
 ### 완료 기준
 - Vercel에 빈 앱이 배포되어 접속 가능
@@ -224,3 +224,4 @@ M1 → M2 → M3 → M4 → M5 → M6
 |------|------|----------|
 | v1.0 | 2025-03-03 | core 문서 기반 최초 Milestone 수립 (M1~M6) |
 | v1.1 | 2026-03-04 | WP 정합성 검토 반영: M3-b 병렬 다이어그램 → 직렬로 수정, Supabase Client 3종 명시, 모임 삭제 API 경로 `/api/meetings/[id]/delete`로 통일 |
+| v1.2 | 2026-03-07 | M1 완료: 산출물 전체 체크 (WP1-1, WP1-2, WP1-3 구현 + 검증 완료) |
