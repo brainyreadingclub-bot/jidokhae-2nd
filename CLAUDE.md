@@ -28,6 +28,8 @@ The actual codebase lives at a separate repository (`jidokhae-web/`), which has 
 /검토문서                                        # Review notes (post-hoc analysis)
 ├── mvp 검토.md                                 # MVP review: payment reliability, Kakao in-app browser issues, webhook gaps
 └── 수정 계획.md                                 # Modification plan: 19 changes across 3 documents (applied to v1.6/v1.3/v1.3)
+
+prompts                                          # Implementation prompt template (used when starting WP implementation in jidokhae-web/)
 ```
 
 ## Document Hierarchy (when conflicts arise)
@@ -122,3 +124,14 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 - **Button logic:** Determined by `confirmed` registration existence + meeting timing (5 states — see PRD §6-2)
 - **Deletion refund:** Always 100% regardless of refund policy dates
 - **Duplicate prevention:** DB Function detects existing confirmed registration and rejects
+
+---
+
+## Working with This Repository
+
+- **Language:** All planning documents are written in Korean. Maintain Korean when editing core and roadmap documents.
+- **Core documents are authoritative:** `/core` documents define the spec. When implementing in the separate `jidokhae-web/` codebase, always cross-reference these specs — do not rely on memory or summaries alone.
+- **Roadmap documents track execution:** `/roadmap` is maintained by Claude. When a WP is completed in the implementation repo, update `milestones.md` status and mark completed scenarios in `scenarios.md`.
+- **Review flow:** `/검토문서` captures post-hoc analysis. When reviews identify issues, create a 수정 계획 (modification plan) listing exact edit locations before modifying core/roadmap docs.
+- **Version awareness:** Core documents carry version numbers (e.g., v1.6, v1.3). Note the version when referencing specific sections, as review-driven edits may change content between versions.
+- **Cross-repo workflow:** The implementation repo (`jidokhae-web/`) is a sibling directory. The `prompts` file contains a template for starting WP implementation — substitute `--단계` with the target WP (e.g., `WP1-1`) when using it.
