@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import BottomNav from '@/components/BottomNav'
 
 export const metadata: Metadata = {
   title: '지독해 - 독서모임',
@@ -23,10 +22,9 @@ export default function RootLayout({
     <html lang="ko">
       <body className="min-h-screen bg-gray-50 antialiased">
         <div className="mx-auto max-w-screen-sm min-h-screen bg-white">
-          <main className="pb-20">
+          <main>
             {children}
           </main>
-          <BottomNav />
         </div>
       </body>
     </html>
