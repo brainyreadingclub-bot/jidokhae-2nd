@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the **planning and specification repository** for JIDOKHAE 2nd — a rewrite of the reading club web service with a tighter MVP scope. It contains only planning documents (no source code).
 
-The actual codebase lives at a separate repository (`jidokhae-web/`), which has its own CLAUDE.md with full development commands and architecture details.
+The actual implementation codebase lives at `jidokhae-web/` (nested inside this repo).
 
 **Project:** JIDOKHAE (지독해) — A web service for a reading club in Gyeongju/Pohang, Korea (250 members). Members browse meeting schedules, register with payment, and manage cancellations/refunds.
 
@@ -67,7 +67,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → WP4-1 → WP4-2 → WP4-3 → WP5-1 → WP5-2 → WP6-1 → WP6-2
 ```
 
-**Current status:** M1 is **completed**. M2-M6 are **not started**.
+**Current status:** M1 and M2 are **completed**. M3-M6 are **not started**.
 
 ---
 
@@ -98,7 +98,7 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 
 | Decision | Detail |
 |----------|--------|
-| Stack | Next.js 14 (App Router) + TypeScript + Supabase + Vercel |
+| Stack | Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Supabase + Vercel |
 | Auth | Supabase Auth ↔ Kakao OAuth |
 | Payment | PortOne V2 API (NOT V1). PG: TossPayments or NHN KCP |
 | DB access | Frontend: Supabase Client (anon key + RLS). Server: API Routes with service_role key |
@@ -135,3 +135,36 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 - **Review flow:** `/검토문서` captures post-hoc analysis. When reviews identify issues, create a 수정 계획 (modification plan) listing exact edit locations before modifying core/roadmap docs.
 - **Version awareness:** Core documents carry version numbers (e.g., v1.6, v1.3). Note the version when referencing specific sections, as review-driven edits may change content between versions.
 - **Cross-repo workflow:** The implementation repo lives at `jidokhae-web/` (nested inside this repo). The `prompts` file contains a template for starting WP implementation — substitute `--단계` with the target WP (e.g., `WP1-1`) when using it.
+
+---
+
+## Implementation Codebase (`jidokhae-web/`)
+
+### Development Commands
+
+```bash
+cd jidokhae-web
+npm run dev      # Start dev server (http://localhost:3000)
+npm run build    # Production build
+npm run lint     # ESLint (eslint-config-next with core-web-vitals + typescript)
+npm run start    # Start production server
+```
+
+Verification scripts (require `.env.local` with Supabase keys):
+```bash
+npx tsx scripts/verify-m1.ts       # Verify M1 deliverables
+npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
+```
+
+### Architecture
+
+- **Route groups:** `src/app/(main)/` for authenticated pages (모임 일정, 내 신청), `src/app/auth/` for login/callback
+- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`
+- **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
+- **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Primary color: warm amber (`--color-primary-*`)
+- **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav` component)
+- **DB migrations:** `supabase/migration.sql` — run manually in Supabase SQL Editor (no CLI migration)
+
+### Environment Variables
+
+See `jidokhae-web/.env.example` for required variables (Supabase URL/keys, PortOne keys).

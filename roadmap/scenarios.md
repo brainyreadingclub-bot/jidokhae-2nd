@@ -209,51 +209,51 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 # M2. 인증 (카카오 로그인)
 
-## WP2-1. 카카오 로그인 + 프로필 자동 생성
+## WP2-1. 카카오 로그인 + 프로필 자동 생성 ✅
 
-### Scenario 2-1-01: 카카오 로그인 성공 시 메인 페이지로 이동
+### Scenario 2-1-01: 카카오 로그인 성공 시 메인 페이지로 이동 ✅
 
 - **Given:** 미인증 사용자가 로그인 페이지(`/auth/login`)에 있다
 - **When:** 카카오 로그인 버튼을 클릭하고, 카카오 인증을 완료한다
 - **Then:** `/auth/callback`을 거쳐 메인 페이지(`/`)로 리다이렉트된다. Supabase Auth에 세션이 생성된다
 - **선행 Scenario:** 없음
 
-### Scenario 2-1-02: 로그인 시 profiles 레코드 자동 생성
+### Scenario 2-1-02: 로그인 시 profiles 레코드 자동 생성 ✅
 
 - **Given:** 처음 로그인하는 카카오 사용자 (profiles 테이블에 레코드 없음)
 - **When:** 카카오 로그인을 완료한다
 - **Then:** DB Trigger에 의해 `profiles` 테이블에 레코드가 자동 생성된다. `kakao_id`는 카카오 제공 값, `nickname`은 카카오 닉네임, `email`은 카카오 이메일, `role`은 `'member'`
 - **선행 Scenario:** 2-1-01
 
-### Scenario 2-1-03: 카카오 이메일 미동의 시 정상 로그인
+### Scenario 2-1-03: 카카오 이메일 미동의 시 정상 로그인 ✅
 
 - **Given:** 카카오 인증 시 이메일 제공에 동의하지 않은 사용자
 - **When:** 카카오 로그인을 완료한다
 - **Then:** `profiles.email = null`로 저장되며, 로그인은 정상 완료된다. 크래시 없음
 - **선행 Scenario:** 2-1-01
 
-### Scenario 2-1-04: 카카오 닉네임 없이 로그인 성공
+### Scenario 2-1-04: 카카오 닉네임 없이 로그인 성공 ✅
 
 - **Given:** 카카오 프로필에 닉네임이 없는(또는 빈) 사용자
 - **When:** 카카오 로그인을 완료한다
 - **Then:** `profiles.nickname = ''`(빈 문자열)로 저장되며, 로그인은 정상 완료된다
 - **선행 Scenario:** 2-1-01
 
-### Scenario 2-1-05: 카카오 인증 취소 시 로그인 페이지 복귀
+### Scenario 2-1-05: 카카오 인증 취소 시 로그인 페이지 복귀 ✅
 
 - **Given:** 미인증 사용자가 카카오 인증 화면에 진입했다
 - **When:** 카카오 인증 화면에서 "취소" 또는 뒤로가기를 누른다
 - **Then:** 로그인 페이지(`/auth/login`)로 복귀한다. 세션은 생성되지 않는다. 에러 페이지가 뜨지 않는다
 - **선행 Scenario:** 없음
 
-### Scenario 2-1-06: OAuth Callback에서 쿠키 유실 없이 세션 설정
+### Scenario 2-1-06: OAuth Callback에서 쿠키 유실 없이 세션 설정 ✅
 
 - **Given:** 카카오 인증이 완료되어 `/auth/callback`으로 리다이렉트됐다
 - **When:** Callback Route가 auth code를 session으로 교환한다
 - **Then:** `pendingCookies` 패턴으로 redirect 응답에 세션 쿠키가 올바르게 설정된다. 미들웨어는 `/auth/callback`을 건너뛰어 쿠키를 덮어쓰지 않는다
 - **선행 Scenario:** 2-1-01
 
-### Scenario 2-1-07: 카카오톡 인앱 브라우저에서 OAuth redirect 정상 동작
+### Scenario 2-1-07: 카카오톡 인앱 브라우저에서 OAuth redirect 정상 동작 ✅
 
 - **Given:** 카카오톡 앱 내에서 서비스 링크를 터치하여 인앱 브라우저가 열린 상태
 - **When:** 카카오 로그인 버튼을 클릭하고 인증을 완료한다
@@ -262,65 +262,65 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 ---
 
-## WP2-2. 세션 관리 + 접근 제어 + 로그아웃
+## WP2-2. 세션 관리 + 접근 제어 + 로그아웃 ✅
 
-### Scenario 2-2-01: 미인증 사용자가 보호 경로 접근 시 로그인 리다이렉트
+### Scenario 2-2-01: 미인증 사용자가 보호 경로 접근 시 로그인 리다이렉트 ✅
 
 - **Given:** 세션이 없는(미인증) 사용자
 - **When:** 보호된 경로(예: `/`, `/meetings/[id]`)에 직접 접근한다
 - **Then:** `/auth/login`으로 리다이렉트된다
 - **선행 Scenario:** 없음
 
-### Scenario 2-2-02: 인증된 사용자가 보호 경로 정상 접근
+### Scenario 2-2-02: 인증된 사용자가 보호 경로 정상 접근 ✅
 
 - **Given:** 카카오 로그인이 완료된 사용자 (유효한 세션 존재)
 - **When:** 보호된 경로에 접근한다
 - **Then:** 해당 페이지가 정상 렌더링된다. 리다이렉트 없음
 - **선행 Scenario:** 2-1-01
 
-### Scenario 2-2-03: 브라우저 재방문 시 세션 유지
+### Scenario 2-2-03: 브라우저 재방문 시 세션 유지 ✅
 
 - **Given:** 로그인 후 브라우저 탭을 닫은 사용자
 - **When:** 동일 브라우저에서 서비스 URL에 다시 접속한다
 - **Then:** Supabase session refresh가 동작하여 로그인 없이 메인 페이지에 진입한다
 - **선행 Scenario:** 2-1-01
 
-### Scenario 2-2-04: 로그아웃 후 로그인 페이지로 이동
+### Scenario 2-2-04: 로그아웃 후 로그인 페이지로 이동 ✅
 
 - **Given:** 로그인 상태의 사용자
 - **When:** 로그아웃 버튼을 클릭한다
 - **Then:** Supabase `signOut()`이 호출되고, `/auth/login`으로 이동한다. 세션 쿠키가 삭제된다
 - **선행 Scenario:** 2-2-02
 
-### Scenario 2-2-05: 로그아웃 후 보호 경로 접근 불가
+### Scenario 2-2-05: 로그아웃 후 보호 경로 접근 불가 ✅
 
 - **Given:** 로그아웃을 완료한 사용자
 - **When:** 브라우저 뒤로가기 또는 URL 직접 입력으로 보호 경로에 접근한다
 - **Then:** `/auth/login`으로 리다이렉트된다
 - **선행 Scenario:** 2-2-04
 
-### Scenario 2-2-06: admin 역할 사용자 확인
+### Scenario 2-2-06: admin 역할 사용자 확인 ✅
 
 - **Given:** Supabase 대시보드에서 `profiles.role = 'admin'`으로 설정된 사용자
 - **When:** 로그인 후 프로필 정보를 조회한다
 - **Then:** `role` 값이 `'admin'`으로 반환된다
 - **선행 Scenario:** 2-1-02
 
-### Scenario 2-2-07: member 역할 사용자 확인
+### Scenario 2-2-07: member 역할 사용자 확인 ✅
 
 - **Given:** 일반 카카오 로그인으로 가입한 사용자 (role 수동 변경 안 함)
 - **When:** 로그인 후 프로필 정보를 조회한다
 - **Then:** `role` 값이 `'member'`(기본값)로 반환된다
 - **선행 Scenario:** 2-1-02
 
-### Scenario 2-2-08: profiles 미생성 시 graceful 처리
+### Scenario 2-2-08: profiles 미생성 시 graceful 처리 ✅
 
 - **Given:** `auth.uid()`는 존재하지만 DB Trigger 지연으로 `profiles` 레코드가 아직 없는 상태
 - **When:** 프로필 조회 쿼리가 실행된다
 - **Then:** 크래시 없이 빈 결과 또는 로딩 상태가 표시된다. 앱이 정상 동작한다
 - **선행 Scenario:** 2-1-01
 
-### Scenario 2-2-09: 세션 만료 후 페이지 접근 시 자동 리프레시 또는 로그인 유도
+### Scenario 2-2-09: 세션 만료 후 페이지 접근 시 자동 리프레시 또는 로그인 유도 ✅
 
 - **Given:** 로그인 후 장시간 미사용으로 Supabase access token이 만료된 상태
 - **When:** 보호된 경로에 접근한다
@@ -1144,3 +1144,4 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 | v1.2 | 2026-03-04 | 정합성 검토 반영: 5개 Scenario 추가 (2-1-07, 2-2-09, 3-1-10, 4-1-09, 4-2-07). 총 140 Scenarios |
 | v1.3 | 2026-03-05 | MVP 검토 v1.3 반영: 6개 Scenario 추가 (1-2-15, 4-1-10, 4-1-11, 4-2-08, 4-2-09, 5-1-15), 4-1-09 수정. 총 146 Scenarios |
 | v1.4 | 2026-03-07 | M1 검증 완료: WP1-1(6), WP1-2(15), WP1-3(4) 총 25 Scenarios 검증 통과 |
+| v1.5 | 2026-03-10 | M2 검증 완료: WP2-1(7), WP2-2(9) 총 16 Scenarios 수동 검증 통과 |
