@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import BottomNav from '@/components/BottomNav'
 import LogoutButton from '@/components/LogoutButton'
@@ -30,9 +31,12 @@ export default async function MainLayout({
             {nickname || '회원'}님
           </span>
           {role === 'admin' && (
-            <span className="text-xs font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">
+            <Link
+              href="/admin"
+              className="text-xs font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded hover:bg-primary-100 transition-colors"
+            >
               운영자
-            </span>
+            </Link>
           )}
         </div>
         <LogoutButton />
