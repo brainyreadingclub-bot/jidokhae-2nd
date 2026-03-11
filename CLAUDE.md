@@ -67,7 +67,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → WP4-1 → WP4-2 → WP4-3 → WP5-1 → WP5-2 → WP6-1 → WP6-2
 ```
 
-**Current status:** M1 and M2 are **completed**. M3-M6 are **not started**.
+**Current status:** M1, M2, M3 are **completed**. Next WP is **WP4-1** (PortOne 결제 파이프라인). M4-M6 are **not started**.
 
 ---
 
@@ -158,12 +158,39 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 
 ### Architecture
 
-- **Route groups:** `src/app/(main)/` for authenticated pages (모임 일정, 내 신청), `src/app/auth/` for login/callback
-- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`
+- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback
+- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` to preserve PKCE cookies
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
-- **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Primary color: warm amber (`--color-primary-*`)
-- **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav` component)
-- **DB migrations:** `supabase/migration.sql` — run manually in Supabase SQL Editor (no CLI migration)
+- **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Primary color: warm amber (`--color-primary-*`). Font: Pretendard
+- **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
+- **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
+- **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
+- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts`, Supabase responses cast with `as Meeting`
+- **Error/Loading boundaries:** Each route group has `error.tsx` and `loading.tsx` files
+
+### Database Schema
+
+**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking)
+
+**Key DB Functions (SECURITY DEFINER):**
+- `is_admin()` — Returns true if current user has admin role. Used in RLS policies
+- `confirm_registration(p_user_id, p_meeting_id, p_payment_id, p_paid_amount)` — Atomic capacity check + INSERT with `FOR UPDATE` row lock. Returns: 'success' | 'not_found' | 'not_active' | 'already_registered' | 'full'
+- `get_confirmed_counts(meeting_ids UUID[])` — Batch count of confirmed registrations per meeting (avoids N+1 queries)
+
+**Triggers:** `on_auth_user_created` auto-creates profile from Kakao metadata on signup
+
+### Code Conventions
+
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Only 6 files use `'use client'`: `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `DeleteMeetingButton`, `auth/login/page`
+- **No semicolons**, single quotes, function components only
+- **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
+- **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function
+- **Mutation pattern in client components:** `router.push() + router.refresh()` after mutations (no `revalidatePath`)
+- **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
+- **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
+- **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getButtonState()`), never `new Date()` directly
+- **No API routes yet** (except auth callback) — admin CRUD uses direct Supabase client with RLS. API routes planned for M4/M5
+- **No test framework** — verification via scripts (`scripts/verify-m1*.ts`). E2E tests planned for M6
 
 ### Environment Variables
 
