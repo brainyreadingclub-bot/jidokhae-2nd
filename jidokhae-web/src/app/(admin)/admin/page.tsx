@@ -8,20 +8,28 @@ export default async function AdminPage() {
   const kstToday = getKSTToday()
   const supabase = await createClient()
 
-  const { data: meetings } = await supabase
+  const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
     .select('*')
     .in('status', ['active', 'deleting'])
     .order('date', { ascending: false })
     .order('time', { ascending: false })
 
+  if (meetingsError) {
+    throw new Error(`모임 목록 조회 실패: ${meetingsError.message}`)
+  }
+
   const typedMeetings = (meetings ?? []) as Meeting[]
 
   const meetingIds = typedMeetings.map((m) => m.id)
 
-  const { data: counts } = meetingIds.length > 0
+  const { data: counts, error: countsError } = meetingIds.length > 0
     ? await supabase.rpc('get_confirmed_counts', { meeting_ids: meetingIds })
-    : { data: [] }
+    : { data: [], error: null }
+
+  if (countsError) {
+    throw new Error(`참가자 수 조회 실패: ${countsError.message}`)
+  }
 
   const countMap = new Map<string, number>(
     (counts ?? []).map(

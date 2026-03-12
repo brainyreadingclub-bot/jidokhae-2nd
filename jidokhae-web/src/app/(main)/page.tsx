@@ -13,13 +13,17 @@ export default async function HomePage() {
   const kstToday = getKSTToday()
 
   // Fetch active meetings from today onwards
-  const { data: meetings } = await supabase
+  const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
     .select('*')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })
     .order('time', { ascending: true })
+
+  if (meetingsError) {
+    throw new Error(`모임 목록 조회 실패: ${meetingsError.message}`)
+  }
 
   const typedMeetings = (meetings ?? []) as Meeting[]
 
@@ -44,8 +48,15 @@ export default async function HomePage() {
           .eq('user_id', user.id)
           .eq('status', 'confirmed')
           .in('meeting_id', meetingIds)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [] as { meeting_id: string }[], error: null }),
   ])
+
+  if (countsResult.error) {
+    throw new Error(`참가자 수 조회 실패: ${countsResult.error.message}`)
+  }
+  if ('error' in myRegsResult && myRegsResult.error) {
+    throw new Error(`내 신청 조회 실패: ${myRegsResult.error.message}`)
+  }
 
   const countMap = new Map<string, number>(
     (countsResult.data ?? []).map(

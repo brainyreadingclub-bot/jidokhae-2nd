@@ -1,11 +1,18 @@
 'use client'
 
+import { useEffect } from 'react'
+
 export default function MainError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    console.error('[MainError]', error)
+  }, [error])
+
   return (
     <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-error/10">
@@ -31,6 +38,11 @@ export default function MainError({
       <p className="mt-2 text-sm text-gray-500">
         일시적인 오류입니다. 잠시 후 다시 시도해 주세요.
       </p>
+      {process.env.NODE_ENV === 'development' && (
+        <pre className="mt-4 max-w-full overflow-auto rounded-lg bg-gray-100 p-3 text-left text-xs text-gray-700">
+          {error.message}
+        </pre>
+      )}
       <button
         onClick={reset}
         className="mt-6 rounded-[var(--radius-md)] bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-600"

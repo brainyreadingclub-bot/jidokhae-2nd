@@ -11,20 +11,28 @@ export default async function EditMeetingPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: meeting } = await supabase
+  const { data: meeting, error: meetingError } = await supabase
     .from('meetings')
     .select('*')
     .eq('id', id)
     .single()
+
+  if (meetingError && meetingError.code !== 'PGRST116') {
+    throw new Error(`모임 조회 실패: ${meetingError.message}`)
+  }
 
   const typed = meeting as Meeting | null
   if (!typed || typed.status === 'deleted') {
     notFound()
   }
 
-  const { data: counts } = await supabase.rpc('get_confirmed_counts', {
+  const { data: counts, error: countsError } = await supabase.rpc('get_confirmed_counts', {
     meeting_ids: [typed.id],
   })
+
+  if (countsError) {
+    throw new Error(`참가자 수 조회 실패: ${countsError.message}`)
+  }
   const confirmedCount = Number(
     (counts as { meeting_id: string; confirmed_count: number }[] | null)
       ?.find((c) => c.meeting_id === typed.id)?.confirmed_count ?? 0,

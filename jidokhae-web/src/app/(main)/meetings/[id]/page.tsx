@@ -21,11 +21,16 @@ export default async function MeetingDetailPage({ params }: Props) {
   if (!user) redirect('/auth/login')
 
   // Fetch meeting
-  const { data: meeting } = await supabase
+  const { data: meeting, error: meetingError } = await supabase
     .from('meetings')
     .select('*')
     .eq('id', id)
     .single()
+
+  if (meetingError && meetingError.code !== 'PGRST116') {
+    // PGRST116 = row not found → notFound()로 처리, 그 외는 진짜 에러
+    throw new Error(`모임 조회 실패: ${meetingError.message}`)
+  }
 
   const typedMeeting = meeting as Meeting | null
 
@@ -49,6 +54,16 @@ export default async function MeetingDetailPage({ params }: Props) {
       .eq('id', user.id)
       .single(),
   ])
+
+  if (countsResult.error) {
+    throw new Error(`참가자 수 조회 실패: ${countsResult.error.message}`)
+  }
+  if (myRegResult.error) {
+    throw new Error(`내 신청 조회 실패: ${myRegResult.error.message}`)
+  }
+  if (profileResult.error) {
+    throw new Error(`프로필 조회 실패: ${profileResult.error.message}`)
+  }
 
   const confirmedCount = Number(
     (countsResult.data as { meeting_id: string; confirmed_count: number }[] | null)

@@ -34,12 +34,15 @@ export function formatKoreanDate(dateStr: string): string {
 
 /** "19:00:00" or "19:00" → "오후 7:00" */
 export function formatKoreanTime(time: string): string {
-  const [hourStr, minuteStr] = time.split(':')
+  if (!time) return ''
+  const parts = time.split(':')
+  const hourStr = parts[0] ?? '0'
+  const minuteStr = (parts[1] ?? '00').padStart(2, '0')
   const hour = parseInt(hourStr, 10)
-  const minute = minuteStr.padStart(2, '0')
+  if (isNaN(hour)) return ''
   const period = hour < 12 ? '오전' : '오후'
   const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-  return `${period} ${displayHour}:${minute}`
+  return `${period} ${displayHour}:${minuteStr}`
 }
 
 /** "10000" → "10,000원" */
