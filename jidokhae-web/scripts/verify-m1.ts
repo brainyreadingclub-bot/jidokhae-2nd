@@ -39,49 +39,49 @@ async function main() {
 
   // 1-1-04: Server(anon) client
   try {
-    const { data, error } = await anon.from('meetings').select('id').limit(1)
+    const { error } = await anon.from('meetings').select('id').limit(1)
     if (error) throw error
     ok('1-1-04: Anon client 초기화 + meetings SELECT 성공')
-  } catch (e: any) {
-    fail('1-1-04: Anon client 초기화', e.message)
+  } catch (e: unknown) {
+    fail('1-1-04: Anon client 초기화', e instanceof Error ? e.message : String(e))
   }
 
   // 1-1-05: Admin(service_role) client
   try {
-    const { data, error } = await admin.from('profiles').select('id').limit(1)
+    const { error } = await admin.from('profiles').select('id').limit(1)
     if (error) throw error
     ok('1-1-05: Admin client 초기화 + profiles SELECT 성공')
-  } catch (e: any) {
-    fail('1-1-05: Admin client 초기화', e.message)
+  } catch (e: unknown) {
+    fail('1-1-05: Admin client 초기화', e instanceof Error ? e.message : String(e))
   }
 
   console.log('\n=== WP1-2: DB 스키마 검증 ===\n')
 
   // 1-2-01: profiles 테이블 구조
   try {
-    const { data, error } = await admin.from('profiles').select('id, kakao_id, nickname, email, role, created_at').limit(0)
+    const { error } = await admin.from('profiles').select('id, kakao_id, nickname, email, role, created_at').limit(0)
     if (error) throw error
     ok('1-2-01: profiles 테이블 컬럼 존재')
-  } catch (e: any) {
-    fail('1-2-01: profiles 테이블', e.message)
+  } catch (e: unknown) {
+    fail('1-2-01: profiles 테이블', e instanceof Error ? e.message : String(e))
   }
 
   // 1-2-02: meetings 테이블 구조
   try {
-    const { data, error } = await admin.from('meetings').select('id, title, date, time, location, capacity, fee, status, created_at, updated_at').limit(0)
+    const { error } = await admin.from('meetings').select('id, title, date, time, location, capacity, fee, status, created_at, updated_at').limit(0)
     if (error) throw error
     ok('1-2-02: meetings 테이블 컬럼 존재')
-  } catch (e: any) {
-    fail('1-2-02: meetings 테이블', e.message)
+  } catch (e: unknown) {
+    fail('1-2-02: meetings 테이블', e instanceof Error ? e.message : String(e))
   }
 
   // 1-2-03: registrations 테이블 구조
   try {
-    const { data, error } = await admin.from('registrations').select('id, user_id, meeting_id, status, cancel_type, payment_id, paid_amount, refunded_amount, attended, created_at, cancelled_at').limit(0)
+    const { error } = await admin.from('registrations').select('id, user_id, meeting_id, status, cancel_type, payment_id, paid_amount, refunded_amount, attended, created_at, cancelled_at').limit(0)
     if (error) throw error
     ok('1-2-03: registrations 테이블 컬럼 존재')
-  } catch (e: any) {
-    fail('1-2-03: registrations 테이블', e.message)
+  } catch (e: unknown) {
+    fail('1-2-03: registrations 테이블', e instanceof Error ? e.message : String(e))
   }
 
   // 1-2-07: RLS — anon(미인증)이 registrations 직접 INSERT 차단
@@ -98,7 +98,7 @@ async function main() {
       // cleanup
       await admin.from('registrations').delete().eq('user_id', '00000000-0000-0000-0000-000000000000')
     }
-  } catch (e: any) {
+  } catch {
     ok('1-2-07: RLS — registrations 직접 INSERT 차단됨')
   }
 
@@ -233,7 +233,7 @@ async function main() {
       meeting_ids: [testMeetingId],
     })
     if (countErr) throw countErr
-    const meetingCount = counts?.find((c: any) => c.meeting_id === testMeetingId)
+    const meetingCount = counts?.find((c: { meeting_id: string; confirmed_count: number }) => c.meeting_id === testMeetingId)
     if (meetingCount && meetingCount.confirmed_count === 2) {
       ok('1-2-14: get_confirmed_counts 정확한 카운트 반환 (2)')
     } else {
@@ -280,8 +280,8 @@ async function main() {
 
     ok('Cleanup: 테스트 데이터 정리 완료')
 
-  } catch (e: any) {
-    fail('DB Function 테스트', e.message)
+  } catch (e: unknown) {
+    fail('DB Function 테스트', e instanceof Error ? e.message : String(e))
     // Attempt cleanup
     if (testMeetingId) await admin.from('registrations').delete().eq('meeting_id', testMeetingId)
     if (testMeetingId) await admin.from('meetings').delete().eq('id', testMeetingId)

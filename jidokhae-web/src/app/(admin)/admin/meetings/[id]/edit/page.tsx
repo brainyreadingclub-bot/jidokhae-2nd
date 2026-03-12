@@ -22,12 +22,21 @@ export default async function EditMeetingPage({ params }: Props) {
     notFound()
   }
 
+  const { data: counts } = await supabase.rpc('get_confirmed_counts', {
+    meeting_ids: [typed.id],
+  })
+  const confirmedCount = Number(
+    (counts as { meeting_id: string; confirmed_count: number }[] | null)
+      ?.find((c) => c.meeting_id === typed.id)?.confirmed_count ?? 0,
+  )
+
   return (
     <div className="px-4 pt-4 pb-6">
       <h1 className="text-lg font-bold text-gray-900 mb-5">모임 수정</h1>
       <MeetingForm
         mode="edit"
         meetingId={typed.id}
+        confirmedCount={confirmedCount}
         initialValues={{
           title: typed.title,
           date: typed.date,

@@ -17,6 +17,7 @@ type Props = {
   mode: 'create' | 'edit'
   meetingId?: string
   initialValues?: Partial<MeetingValues>
+  confirmedCount?: number
 }
 
 const defaultValues: MeetingValues = {
@@ -28,7 +29,7 @@ const defaultValues: MeetingValues = {
   fee: '',
 }
 
-export default function MeetingForm({ mode, meetingId, initialValues }: Props) {
+export default function MeetingForm({ mode, meetingId, initialValues, confirmedCount = 0 }: Props) {
   const router = useRouter()
   const [values, setValues] = useState<MeetingValues>({
     ...defaultValues,
@@ -53,6 +54,9 @@ export default function MeetingForm({ mode, meetingId, initialValues }: Props) {
 
     const capacity = parseInt(values.capacity, 10)
     if (!capacity || capacity < 1) return setError('정원은 1명 이상이어야 합니다')
+    if (mode === 'edit' && capacity < confirmedCount) {
+      return setError(`현재 신청자(${confirmedCount}명)보다 적은 정원은 설정할 수 없습니다`)
+    }
 
     const fee = parseInt(values.fee, 10)
     if (isNaN(fee) || fee < 0) return setError('참가비는 0원 이상이어야 합니다')

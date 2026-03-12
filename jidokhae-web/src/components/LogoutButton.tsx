@@ -12,9 +12,13 @@ export default function LogoutButton() {
     if (isLoading) return
     setIsLoading(true)
 
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/auth/login')
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/auth/login')
+    } catch {
+      setIsLoading(false)
+    }
   }
 
   return (

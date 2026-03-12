@@ -25,17 +25,17 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  const { pathname } = request.nextUrl
+
+  // Auth callback: skip getUser() — PKCE code verifier cookies must stay intact
+  if (pathname.startsWith('/auth/callback')) {
+    return supabaseResponse
+  }
+
   // Session refresh — must call getUser() to refresh expired tokens
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
-
-  // Auth callback: always allow (cookie exchange in progress)
-  if (pathname.startsWith('/auth/callback')) {
-    return supabaseResponse
-  }
 
   // Auth pages: redirect to main if already authenticated
   if (pathname.startsWith('/auth')) {

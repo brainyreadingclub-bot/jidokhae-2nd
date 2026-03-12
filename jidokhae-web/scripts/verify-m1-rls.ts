@@ -96,7 +96,7 @@ async function main() {
       const { data, error } = await memberClient.from('registrations').select('*')
       if (error) fail('1-2-06: member registrations SELECT', error.message)
       else {
-        const allMine = data?.every((r: any) => r.user_id === memberUserId)
+        const allMine = data?.every((r: { user_id: string }) => r.user_id === memberUserId)
         if (allMine && data!.length === 1) ok('1-2-06: member registrations 자기 것만 SELECT (1건)')
         else fail('1-2-06: member registrations', `got ${data?.length} records, allMine=${allMine}`)
       }
@@ -151,8 +151,8 @@ async function main() {
       }
     }
 
-  } catch (e: any) {
-    fail('Setup/Teardown', e.message)
+  } catch (e: unknown) {
+    fail('Setup/Teardown', e instanceof Error ? e.message : String(e))
   } finally {
     // Cleanup
     if (testMeetingId) await admin.from('registrations').delete().eq('meeting_id', testMeetingId)
