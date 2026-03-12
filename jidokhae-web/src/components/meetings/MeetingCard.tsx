@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import type { Meeting } from '@/types/meeting'
