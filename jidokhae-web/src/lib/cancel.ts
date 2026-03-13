@@ -5,7 +5,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/admin'
-import { cancelPayment } from '@/lib/tosspayments'
+import { cancelPayment, getPayment } from '@/lib/tosspayments'
 import { calculateRefund } from '@/lib/refund'
 import { getKSTToday } from '@/lib/kst'
 
@@ -58,10 +58,22 @@ export async function processUserCancel(
         refundRate === 100 ? undefined : refundAmount,
       )
     } catch {
-      // 토스페이먼츠 실패 시: confirmed 유지, 에러 반환 (PRD 요구사항)
-      return {
-        status: 'error',
-        message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+      // Race condition safety: check if already cancelled at TossPayments
+      // (handles concurrent cancel where another request already succeeded)
+      try {
+        const payment = await getPayment(reg.payment_id)
+        if (payment.status !== 'CANCELED') {
+          return {
+            status: 'error',
+            message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          }
+        }
+        // Already cancelled → proceed to DB update
+      } catch {
+        return {
+          status: 'error',
+          message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        }
       }
     }
   }
