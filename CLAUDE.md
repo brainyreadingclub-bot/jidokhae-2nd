@@ -25,9 +25,11 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 ├── work-packages.md                           # 15 Work Packages — how to execute each milestone
 └── scenarios.md                               # 146 BDD Scenarios — how to verify each WP
 
-/검토문서                                        # Review notes (post-hoc analysis)
+/검토문서                                        # Review notes & manual test checklists
 ├── mvp 검토.md                                 # MVP review: payment reliability, Kakao in-app browser issues, webhook gaps
-└── 수정 계획.md                                 # Modification plan: 19 changes across 3 documents (applied to v1.6/v1.3/v1.3)
+├── 수정 계획.md                                 # Modification plan: 19 changes across 3 documents (applied to v1.6/v1.3/v1.3)
+├── M3-수동테스트-체크리스트.md                     # M3 manual test checklist (28 items)
+└── M5-수동테스트-체크리스트.md                     # M5 manual test checklist (cancel + refund, 48 items)
 
 prompts                                          # Implementation prompt template (used when starting WP implementation in jidokhae-web/)
 ```
@@ -67,7 +69,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → WP4-1 → WP4-2 → WP4-3 → WP5-1 → WP5-2 → WP6-1 → WP6-2
 ```
 
-**Current status:** M1, M2, M3 are **completed**. Next WP is **WP4-1** (TossPayments 결제 파이프라인). M4-M6 are **not started**.
+**Current status:** M1–M5 are **completed**. Next is **M6** (통합 검증 + 출시).
 
 ---
 
@@ -181,7 +183,7 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 
 ### Code Conventions
 
-- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Only 6 files use `'use client'`: `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `DeleteMeetingButton`, `auth/login/page`
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Only 7 files use `'use client'`: `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `DeleteMeetingButton`, `RegistrationCard`, `auth/login/page`
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
 - **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function
@@ -189,8 +191,28 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getButtonState()`), never `new Date()` directly
-- **No API routes yet** (except auth callback) — admin CRUD uses direct Supabase client with RLS. API routes planned for M4/M5
-- **No test framework** — verification via scripts (`scripts/verify-m1*.ts`). E2E tests planned for M6
+- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment), `registrations/cancel` (M5 cancel), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup). All use service_role Supabase client, cookie-based auth
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper). Shared between API routes — keep logic here, not in route handlers
+- **No test framework** — verification via scripts (`scripts/verify-m1*.ts`) and manual testing checklists (`검토문서/`). E2E tests planned for M6
+
+### Payment Flow (M4)
+
+1. Client loads TossPayments SDK → `requestPayment('카드', { amount, orderId, ... })`
+2. User completes card payment on TossPayments page
+3. TossPayments redirects to `/meetings/[id]/payment-redirect?paymentKey=...&orderId=...&amount=...`
+4. Redirect page calls `POST /api/registrations/confirm` with those params
+5. API Route: auth check → `processPaymentConfirmation()` → `confirmPayment()` (money moves) → `confirm_registration()` RPC (atomic DB insert)
+6. Webhook backup at `/api/webhooks/tosspayments` handles missed redirects
+
+**Safety patterns:** payment_id idempotency (no double-charge), atomic capacity check via DB function with `FOR UPDATE` lock, rollback refund if DB insert fails
+
+### Cancel/Refund Flow (M5)
+
+1. User clicks "취소하기" → info modal (refund rate/amount) → confirm modal → API call
+2. `POST /api/registrations/cancel` → `processUserCancel()` → `cancelPayment()` (TossPayments) → DB update
+3. Admin delete: `POST /api/meetings/[id]/delete` → set `deleting` → `Promise.allSettled` parallel refund → `deleted`
+
+**Safety patterns:** optimistic lock with `.eq('status', 'confirmed')` + `.select('id')` to detect 0-row updates, race condition handling via `getPayment()` status check, partial failure retry (meeting stays `deleting`)
 
 ### Environment Variables
 
