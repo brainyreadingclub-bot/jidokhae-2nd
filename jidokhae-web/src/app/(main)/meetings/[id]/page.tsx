@@ -5,6 +5,7 @@ import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
 import type { Meeting } from '@/types/meeting'
+import type { RegistrationWithProfile } from '@/types/registration'
 import Link from 'next/link'
 
 type Props = {
@@ -79,6 +80,18 @@ export default async function MeetingDetailPage({ params }: Props) {
     notFound()
   }
 
+  // Fetch registrations for admin view
+  let adminRegistrations: RegistrationWithProfile[] = []
+  if (isAdmin) {
+    const { data: regs } = await supabase
+      .from('registrations')
+      .select('*, profiles(nickname)')
+      .eq('meeting_id', id)
+      .order('created_at', { ascending: false })
+
+    adminRegistrations = (regs ?? []) as RegistrationWithProfile[]
+  }
+
   const kstToday = getKSTToday()
   const buttonState = getButtonState(
     typedMeeting.date,
@@ -117,7 +130,13 @@ export default async function MeetingDetailPage({ params }: Props) {
 
       {/* Action button */}
       <div className="mt-8">
-        <MeetingActionButton buttonState={buttonState} />
+        <MeetingActionButton
+          buttonState={buttonState}
+          meetingId={typedMeeting.id}
+          meetingTitle={typedMeeting.title}
+          meetingFee={typedMeeting.fee}
+          userId={user.id}
+        />
       </div>
 
       {/* Admin section */}
@@ -125,6 +144,7 @@ export default async function MeetingDetailPage({ params }: Props) {
         <AdminMeetingSection
           meetingId={typedMeeting.id}
           confirmedCount={confirmedCount}
+          registrations={adminRegistrations}
         />
       )}
     </div>

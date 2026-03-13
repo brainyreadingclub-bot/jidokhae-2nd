@@ -1,14 +1,24 @@
 import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
+import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
   meetingId: string
   confirmedCount: number
+  registrations: RegistrationWithProfile[]
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  const month = d.getMonth() + 1
+  const day = d.getDate()
+  return `${month}/${day}`
 }
 
 export default function AdminMeetingSection({
   meetingId,
   confirmedCount,
+  registrations,
 }: Props) {
   return (
     <div className="mt-8 border-t border-gray-100 pt-6">
@@ -35,7 +45,7 @@ export default function AdminMeetingSection({
       {/* Registrant list table */}
       <div>
         <h3 className="text-xs font-medium text-gray-500 mb-3">
-          신청자 목록
+          신청자 목록 ({confirmedCount}명)
         </h3>
         <div className="rounded-[var(--radius-md)] border border-gray-100 overflow-hidden">
           <table className="w-full text-sm">
@@ -53,7 +63,7 @@ export default function AdminMeetingSection({
               </tr>
             </thead>
             <tbody>
-              {confirmedCount === 0 ? (
+              {registrations.length === 0 ? (
                 <tr>
                   <td
                     colSpan={3}
@@ -63,14 +73,30 @@ export default function AdminMeetingSection({
                   </td>
                 </tr>
               ) : (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-4 py-8 text-center text-sm text-gray-400"
+                registrations.map((reg) => (
+                  <tr
+                    key={reg.id}
+                    className="border-b border-gray-50 last:border-b-0"
                   >
-                    신청자 {confirmedCount}명 (상세 목록은 준비 중)
-                  </td>
-                </tr>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {reg.profiles?.nickname || '(알 수 없음)'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {formatDate(reg.created_at)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {reg.status === 'confirmed' ? (
+                        <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                          결제완료
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                          취소됨
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
