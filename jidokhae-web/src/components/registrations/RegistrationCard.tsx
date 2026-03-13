@@ -11,13 +11,11 @@ type Props = {
 
 export default function RegistrationCard({ registration, badge }: Props) {
   const meeting = registration.meetings
+  const isDeleted =
+    meeting.status === 'deleted' || meeting.status === 'deleting'
 
-  return (
-    <Link
-      href={`/meetings/${meeting.id}`}
-      className="block rounded-[var(--radius-lg)] border border-gray-100 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5"
-      style={{ boxShadow: 'var(--shadow-card)' }}
-    >
+  const cardInner = (
+    <>
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-bold text-gray-900 truncate">
@@ -60,6 +58,28 @@ export default function RegistrationCard({ registration, badge }: Props) {
             )}
         </div>
       )}
+    </>
+  )
+
+  // Deleted/deleting meetings: non-clickable card with muted style
+  if (isDeleted) {
+    return (
+      <div
+        className="block rounded-[var(--radius-lg)] border border-gray-100 bg-gray-50/50 p-4"
+        style={{ boxShadow: 'var(--shadow-card)' }}
+      >
+        {cardInner}
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href={`/meetings/${meeting.id}`}
+      className="block rounded-[var(--radius-lg)] border border-gray-100 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5"
+      style={{ boxShadow: 'var(--shadow-card)' }}
+    >
+      {cardInner}
     </Link>
   )
 }
