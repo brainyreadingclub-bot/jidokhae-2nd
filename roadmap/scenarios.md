@@ -38,7 +38,7 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 ### Scenario 1-1-03: 환경 변수 구조 설정 확인
 
-- **Given:** `.env.local`에 Supabase URL/Keys, 포트원 API Key 등 환경 변수가 설정되어 있다
+- **Given:** `.env.local`에 Supabase URL/Keys, 토스페이먼츠 API Key 등 환경 변수가 설정되어 있다
 - **When:** `.env.example` 파일을 확인한다
 - **Then:** 필요한 모든 환경 변수 키가 `.env.example`에 목록화되어 있다 (값은 비어 있음)
 - **선행 Scenario:** 1-1-01
@@ -555,32 +555,32 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 # M4. 결제 + 신청
 
-## WP4-1. 포트원 결제 파이프라인
+## WP4-1. 토스페이먼츠 결제 파이프라인
 
-### Scenario 4-1-01: 포트원 SDK로 결제창 호출 성공
+### Scenario 4-1-01: 토스페이먼츠 SDK로 결제창 호출 성공
 
-- **Given:** 포트원 V2 SDK가 프론트엔드에 연동되어 있다
+- **Given:** 토스페이먼츠 SDK(`@tosspayments/payment-sdk`)가 프론트엔드에 연동되어 있다
 - **When:** 결제 요청 함수를 호출한다 (모임 정보 + 금액 전달)
-- **Then:** PG사 결제창이 정상 표시된다 (팝업 또는 리다이렉트)
+- **Then:** 토스페이먼츠 결제 페이지로 redirect된다. 결제 완료 후 successUrl로 redirect back된다
 - **선행 Scenario:** 없음
 
 ### Scenario 4-1-02: 결제 검증 + 원자적 등록 성공
 
 - **Given:** 사용자가 PG사 결제를 완료하여 payment_id를 받았다. 해당 모임에 정원 여유가 있다
 - **When:** 프론트엔드가 `POST /api/registrations/confirm`에 payment_id를 전송한다
-- **Then:** ① 포트원 REST API로 결제 상태 = 'paid' 확인 ② 결제 금액 = meetings.fee 일치 확인 ③ `confirm_registration` DB Function 호출 → 'success' 반환 ④ `registrations`에 `status='confirmed'` 레코드 INSERT. 성공 응답 반환
+- **Then:** ① 토스페이먼츠 REST API POST /v1/payments/confirm 호출하여 결제 승인 ② 결제 금액 = meetings.fee 일치 확인 ③ `confirm_registration` DB Function 호출 → 'success' 반환 ④ `registrations`에 `status='confirmed'` 레코드 INSERT. 성공 응답 반환
 - **선행 Scenario:** 4-1-01
 
 ### Scenario 4-1-03: 결제 금액과 모임비 불일치 시 거부 + 환불
 
-- **Given:** 포트원에서 검증된 결제 금액이 5,000원이지만, 해당 모임의 fee는 10,000원이다
-- **When:** API Route가 결제를 검증한다
-- **Then:** 금액 불일치로 등록이 거부된다. 포트원 환불 API로 5,000원 전액 환불이 호출된다. 에러 응답 반환
+- **Given:** 토스페이먼츠에서 승인된 결제 금액이 5,000원이지만, 해당 모임의 fee는 10,000원이다
+- **When:** API Route가 결제를 승인한다
+- **Then:** 금액 불일치로 등록이 거부된다. 토스페이먼츠 환불 API로 5,000원 전액 환불이 호출된다. 에러 응답 반환
 - **선행 Scenario:** 4-1-01
 
 ### Scenario 4-1-04: 비활성 모임에 대한 결제 검증 거부
 
-- **Given:** `status = 'deleting'` 또는 `'deleted'`인 모임에 대한 결제가 포트원에서 완료됐다
+- **Given:** `status = 'deleting'` 또는 `'deleted'`인 모임에 대한 결제가 토스페이먼츠에서 완료됐다
 - **When:** API Route가 결제를 검증한다
 - **Then:** 모임 상태가 active가 아니므로 등록이 거부된다. 전액 환불 처리
 - **선행 Scenario:** 4-1-01
@@ -589,7 +589,7 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 - **Given:** 정원 14명인 모임에 이미 confirmed 14건이 있다. 새 사용자가 결제를 완료했다
 - **When:** API Route가 DB Function `confirm_registration`을 호출한다
-- **Then:** DB Function이 'full' 반환 → 포트원 환불 API로 전액 환불 호출 → 프론트에 "마감" 응답 반환. registrations에 레코드가 INSERT되지 않는다
+- **Then:** DB Function이 'full' 반환 → 토스페이먼츠 환불 API로 전액 환불 호출 → 프론트에 "마감" 응답 반환. registrations에 레코드가 INSERT되지 않는다
 - **선행 Scenario:** 4-1-02
 
 ### Scenario 4-1-06: 마지막 1자리에 2명 동시 결제 시 직렬화
@@ -601,9 +601,9 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 ### Scenario 4-1-07: 정원 초과 환불 API 호출 실패
 
-- **Given:** DB Function이 'full'을 반환했으나, 포트원 환불 API 호출이 네트워크 오류로 실패했다
+- **Given:** DB Function이 'full'을 반환했으나, 토스페이먼츠 환불 API 호출이 네트워크 오류로 실패했다
 - **When:** API Route가 환불 처리를 시도한다
-- **Then:** 에러가 로그에 기록된다. 프론트에 "일시적 오류가 발생했습니다. 잠시 후 다시 시도해주세요." 메시지 반환. 결제 건은 포트원 콘솔에서 운영자가 수동 확인
+- **Then:** 에러가 로그에 기록된다. 프론트에 "일시적 오류가 발생했습니다. 잠시 후 다시 시도해주세요." 메시지 반환. 결제 건은 토스페이먼츠 관리자 콘솔에서 운영자가 수동 확인
 - **선행 Scenario:** 4-1-05
 
 ### Scenario 4-1-08: 이미 confirmed 신청이 있는 사용자의 중복 결제 방어
@@ -617,13 +617,13 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 - **Given:** 사용자가 PG사 결제를 완료하여 payment_id를 받았다
 - **When:** 프론트엔드 콜백 또는 redirect 복귀가 실패하여 API Route가 호출되지 않는다
-- **Then:** 포트원 Webhook이 서버에 직접 결제 완료를 통지하여 등록 처리를 시도한다. Webhook도 실패 시 포트원 콘솔에서 운영자 수동 확인
+- **Then:** 토스페이먼츠 Webhook이 서버에 직접 결제 완료를 통지하여 등록 처리를 시도한다. Webhook도 실패 시 토스페이먼츠 관리자 콘솔에서 운영자 수동 확인
 - **선행 Scenario:** 4-1-01
 
 ### Scenario 4-1-10: Webhook으로 미등록 결제 자동 복구
 
 - **Given:** 사용자가 PG사 결제를 완료했으나 프론트 콜백이 실패하여 registrations에 레코드가 없다
-- **When:** 포트원 Webhook이 `/api/webhooks/portone`에 결제 완료를 통지한다
+- **When:** 토스페이먼츠 Webhook이 `/api/webhooks/tosspayments`에 결제 완료를 통지한다
 - **Then:** Webhook 서명을 검증한 후, payment_id로 미등록을 확인하고, 결제 검증 → confirm_registration 호출 → 등록 완료. 이미 등록된 경우 무시
 - **선행 Scenario:** 4-1-02
 
@@ -662,7 +662,7 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 ### Scenario 4-2-04: 결제 실패 (사용자 취소) 시 상세 페이지 복귀
 
 - **Given:** 사용자가 PG사 결제창에서 "취소" 또는 뒤로가기를 눌렀다
-- **When:** 포트원 SDK가 결제 실패 콜백을 반환한다
+- **When:** 토스페이먼츠가 failUrl로 redirect한다
 - **Then:** 모임 상세 페이지로 복귀한다. "결제가 완료되지 않았습니다. 다시 시도해주세요." 토스트 메시지가 표시된다. registrations에 레코드가 생성되지 않는다
 - **선행 Scenario:** 4-1-01
 
@@ -680,11 +680,11 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 - **Then:** 해당 모임 카드에 "마감" 뱃지가 표시된다. 상세 진입 시 "마감" (비활성) 표시
 - **선행 Scenario:** 4-1-02
 
-### Scenario 4-2-07: 모바일 브라우저에서 결제창 정상 표시 (팝업 차단 없음)
+### Scenario 4-2-07: 모바일 브라우저에서 결제창 정상 표시 (redirect)
 
 - **Given:** 모바일 브라우저(iOS Safari, Android Chrome)에서 모임 상세 페이지에 있다
 - **When:** "신청하기" 버튼을 터치하여 결제창을 호출한다
-- **Then:** PG사 결제창이 팝업 차단 없이 정상 표시된다. 결제 진행 및 완료 후 앱으로 정상 복귀한다
+- **Then:** 토스페이먼츠 결제창으로 redirect되고, 결제 진행 및 완료 후 앱으로 정상 복귀한다
 - **선행 Scenario:** 4-2-01
 
 ### Scenario 4-2-08: 신청하기 버튼 연속 클릭 시 결제창 1회만 열림
@@ -698,7 +698,7 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 - **Given:** 카카오톡 인앱 브라우저에서 redirect 방식으로 결제가 완료되어 returnUrl로 돌아왔다
 - **When:** 복귀 페이지가 URL 파라미터에서 payment_id를 읽어 결제 확인 API를 호출한다
-- **Then:** 결제 검증 → 등록 완료 → 신청 확정 화면이 표시된다. popup 콜백과 동일한 결과
+- **Then:** 결제 승인 → 등록 완료 → 신청 확정 화면이 표시된다
 - **선행 Scenario:** 4-2-01
 
 ---
@@ -778,21 +778,21 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 - **Given:** 모임 날짜 = 3/8, 오늘(KST) = 3/5 (days_remaining = 3). paid_amount = 10,000원
 - **When:** 취소를 확정한다
-- **Then:** 포트원 환불 API에 10,000원(100%) 환불 요청. `registrations` 업데이트: `status='cancelled'`, `cancel_type='user_cancelled'`, `refunded_amount=10000`, `cancelled_at=현재시각`
+- **Then:** 토스페이먼츠 환불 API에 10,000원(100%) 환불 요청. `registrations` 업데이트: `status='cancelled'`, `cancel_type='user_cancelled'`, `refunded_amount=10000`, `cancelled_at=현재시각`
 - **선행 Scenario:** 5-1-01
 
 ### Scenario 5-1-03: 2일 전 취소 → 50% 환불
 
 - **Given:** 모임 날짜 = 3/8, 오늘(KST) = 3/6 (days_remaining = 2). paid_amount = 10,000원
 - **When:** 취소를 확정한다
-- **Then:** 포트원 환불 API에 5,000원(50%) 부분 환불 요청. `refunded_amount=5000`
+- **Then:** 토스페이먼츠 환불 API에 5,000원(50%) 부분 환불 요청. `refunded_amount=5000`
 - **선행 Scenario:** 5-1-01
 
 ### Scenario 5-1-04: 전날 취소 → 0원 환불 + 취소 완료
 
 - **Given:** 모임 날짜 = 3/8, 오늘(KST) = 3/7 (days_remaining = 1). paid_amount = 10,000원
 - **When:** 환불 규정에 "환불 금액: 0원 (환불 불가 기간)" 표시 → 사용자가 취소를 확정한다
-- **Then:** 포트원 환불 API 호출 **생략** (0원). `registrations` 업데이트: `status='cancelled'`, `refunded_amount=0`. 취소 완료 화면 표시
+- **Then:** 토스페이먼츠 환불 API 호출 **생략** (0원). `registrations` 업데이트: `status='cancelled'`, `refunded_amount=0`. 취소 완료 화면 표시
 - **선행 Scenario:** 5-1-01
 
 ### Scenario 5-1-05: 당일 취소 → 0원 환불 + 취소 완료
@@ -867,8 +867,8 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 ### Scenario 5-1-15: 취소 확정 후 환불 API 실패 → 신청 상태 유지
 
-- **Given:** 사용자가 "취소 확정"을 눌러 API Route가 포트원 환불 API를 호출했다
-- **When:** 포트원 환불 API가 네트워크 오류로 실패한다
+- **Given:** 사용자가 "취소 확정"을 눌러 API Route가 토스페이먼츠 환불 API를 호출했다
+- **When:** 토스페이먼츠 환불 API가 네트워크 오류로 실패한다
 - **Then:** registrations 상태는 confirmed 유지 (cancelled로 변경하지 않음). 프론트에 "환불 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." 에러 메시지 표시
 - **선행 Scenario:** 5-1-07
 
@@ -892,7 +892,7 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 ### Scenario 5-2-03: 부분 환불 실패 → deleting 유지
 
-- **Given:** confirmed 5건 모임. 환불 처리 중 2건이 포트원 API 오류로 실패했다
+- **Given:** confirmed 5건 모임. 환불 처리 중 2건이 토스페이먼츠 API 오류로 실패했다
 - **When:** `Promise.allSettled` 결과가 반환된다
 - **Then:** 성공 3건: `cancelled + meeting_deleted`. 실패 2건: `confirmed` 유지. `meetings.status`는 `'deleting'` 유지 (deleted로 변경하지 않음)
 - **선행 Scenario:** 5-2-02
@@ -1012,7 +1012,7 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 - **Given:** 카카오톡 앱에서 서비스 링크를 터치한 상태
 - **When:** 카카오톡 인앱 브라우저에서 로그인 → 목록 → 결제까지 전체 흐름 수행
-- **Then:** OAuth 리다이렉트, 결제 팝업, 모든 UI가 정상 동작한다
+- **Then:** OAuth 리다이렉트, 결제 redirect, 모든 UI가 정상 동작한다
 - **선행 Scenario:** 6-1-01
 
 ### Scenario 6-1-11: 모바일 호환성 — iOS Safari
@@ -1061,17 +1061,17 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 - **Then:** 모든 항목이 개발 환경과 동일하게 설정되어 있다
 - **선행 Scenario:** 없음
 
-### Scenario 6-2-02: 포트원 실결제 모드 전환
+### Scenario 6-2-02: 토스페이먼츠 실결제 모드 전환
 
-- **Given:** 포트원 테스트 모드에서 개발이 완료된 상태
-- **When:** 포트원 대시보드에서 라이브 모드로 전환하고, API 키를 프로덕션 값으로 교체한다
-- **Then:** PG사(토스페이먼츠/KCP) 실 결제가 가능한 상태가 된다
+- **Given:** 토스페이먼츠 테스트 모드에서 개발이 완료된 상태
+- **When:** 토스페이먼츠 개발자센터에서 라이브 모드로 전환하고, API 키를 프로덕션 값으로 교체한다
+- **Then:** 토스페이먼츠 실 결제가 가능한 상태가 된다
 - **선행 Scenario:** 없음
 
 ### Scenario 6-2-03: Vercel 프로덕션 도메인 + 환경 변수 설정
 
 - **Given:** Vercel 프로젝트
-- **When:** 프로덕션 도메인을 설정하고, 모든 환경 변수(SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, PORTONE_API_KEY 등)를 프로덕션 값으로 세팅한다
+- **When:** 프로덕션 도메인을 설정하고, 모든 환경 변수(SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, TOSSPAYMENTS_SECRET_KEY 등)를 프로덕션 값으로 세팅한다
 - **Then:** 프로덕션 도메인으로 접속 시 앱이 정상 동작한다
 - **선행 Scenario:** 없음
 
@@ -1091,7 +1091,7 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 
 ### Scenario 6-2-06: 프로덕션 실결제 E2E 테스트
 
-- **Given:** 프로덕션 환경에서 포트원 라이브 모드 활성화
+- **Given:** 프로덕션 환경에서 토스페이먼츠 라이브 모드 활성화
 - **When:** 실제 결제(소액) → 신청 확정 → 취소 → 환불 전체 흐름을 1회 수행한다
 - **Then:** 실제 PG사 결제 + 환불이 정상 처리된다. registrations에 올바르게 기록된다
 - **선행 Scenario:** 6-2-05
@@ -1145,3 +1145,5 @@ Scenario [WP번호]-[순번]: [행동 기반 명칭]
 | v1.3 | 2026-03-05 | MVP 검토 v1.3 반영: 6개 Scenario 추가 (1-2-15, 4-1-10, 4-1-11, 4-2-08, 4-2-09, 5-1-15), 4-1-09 수정. 총 146 Scenarios |
 | v1.4 | 2026-03-07 | M1 검증 완료: WP1-1(6), WP1-2(15), WP1-3(4) 총 25 Scenarios 검증 통과 |
 | v1.5 | 2026-03-10 | M2 검증 완료: WP2-1(7), WP2-2(9) 총 16 Scenarios 수동 검증 통과 |
+| v1.6 | 2026-03-10 | M3 검증 완료: WP3-1(10), WP3-2(10), WP3-3(10) 총 30 Scenarios 검증 통과 |
+| v1.7 | 2026-03-12 | 결제 연동 변경: 포트원 경유 → 토스페이먼츠 직접 연동. 전체 포트원 참조 → 토스페이먼츠로 교체, redirect-only 플로우 반영 |

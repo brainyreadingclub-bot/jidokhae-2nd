@@ -38,7 +38,7 @@ M1 → M2 → M3 → M4 → M5 → M6
   - DB Function: `confirm_registration` (정원 체크 + 원자적 INSERT)
   - DB Function: 모임별 confirmed 수 조회 (SECURITY DEFINER)
   - DB Trigger: `auth.users` INSERT 시 `profiles` 자동 생성
-- [x] 환경 변수 설정 (Supabase URL/Keys, 포트원 API Key 등)
+- [x] 환경 변수 설정 (Supabase URL/Keys, TossPayments Key 등)
 - [x] Supabase Client 3종 유틸리티 (Server용/Client용 anon key, Admin용 service_role key)
 - [x] 모바일 우선 반응형 레이아웃 기본 구조 (하단 탭: 모임 일정 / 내 신청)
 - [x] 글로벌 스타일 시스템 (디자인 토큰, 타이포그래피)
@@ -119,12 +119,12 @@ M1 → M2 → M3 → M4 → M5 → M6
 
 ### 의존성
 - **M3 필요**: 모임 상세 페이지, "신청하기" 버튼 UI
-- **외부 의존성**: 포트원 V2 API 연동, PG사(토스페이먼츠/KCP) 심사 승인
+- **외부 의존성**: 토스페이먼츠 직접 연동 (REST API + SDK)
 
 ### 산출물
-- [ ] 포트원 SDK 연동 (프론트엔드 — 결제창 호출)
-- [ ] 결제 검증 API Route (`/api/registrations/confirm`)
-  - 포트원 REST API로 결제 검증
+- [ ] 토스페이먼츠 SDK 연동 (프론트엔드 — 결제창 호출, redirect 방식)
+- [ ] 결제 승인 API Route (`/api/registrations/confirm`)
+  - 토스페이먼츠 REST API로 결제 승인 (POST /v1/payments/confirm)
   - DB Function(`confirm_registration`) 호출 → 정원 체크 + 원자적 INSERT
   - 정원 초과 시 자동 환불 + "마감" 응답
 - [ ] 신청 확정 화면 ("신청이 완료되었습니다" + 모임 정보 요약)
@@ -150,7 +150,7 @@ M1 → M2 → M3 → M4 → M5 → M6
 회원 셀프 취소/자동 환불과 운영자 모임 삭제 시 일괄 환불을 구현하여, MVP 핵심 흐름(일정 → 신청/결제 → 취소/환불)을 완성한다.
 
 ### 의존성
-- **M4 필요**: 결제 완료된 신청 레코드(registrations), 포트원 연동
+- **M4 필요**: 결제 완료된 신청 레코드(registrations), 토스페이먼츠 연동
 
 ### 산출물
 
@@ -160,7 +160,7 @@ M1 → M2 → M3 → M4 → M5 → M6
 - [ ] 취소 확정 확인 다이얼로그 ("취소를 확정하시겠습니까?")
 - [ ] 취소/환불 API Route (`/api/registrations/cancel`)
   - KST 기준 환불 금액 자동 계산
-  - 포트원 환불 API 호출 (0원이면 생략)
+  - 토스페이먼츠 환불 API 호출 (0원이면 생략)
   - `registrations` 상태 업데이트 (cancelled, user_cancelled)
 - [ ] 취소 완료 화면 (환불 예정 금액 + 소요 시간 안내)
 - [ ] "단무지에게 1대1톡" 문의 링크
@@ -198,7 +198,7 @@ M1 → M2 → M3 → M4 → M5 → M6
   - 엣지 케이스: 동시 신청(정원 초과), 결제 실패, 환불 실패 재시도, 재신청
 - [ ] 프로덕션 환경 설정
   - Supabase 프로덕션 프로젝트 (또는 동일 프로젝트 확인)
-  - 포트원 실 결제 모드 전환 + PG사 연동 확인
+  - 토스페이먼츠 실결제 모드 전환 (테스트 → 라이브) 확인
   - Vercel 프로덕션 도메인 설정
   - 환경 변수 프로덕션 값 세팅
 - [ ] 운영자(영탁) 계정 admin 설정
@@ -226,3 +226,4 @@ M1 → M2 → M3 → M4 → M5 → M6
 | v1.1 | 2026-03-04 | WP 정합성 검토 반영: M3-b 병렬 다이어그램 → 직렬로 수정, Supabase Client 3종 명시, 모임 삭제 API 경로 `/api/meetings/[id]/delete`로 통일 |
 | v1.2 | 2026-03-07 | M1 완료: 산출물 전체 체크 (WP1-1, WP1-2, WP1-3 구현 + 검증 완료) |
 | v1.3 | 2026-03-10 | M2 완료: 산출물 전체 체크 (WP2-1, WP2-2 구현 + 수동 검증 완료) |
+| v1.4 | 2026-03-12 | 결제 연동 변경: 포트원 경유 → 토스페이먼츠 직접 연동으로 전환. M4/M5/M6 산출물 업데이트 |

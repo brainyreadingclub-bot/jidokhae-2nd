@@ -67,7 +67,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → WP4-1 → WP4-2 → WP4-3 → WP5-1 → WP5-2 → WP6-1 → WP6-2
 ```
 
-**Current status:** M1, M2, M3 are **completed**. Next WP is **WP4-1** (PortOne 결제 파이프라인). M4-M6 are **not started**.
+**Current status:** M1, M2, M3 are **completed**. Next WP is **WP4-1** (TossPayments 결제 파이프라인). M4-M6 are **not started**.
 
 ---
 
@@ -88,7 +88,7 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 | M1 프로젝트 기반 구축 | 3 | 25 | Next.js + Supabase DB + Layout |
 | M2 인증 (카카오 로그인) | 2 | 16 | Kakao OAuth + Session + Access control |
 | M3 모임 일정 조회 + 운영자 CRUD | 3 | 30 | Meeting list/detail + Admin CRUD |
-| M4 결제 + 신청 | 3 | 29 | PortOne payment pipeline + Registration UX |
+| M4 결제 + 신청 | 3 | 29 | TossPayments payment pipeline + Registration UX |
 | M5 취소 + 환불 | 2 | 24 | Self-cancel + Batch refund on deletion |
 | M6 통합 검증 + 출시 | 2 | 22 | E2E verification + Production deploy |
 
@@ -100,7 +100,7 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 |----------|--------|
 | Stack | Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Supabase + Vercel |
 | Auth | Supabase Auth ↔ Kakao OAuth |
-| Payment | PortOne V2 API (NOT V1). PG: TossPayments or NHN KCP |
+| Payment | TossPayments 직접 연동 (REST API + @tosspayments/payment-sdk) |
 | DB access | Frontend: Supabase Client (anon key + RLS). Server: API Routes with service_role key |
 | Supabase Clients | 3 variants: Server (anon key), Browser (anon key), Admin (service_role key) |
 | Capacity check | DB Function (RPC) with `FOR UPDATE` row lock — atomic check + INSERT |
@@ -110,8 +110,8 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 | Registration uniqueness | `user_id + meeting_id` is NOT UNIQUE — re-registration creates new record |
 | Meeting fee | Per-meeting variable (not hardcoded 10,000원) |
 | Batch refund timeout | `Promise.allSettled` required (Vercel 10-second limit) |
-| Payment mode | popup + redirect dual path (Kakao in-app browser blocks popups → auto-fallback to redirect) |
-| Webhook backup | PortOne Webhook (`/api/webhooks/portone`) as backup when frontend callback/redirect fails. Signature verification required |
+| Payment mode | redirect only (TossPayments SDK는 항상 redirect) |
+| Webhook backup | TossPayments Webhook (`/api/webhooks/tosspayments`) as backup when frontend redirect fails. Signature verification required |
 | payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
 | Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
 
@@ -194,4 +194,4 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 
 ### Environment Variables
 
-See `jidokhae-web/.env.example` for required variables (Supabase URL/keys, PortOne keys).
+See `jidokhae-web/.env.example` for required variables (Supabase URL/keys, TossPayments keys).

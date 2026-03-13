@@ -37,7 +37,7 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 | 1 | Next.js 프로젝트 생성 | App Router + TypeScript. `create-next-app` 사용 |
 | 2 | GitHub 저장소 연결 | 코드 push 가능한 상태 |
 | 3 | Vercel 연동 + 자동 배포 | GitHub push → Vercel 자동 빌드/배포 확인 |
-| 4 | 환경 변수 구조 설정 | `.env.local` 템플릿 (Supabase URL/Keys, 포트원 API Key 등). `.env.example` 파일 제공 |
+| 4 | 환경 변수 구조 설정 | `.env.local` 템플릿 (Supabase URL/Keys, TossPayments Key 등). `.env.example` 파일 제공 |
 | 5 | Supabase Client 유틸리티 | Server용 `createClient()` (anon key), Admin용 `createServiceClient()` (service_role key), Client용 `createClient()` — 3종 구현 |
 
 **검증 기준:**
@@ -271,50 +271,48 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 
 ## M4. 결제 + 신청
 
-### WP4-1. 포트원 결제 파이프라인
+### WP4-1. 토스페이먼츠 결제 파이프라인
 
-**목표:** 결제 → 서버 검증 → 원자적 등록이 하나의 안전한 파이프라인으로 동작한다.
+**목표:** 결제 → 서버 승인 → 원자적 등록이 하나의 안전한 파이프라인으로 동작한다.
 
 **선행 조건:**
 - WP3-3 완료
-- **(외부) 포트원 V2 계정 생성 + PG사(토스페이먼츠/KCP) 심사 승인** — 리드타임 있으므로 M2 시작과 동시에 신청 권장
+- **(외부) 토스페이먼츠 계정 생성 + 심사 승인** — 리드타임 있으므로 M2 시작과 동시에 신청 권장
 - M1의 `confirm_registration` DB Function 정상 동작 확인 (동시 호출 테스트 포함)
 
 **산출물:**
 
 | # | 작업 | 상세 |
 |---|------|------|
-| 1 | 포트원 V2 SDK 연동 | 프론트엔드에 PortOne SDK 설치. **반드시 V2 API. V1 코드 사용 금지** |
-| 2 | 결제 검증 API Route | `POST /api/registrations/confirm` — service_role key 사용. **payment_id로 기등록 여부 선행 체크. 이미 confirmed 존재 시 성공 반환 (멱등성, 환불 안 함)** |
-| 3 | 포트원 REST API 클라이언트 | 결제 검증 + 환불 기능을 **재사용 가능한 모듈**로 구현. M5에서 재사용 |
-| 4 | 결제 검증 로직 | ① 포트원 API로 결제 상태 확인 (paid 여부) ② 결제 금액 = meetings.fee 일치 확인 ③ meeting.status = 'active' 확인 |
+| 1 | 토스페이먼츠 SDK 연동 | 프론트엔드에 @tosspayments/payment-sdk 설치. **항상 redirect 방식** |
+| 2 | 결제 승인 API Route | `POST /api/registrations/confirm` — service_role key 사용. **paymentKey로 기등록 여부 선행 체크. 이미 confirmed 존재 시 성공 반환 (멱등성, 환불 안 함)**. 서버에서 POST /v1/payments/confirm 호출하여 결제 승인 |
+| 3 | 토스페이먼츠 REST API 클라이언트 | 결제 승인 + 환불 기능을 **재사용 가능한 모듈**로 구현. M5에서 재사용 |
+| 4 | 결제 승인 로직 | ① 토스페이먼츠 API POST /v1/payments/confirm 호출하여 결제 승인 ② 결제 금액 = meetings.fee 일치 확인 ③ meeting.status = 'active' 확인 |
 | 5 | 원자적 등록 | `confirm_registration` DB Function 호출 → 'success' 또는 'full' 반환 |
-| 6 | 정원 초과 자동 환불 | DB Function이 'full' 반환 시 → 포트원 환불 API 호출 → "마감" 응답 |
-| 7 | Webhook API Route | `/api/webhooks/portone` — 포트원 결제 완료 Webhook 수신. 서명(signature) 검증 → payment_id로 기등록 확인 → 미등록 시 결제 검증 + 등록 처리. 기존 결제 검증 모듈(산출물 3) 재사용 |
+| 6 | 정원 초과 자동 환불 | DB Function이 'full' 반환 시 → 토스페이먼츠 환불 API 호출 → "마감" 응답 |
+| 7 | Webhook API Route | `/api/webhooks/tosspayments` — 토스페이먼츠 결제 완료 Webhook 수신. 서명(signature) 검증 → paymentKey로 기등록 확인 → 미등록 시 결제 승인 + 등록 처리. 기존 결제 승인 모듈(산출물 3) 재사용 |
 
 **4단계 결제 흐름 (기술 스택 문서 §4-2 기준, 엄격히 준수):**
 
 ```
-① 프론트: 포트원 SDK → PG사 결제창 (popup 또는 redirect)
-② 결제 완료:
-   [popup] 포트원 → 프론트 콜백 (payment_id)
-   [redirect] 포트원 → returnUrl 복귀 (payment_id)
-③ API Route: payment_id 멱등성 체크 → 포트원 검증 → DB Function
+① 프론트: 토스페이먼츠 SDK → 토스페이먼츠 결제창 (항상 redirect)
+② 결제 완료: 토스페이먼츠 → successUrl로 redirect (paymentKey, orderId, amount 파라미터)
+③ API Route: paymentKey 멱등성 체크 → 토스페이먼츠 confirm API 호출 → DB Function
 ④ 응답: success / full(환불) / already_registered(환불)
-[Webhook 백업] 프론트 경로 실패 시 포트원이 /api/webhooks/portone에 직접 통지 → 동일 검증 + 등록
+[Webhook 백업] 프론트 redirect 실패 시 토스페이먼츠가 /api/webhooks/tosspayments에 직접 통지 → 동일 승인 + 등록
 ```
 
-> **핵심 규칙: 프론트의 "결제됐다"는 말을 그대로 믿지 않는다. 서버가 포트원에 직접 검증한다.**
+> **핵심 규칙: 프론트의 "결제됐다"는 말을 그대로 믿지 않는다. 서버가 토스페이먼츠에 직접 confirm을 호출한다.**
 
 **엣지 케이스:**
-- 결제 성공 후 프론트 콜백/redirect 복귀 실패 → Webhook 백업 경로에서 자동 복구 시도. Webhook도 실패 시 포트원 콘솔에서 운영자 수동 확인
+- 결제 성공 후 프론트 redirect 복귀 실패 → Webhook 백업 경로에서 자동 복구 시도. Webhook도 실패 시 토스페이먼츠 관리자 콘솔에서 운영자 수동 확인
 - 두 명이 마지막 1자리 동시 신청 → FOR UPDATE 잠금으로 직렬화. 한 명만 성공, 나머지는 자동 환불
 - 결제 금액 위변조 시도 (프론트 조작) → 서버에서 meetings.fee와 대조하여 불일치 시 거부 + 환불
-- 정원 초과 환불 API 호출 실패 → 에러 로깅 + "일시적 오류" 메시지. 포트원 콘솔에서 수동 처리
+- 정원 초과 환불 API 호출 실패 → 에러 로깅 + "일시적 오류" 메시지. 토스페이먼츠 관리자 콘솔에서 수동 처리
 - 이미 confirmed 신청이 있는 사용자의 중복 결제 시도 → DB Function이 기존 confirmed 존재를 감지하고 중복 등록 거부 + 환불
 
 **검증 기준:**
-- [ ] 테스트 결제 → 포트원 검증 → registrations INSERT 확인 (status: confirmed)
+- [ ] 테스트 결제 → 토스페이먼츠 승인 → registrations INSERT 확인 (status: confirmed)
 - [ ] 결제 금액 ≠ 모임비 → 거부 + 환불 확인
 - [ ] 정원 초과 시 자동 환불 + "마감" 응답 확인
 - [ ] DB Function 동시 호출 시 정원 이상 INSERT 불가 확인
@@ -331,12 +329,12 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 
 | # | 작업 | 상세 |
 |---|------|------|
-| 1 | "신청하기" 버튼 연결 | WP3-2의 placeholder를 실제 결제 플로우로 교체. 클릭 → 포트원 결제창 |
+| 1 | "신청하기" 버튼 연결 | WP3-2의 placeholder를 실제 결제 플로우로 교체. 클릭 → 토스페이먼츠 결제창 (redirect) |
 | 2 | 신청 확정 화면 | "신청이 완료되었습니다" + 모임 정보 요약 (날짜, 시간, 장소, 결제 금액) |
 | 3 | 결제 실패 처리 | PG 취소/한도 초과/오류 → 모임 상세로 복귀 + "결제가 완료되지 않았습니다. 다시 시도해주세요." 토스트 |
 | 4 | 목록 "신청완료" 뱃지 실데이터 | WP3-2에서 구현한 뱃지가 실제 registrations 데이터와 연동 확인 |
 | 5 | 마감 상태 실시간 반영 | 결제 완료로 정원이 찬 경우, 다른 사용자에게 "마감" 뱃지 표시 |
-| 6 | redirect 복귀 페이지 | 결제 완료 후 returnUrl로 돌아온 경우의 처리 페이지. URL 파라미터에서 payment_id 수신 → 결제 확인 API 호출 → 결과에 따라 확정 화면 또는 에러 표시. popup 콜백과 동일한 UX 흐름 |
+| 6 | redirect 복귀 페이지 | 결제 완료 후 returnUrl로 돌아온 경우의 처리 페이지. URL 파라미터에서 paymentKey/orderId/amount 수신 → 결제 승인 API 호출 → 결과에 따라 확정 화면 또는 에러 표시 |
 | 7 | 신청 버튼 비활성화 | "신청하기" 클릭 시 즉시 비활성화 + 로딩 표시. 결제 완료/실패까지 유지 |
 
 **3클릭 규칙 (PRD 기준):**
@@ -350,7 +348,7 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 - [ ] 목록 → 상세 → 신청하기: 결제 화면 진입까지 정확히 3클릭
 - [ ] 결제 완료 → 확정 화면 표시 → 목록 복귀 시 "신청완료" 뱃지
 - [ ] 결제 실패 → 상세 페이지 + 에러 토스트 → 바로 재시도 가능
-- [ ] 모바일에서 결제창이 정상 표시됨 (팝업 차단 이슈 없음)
+- [ ] 모바일에서 결제창이 정상 표시됨 (redirect 방식)
 
 ---
 
@@ -396,7 +394,7 @@ WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → 
 | 4 | 취소 확정 다이얼로그 | "취소를 확정하시겠습니까?" + 환불 금액 재확인 |
 | 5 | 취소/환불 API Route | `POST /api/registrations/cancel` — service_role key 사용 |
 | 6 | KST 환불 금액 계산 | WP3-1의 KST 유틸 사용. 기술 스택 §4-2 의사코드 그대로 구현 |
-| 7 | 포트원 환불 호출 | WP4-1의 포트원 클라이언트 재사용. 0원이면 API 호출 생략 |
+| 7 | 토스페이먼츠 환불 호출 | WP4-1의 토스페이먼츠 클라이언트 재사용. 0원이면 API 호출 생략 |
 | 8 | DB 상태 업데이트 | `status → cancelled`, `cancel_type → user_cancelled`, `refunded_amount`, `cancelled_at` |
 | 9 | 취소 완료 화면 | 환불 예정 금액 + 환불 소요 시간 안내 |
 | 10 | 재신청 가능 확인 | 취소 후 상세 페이지에서 자리 남으면 "신청하기" 다시 표시. 새 registrations 레코드 생성 |
@@ -420,9 +418,9 @@ refund_amount = paid_amount × refund_rate
 **엣지 케이스:**
 - 자정(KST) 경계: 3/2 23:59 vs 3/3 00:00 → refund rate 100% vs 50%
 - 0원 환불 확정: "환불 금액: 0원 (환불 불가 기간)" 명확히 표시 후 사용자 동의 받고 취소
-- 부분 환불: 포트원 V2 API의 partial refund 파라미터 확인 필수
+- 부분 환불: 토스페이먼츠 REST API의 partial refund 파라미터 확인 필수
 - 취소 후 같은 모임 재신청: 새 registrations 레코드 생성 (이전 cancelled 레코드 유지)
-- 포트원 환불 API 호출 실패 시 → registrations 상태 변경 없음 (confirmed 유지) + "환불 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." 에러 메시지 + 재시도 유도
+- 토스페이먼츠 환불 API 호출 실패 시 → registrations 상태 변경 없음 (confirmed 유지) + "환불 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요." 에러 메시지 + 재시도 유도
 - 취소 API Route에서 status='confirmed' 재확인 → 이미 cancelled면 환불 없이 즉시 반환 (멱등성)
 
 **검증 기준:**
@@ -459,7 +457,7 @@ refund_amount = paid_amount × refund_rate
 **10초 타임아웃 대응 (필수):**
 
 ```
-정원 14명 × 포트원 API 1~3초/건 = 순차 14~42초 → 타임아웃
+정원 14명 × 토스페이먼츠 API 1~3초/건 = 순차 14~42초 → 타임아웃
 Promise.allSettled 병렬 = 전원 1~3초 → 안전
 ```
 
@@ -528,7 +526,7 @@ Promise.allSettled 병렬 = 전원 1~3초 → 안전
 | # | 작업 | 상세 |
 |---|------|------|
 | 1 | Supabase 프로덕션 확인 | RLS, DB Functions, Triggers가 프로덕션에 모두 반영되어 있는지 확인 |
-| 2 | 포트원 실결제 전환 | 테스트 모드 → 라이브 모드 전환. PG사 실 연동 확인 |
+| 2 | 토스페이먼츠 실결제 전환 | 테스트 모드 → 라이브 모드 전환. 실 결제 연동 확인 |
 | 3 | Vercel 프로덕션 배포 | 프로덕션 도메인 설정. 환경 변수 프로덕션 값 세팅 |
 | 4 | 카카오 OAuth 프로덕션 | Redirect URI에 프로덕션 도메인 추가 |
 | 5 | Admin 계정 설정 | 영탁(단무지)님 카카오 로그인 → profiles 생성 → `role = 'admin'` 수동 변경 |
@@ -559,10 +557,10 @@ Promise.allSettled 병렬 = 전원 1~3초 → 안전
 | WP3-1 | M3 | 모임 일정 목록 (회원) | 카드 UI, 마감 뱃지, KST 유틸 |
 | WP3-2 | M3 | 모임 상세 + 목록 뱃지 | 5종 버튼 분기, "신청완료" 뱃지 |
 | WP3-3 | M3 | 운영자 모임 CRUD | 생성/수정/삭제(제한적), 신청자 UI 틀 |
-| WP4-1 | M4 | 포트원 결제 파이프라인 | 결제 → 검증 → 원자적 등록, 정원 초과 환불 |
+| WP4-1 | M4 | 토스페이먼츠 결제 파이프라인 | 결제 → 승인 → 원자적 등록, 정원 초과 환불 |
 | WP4-2 | M4 | 신청 UX 완성 | 3클릭 결제, 확정 화면, 실패 처리 |
 | WP4-3 | M4 | 내 신청 내역 + 운영자 목록 | 상태 뱃지, 과거 이력, 신청자 실데이터 |
-| WP5-1 | M5 | 회원 셀프 취소 + 환불 | KST 환불 계산, 포트원 환불, 재신청 |
+| WP5-1 | M5 | 회원 셀프 취소 + 환불 | KST 환불 계산, 토스페이먼츠 환불, 재신청 |
 | WP5-2 | M5 | 운영자 삭제 + 일괄 환불 | 병렬 환불, deleting 상태 머신, 재시도 |
 | WP6-1 | M6 | E2E 검증 + 버그 수정 | 10개 시나리오, 카카오톡 인앱 테스트 |
 | WP6-2 | M6 | 프로덕션 배포 + 출시 | 실결제 전환, admin 설정, 출시 체크리스트 |
@@ -573,9 +571,9 @@ Promise.allSettled 병렬 = 전원 1~3초 → 안전
 
 | 항목 | 시작 시점 | 이유 |
 |------|----------|------|
-| 포트원 가입 + PG사 심사 | **M2 시작과 동시** | 심사 승인까지 수일~수주 소요. M4 시작 전 완료 필요 |
+| 토스페이먼츠 가입 + 심사 | **M2 시작과 동시** | 심사 승인까지 수일~수주 소요. M4 시작 전 완료 필요 |
 | 카카오 개발자 앱 등록 | **M2 시작 전** | OAuth Redirect URI 설정 필요 |
-| Vercel 도메인 설정 | **M6 이전** | 프로덕션 URL이 카카오 OAuth, 포트원 리다이렉트에 반영되어야 함 |
+| Vercel 도메인 설정 | **M6 이전** | 프로덕션 URL이 카카오 OAuth, 토스페이먼츠 리다이렉트에 반영되어야 함 |
 
 ---
 
@@ -587,3 +585,4 @@ Promise.allSettled 병렬 = 전원 1~3초 → 안전
 | v1.1 | 2026-03-03 | M1 Work Package 추가 (WP1-1, WP1-2, WP1-3). 총 15 WP |
 | v1.2 | 2026-03-04 | 정합성 검토 반영: WP3-1 검증 기준에 3초 로딩 추가, WP4-1 엣지 케이스에 중복 결제 방어 + 네트워크 오류 추가 |
 | v1.3 | 2026-03-05 | MVP 검토 반영 6건: WP1-2 confirm_registration 중복 체크 추가, WP4-1 Webhook+멱등성+결제 흐름 이중 경로, WP4-2 redirect 복귀+버튼 비활성화, WP5-1 환불 실패 분기+취소 멱등성+버튼 비활성화 |
+| v1.4 | 2026-03-12 | 결제 연동 변경: 포트원 경유 → 토스페이먼츠 직접 연동. WP4-1 전면 수정 (redirect only, server confirm), Webhook 엔드포인트 변경, 전체 포트원 참조 → 토스페이먼츠로 교체 |
