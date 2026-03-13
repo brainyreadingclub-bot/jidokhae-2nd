@@ -48,6 +48,16 @@ export default function RegistrationCard({ registration, badge }: Props) {
           <span className="font-medium text-primary-600">
             {formatFee(registration.paid_amount)}
           </span>
+          {registration.status === 'cancelled' &&
+            registration.refunded_amount != null &&
+            registration.refunded_amount > 0 && (
+              <span className="ml-2 text-gray-400">
+                · 환불{' '}
+                <span className="font-medium text-gray-600">
+                  {formatFee(registration.refunded_amount)}
+                </span>
+              </span>
+            )}
         </div>
       )}
     </Link>

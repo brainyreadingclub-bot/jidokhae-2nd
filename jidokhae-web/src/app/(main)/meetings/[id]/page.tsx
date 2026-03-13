@@ -44,7 +44,7 @@ export default async function MeetingDetailPage({ params }: Props) {
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
-      .select('id')
+      .select('id, paid_amount, payment_id')
       .eq('user_id', user.id)
       .eq('meeting_id', id)
       .eq('status', 'confirmed')
@@ -70,7 +70,8 @@ export default async function MeetingDetailPage({ params }: Props) {
     (countsResult.data as { meeting_id: string; confirmed_count: number }[] | null)
       ?.find((c) => c.meeting_id === id)?.confirmed_count ?? 0,
   )
-  const hasConfirmed = (myRegResult.data?.length ?? 0) > 0
+  const myReg = myRegResult.data?.[0] ?? null
+  const hasConfirmed = myReg !== null
   const isFull = confirmedCount >= typedMeeting.capacity
   const role = profileResult.data?.role ?? 'member'
   const isAdmin = role === 'admin'
@@ -135,7 +136,10 @@ export default async function MeetingDetailPage({ params }: Props) {
           meetingId={typedMeeting.id}
           meetingTitle={typedMeeting.title}
           meetingFee={typedMeeting.fee}
+          meetingDate={typedMeeting.date}
           userId={user.id}
+          registrationId={myReg?.id}
+          paidAmount={myReg?.paid_amount}
         />
       </div>
 
@@ -143,6 +147,7 @@ export default async function MeetingDetailPage({ params }: Props) {
       {isAdmin && (
         <AdminMeetingSection
           meetingId={typedMeeting.id}
+          meetingStatus={typedMeeting.status}
           confirmedCount={confirmedCount}
           registrations={adminRegistrations}
         />

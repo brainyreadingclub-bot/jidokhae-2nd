@@ -4,6 +4,7 @@ import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
   meetingId: string
+  meetingStatus: string
   confirmedCount: number
   registrations: RegistrationWithProfile[]
 }
@@ -17,6 +18,7 @@ function formatDate(dateStr: string): string {
 
 export default function AdminMeetingSection({
   meetingId,
+  meetingStatus,
   confirmedCount,
   registrations,
 }: Props) {
@@ -37,6 +39,7 @@ export default function AdminMeetingSection({
         <div className="flex-1">
           <DeleteMeetingButton
             meetingId={meetingId}
+            meetingStatus={meetingStatus}
             confirmedCount={confirmedCount}
           />
         </div>
