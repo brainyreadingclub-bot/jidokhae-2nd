@@ -79,7 +79,8 @@ export async function processUserCancel(
   }
 
   // 6. DB update: status, cancel_type, refunded_amount, cancelled_at
-  const { error: updateError } = await supabase
+  //    .select('id') to detect zero-row update (concurrent cancel won the race)
+  const { data: updated, error: updateError } = await supabase
     .from('registrations')
     .update({
       status: 'cancelled',
@@ -89,6 +90,7 @@ export async function processUserCancel(
     })
     .eq('id', registrationId)
     .eq('status', 'confirmed') // optimistic lock: 여전히 confirmed인 경우만
+    .select('id')
 
   if (updateError) {
     console.error(
@@ -96,6 +98,11 @@ export async function processUserCancel(
       updateError,
     )
     return { status: 'error', message: '취소 처리 중 오류가 발생했습니다' }
+  }
+
+  // Zero rows updated = concurrent cancel already completed the DB update
+  if (!updated || updated.length === 0) {
+    return { status: 'already_cancelled' }
   }
 
   return { status: 'success', refundedAmount: refundAmount, refundRate }

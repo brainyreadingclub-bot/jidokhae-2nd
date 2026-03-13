@@ -17,6 +17,8 @@ export default function DeleteMeetingButton({
   confirmedCount,
 }: Props) {
   const router = useRouter()
+  // Track if we've ever entered partial failure state (meeting is now 'deleting' in DB)
+  const [hadPartial, setHadPartial] = useState(meetingStatus === 'deleting')
   const [phase, setPhase] = useState<DeletePhase>(
     meetingStatus === 'deleting' ? 'partial' : 'idle',
   )
@@ -26,9 +28,13 @@ export default function DeleteMeetingButton({
     failedCount: number
   } | null>(null)
 
+  // After any delete attempt, meeting is at least 'deleting' in DB
+  const fallbackPhase = hadPartial ? 'partial' : 'idle'
+
   async function handleDelete() {
     setPhase('processing')
     setError(null)
+    setHadPartial(true) // meeting is now 'deleting' in DB after first attempt
 
     try {
       const res = await fetch(`/api/meetings/${meetingId}/delete`, {
@@ -47,11 +53,11 @@ export default function DeleteMeetingButton({
         setPhase('partial')
       } else {
         setError(data.message || '삭제에 실패했습니다')
-        setPhase(meetingStatus === 'deleting' ? 'partial' : 'idle')
+        setPhase(fallbackPhase)
       }
     } catch {
       setError('네트워크 오류가 발생했습니다')
-      setPhase(meetingStatus === 'deleting' ? 'partial' : 'idle')
+      setPhase(fallbackPhase)
     }
   }
 
@@ -131,9 +137,7 @@ export default function DeleteMeetingButton({
           </p>
           <div className="mt-3 flex gap-2">
             <button
-              onClick={() =>
-                setPhase(meetingStatus === 'deleting' ? 'partial' : 'idle')
-              }
+              onClick={() => setPhase(fallbackPhase)}
               className="flex-1 rounded-[var(--radius-md)] border border-gray-200 bg-white py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
             >
               취소
