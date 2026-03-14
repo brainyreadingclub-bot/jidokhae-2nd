@@ -20,8 +20,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-gray-50 antialiased">
-        <div className="mx-auto max-w-screen-sm min-h-screen bg-white">
+      <body className="min-h-screen antialiased" style={{ backgroundColor: 'var(--color-surface-100)' }}>
+        <div className="mx-auto max-w-screen-sm min-h-screen" style={{ backgroundColor: 'var(--color-surface-50)' }}>
           <main>
             {children}
           </main>

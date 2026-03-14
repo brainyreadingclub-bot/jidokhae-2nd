@@ -29,8 +29,8 @@ export default async function HomePage() {
 
   if (typedMeetings.length === 0) {
     return (
-      <div className="px-4 pt-6">
-        <h1 className="text-xl font-bold text-gray-900">모임 일정</h1>
+      <div className="px-5 pt-6">
+        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">모임 일정</h1>
         <EmptyMeetings />
       </div>
     )
@@ -73,8 +73,8 @@ export default async function HomePage() {
   )
 
   return (
-    <div className="px-4 pt-6">
-      <h1 className="text-xl font-bold text-gray-900">모임 일정</h1>
+    <div className="px-5 pt-6">
+      <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">모임 일정</h1>
       <div className="mt-4 flex flex-col gap-3">
         {typedMeetings.map((meeting) => (
           <MeetingCard

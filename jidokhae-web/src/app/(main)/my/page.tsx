@@ -28,16 +28,16 @@ export default async function MyPage() {
 
   if (typedRegs.length === 0) {
     return (
-      <div className="px-4 pt-6">
-        <h1 className="text-xl font-bold text-gray-900">내 신청</h1>
-        <p className="mt-4 text-sm text-gray-500">신청 내역이 없습니다</p>
+      <div className="px-5 pt-6">
+        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">내 신청</h1>
+        <p className="mt-4 text-sm text-primary-400">신청 내역이 없습니다</p>
       </div>
     )
   }
 
   return (
-    <div className="px-4 pt-6">
-      <h1 className="text-xl font-bold text-gray-900">내 신청</h1>
+    <div className="px-5 pt-6">
+      <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">내 신청</h1>
       <div className="mt-4 flex flex-col gap-3">
         {typedRegs.map((reg) => {
           let badge: { label: string; color: 'success' | 'gray' }

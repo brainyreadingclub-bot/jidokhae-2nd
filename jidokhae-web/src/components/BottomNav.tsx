@@ -21,10 +21,10 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200"
-      style={{ boxShadow: 'var(--shadow-tab)' }}
+      className="fixed bottom-0 left-0 right-0 z-50"
+      style={{ backgroundColor: 'var(--color-surface-50)', boxShadow: 'var(--shadow-tab)', borderTop: '1px solid var(--color-surface-300)' }}
     >
-      <div className="mx-auto flex h-16 max-w-screen-sm items-center justify-around">
+      <div className="mx-auto flex h-16 max-w-screen-sm items-center justify-around px-4">
         {tabs.map((tab) => {
           const isActive = tab.href === '/'
             ? pathname === '/'
@@ -34,14 +34,17 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-1 flex-col items-center justify-center gap-1 py-2 transition-colors ${
+              className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2 transition-all duration-200 ${
                 isActive
-                  ? 'text-primary-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                  ? 'text-primary-700'
+                  : 'text-gray-400 hover:text-primary-500'
               }`}
             >
+              {isActive && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary-500" />
+              )}
               <tab.icon active={isActive} />
-              <span className={`text-xs ${isActive ? 'font-semibold' : 'font-medium'}`}>
+              <span className={`text-[11px] tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>
                 {tab.label}
               </span>
             </Link>

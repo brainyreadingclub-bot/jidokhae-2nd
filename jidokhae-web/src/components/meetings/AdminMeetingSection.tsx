@@ -23,8 +23,11 @@ export default function AdminMeetingSection({
   registrations,
 }: Props) {
   return (
-    <div className="mt-8 border-t border-gray-100 pt-6">
-      <h2 className="text-sm font-semibold text-gray-900 mb-4">
+    <div
+      className="mt-8 pt-6"
+      style={{ borderTop: '1px solid var(--color-surface-300)' }}
+    >
+      <h2 className="text-sm font-bold text-primary-800 mb-4 tracking-tight">
         운영자 관리
       </h2>
 
@@ -32,7 +35,12 @@ export default function AdminMeetingSection({
       <div className="flex gap-2 mb-6">
         <Link
           href={`/admin/meetings/${meetingId}/edit`}
-          className="flex-1 rounded-[var(--radius-md)] border border-gray-200 bg-white py-2.5 text-center text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          className="flex-1 rounded-[var(--radius-md)] py-2.5 text-center text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+          style={{
+            backgroundColor: 'var(--color-surface-50)',
+            border: '1px solid var(--color-surface-300)',
+            color: 'var(--color-primary-600)',
+          }}
         >
           수정
         </Link>
@@ -47,20 +55,25 @@ export default function AdminMeetingSection({
 
       {/* Registrant list table */}
       <div>
-        <h3 className="text-xs font-medium text-gray-500 mb-3">
+        <h3 className="text-xs font-bold text-primary-500 mb-3 tracking-tight">
           신청자 목록 ({confirmedCount}명)
         </h3>
-        <div className="rounded-[var(--radius-md)] border border-gray-100 overflow-hidden">
+        <div
+          className="rounded-[var(--radius-md)] overflow-hidden"
+          style={{
+            border: '1px solid var(--color-surface-300)',
+          }}
+        >
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+              <tr style={{ borderBottom: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-100)' }}>
+                <th className="px-4 py-2.5 text-left text-xs font-bold text-primary-500">
                   이름
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                <th className="px-4 py-2.5 text-left text-xs font-bold text-primary-500">
                   신청일
                 </th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500">
+                <th className="px-4 py-2.5 text-right text-xs font-bold text-primary-500">
                   상태
                 </th>
               </tr>
@@ -70,7 +83,8 @@ export default function AdminMeetingSection({
                 <tr>
                   <td
                     colSpan={3}
-                    className="px-4 py-8 text-center text-sm text-gray-400"
+                    className="px-4 py-8 text-center text-sm text-primary-400"
+                    style={{ backgroundColor: 'var(--color-surface-50)' }}
                   >
                     아직 신청자가 없습니다
                   </td>
@@ -79,21 +93,28 @@ export default function AdminMeetingSection({
                 registrations.map((reg) => (
                   <tr
                     key={reg.id}
-                    className="border-b border-gray-50 last:border-b-0"
+                    style={{ borderBottom: '1px solid var(--color-surface-200)', backgroundColor: 'var(--color-surface-50)' }}
+                    className="last:border-b-0"
                   >
-                    <td className="px-4 py-3 text-sm text-gray-900">
+                    <td className="px-4 py-3 text-sm font-medium text-primary-800">
                       {reg.profiles?.nickname || '(알 수 없음)'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm text-primary-500/70">
                       {formatDate(reg.created_at)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {reg.status === 'confirmed' ? (
-                        <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                        <span
+                          className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-700"
+                          style={{ border: '1px solid var(--color-primary-100)' }}
+                        >
                           결제완료
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                        <span
+                          className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-primary-400"
+                          style={{ backgroundColor: 'var(--color-surface-200)' }}
+                        >
                           취소됨
                         </span>
                       )}

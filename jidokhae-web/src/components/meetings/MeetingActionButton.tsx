@@ -119,7 +119,8 @@ export default function MeetingActionButton({
         <button
           onClick={handleRegister}
           disabled={loading}
-          className="w-full rounded-[var(--radius-md)] bg-primary-500 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-[var(--radius-lg)] bg-primary-600 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
         >
           {loading ? (
             <span className="inline-flex items-center gap-2">
@@ -136,7 +137,11 @@ export default function MeetingActionButton({
       {buttonState.type === 'full' && (
         <button
           disabled
-          className="w-full rounded-[var(--radius-md)] bg-gray-100 py-3.5 text-sm font-semibold text-gray-400 cursor-not-allowed"
+          className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold cursor-not-allowed"
+          style={{
+            backgroundColor: 'var(--color-surface-200)',
+            color: 'var(--color-primary-300)',
+          }}
         >
           마감
         </button>
@@ -146,7 +151,12 @@ export default function MeetingActionButton({
       {buttonState.type === 'cancel' && cancelPhase === 'idle' && (
         <button
           onClick={() => setCancelPhase('info')}
-          className="w-full rounded-[var(--radius-md)] border border-gray-200 bg-white py-3.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50 active:bg-gray-100"
+          className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+          style={{
+            backgroundColor: 'var(--color-surface-50)',
+            border: '1px solid var(--color-surface-300)',
+            color: 'var(--color-primary-600)',
+          }}
         >
           취소하기
         </button>
@@ -154,8 +164,14 @@ export default function MeetingActionButton({
 
       {/* === Cancel complete (replaces button area) === */}
       {cancelPhase === 'complete' && cancelResult && (
-        <div className="rounded-[var(--radius-lg)] border border-gray-100 bg-white p-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
+        <div
+          className="rounded-[var(--radius-lg)] p-6 text-center"
+          style={{
+            backgroundColor: 'var(--color-surface-50)',
+            border: '1px solid var(--color-surface-300)',
+          }}
+        >
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50">
             <svg
               width="24"
               height="24"
@@ -165,21 +181,21 @@ export default function MeetingActionButton({
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-success"
+              className="text-primary-600"
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h3 className="text-base font-bold text-gray-900">취소 완료</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <h3 className="text-base font-bold text-primary-900">취소 완료</h3>
+          <p className="mt-2 text-sm text-primary-600/70">
             {cancelResult.refundedAmount > 0 ? (
               <>
                 환불 예정 금액:{' '}
-                <span className="font-semibold text-gray-900">
+                <span className="font-bold text-primary-800">
                   {formatFee(cancelResult.refundedAmount)}
                 </span>
                 <br />
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-primary-400">
                   영업일 기준 3~5일 내 환불됩니다
                 </span>
               </>
@@ -189,7 +205,7 @@ export default function MeetingActionButton({
           </p>
           <button
             onClick={() => router.push('/')}
-            className="mt-4 w-full rounded-[var(--radius-md)] bg-primary-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
+            className="mt-4 w-full rounded-[var(--radius-lg)] bg-primary-600 py-3.5 text-sm font-bold text-white transition-all hover:bg-primary-700 active:scale-[0.98]"
           >
             모임 일정으로
           </button>
@@ -198,7 +214,10 @@ export default function MeetingActionButton({
 
       {/* === Attended === */}
       {buttonState.type === 'attended' && (
-        <div className="w-full rounded-[var(--radius-md)] bg-success/10 py-3.5 text-center text-sm font-semibold text-success">
+        <div
+          className="w-full rounded-[var(--radius-lg)] bg-primary-50 py-4 text-center text-sm font-bold text-primary-700"
+          style={{ border: '1px solid var(--color-primary-100)' }}
+        >
           참여 완료
         </div>
       )}
@@ -206,45 +225,59 @@ export default function MeetingActionButton({
       {/* === Cancel Info Modal (Phase 1) === */}
       {cancelPhase === 'info' && refundInfo && (
         <ModalOverlay onClose={() => setCancelPhase('idle')}>
-          <h3 className="text-base font-bold text-gray-900">환불 규정 안내</h3>
-          <div className="mt-4 rounded-[var(--radius-md)] bg-gray-50 p-4">
+          <h3 className="text-base font-bold text-primary-900">환불 규정 안내</h3>
+          <div
+            className="mt-4 rounded-[var(--radius-md)] p-4"
+            style={{
+              backgroundColor: 'var(--color-surface-100)',
+              border: '1px solid var(--color-surface-300)',
+            }}
+          >
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">결제 금액</span>
-              <span className="font-medium text-gray-900">
+              <span className="text-primary-500">결제 금액</span>
+              <span className="font-semibold text-primary-800">
                 {formatFee(paidAmount ?? 0)}
               </span>
             </div>
             <div className="mt-2 flex justify-between text-sm">
-              <span className="text-gray-500">환불 비율</span>
-              <span className="font-medium text-gray-900">
+              <span className="text-primary-500">환불 비율</span>
+              <span className="font-semibold text-primary-800">
                 {refundInfo.refundRate}%
               </span>
             </div>
-            <div className="mt-2 border-t border-gray-200 pt-2 flex justify-between text-sm">
-              <span className="font-medium text-gray-700">환불 예정 금액</span>
-              <span className="font-bold text-primary-600">
+            <div
+              className="mt-2 pt-2 flex justify-between text-sm"
+              style={{ borderTop: '1px solid var(--color-surface-300)' }}
+            >
+              <span className="font-semibold text-primary-700">환불 예정 금액</span>
+              <span className="font-bold text-accent-600">
                 {formatFee(refundInfo.refundAmount)}
               </span>
             </div>
           </div>
           {refundInfo.refundRate === 0 && (
-            <p className="mt-3 text-xs text-warning text-center">
+            <p className="mt-3 text-xs text-warning text-center font-medium">
               환불 불가 기간입니다. 취소 시 환불 금액이 없습니다.
             </p>
           )}
-          <div className="mt-4 text-xs text-gray-400 text-center">
+          <div className="mt-4 text-xs text-primary-400 text-center">
             모임 3일 전: 100% · 2일 전: 50% · 전날/당일: 0%
           </div>
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setCancelPhase('idle')}
-              className="flex-1 rounded-[var(--radius-md)] border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
             >
               닫기
             </button>
             <button
               onClick={() => setCancelPhase('confirm')}
-              className="flex-1 rounded-[var(--radius-md)] bg-gray-900 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
+              className="flex-1 rounded-[var(--radius-md)] bg-primary-700 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-800"
             >
               취소 진행
             </button>
@@ -255,36 +288,41 @@ export default function MeetingActionButton({
       {/* === Cancel Confirm Modal (Phase 2) === */}
       {cancelPhase === 'confirm' && refundInfo && (
         <ModalOverlay onClose={() => setCancelPhase('info')}>
-          <h3 className="text-base font-bold text-gray-900 text-center">
+          <h3 className="text-base font-bold text-primary-900 text-center">
             취소를 확정하시겠습니까?
           </h3>
-          <p className="mt-3 text-sm text-gray-500 text-center">
+          <p className="mt-3 text-sm text-primary-600/70 text-center">
             환불 금액:{' '}
-            <span className="font-bold text-gray-900">
+            <span className="font-bold text-primary-800">
               {formatFee(refundInfo.refundAmount)}
             </span>
             {refundInfo.refundRate < 100 && (
-              <span className="text-gray-400">
+              <span className="text-primary-400">
                 {' '}
                 ({refundInfo.refundRate}%)
               </span>
             )}
           </p>
           {refundInfo.refundAmount === 0 && (
-            <p className="mt-1 text-xs text-warning text-center">
+            <p className="mt-1 text-xs text-warning text-center font-medium">
               환불 금액이 0원입니다. 그래도 취소하시겠습니까?
             </p>
           )}
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setCancelPhase('info')}
-              className="flex-1 rounded-[var(--radius-md)] border border-gray-200 bg-white py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
             >
               돌아가기
             </button>
             <button
               onClick={handleCancelConfirm}
-              className="flex-1 rounded-[var(--radius-md)] bg-error py-2.5 text-sm font-semibold text-white transition-colors hover:bg-error/90"
+              className="flex-1 rounded-[var(--radius-md)] bg-error py-2.5 text-sm font-bold text-white transition-colors hover:bg-error/90"
             >
               취소 확정
             </button>
@@ -297,14 +335,20 @@ export default function MeetingActionButton({
         <ModalOverlay>
           <div className="flex flex-col items-center py-4">
             <Spinner />
-            <p className="mt-3 text-sm text-gray-500">취소 처리 중...</p>
+            <p className="mt-3 text-sm text-primary-500">취소 처리 중...</p>
           </div>
         </ModalOverlay>
       )}
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-gray-800 px-4 py-2 text-sm text-white shadow-lg animate-[fadeIn_0.2s_ease-out]">
+        <div
+          className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2.5 text-sm font-medium text-white animate-[fadeIn_0.2s_ease-out]"
+          style={{
+            backgroundColor: 'var(--color-primary-800)',
+            boxShadow: 'var(--shadow-elevated)',
+          }}
+        >
           {toast}
         </div>
       )}
@@ -322,12 +366,18 @@ function ModalOverlay({
   onClose?: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
       <div
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-sm rounded-[var(--radius-lg)] bg-white p-5 shadow-xl">
+      <div
+        className="relative w-full max-w-sm rounded-[var(--radius-lg)] p-6 animate-[scaleIn_0.2s_ease-out]"
+        style={{
+          backgroundColor: 'var(--color-surface-50)',
+          boxShadow: 'var(--shadow-elevated)',
+        }}
+      >
         {children}
       </div>
     </div>

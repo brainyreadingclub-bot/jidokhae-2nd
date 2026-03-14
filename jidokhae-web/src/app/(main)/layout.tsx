@@ -25,15 +25,15 @@ export default async function MainLayout({
 
   return (
     <>
-      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">
+      <header className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--color-surface-300)' }}>
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-semibold text-primary-800 tracking-tight">
             {nickname || '회원'}님
           </span>
           {role === 'admin' && (
             <Link
               href="/admin"
-              className="text-xs font-medium text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded hover:bg-primary-100 transition-colors"
+              className="text-[10px] font-bold tracking-wider uppercase text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full hover:bg-primary-100 transition-colors"
             >
               운영자
             </Link>

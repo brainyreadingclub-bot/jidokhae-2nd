@@ -102,11 +102,11 @@ export default async function MeetingDetailPage({ params }: Props) {
   )
 
   return (
-    <div className="px-4 pt-4 pb-6">
+    <div className="px-5 pt-4 pb-6">
       {/* Back link */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 transition-colors mb-4"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-400 hover:text-primary-600 transition-colors mb-5"
       >
         <svg
           width="16"
@@ -114,7 +114,7 @@ export default async function MeetingDetailPage({ params }: Props) {
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
