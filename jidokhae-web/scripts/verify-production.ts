@@ -37,7 +37,6 @@ async function main() {
     'SUPABASE_SERVICE_ROLE_KEY',
     'NEXT_PUBLIC_TOSSPAYMENTS_CLIENT_KEY',
     'TOSSPAYMENTS_SECRET_KEY',
-    'TOSSPAYMENTS_WEBHOOK_SECRET',
   ] as const
 
   const missingVars: string[] = []
