@@ -103,15 +103,24 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
     }
   }
 
+  const inputClassName =
+    'w-full rounded-[var(--radius-md)] px-3.5 py-3 text-sm font-medium text-primary-900 placeholder:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-shadow'
+
+  const inputStyle = {
+    backgroundColor: 'var(--color-surface-50)',
+    border: '1px solid var(--color-surface-300)',
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <Field label="모임명" required>
         <input
           type="text"
           value={values.title}
           onChange={(e) => handleChange('title', e.target.value)}
           placeholder="독서모임 제목"
-          className="w-full rounded-[var(--radius-md)] border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          className={inputClassName}
+          style={inputStyle}
         />
       </Field>
 
@@ -121,7 +130,8 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
             type="date"
             value={values.date}
             onChange={(e) => handleChange('date', e.target.value)}
-            className="w-full rounded-[var(--radius-md)] border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            className={inputClassName}
+            style={inputStyle}
           />
         </Field>
         <Field label="시간" required>
@@ -129,7 +139,8 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
             type="time"
             value={values.time}
             onChange={(e) => handleChange('time', e.target.value)}
-            className="w-full rounded-[var(--radius-md)] border border-gray-200 px-3 py-2.5 text-sm text-gray-900 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            className={inputClassName}
+            style={inputStyle}
           />
         </Field>
       </div>
@@ -140,7 +151,8 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
           value={values.location}
           onChange={(e) => handleChange('location', e.target.value)}
           placeholder="모임 장소"
-          className="w-full rounded-[var(--radius-md)] border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+          className={inputClassName}
+          style={inputStyle}
         />
       </Field>
 
@@ -152,7 +164,8 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
             value={values.capacity}
             onChange={(e) => handleChange('capacity', e.target.value)}
             placeholder="14"
-            className="w-full rounded-[var(--radius-md)] border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            className={inputClassName}
+            style={inputStyle}
           />
         </Field>
         <Field label="참가비 (원)" required>
@@ -163,19 +176,29 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
             value={values.fee}
             onChange={(e) => handleChange('fee', e.target.value)}
             placeholder="10000"
-            className="w-full rounded-[var(--radius-md)] border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-400"
+            className={inputClassName}
+            style={inputStyle}
           />
         </Field>
       </div>
 
       {error && (
-        <p className="text-sm text-error">{error}</p>
+        <div
+          className="rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-error"
+          style={{
+            backgroundColor: 'rgba(196, 61, 61, 0.06)',
+            border: '1px solid rgba(196, 61, 61, 0.15)',
+          }}
+        >
+          {error}
+        </div>
       )}
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-[var(--radius-md)] bg-primary-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50"
+        className="w-full rounded-[var(--radius-lg)] bg-primary-600 py-3.5 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50"
+        style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
       >
         {isSubmitting
           ? mode === 'create'
@@ -200,9 +223,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-gray-600">
+      <label className="mb-2 block text-xs font-bold text-primary-700 tracking-tight">
         {label}
-        {required && <span className="text-error ml-0.5">*</span>}
+        {required && <span className="text-accent-500 ml-0.5">*</span>}
       </label>
       {children}
     </div>

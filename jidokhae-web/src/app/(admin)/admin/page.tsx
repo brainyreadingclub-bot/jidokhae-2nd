@@ -41,13 +41,14 @@ export default async function AdminPage() {
   )
 
   return (
-    <div className="px-4 pt-4 pb-6">
+    <div className="px-5 pt-4 pb-6">
       {/* Header with create button */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-bold text-gray-900">모임 목록</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-lg font-extrabold text-primary-900 tracking-tight">모임 목록</h1>
         <Link
           href="/admin/meetings/new"
-          className="inline-flex items-center gap-1 rounded-[var(--radius-md)] bg-primary-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-600"
+          className="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-2 text-xs font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.97]"
+          style={{ boxShadow: '0 2px 8px rgba(27, 67, 50, 0.2)' }}
         >
           <svg
             width="14"
@@ -68,10 +69,10 @@ export default async function AdminPage() {
 
       {typedMeetings.length === 0 ? (
         <div className="py-16 text-center">
-          <p className="text-sm text-gray-400">등록된 모임이 없습니다</p>
+          <p className="text-sm text-primary-400">등록된 모임이 없습니다</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {typedMeetings.map((meeting) => (
             <AdminMeetingCard
               key={meeting.id}

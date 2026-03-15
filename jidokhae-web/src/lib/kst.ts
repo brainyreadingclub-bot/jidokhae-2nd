@@ -45,9 +45,9 @@ export function formatKoreanTime(time: string): string {
   return `${period} ${displayHour}:${minuteStr}`
 }
 
-/** "10000" → "10,000원" */
+/** "10000" → "10,000" */
 export function formatFee(fee: number): string {
-  return `${fee.toLocaleString('ko-KR')}원`
+  return fee.toLocaleString('ko-KR')
 }
 
 export type MeetingTiming = 'before_or_today' | 'after'
