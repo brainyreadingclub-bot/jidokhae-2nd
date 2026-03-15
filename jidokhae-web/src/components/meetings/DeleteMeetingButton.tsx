@@ -171,8 +171,7 @@ export default function DeleteMeetingButton({
     <div>
       <button
         onClick={() => setPhase('confirm')}
-        className="w-full rounded-[var(--radius-md)] border border-error/30 py-2.5 text-sm font-bold text-error transition-colors hover:bg-error/5 active:bg-error/10"
-        style={{ backgroundColor: 'var(--color-surface-50)' }}
+        className="w-full py-2.5 text-sm font-medium text-error transition-colors hover:text-error/70"
       >
         삭제
       </button>

@@ -24,8 +24,8 @@ export default function AdminMeetingSection({
 }: Props) {
   return (
     <div
-      className="mt-8 pt-6"
-      style={{ borderTop: '1px solid var(--color-surface-300)' }}
+      className="mt-8 rounded-[var(--radius-lg)] p-4"
+      style={{ backgroundColor: 'var(--color-surface-100)' }}
     >
       <h2 className="text-sm font-bold text-primary-800 mb-4 tracking-tight">
         운영자 관리
@@ -53,44 +53,38 @@ export default function AdminMeetingSection({
         </div>
       </div>
 
-      {/* Registrant list table */}
+      {/* Registrant list */}
       <div>
         <h3 className="text-xs font-bold text-primary-500 mb-3 tracking-tight">
           신청자 목록 ({confirmedCount}명)
         </h3>
-        <div
-          className="rounded-[var(--radius-md)] overflow-hidden"
-          style={{
-            border: '1px solid var(--color-surface-300)',
-          }}
-        >
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-100)' }}>
-                <th className="px-4 py-2.5 text-left text-xs font-bold text-primary-500">
-                  이름
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-bold text-primary-500">
-                  신청일
-                </th>
-                <th className="px-4 py-2.5 text-right text-xs font-bold text-primary-500">
-                  상태
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {registrations.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={3}
-                    className="px-4 py-8 text-center text-sm text-primary-400"
-                    style={{ backgroundColor: 'var(--color-surface-50)' }}
-                  >
-                    아직 신청자가 없습니다
-                  </td>
+        {registrations.length === 0 ? (
+          <p className="text-sm text-primary-400 text-center py-8">
+            아직 신청자가 없습니다
+          </p>
+        ) : (
+          <div
+            className="rounded-[var(--radius-md)] overflow-hidden"
+            style={{
+              border: '1px solid var(--color-surface-300)',
+            }}
+          >
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-100)' }}>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold text-primary-500">
+                    이름
+                  </th>
+                  <th className="px-4 py-2.5 text-left text-xs font-bold text-primary-500">
+                    신청일
+                  </th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold text-primary-500">
+                    상태
+                  </th>
                 </tr>
-              ) : (
-                registrations.map((reg) => (
+              </thead>
+              <tbody>
+                {registrations.map((reg) => (
                   <tr
                     key={reg.id}
                     style={{ borderBottom: '1px solid var(--color-surface-200)', backgroundColor: 'var(--color-surface-50)' }}
@@ -113,18 +107,18 @@ export default function AdminMeetingSection({
                       ) : (
                         <span
                           className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-primary-400"
-                          style={{ backgroundColor: 'var(--color-surface-200)' }}
+                          style={{ backgroundColor: 'var(--color-surface-200)', border: '1px solid var(--color-surface-300)' }}
                         >
                           취소됨
                         </span>
                       )}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -112,60 +112,68 @@ export default function MeetingActionButton({
     }
   }
 
+  // Determine if we should show a sticky button
+  const showStickyButton =
+    (buttonState.type === 'register') ||
+    (buttonState.type === 'full') ||
+    (buttonState.type === 'cancel' && cancelPhase === 'idle')
+
   return (
     <>
-      {/* === Register button === */}
-      {buttonState.type === 'register' && (
-        <button
-          onClick={handleRegister}
-          disabled={loading}
-          className="w-full rounded-[var(--radius-lg)] bg-primary-600 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
-        >
-          {loading ? (
-            <span className="inline-flex items-center gap-2">
-              <Spinner />
-              결제 진행 중...
-            </span>
-          ) : (
-            '신청하기'
+      {/* === Sticky bottom buttons === */}
+      {showStickyButton && (
+        <StickyBottom>
+          {buttonState.type === 'register' && (
+            <button
+              onClick={handleRegister}
+              disabled={loading}
+              className="w-full rounded-[var(--radius-lg)] bg-primary-600 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
+            >
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner />
+                  결제 진행 중...
+                </span>
+              ) : (
+                '신청하기'
+              )}
+            </button>
           )}
-        </button>
-      )}
 
-      {/* === Full (마감) === */}
-      {buttonState.type === 'full' && (
-        <button
-          disabled
-          className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold cursor-not-allowed"
-          style={{
-            backgroundColor: 'var(--color-surface-200)',
-            color: 'var(--color-primary-300)',
-          }}
-        >
-          마감
-        </button>
-      )}
+          {buttonState.type === 'full' && (
+            <button
+              disabled
+              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold cursor-not-allowed"
+              style={{
+                backgroundColor: 'var(--color-surface-200)',
+                color: 'var(--color-primary-300)',
+              }}
+            >
+              마감
+            </button>
+          )}
 
-      {/* === Cancel button === */}
-      {buttonState.type === 'cancel' && cancelPhase === 'idle' && (
-        <button
-          onClick={() => setCancelPhase('info')}
-          className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
-          style={{
-            backgroundColor: 'var(--color-surface-50)',
-            border: '1px solid var(--color-surface-300)',
-            color: 'var(--color-primary-600)',
-          }}
-        >
-          취소하기
-        </button>
+          {buttonState.type === 'cancel' && cancelPhase === 'idle' && (
+            <button
+              onClick={() => setCancelPhase('info')}
+              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
+            >
+              취소하기
+            </button>
+          )}
+        </StickyBottom>
       )}
 
       {/* === Cancel complete (replaces button area) === */}
       {cancelPhase === 'complete' && cancelResult && (
         <div
-          className="rounded-[var(--radius-lg)] p-6 text-center"
+          className="mt-8 rounded-[var(--radius-lg)] p-6 text-center"
           style={{
             backgroundColor: 'var(--color-surface-50)',
             border: '1px solid var(--color-surface-300)',
@@ -215,7 +223,7 @@ export default function MeetingActionButton({
       {/* === Attended === */}
       {buttonState.type === 'attended' && (
         <div
-          className="w-full rounded-[var(--radius-lg)] bg-primary-50 py-4 text-center text-sm font-bold text-primary-700"
+          className="mt-8 w-full rounded-[var(--radius-lg)] bg-primary-50 py-4 text-center text-sm font-bold text-primary-700"
           style={{ border: '1px solid var(--color-primary-100)' }}
         >
           참여 완료
@@ -376,6 +384,25 @@ function ModalOverlay({
         style={{
           backgroundColor: 'var(--color-surface-50)',
           boxShadow: 'var(--shadow-elevated)',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function StickyBottom({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-40"
+      style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}
+    >
+      <div
+        className="mx-auto max-w-screen-sm px-5 py-3"
+        style={{
+          backgroundColor: 'var(--color-surface-50)',
+          boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
         }}
       >
         {children}

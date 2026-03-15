@@ -1,15 +1,42 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getKSTToday, getButtonState } from '@/lib/kst'
+import { getKSTToday, getButtonState, formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
 import type { Meeting } from '@/types/meeting'
+import type { Metadata } from 'next'
 import type { RegistrationWithProfile } from '@/types/registration'
 import Link from 'next/link'
 
 type Props = {
   params: Promise<{ id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: meeting } = await supabase
+    .from('meetings')
+    .select('title, date, time, location, fee')
+    .eq('id', id)
+    .single()
+
+  if (!meeting) {
+    return { title: '지독해 - 독서모임' }
+  }
+
+  const description = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatFee(meeting.fee)}`
+
+  return {
+    title: meeting.title,
+    openGraph: {
+      title: meeting.title,
+      description,
+      siteName: '지독해',
+      type: 'website',
+    },
+  }
 }
 
 export default async function MeetingDetailPage({ params }: Props) {
@@ -129,19 +156,17 @@ export default async function MeetingDetailPage({ params }: Props) {
         confirmedCount={confirmedCount}
       />
 
-      {/* Action button */}
-      <div className="mt-8">
-        <MeetingActionButton
-          buttonState={buttonState}
-          meetingId={typedMeeting.id}
-          meetingTitle={typedMeeting.title}
-          meetingFee={typedMeeting.fee}
-          meetingDate={typedMeeting.date}
-          userId={user.id}
-          registrationId={myReg?.id}
-          paidAmount={myReg?.paid_amount}
-        />
-      </div>
+      {/* Action button (sticky for register/full/cancel, inline for attended/complete) */}
+      <MeetingActionButton
+        buttonState={buttonState}
+        meetingId={typedMeeting.id}
+        meetingTitle={typedMeeting.title}
+        meetingFee={typedMeeting.fee}
+        meetingDate={typedMeeting.date}
+        userId={user.id}
+        registrationId={myReg?.id}
+        paidAmount={myReg?.paid_amount}
+      />
 
       {/* Admin section */}
       {isAdmin && (

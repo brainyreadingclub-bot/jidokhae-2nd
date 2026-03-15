@@ -112,7 +112,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <Field label="모임명" required>
         <input
           type="text"
@@ -223,7 +223,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-bold text-primary-700 tracking-tight">
+      <label className="mb-2 block text-xs font-bold text-primary-700 tracking-tight">
         {label}
         {required && <span className="text-accent-500 ml-0.5">*</span>}
       </label>

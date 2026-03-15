@@ -48,7 +48,7 @@ export default function RegistrationCard({ registration, badge }: Props) {
             style={
               badge.color === 'success'
                 ? { border: '1px solid var(--color-primary-100)' }
-                : { backgroundColor: 'var(--color-surface-200)' }
+                : { backgroundColor: 'var(--color-surface-200)', border: '1px solid var(--color-surface-300)' }
             }
           >
             {badge.label}
@@ -80,6 +80,8 @@ export default function RegistrationCard({ registration, badge }: Props) {
     </>
   )
 
+  const isCancelled = registration.status === 'cancelled'
+
   // Deleted/deleting meetings: non-clickable card with muted style
   if (isDeleted) {
     return (
@@ -99,9 +101,9 @@ export default function RegistrationCard({ registration, badge }: Props) {
   return (
     <Link
       href={`/meetings/${meeting.id}`}
-      className="block rounded-[var(--radius-lg)] overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+      className={`block rounded-[var(--radius-lg)] overflow-hidden transition-all duration-200 hover:-translate-y-0.5${isCancelled ? ' opacity-60' : ''}`}
       style={{
-        backgroundColor: 'var(--color-surface-50)',
+        backgroundColor: isCancelled ? 'var(--color-surface-100)' : 'var(--color-surface-50)',
         border: '1px solid var(--color-surface-300)',
         boxShadow: 'var(--shadow-card)',
       }}
