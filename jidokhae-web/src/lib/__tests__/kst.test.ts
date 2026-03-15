@@ -105,20 +105,20 @@ describe('formatKoreanTime', () => {
 // ─── formatFee ───
 
 describe('formatFee', () => {
-  it('10000 → "10,000원"', () => {
-    expect(formatFee(10000)).toBe('10,000원')
+  it('10000 → "10,000"', () => {
+    expect(formatFee(10000)).toBe('10,000')
   })
 
-  it('0 → "0원"', () => {
-    expect(formatFee(0)).toBe('0원')
+  it('0 → "0"', () => {
+    expect(formatFee(0)).toBe('0')
   })
 
-  it('1000 → "1,000원"', () => {
-    expect(formatFee(1000)).toBe('1,000원')
+  it('1000 → "1,000"', () => {
+    expect(formatFee(1000)).toBe('1,000')
   })
 
-  it('100000 → "100,000원"', () => {
-    expect(formatFee(100000)).toBe('100,000원')
+  it('100000 → "100,000"', () => {
+    expect(formatFee(100000)).toBe('100,000')
   })
 })
 
