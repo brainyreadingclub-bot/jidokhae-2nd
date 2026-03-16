@@ -119,19 +119,6 @@
   --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ─── Dark Mode Variables (placeholder, 미사용) ─── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg-base: #1A1714;
-    --color-bg-surface: #242019;
-    --color-bg-elevated: #2E2A22;
-    --color-neutral-50: #2E2A22;
-    --color-neutral-100: #3D3732;
-    --color-neutral-800: #F0EBE1;
-    --color-neutral-900: #FDFBF7;
-  }
-}
-
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

@@ -16,77 +16,64 @@ export default function MeetingCard({
   isRegistered,
 }: MeetingCardProps) {
   const isFull = confirmedCount >= meeting.capacity
+  const isAlmostFull = !isFull && confirmedCount >= meeting.capacity * 0.8
 
-  // Status-based styling
+  // Status-based left border color
   const borderColor = isRegistered
     ? 'var(--color-accent-500)'
     : isFull
       ? 'var(--color-status-full)'
       : 'var(--color-status-open)'
 
+  // Status badge config
   const badge = isRegistered
-    ? { label: '신청완료', bg: 'var(--color-accent-50)', border: 'var(--color-accent-200)', text: 'text-accent-700' }
+    ? { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }
     : isFull
-      ? { label: '마감', bg: 'color-mix(in srgb, var(--color-error) 6%, transparent)', border: 'color-mix(in srgb, var(--color-error) 20%, transparent)', text: 'text-error' }
-      : { label: '모집중', bg: 'var(--color-primary-50)', border: 'var(--color-primary-200)', text: 'text-primary-600' }
+      ? { label: '마감', classes: 'bg-neutral-100 text-neutral-500 border-neutral-200' }
+      : { label: '모집중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
 
-  const isDimmed = isRegistered || isFull
+  // Capacity color
+  const capacityClass = isFull
+    ? 'text-neutral-400'
+    : isAlmostFull
+      ? 'text-accent-500'
+      : 'text-primary-600'
 
   return (
     <Link
       href={`/meetings/${meeting.id}`}
-      className="group relative block overflow-hidden rounded-[var(--radius-lg)] transition-all duration-200 hover:-translate-y-0.5"
-      style={{
-        boxShadow: 'var(--shadow-card)',
-        backgroundColor: isDimmed ? 'var(--color-surface-100)' : 'var(--color-surface-50)',
-        border: '1px solid var(--color-surface-300)',
-        borderLeft: `4px solid ${borderColor}`,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-card-hover)'
-        e.currentTarget.style.borderRightColor = 'var(--color-primary-200)'
-        e.currentTarget.style.borderTopColor = 'var(--color-primary-200)'
-        e.currentTarget.style.borderBottomColor = 'var(--color-primary-200)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'var(--shadow-card)'
-        e.currentTarget.style.borderRightColor = 'var(--color-surface-300)'
-        e.currentTarget.style.borderTopColor = 'var(--color-surface-300)'
-        e.currentTarget.style.borderBottomColor = 'var(--color-surface-300)'
-      }}
+      className="group relative block overflow-hidden rounded-[var(--radius-md)] border border-neutral-200 bg-white shadow-sm transition-all hover:-translate-y-px hover:shadow-md"
+      style={{ borderLeft: `4px solid ${borderColor}` }}
     >
       {/* Badge — top right */}
       <div className="absolute top-3.5 right-4">
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${badge.text}`}
-          style={{ backgroundColor: badge.bg, border: `1px solid ${badge.border}` }}
-        >
+        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-small font-medium ${badge.classes}`}>
           {badge.label}
         </span>
       </div>
 
-      <div className="px-4 py-4">
+      <div className="p-[var(--spacing-card)]">
         {/* Date + Time */}
         <div className="mb-2.5 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold text-primary-700" style={{ backgroundColor: 'var(--color-primary-50)' }}>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-700">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
             {formatKoreanDate(meeting.date)}
           </span>
-          <span className="text-xs text-neutral-500 font-medium">
+          <span className="text-caption font-medium text-neutral-600">
             {formatKoreanTime(meeting.time)}
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="text-sm font-bold text-primary-900 leading-snug pr-16 group-hover:text-primary-600 transition-colors duration-200">
+        <h3 className="pr-16 text-[15px] font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-primary-600">
           {meeting.title}
         </h3>
 
         {/* Details row */}
-        <div className="mt-4 flex items-center gap-3 text-xs text-neutral-500">
+        <div className="mt-4 flex items-center gap-3 text-caption text-neutral-500">
           {/* Location */}
           <span className="flex items-center gap-1">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
@@ -96,24 +83,24 @@ export default function MeetingCard({
             {meeting.location}
           </span>
 
-          <span className="h-3 w-px" style={{ backgroundColor: 'var(--color-surface-300)' }} />
+          <span className="h-3 w-px bg-neutral-200" />
 
           {/* Participant count */}
-          <span className="flex items-center gap-1">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
+          <span className={`flex items-center gap-1 ${capacityClass}`}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            {confirmedCount}/{meeting.capacity}명
+            <span className="font-mono tabular-nums">{confirmedCount}/{meeting.capacity}</span>명
           </span>
 
-          <span className="h-3 w-px" style={{ backgroundColor: 'var(--color-surface-300)' }} />
+          <span className="h-3 w-px bg-neutral-200" />
 
           {/* Fee */}
-          <span className="font-bold text-accent-600 tabular-nums">
-            {formatFee(meeting.fee)}
+          <span className="font-mono font-semibold tabular-nums text-accent-600">
+            {formatFee(meeting.fee)}원
           </span>
         </div>
       </div>

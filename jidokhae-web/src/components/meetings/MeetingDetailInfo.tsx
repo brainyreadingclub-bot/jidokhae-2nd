@@ -8,6 +8,14 @@ type Props = {
 }
 
 export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }: Props) {
+  const isFull = confirmedCount >= capacity
+  const isAlmostFull = !isFull && confirmedCount >= capacity * 0.8
+  const capacityClass = isFull
+    ? 'text-neutral-400'
+    : isAlmostFull
+      ? 'text-accent-500'
+      : 'text-primary-600'
+
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -66,6 +74,7 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }:
           }
           label="참여"
           value={`${confirmedCount}/${capacity}명`}
+          valueClassName={`${capacityClass} font-mono tabular-nums`}
         />
         <InfoRow
           icon={
@@ -90,12 +99,14 @@ function InfoRow({
   value,
   highlight,
   isLast,
+  valueClassName,
 }: {
   icon: React.ReactNode
   label: string
   value: string
   highlight?: boolean
   isLast?: boolean
+  valueClassName?: string
 }) {
   return (
     <div
@@ -105,7 +116,7 @@ function InfoRow({
       <span className="text-primary-400 flex-shrink-0">{icon}</span>
       <span className="text-xs font-medium text-primary-500/70 w-11 flex-shrink-0">{label}</span>
       <span
-        className={`text-sm font-semibold ${highlight ? 'text-accent-600' : 'text-primary-800'}`}
+        className={`text-sm font-semibold ${valueClassName || (highlight ? 'text-accent-600' : 'text-primary-800')}`}
       >
         {value}
       </span>
