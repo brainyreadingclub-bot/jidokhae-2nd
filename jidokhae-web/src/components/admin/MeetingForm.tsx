@@ -208,7 +208,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
         type="submit"
         disabled={isDisabled}
         className="w-full rounded-[var(--radius-md)] bg-primary-600 py-3.5 text-sm font-bold text-white tracking-wide transition-all duration-[250ms] ease hover:bg-primary-700 active:scale-[0.98] disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed disabled:shadow-none"
-        style={{ boxShadow: isDisabled ? 'none' : '0 4px 14px rgba(27, 67, 50, 0.25)' }}
+        style={{ boxShadow: isDisabled ? 'none' : 'var(--shadow-md)' }}
       >
         {isSubmitting
           ? mode === 'create'
