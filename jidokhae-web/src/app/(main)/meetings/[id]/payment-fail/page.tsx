@@ -30,10 +30,33 @@ export default function PaymentFailPage({ params }: Props) {
   }, [params, searchParams, router])
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-5">
       <div className="text-center">
-        <p className="text-sm font-medium text-error">{message}</p>
-        <p className="mt-2 text-xs text-gray-400">
+        {/* Error icon */}
+        <div
+          className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full"
+          style={{
+            backgroundColor: 'rgba(196, 61, 61, 0.08)',
+            border: '1px solid rgba(196, 61, 61, 0.15)',
+          }}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-error"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </div>
+        <p className="text-sm font-bold text-error">{message}</p>
+        <p className="mt-2 text-xs text-primary-400">
           잠시 후 모임 페이지로 이동합니다...
         </p>
       </div>

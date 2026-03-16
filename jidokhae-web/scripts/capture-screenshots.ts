@@ -76,37 +76,79 @@ function createSessionCookies(session: object): Array<{ name: string; value: str
   return chunks.map((value, i) => ({ name: `${COOKIE_NAME}.${i}`, value }))
 }
 
-// ── Admin 유저 조회 + 세션 획득 ──
-async function getAdminSession(admin: SupabaseClient): Promise<{
+// ── 유저 세션 획득 (범용) ──
+interface UserSession {
   session: object
   userId: string
   originalEmail: string | null
-}> {
-  console.log('\n=== 1. Admin 유저 조회 ===\n')
+  isTemp: boolean // 임시 생성 유저인지
+}
 
-  // profiles에서 admin 찾기
+async function getUserSession(
+  admin: SupabaseClient,
+  role: 'admin' | 'member',
+): Promise<UserSession> {
+  console.log(`\n  [${role}] 유저 조회...`)
+
+  if (role === 'admin') {
+    // profiles에서 admin 찾기
+    const { data: profiles, error: profileErr } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('role', 'admin')
+      .limit(1)
+
+    if (profileErr || !profiles?.length) {
+      throw new Error(`Admin 유저를 찾을 수 없습니다: ${profileErr?.message}`)
+    }
+
+    const userId = profiles[0].id
+    console.log(`  userId: ${userId}`)
+    return await signInUser(admin, userId, false)
+  }
+
+  // member: 기존 비admin 유저 찾기
   const { data: profiles, error: profileErr } = await admin
     .from('profiles')
     .select('id')
-    .eq('role', 'admin')
+    .neq('role', 'admin')
     .limit(1)
 
-  if (profileErr || !profiles?.length) {
-    throw new Error(`Admin 유저를 찾을 수 없습니다: ${profileErr?.message}`)
+  if (!profileErr && profiles?.length) {
+    const userId = profiles[0].id
+    console.log(`  기존 회원 userId: ${userId}`)
+    return await signInUser(admin, userId, false)
   }
 
-  const userId = profiles[0].id
-  console.log(`  Admin userId: ${userId}`)
+  // 기존 회원이 없으면 임시 유저 생성
+  console.log('  기존 회원 없음 → 임시 회원 생성...')
+  const tempEmail = `temp-member-${crypto.randomUUID().slice(0, 8)}@temp.local`
+  const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
+    email: tempEmail,
+    password: TEMP_PASSWORD,
+    email_confirm: true,
+    user_metadata: { nickname: '테스트회원' },
+  })
+  if (createErr || !newUser.user) {
+    throw new Error(`임시 회원 생성 실패: ${createErr?.message}`)
+  }
+  console.log(`  임시 회원 생성: ${newUser.user.id}`)
+  return await signInUser(admin, newUser.user.id, true)
+}
 
+async function signInUser(
+  admin: SupabaseClient,
+  userId: string,
+  isTemp: boolean,
+): Promise<UserSession> {
   // auth에서 이메일 확인
   const { data: authUser, error: authErr } = await admin.auth.admin.getUserById(userId)
   if (authErr) throw new Error(`getUserById 실패: ${authErr.message}`)
 
   const originalEmail = authUser.user.email ?? null
-  console.log(`  Email: ${originalEmail || '(없음)'}`)
 
   // 이메일이 없으면 임시 이메일 설정
-  const email = originalEmail || 'admin-screenshot@temp.local'
+  const email = originalEmail || `screenshot-${userId.slice(0, 8)}@temp.local`
   if (!originalEmail) {
     console.log(`  임시 이메일 설정: ${email}`)
     const { error } = await admin.auth.admin.updateUserById(userId, { email })
@@ -114,14 +156,12 @@ async function getAdminSession(admin: SupabaseClient): Promise<{
   }
 
   // 임시 비밀번호 설정
-  console.log('  임시 비밀번호 설정...')
   const { error: pwErr } = await admin.auth.admin.updateUserById(userId, {
     password: TEMP_PASSWORD,
   })
   if (pwErr) throw new Error(`비밀번호 설정 실패: ${pwErr.message}`)
 
   // signInWithPassword로 세션 획득
-  console.log('  세션 획득 중...')
   const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
@@ -135,8 +175,8 @@ async function getAdminSession(admin: SupabaseClient): Promise<{
     throw new Error(`로그인 실패: ${signInErr?.message}`)
   }
 
-  console.log('  세션 획득 성공!')
-  return { session: data.session, userId, originalEmail }
+  console.log(`  세션 획득 성공!`)
+  return { session: data.session, userId, originalEmail, isTemp }
 }
 
 // ── 동적 ID 조회 ──
@@ -220,38 +260,13 @@ function generateReadme(captures: Array<{ flow: string; desc: string; file: stri
   return lines.join('\n')
 }
 
-// ── 메인 ──
-async function main() {
-  console.log('\n🔧 UI/UX 리뷰용 스크린샷 캡처 시작\n')
-
-  // 환경 변수 검증
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('.env.local에 Supabase 환경 변수가 필요합니다')
-  }
-
-  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  })
-
-  // 1. Admin 세션 획득
-  const { session, userId, originalEmail } = await getAdminSession(admin)
-  const sessionCookies = createSessionCookies(session)
-  console.log(`  쿠키 ${sessionCookies.length}개 생성`)
-
-  // 2. 모임 ID 조회
-  const meetingId = await getMeetingId(admin)
-  console.log(`  모임 ID: ${meetingId}`)
-
-  // 3. Playwright 브라우저 시작
-  console.log('\n=== 2. 브라우저 시작 ===\n')
-  const browser = await chromium.launch({ headless: true })
-
-  // 인증된 context (admin)
-  const authContext = await browser.newContext({
+// ── Playwright context 생성 헬퍼 ──
+async function createAuthContext(browser: Browser, sessionCookies: Array<{ name: string; value: string }>) {
+  const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
   })
-  await authContext.addCookies(
+  await ctx.addCookies(
     sessionCookies.map(({ name, value }) => ({
       name,
       value,
@@ -262,53 +277,101 @@ async function main() {
       sameSite: 'Lax' as const,
     }))
   )
-  const authPage = await authContext.newPage()
+  return ctx
+}
 
-  // 비인증 context (로그인 페이지용)
-  const unauthContext = await browser.newContext({
+// ── 메인 ──
+async function main() {
+  console.log('\n🔧 UI/UX 리뷰용 스크린샷 캡처 시작\n')
+
+  // 환경 변수 검증
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('.env.local에 Supabase 환경 변수가 필요합니다')
+  }
+
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+
+  // 1. 세션 획득 (Admin + Member)
+  console.log('\n=== 1. 유저 세션 획득 ===')
+  const adminUser = await getUserSession(adminClient, 'admin')
+  const memberUser = await getUserSession(adminClient, 'member')
+
+  const adminCookies = createSessionCookies(adminUser.session)
+  const memberCookies = createSessionCookies(memberUser.session)
+  console.log(`\n  Admin 쿠키 ${adminCookies.length}개, Member 쿠키 ${memberCookies.length}개 생성`)
+
+  // 2. 모임 ID 조회
+  const meetingId = await getMeetingId(adminClient)
+  console.log(`  모임 ID: ${meetingId}`)
+
+  // 3. Playwright 브라우저 시작
+  console.log('\n=== 2. 브라우저 시작 ===\n')
+  const browser = await chromium.launch({ headless: true })
+
+  // 3개 context: admin, member, 비인증
+  const adminCtx = await createAuthContext(browser, adminCookies)
+  const adminPage = await adminCtx.newPage()
+
+  const memberCtx = await createAuthContext(browser, memberCookies)
+  const memberPage = await memberCtx.newPage()
+
+  const unauthCtx = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
   })
-  const unauthPage = await unauthContext.newPage()
+  const unauthPage = await unauthCtx.newPage()
 
   // 4. 스크린샷 캡처
   console.log('\n=== 3. 스크린샷 캡처 ===\n')
 
+  type ContextType = 'admin' | 'member' | 'unauth'
+  const contextPages: Record<ContextType, Page> = {
+    admin: adminPage,
+    member: memberPage,
+    unauth: unauthPage,
+  }
+
   const captures: Array<{ flow: string; desc: string; file: string }> = []
   let successCount = 0
+  let totalCount = 0
 
-  const pages = [
-    // Flow 5: 운영자 관리
-    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '운영 대시보드', path: '/admin', dir: 'flow5-admin-manage', file: '5-1-admin-dashboard.png', auth: true },
-    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 생성 폼', path: '/admin/meetings/new', dir: 'flow5-admin-manage', file: '5-2-meeting-create-form.png', auth: true },
-    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 수정 폼', path: `/admin/meetings/${meetingId}/edit`, dir: 'flow5-admin-manage', file: '5-3-meeting-edit-form.png', auth: true },
-    // Flow 6: 운영자 상세
-    { flow: 'Flow 6: 운영자 — 모임 상세', desc: '모임 상세 (관리 영역 포함)', path: `/meetings/${meetingId}`, dir: 'flow6-admin-detail', file: '6-1-meeting-detail-admin.png', auth: true },
-    // Flow 2: 모임 탐색
-    { flow: 'Flow 2: 모임 탐색', desc: '메인 — 모임 목록', path: '/', dir: 'flow2-browse', file: '2-1-meeting-list.png', auth: true },
-    // Flow 4: 내 신청
-    { flow: 'Flow 4: 내 신청 관리', desc: '내 신청 목록', path: '/my', dir: 'flow4-my-registrations', file: '4-1-my-registrations.png', auth: true },
+  const pages: Array<{
+    flow: string; desc: string; path: string
+    dir: string; file: string; ctx: ContextType
+  }> = [
     // Flow 1: 온보딩 (비인증)
-    { flow: 'Flow 1: 온보딩', desc: '로그인 페이지', path: '/auth/login', dir: 'flow1-onboarding', file: '1-1-login.png', auth: false },
+    { flow: 'Flow 1: 온보딩', desc: '로그인 페이지', path: '/auth/login', dir: 'flow1-onboarding', file: '1-1-login.png', ctx: 'unauth' },
+
+    // Flow 2: 모임 탐색 (회원 시점)
+    { flow: 'Flow 2: 모임 탐색', desc: '메인 — 모임 목록', path: '/', dir: 'flow2-browse', file: '2-1-meeting-list.png', ctx: 'admin' },
+    { flow: 'Flow 2: 모임 탐색', desc: '모임 상세 (회원 시점)', path: `/meetings/${meetingId}`, dir: 'flow2-browse', file: '2-2-meeting-detail-member.png', ctx: 'member' },
+
+    // Flow 3: 결제 결과
+    { flow: 'Flow 3: 결제 결과', desc: '결제 확인 (신청 완료)', path: `/meetings/${meetingId}/confirm`, dir: 'flow3-payment', file: '3-1-confirm.png', ctx: 'member' },
+    { flow: 'Flow 3: 결제 결과', desc: '결제 실패', path: `/meetings/${meetingId}/payment-fail?code=PAY_PROCESS_CANCELED&message=${encodeURIComponent('사용자가 결제를 취소했습니다')}`, dir: 'flow3-payment', file: '3-2-payment-fail.png', ctx: 'member' },
+
+    // Flow 4: 내 신청
+    { flow: 'Flow 4: 내 신청 관리', desc: '내 신청 목록', path: '/my', dir: 'flow4-my-registrations', file: '4-1-my-registrations.png', ctx: 'admin' },
+
+    // Flow 5: 운영자 관리
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '운영 대시보드', path: '/admin', dir: 'flow5-admin-manage', file: '5-1-admin-dashboard.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 생성 폼', path: '/admin/meetings/new', dir: 'flow5-admin-manage', file: '5-2-meeting-create-form.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 수정 폼', path: `/admin/meetings/${meetingId}/edit`, dir: 'flow5-admin-manage', file: '5-3-meeting-edit-form.png', ctx: 'admin' },
+
+    // Flow 6: 운영자 모임 상세
+    { flow: 'Flow 6: 운영자 — 모임 상세', desc: '모임 상세 (관리 영역 포함)', path: `/meetings/${meetingId}`, dir: 'flow6-admin-detail', file: '6-1-meeting-detail-admin.png', ctx: 'admin' },
   ]
 
   for (const p of pages) {
-    const page = p.auth ? authPage : unauthPage
+    totalCount++
+    const page = contextPages[p.ctx]
     const outputPath = path.join(OUTPUT_DIR, p.dir, p.file)
     const ok = await capture(page, `${BASE_URL}${p.path}`, outputPath)
     if (ok) {
       successCount++
       captures.push({ flow: p.flow, desc: p.desc, file: `${p.dir}/${p.file}` })
-    }
-  }
-
-  // 비인증 모임 상세 (일반 사용자 시점)
-  {
-    const outputPath = path.join(OUTPUT_DIR, 'flow2-browse', '2-3-meeting-detail.png')
-    const ok = await capture(unauthPage, `${BASE_URL}/meetings/${meetingId}`, outputPath)
-    if (ok) {
-      successCount++
-      captures.push({ flow: 'Flow 2: 모임 탐색', desc: '모임 상세 (비회원 시점)', file: 'flow2-browse/2-3-meeting-detail.png' })
     }
   }
 
@@ -321,25 +384,32 @@ async function main() {
 
   // 6. 정리
   console.log('\n=== 5. 정리 ===\n')
-  await authContext.close()
-  await unauthContext.close()
+  await adminCtx.close()
+  await memberCtx.close()
+  await unauthCtx.close()
   await browser.close()
   console.log('  브라우저 종료')
 
-  // 임시 비밀번호 무효화 (새 랜덤 비밀번호로 덮어쓰기)
+  // 임시 비밀번호 무효화
   const newRandomPw = crypto.randomUUID() + crypto.randomUUID()
-  await admin.auth.admin.updateUserById(userId, { password: newRandomPw })
+  await adminClient.auth.admin.updateUserById(adminUser.userId, { password: newRandomPw })
+  await adminClient.auth.admin.updateUserById(memberUser.userId, { password: newRandomPw })
   console.log('  임시 비밀번호 무효화 완료')
 
+  // 임시 생성 유저 삭제
+  if (memberUser.isTemp) {
+    await adminClient.auth.admin.deleteUser(memberUser.userId)
+    console.log('  임시 회원 삭제 완료')
+  }
+
   // 원래 이메일이 없었으면 경고
-  if (!originalEmail) {
-    console.log('  ⚠️  임시 이메일(admin-screenshot@temp.local)이 남아있습니다.')
-    console.log('     카카오 로그인에는 영향 없습니다.')
+  if (!adminUser.originalEmail) {
+    console.log('  ⚠️  Admin 임시 이메일이 남아있습니다. 카카오 로그인에는 영향 없습니다.')
   }
 
   // 결과
   console.log('\n' + '═'.repeat(50))
-  console.log(`  📸 캡처 완료: ${successCount}/${pages.length + 1}장`)
+  console.log(`  📸 캡처 완료: ${successCount}/${totalCount}장`)
   console.log(`  📁 저장 위치: ${OUTPUT_DIR}`)
   console.log('═'.repeat(50) + '\n')
 }

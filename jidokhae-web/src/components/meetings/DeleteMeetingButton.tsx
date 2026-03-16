@@ -67,17 +67,17 @@ export default function DeleteMeetingButton({
       <div>
         <button
           onClick={() => setPhase('confirm')}
-          className="w-full rounded-[var(--radius-md)] border border-warning/30 bg-warning/5 py-2.5 text-sm font-medium text-warning transition-colors hover:bg-warning/10"
+          className="w-full rounded-[var(--radius-md)] border border-warning/30 bg-accent-50 py-2.5 text-sm font-bold text-warning transition-colors hover:bg-accent-100"
         >
           환불 재시도
         </button>
         {result && (
-          <p className="mt-1.5 text-xs text-warning text-center">
+          <p className="mt-1.5 text-xs text-warning text-center font-medium">
             {result.failedCount}건 환불 실패
           </p>
         )}
         {error && (
-          <p className="mt-1.5 text-xs text-error text-center">{error}</p>
+          <p className="mt-1.5 text-xs text-error text-center font-medium">{error}</p>
         )}
       </div>
     )
@@ -89,7 +89,11 @@ export default function DeleteMeetingButton({
       <div>
         <button
           disabled
-          className="w-full rounded-[var(--radius-md)] border border-gray-200 bg-gray-50 py-2.5 text-sm text-gray-400 cursor-not-allowed"
+          className="w-full rounded-[var(--radius-md)] py-2.5 text-sm cursor-not-allowed"
+          style={{
+            backgroundColor: 'var(--color-surface-200)',
+            color: 'var(--color-primary-300)',
+          }}
         >
           <span className="inline-flex items-center gap-1.5">
             <svg
@@ -122,8 +126,11 @@ export default function DeleteMeetingButton({
   if (phase === 'confirm') {
     return (
       <div>
-        <div className="rounded-[var(--radius-md)] border border-error/20 bg-error/5 p-3">
-          <p className="text-sm text-gray-700 text-center">
+        <div
+          className="rounded-[var(--radius-md)] border border-error/20 p-3"
+          style={{ backgroundColor: 'rgba(196, 61, 61, 0.04)' }}
+        >
+          <p className="text-sm text-primary-700 text-center">
             {confirmedCount > 0 ? (
               <>
                 신청자 <span className="font-bold">{confirmedCount}명</span>에게
@@ -138,13 +145,18 @@ export default function DeleteMeetingButton({
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setPhase(fallbackPhase)}
-              className="flex-1 rounded-[var(--radius-md)] border border-gray-200 bg-white py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              className="flex-1 rounded-[var(--radius-md)] py-2 text-xs font-medium transition-colors hover:bg-primary-50"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
             >
               취소
             </button>
             <button
               onClick={handleDelete}
-              className="flex-1 rounded-[var(--radius-md)] bg-error py-2 text-xs font-semibold text-white transition-colors hover:bg-error/90"
+              className="flex-1 rounded-[var(--radius-md)] bg-error py-2 text-xs font-bold text-white transition-colors hover:bg-error/90"
             >
               삭제 확정
             </button>
@@ -159,12 +171,12 @@ export default function DeleteMeetingButton({
     <div>
       <button
         onClick={() => setPhase('confirm')}
-        className="w-full rounded-[var(--radius-md)] border border-error/30 bg-white py-2.5 text-sm font-medium text-error transition-colors hover:bg-error/5 active:bg-error/10"
+        className="w-full py-2.5 text-sm font-medium text-error transition-colors hover:text-error/70"
       >
         삭제
       </button>
       {error && (
-        <p className="mt-1.5 text-xs text-error text-center">{error}</p>
+        <p className="mt-1.5 text-xs text-error text-center font-medium">{error}</p>
       )}
     </div>
   )
