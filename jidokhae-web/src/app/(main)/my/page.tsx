@@ -54,15 +54,20 @@ export default async function MyPage() {
     <div className="px-5 pt-6">
       <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">내 신청</h1>
 
-      {upcoming.length > 0 && (
-        <>
-          <h2 className="mt-5 mb-3 text-xs font-bold text-primary-500 tracking-tight">다가오는 모임</h2>
-          <div className="flex flex-col gap-3">
-            {upcoming.map((reg) => (
-              <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} />
-            ))}
-          </div>
-        </>
+      <h2 className="mt-5 mb-3 text-xs font-bold text-primary-500 tracking-tight">다가오는 모임</h2>
+      {upcoming.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          {upcoming.map((reg) => (
+            <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} />
+          ))}
+        </div>
+      ) : (
+        <div
+          className="rounded-[var(--radius-md)] py-6 text-center text-sm text-primary-400"
+          style={{ backgroundColor: 'var(--color-surface-50)', border: '1px dashed var(--color-surface-300)' }}
+        >
+          다가오는 모임이 없습니다
+        </div>
       )}
 
       {past.length > 0 && (

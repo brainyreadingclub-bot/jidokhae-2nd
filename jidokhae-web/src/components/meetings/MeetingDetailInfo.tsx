@@ -4,9 +4,10 @@ import type { Meeting } from '@/types/meeting'
 type Props = {
   meeting: Meeting
   confirmedCount: number
+  capacity: number
 }
 
-export default function MeetingDetailInfo({ meeting, confirmedCount }: Props) {
+export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }: Props) {
   return (
     <div className="space-y-6">
       {/* Title */}
@@ -64,7 +65,7 @@ export default function MeetingDetailInfo({ meeting, confirmedCount }: Props) {
             </svg>
           }
           label="참여"
-          value={`${confirmedCount}명 참여`}
+          value={`${confirmedCount}/${capacity}명`}
         />
         <InfoRow
           icon={

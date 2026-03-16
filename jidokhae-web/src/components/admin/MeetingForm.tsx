@@ -103,6 +103,16 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
     }
   }
 
+  const isFormComplete =
+    values.title.trim() !== '' &&
+    values.date !== '' &&
+    values.time !== '' &&
+    values.location.trim() !== '' &&
+    values.capacity !== '' &&
+    values.fee !== ''
+
+  const isDisabled = isSubmitting || !isFormComplete
+
   const inputClassName =
     'w-full rounded-[var(--radius-md)] px-3.5 py-3 text-sm font-medium text-primary-900 placeholder:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-400/40 transition-shadow'
 
@@ -196,9 +206,9 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
 
       <button
         type="submit"
-        disabled={isSubmitting}
-        className="w-full rounded-[var(--radius-lg)] bg-primary-600 py-3.5 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50"
-        style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
+        disabled={isDisabled}
+        className="w-full rounded-[var(--radius-lg)] bg-primary-600 py-3.5 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{ boxShadow: isDisabled ? 'none' : '0 4px 14px rgba(27, 67, 50, 0.25)' }}
       >
         {isSubmitting
           ? mode === 'create'

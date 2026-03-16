@@ -31,11 +31,11 @@ export default function AdminMeetingSection({
         운영자 관리
       </h2>
 
-      {/* Action buttons */}
-      <div className="flex gap-2 mb-6">
+      {/* Action buttons — Edit prominent, Delete subtle below */}
+      <div className="mb-6">
         <Link
           href={`/admin/meetings/${meetingId}/edit`}
-          className="flex-1 rounded-[var(--radius-md)] py-2.5 text-center text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+          className="block w-full rounded-[var(--radius-md)] py-2.5 text-center text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
           style={{
             backgroundColor: 'var(--color-surface-50)',
             border: '1px solid var(--color-surface-300)',
@@ -44,7 +44,7 @@ export default function AdminMeetingSection({
         >
           수정
         </Link>
-        <div className="flex-1">
+        <div className="mt-2">
           <DeleteMeetingButton
             meetingId={meetingId}
             meetingStatus={meetingStatus}

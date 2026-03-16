@@ -402,7 +402,7 @@ function StickyBottom({ children }: { children: React.ReactNode }) {
         className="mx-auto max-w-screen-sm px-5 py-3"
         style={{
           backgroundColor: 'var(--color-surface-50)',
-          boxShadow: '0 -2px 8px rgba(0,0,0,0.06)',
+          boxShadow: '0 -2px 8px rgba(45, 90, 61, 0.06)',
         }}
       >
         {children}

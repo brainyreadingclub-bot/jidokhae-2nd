@@ -128,8 +128,13 @@ export default async function MeetingDetailPage({ params }: Props) {
     isFull,
   )
 
+  const hasStickyButton =
+    buttonState.type === 'register' ||
+    buttonState.type === 'full' ||
+    buttonState.type === 'cancel'
+
   return (
-    <div className="px-5 pt-4 pb-6">
+    <div className={`px-5 pt-4 ${hasStickyButton ? 'pb-36' : 'pb-6'}`}>
       {/* Back link */}
       <Link
         href="/"
@@ -154,6 +159,7 @@ export default async function MeetingDetailPage({ params }: Props) {
       <MeetingDetailInfo
         meeting={typedMeeting}
         confirmedCount={confirmedCount}
+        capacity={typedMeeting.capacity}
       />
 
       {/* Action button (sticky for register/full/cancel, inline for attended/complete) */}

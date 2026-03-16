@@ -34,10 +34,10 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2 transition-all duration-200 ${
+              className={`relative flex flex-1 flex-col items-center justify-center gap-1.5 min-h-[44px] py-2 transition-all duration-200 ${
                 isActive
                   ? 'text-primary-700'
-                  : 'text-gray-400 hover:text-primary-500'
+                  : 'text-neutral-400 hover:text-primary-500'
               }`}
             >
               {isActive && (

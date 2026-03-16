@@ -27,7 +27,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-between px-8 py-12 overflow-hidden" style={{ backgroundColor: 'var(--color-primary-700)' }}>
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-12 px-8 py-12 overflow-hidden" style={{ backgroundColor: 'var(--color-primary-700)' }}>
       {/* Background decoration — layered circles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full opacity-[0.06]" style={{ backgroundColor: 'var(--color-accent-400)' }} />
@@ -35,8 +35,7 @@ export default function LoginPage() {
         <div className="absolute bottom-32 -right-16 w-44 h-44 rounded-full opacity-[0.05]" style={{ backgroundColor: 'var(--color-accent-300)' }} />
       </div>
 
-      {/* Top spacer */}
-      <div />
+      {/* Top spacer (removed for centered layout) */}
 
       {/* Branding */}
       <div className="relative text-center">
@@ -50,7 +49,7 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        <h1 className="text-4xl font-extrabold tracking-tight text-white">
+        <h1 className="text-4xl font-extrabold tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
           지독해
         </h1>
         <p className="mt-2 text-sm font-medium tracking-wide" style={{ color: 'var(--color-primary-200)' }}>
@@ -64,6 +63,11 @@ export default function LoginPage() {
             함께 읽고 나누는 즐거움
           </p>
         </div>
+
+        {/* Functional description */}
+        <p className="mt-3 text-xs font-medium tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>
+          모임 일정 확인 · 신청 · 결제
+        </p>
       </div>
 
       {/* Bottom section */}

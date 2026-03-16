@@ -122,7 +122,7 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 - **결제 완료 = 신청 확정** — No payment-less registrations exist
 - **Refund policy:** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
-- **Capacity display:** Show "O명 참여" (current count), never show max capacity to members
+- **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page
 - **Button logic:** Determined by `confirmed` registration existence + meeting timing (5 states — see PRD §6-2)
 - **Deletion refund:** Always 100% regardless of refund policy dates
 - **Duplicate prevention:** DB Function detects existing confirmed registration and rejects
@@ -146,10 +146,19 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 
 ```bash
 cd jidokhae-web
-npm run dev      # Start dev server (http://localhost:3000)
-npm run build    # Production build
-npm run lint     # ESLint (eslint-config-next with core-web-vitals + typescript)
-npm run start    # Start production server
+npm run dev         # Start dev server (http://localhost:3000)
+npm run build       # Production build
+npm run lint        # ESLint (eslint-config-next with core-web-vitals + typescript)
+npm run test        # Vitest (unit tests: kst, refund)
+npm run test:watch  # Vitest watch mode
+npm run prelaunch   # lint + tsc + test + build (full QA pipeline)
+npm run start       # Start production server
+```
+
+Run a single test file:
+```bash
+cd jidokhae-web
+npx vitest run src/lib/__tests__/kst.test.ts
 ```
 
 Verification scripts (require `.env.local` with Supabase keys):
@@ -163,7 +172,7 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 - **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback
 - **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` to preserve PKCE cookies
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
-- **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Primary color: warm amber (`--color-primary-*`). Font: Pretendard
+- **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Literary Warmth" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Copper (`--color-accent-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Font: Pretendard
 - **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
 - **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
 - **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
@@ -190,10 +199,11 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 - **Mutation pattern in client components:** `router.push() + router.refresh()` after mutations (no `revalidatePath`)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
-- **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getButtonState()`), never `new Date()` directly
+- **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
 - **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment), `registrations/cancel` (M5 cancel), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup). All use service_role Supabase client, cookie-based auth
 - **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper). Shared between API routes — keep logic here, not in route handlers
-- **No test framework** — verification via scripts (`scripts/verify-m1*.ts`) and manual testing checklists (`검토문서/`). E2E tests planned for M6
+- **Unit tests:** Vitest with `@/*` path alias. Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
+- **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
 
 ### Payment Flow (M4)
 

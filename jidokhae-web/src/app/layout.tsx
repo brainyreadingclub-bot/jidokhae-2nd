@@ -20,6 +20,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-screen antialiased" style={{ backgroundColor: 'var(--color-surface-100)' }}>
         <div className="mx-auto max-w-screen-sm min-h-screen" style={{ backgroundColor: 'var(--color-surface-50)' }}>
           <main>
