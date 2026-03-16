@@ -161,10 +161,12 @@ cd jidokhae-web
 npx vitest run src/lib/__tests__/kst.test.ts
 ```
 
-Verification scripts (require `.env.local` with Supabase keys):
+Verification & utility scripts (require `.env.local` with Supabase keys):
 ```bash
 npx tsx scripts/verify-m1.ts       # Verify M1 deliverables
 npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
+npm run verify:prod                # Verify production deployment
+npm run screenshot                 # Capture UI screenshots for review
 ```
 
 ### Architecture
@@ -192,7 +194,7 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 
 ### Code Conventions
 
-- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Only 7 files use `'use client'`: `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `DeleteMeetingButton`, `RegistrationCard`, `auth/login/page`
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `DeleteMeetingButton`, `RegistrationCard`, `MeetingCard`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
 - **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function

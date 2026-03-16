@@ -29,8 +29,8 @@ export default async function MyPage() {
   if (typedRegs.length === 0) {
     return (
       <div className="px-5 pt-6">
-        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">내 신청</h1>
-        <p className="mt-4 text-sm text-primary-400">신청 내역이 없습니다</p>
+        <h1 className="text-xl font-extrabold text-neutral-800 tracking-tight">내 신청</h1>
+        <p className="mt-4 text-caption text-neutral-400">신청 내역이 없습니다</p>
       </div>
     )
   }
@@ -52,7 +52,7 @@ export default async function MyPage() {
 
   return (
     <div className="px-5 pt-6">
-      <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">내 신청</h1>
+      <h1 className="text-xl font-extrabold text-neutral-800 tracking-tight">내 신청</h1>
 
       <h2 className="mt-5 mb-3 text-xs font-bold text-primary-500 tracking-tight">다가오는 모임</h2>
       {upcoming.length > 0 ? (
@@ -62,17 +62,14 @@ export default async function MyPage() {
           ))}
         </div>
       ) : (
-        <div
-          className="rounded-[var(--radius-md)] py-6 text-center text-sm text-primary-400"
-          style={{ backgroundColor: 'var(--color-surface-50)', border: '1px dashed var(--color-surface-300)' }}
-        >
-          다가오는 모임이 없습니다
+        <div className="rounded-[var(--radius-md)] bg-surface-50 border border-dashed border-neutral-300 py-8 text-center text-caption text-neutral-400">
+          신청한 모임이 없어요
         </div>
       )}
 
       {past.length > 0 && (
         <>
-          <h2 className="mt-6 mb-3 text-xs font-bold text-primary-400 tracking-tight">지난 내역</h2>
+          <h2 className="mt-6 mb-3 text-xs font-bold text-neutral-400 tracking-tight">지난 내역</h2>
           <div className="flex flex-col gap-3">
             {past.map((reg) => (
               <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} />

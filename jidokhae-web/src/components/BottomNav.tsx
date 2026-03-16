@@ -21,8 +21,8 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{ backgroundColor: 'var(--color-surface-50)', boxShadow: 'var(--shadow-tab)', borderTop: '1px solid var(--color-surface-300)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-neutral-100"
+      style={{ boxShadow: 'var(--shadow-tab)' }}
     >
       <div className="mx-auto flex h-16 max-w-screen-sm items-center justify-around px-4">
         {tabs.map((tab) => {
@@ -34,14 +34,14 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`relative flex flex-1 flex-col items-center justify-center gap-1.5 min-h-[44px] py-2 transition-all duration-200 ${
+              className={`relative flex flex-1 flex-col items-center justify-center gap-1.5 min-h-[48px] py-2 transition-colors duration-150 ${
                 isActive
-                  ? 'text-primary-700'
+                  ? 'text-primary-600'
                   : 'text-neutral-400 hover:text-primary-500'
               }`}
             >
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary-500" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-primary-600" />
               )}
               <tab.icon active={isActive} />
               <span className={`text-[11px] tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>

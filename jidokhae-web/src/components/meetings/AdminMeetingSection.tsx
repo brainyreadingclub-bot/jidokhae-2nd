@@ -35,16 +35,11 @@ export default function AdminMeetingSection({
       <div className="mb-6">
         <Link
           href={`/admin/meetings/${meetingId}/edit`}
-          className="block w-full rounded-[var(--radius-md)] py-2.5 text-center text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
-          style={{
-            backgroundColor: 'var(--color-surface-50)',
-            border: '1px solid var(--color-surface-300)',
-            color: 'var(--color-primary-600)',
-          }}
+          className="block w-full rounded-[var(--radius-md)] bg-primary-600 py-3 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 active:scale-[0.98]"
         >
           수정
         </Link>
-        <div className="mt-2">
+        <div className="mt-3">
           <DeleteMeetingButton
             meetingId={meetingId}
             meetingStatus={meetingStatus}

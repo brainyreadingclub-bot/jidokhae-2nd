@@ -15,6 +15,8 @@ npm run lint         # ESLint
 npm run test         # Vitest (unit tests)
 npm run test:watch   # Vitest watch mode
 npm run prelaunch    # lint + tsc + test + build (full QA pipeline)
+npm run verify:prod  # Verify production deployment
+npm run screenshot   # Capture UI screenshots for review
 npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 ```
 
@@ -47,7 +49,7 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 
 ## Key Conventions
 
-- **Server Components by default.** Only these files use `'use client'`: BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, auth/login/page
+- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, auth/login/page, payment-redirect/page, payment-fail/page, route group error.tsx files
 - **No semicolons**, single quotes, function components only
 - **Tailwind v4**: Design tokens in `@theme inline` block in `src/app/globals.css` — NOT in `tailwind.config.ts`. Full token reference: `DESIGN_TOKENS.md`
 - **KST always**: Use `src/lib/kst.ts` functions, never `new Date()` directly
