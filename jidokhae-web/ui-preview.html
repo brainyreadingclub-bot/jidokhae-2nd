@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JIDOKHAE UI/UX 개선 프리뷰</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+  :root {
+    /* Literary Warmth Design System */
+    --color-primary-50: #F0F7F4;
+    --color-primary-100: #D9EDE3;
+    --color-primary-200: #B3DBC7;
+    --color-primary-300: #7CC0A0;
+    --color-primary-400: #4A9E76;
+    --color-primary-500: #2D7D5F;
+    --color-primary-600: #1B6347;
+    --color-primary-700: #1B4332;
+    --color-primary-800: #163528;
+    --color-primary-900: #0F2318;
+    --color-accent-50: #FFF8F0;
+    --color-accent-100: #FEECDA;
+    --color-accent-200: #FCD5B0;
+    --color-accent-300: #F7B87A;
+    --color-accent-400: #F09B4B;
+    --color-accent-500: #D9802A;
+    --color-accent-600: #C06A1C;
+    --color-surface-50: #FEFCF9;
+    --color-surface-100: #FDF8F1;
+    --color-surface-200: #FAF3E8;
+    --color-surface-300: #F5EBD9;
+    --color-error: #C43D3D;
+    --shadow-card: 0 1px 3px rgba(15,35,24,0.04), 0 1px 2px rgba(15,35,24,0.03);
+    --shadow-card-hover: 0 8px 24px rgba(15,35,24,0.08), 0 2px 6px rgba(15,35,24,0.04);
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f0ebe3;
+    color: var(--color-primary-900);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page-header {
+    background: var(--color-primary-700);
+    color: white;
+    padding: 32px 20px 24px;
+    text-align: center;
+  }
+  .page-header h1 { font-size: 22px; font-weight: 800; }
+  .page-header p { font-size: 13px; opacity: 0.7; margin-top: 6px; }
+
+  .section {
+    max-width: 800px;
+    margin: 24px auto;
+    padding: 0 16px;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--color-primary-700);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .num {
+    background: var(--color-primary-600);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 640px) {
+    .compare-row { grid-template-columns: 1fr; }
+  }
+
+  .compare-col {
+    background: var(--color-surface-100);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .compare-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    text-align: center;
+  }
+  .compare-label.before { background: var(--color-surface-200); color: var(--color-primary-400); }
+  .compare-label.after { background: var(--color-primary-50); color: var(--color-primary-600); }
+  .compare-body { padding: 16px; }
+
+  /* ====== CARD STYLES ====== */
+  .card-before {
+    background: var(--color-surface-50);
+    border: 1px solid var(--color-surface-300);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .card-before .accent-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-300));
+  }
+  .card-before .inner { padding: 16px; }
+
+  .card-after {
+    background: var(--color-surface-50);
+    border: 1px solid var(--color-surface-300);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .card-after .accent-bar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-300));
+  }
+  .card-after .inner { padding: 16px; }
+
+  /* Toned down card */
+  .card-after.toned-down {
+    background: var(--color-surface-100);
+  }
+
+  /* Date pill */
+  .date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .date-pill-after {
+    font-size: 12px; /* slightly bigger for hierarchy */
+  }
+  .time-text {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
+  .meeting-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-primary-900);
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .meta-row-after {
+    margin-top: 16px; /* +4px */
+    color: var(--color-primary-400);
+  }
+  .meta-sep {
+    width: 1px;
+    height: 12px;
+    background: var(--color-surface-300);
+  }
+  .fee {
+    font-weight: 700;
+    color: var(--color-accent-600);
+  }
+  .fee-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ====== BADGES ====== */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  /* Before badges */
+  .badge-registered-before {
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    color: var(--color-primary-700);
+  }
+  .badge-full-before {
+    background: rgba(196,61,61,0.08);
+    color: var(--color-error);
+  }
+  .badge-cancelled-before {
+    background: var(--color-surface-200);
+    color: var(--color-primary-400);
+  }
+  /* After badges — all outline */
+  .badge-registered-after {
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    color: var(--color-primary-700);
+  }
+  .badge-full-after {
+    background: rgba(196,61,61,0.06);
+    border: 1px solid rgba(196,61,61,0.2);
+    color: var(--color-error);
+  }
+  .badge-cancelled-after {
+    background: var(--color-surface-200);
+    border: 1px solid var(--color-surface-300);
+    color: var(--color-primary-400);
+  }
+  .badge-admin {
+    background: var(--color-primary-50);
+    color: var(--color-primary-600);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .badge-pos {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+
+  /* ====== BUTTONS ====== */
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-600);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(27,67,50,0.25);
+  }
+  .btn-secondary {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-50);
+    border: 1px solid var(--color-surface-300);
+    color: var(--color-primary-600);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-disabled {
+    width: 100%;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-200);
+    color: var(--color-primary-300);
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: not-allowed;
+  }
+
+  /* ====== STICKY BOTTOM ====== */
+  .phone-frame {
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+    background: var(--color-surface-50);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    position: relative;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+  }
+  .phone-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .phone-sticky-btn {
+    background: var(--color-surface-50);
+    padding: 12px 16px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+    border-top: 1px solid var(--color-surface-200);
+  }
+  .phone-bottom-nav {
+    height: 56px;
+    background: var(--color-surface-50);
+    border-top: 1px solid var(--color-surface-300);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    flex-shrink: 0;
+  }
+  .phone-bottom-nav .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9ca3af;
+  }
+  .phone-bottom-nav .tab.active { color: var(--color-primary-700); font-weight: 700; }
+
+  /* ====== ADMIN SECTION ====== */
+  .admin-before {
+    border-top: 1px solid var(--color-surface-300);
+    padding-top: 24px;
+    margin-top: 24px;
+  }
+  .admin-after {
+    background: var(--color-surface-100);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-top: 24px;
+  }
+  .admin-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary-800);
+    margin-bottom: 12px;
+  }
+  .admin-btns {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .btn-edit {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-50);
+    border: 1px solid var(--color-surface-300);
+    color: var(--color-primary-600);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+  }
+  .btn-delete-before {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-50);
+    border: 1px solid rgba(196,61,61,0.3);
+    color: var(--color-error);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-delete-after {
+    color: var(--color-error);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 10px 4px;
+    text-align: center;
+  }
+  .btn-delete-after:hover { text-decoration: underline; }
+
+  /* ====== REGISTRATION CARD ====== */
+  .reg-card {
+    background: var(--color-surface-50);
+    border: 1px solid var(--color-surface-300);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .reg-card .accent-bar-success {
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-300));
+  }
+  .reg-card .accent-bar-gray {
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-surface-300), var(--color-surface-200));
+  }
+  .reg-card.dimmed {
+    opacity: 0.6;
+    background: var(--color-surface-100);
+  }
+  .reg-inner {
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .reg-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary-900);
+  }
+  .reg-meta {
+    font-size: 12px;
+    color: rgba(27,67,50,0.5);
+    margin-top: 6px;
+  }
+  .reg-fee {
+    font-size: 12px;
+    color: rgba(27,67,50,0.5);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-surface-300);
+  }
+
+  /* ====== TABLE ====== */
+  .mini-table {
+    width: 100%;
+    border: 1px solid var(--color-surface-300);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    font-size: 13px;
+  }
+  .mini-table thead tr {
+    background: var(--color-surface-100);
+    border-bottom: 1px solid var(--color-surface-300);
+  }
+  .mini-table th {
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-primary-500);
+  }
+  .mini-table th:last-child { text-align: right; }
+  .mini-table td {
+    padding: 10px 12px;
+    background: var(--color-surface-50);
+  }
+  .mini-table td:last-child { text-align: right; }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--color-primary-400);
+    font-size: 14px;
+  }
+
+  /* ====== FORM ====== */
+  .form-field { margin-bottom: 20px; }
+  .form-field.wider { margin-bottom: 24px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-primary-700);
+    margin-bottom: 6px;
+  }
+  .form-label.wider { margin-bottom: 8px; }
+  .form-label .req { color: var(--color-accent-500); margin-left: 2px; }
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-surface-300);
+    background: var(--color-surface-50);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-primary-900);
+    font-family: inherit;
+    outline: none;
+  }
+
+  /* ====== MY PAGE GROUPS ====== */
+  .group-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary-500);
+    margin: 16px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .group-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-surface-300);
+  }
+
+  /* ====== OG PREVIEW ====== */
+  .og-preview {
+    background: #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 320px;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .og-preview .og-body {
+    padding: 12px 16px;
+    background: white;
+  }
+  .og-preview .og-sitename {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 4px;
+  }
+  .og-preview .og-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .og-preview .og-desc {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+  }
+
+  .note {
+    background: var(--color-accent-50);
+    border: 1px solid var(--color-accent-200);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--color-accent-600);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .note strong { font-weight: 700; }
+
+  .divider {
+    border: none;
+    border-top: 2px solid var(--color-surface-300);
+    margin: 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>JIDOKHAE UI/UX 개선 프리뷰</h1>
+  <p>11개 항목 Before → After 비교</p>
+</div>
+
+<!-- ===== 1. MeetingCard ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">1</span> MeetingCard — 카드 스타일 (톤다운)</div>
+  <div class="note"><strong>전문가 판단:</strong> 좌측 amber 보더는 현재 코드에 없음(이미 제거됨). 상단 gradient bar는 Literary Warmth 브랜드 시그니처로 유지. 신청완료/마감 카드만 bg-surface-100으로 톤다운.</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body">
+        <!-- Normal card -->
+        <div class="card-before">
+          <div class="accent-bar"></div>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill">3월 22일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">데미안 — 자아를 찾는 여정</div>
+            <div class="meta-row">
+              <span>경주 카페</span>
+              <span class="meta-sep"></span>
+              <span>8명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee">15,000원</span>
+            </div>
+          </div>
+        </div>
+        <!-- Registered card (same bg) -->
+        <div class="card-before">
+          <div class="accent-bar"></div>
+          <span class="badge badge-registered-before badge-pos">신청완료</span>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill">3월 29일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">사피엔스 — 인류의 역사</div>
+            <div class="meta-row">
+              <span>포항 라운지</span>
+              <span class="meta-sep"></span>
+              <span>12명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee">12,000원</span>
+            </div>
+          </div>
+        </div>
+        <!-- Full card (same bg) -->
+        <div class="card-before">
+          <div class="accent-bar"></div>
+          <span class="badge badge-full-before badge-pos">마감</span>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill">4월 5일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">총, 균, 쇠</div>
+            <div class="meta-row">
+              <span>경주 북카페</span>
+              <span class="meta-sep"></span>
+              <span>14명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee">10,000원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body">
+        <!-- Normal card (unchanged) -->
+        <div class="card-after">
+          <div class="accent-bar"></div>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill date-pill-after">3월 22일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">데미안 — 자아를 찾는 여정</div>
+            <div class="meta-row meta-row-after">
+              <span>경주 카페</span>
+              <span class="meta-sep"></span>
+              <span>8명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee fee-tabular">15,000원</span>
+            </div>
+          </div>
+        </div>
+        <!-- Registered card (toned down) -->
+        <div class="card-after toned-down">
+          <div class="accent-bar"></div>
+          <span class="badge badge-registered-after badge-pos">신청완료</span>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill date-pill-after">3월 29일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">사피엔스 — 인류의 역사</div>
+            <div class="meta-row meta-row-after">
+              <span>포항 라운지</span>
+              <span class="meta-sep"></span>
+              <span>12명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee fee-tabular">12,000원</span>
+            </div>
+          </div>
+        </div>
+        <!-- Full card (toned down) -->
+        <div class="card-after toned-down">
+          <div class="accent-bar"></div>
+          <span class="badge badge-full-after badge-pos">마감</span>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill date-pill-after">4월 5일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">총, 균, 쇠</div>
+            <div class="meta-row meta-row-after">
+              <span>경주 북카페</span>
+              <span class="meta-sep"></span>
+              <span>14명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee fee-tabular">10,000원</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 2. Badge Styles ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">2</span> 뱃지 스타일 통일 (아웃라인)</div>
+  <div class="note"><strong>전문가 판단:</strong> green/gray 색상은 디자인 토큰에 없으므로 primary/surface 계열로 매핑. 운영자 뱃지만 채움(filled) 유지.</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <span class="badge badge-registered-before">신청완료</span>
+        <span class="badge badge-full-before">마감</span>
+        <span class="badge badge-cancelled-before">취소됨</span>
+        <span class="badge badge-admin">운영자</span>
+        <div style="width:100%;font-size:11px;color:var(--color-primary-400);margin-top:4px">
+          ↑ 마감: 채움(filled), border 없음<br>
+          ↑ 취소됨: 채움(filled), border 없음
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <span class="badge badge-registered-after">신청완료</span>
+        <span class="badge badge-full-after">마감</span>
+        <span class="badge badge-cancelled-after">취소됨</span>
+        <span class="badge badge-admin">운영자</span>
+        <div style="width:100%;font-size:11px;color:var(--color-primary-600);margin-top:4px">
+          ✓ 모든 상태 뱃지: 아웃라인 통일<br>
+          ✓ 운영자: 채움 유지 (권한 표시)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 3. Sticky Bottom Button ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">3</span> 신청하기 버튼 하단 고정 (sticky bottom)</div>
+  <div class="note"><strong>전문가 판단:</strong> register/full/cancel 버튼만 sticky. attended/cancel-complete 결과 UI는 콘텐츠 흐름에 유지 (카드형 UI를 하단 고정하면 부자연스러움).</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body">
+        <div class="phone-frame">
+          <div class="phone-content">
+            <div style="font-size:11px;color:var(--color-primary-400);margin-bottom:12px">← 목록으로</div>
+            <h3 style="font-size:18px;font-weight:800;color:var(--color-primary-900)">데미안</h3>
+            <div style="margin:16px 0;background:var(--color-surface-100);border-radius:var(--radius-md);padding:12px;font-size:13px;color:var(--color-primary-500)">
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">날짜: 3월 22일 (토)</div>
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">시간: 14:00</div>
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">장소: 경주 카페</div>
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">참여: 8명</div>
+              <div style="padding:6px 0">참가비: <span style="color:var(--color-accent-600);font-weight:700">15,000원</span></div>
+            </div>
+            <!-- Button in content flow -->
+            <div style="margin-top:24px">
+              <button class="btn-primary">신청하기</button>
+            </div>
+            <div style="height:100px;display:flex;align-items:center;justify-content:center;color:var(--color-primary-300);font-size:12px">
+              ↑ 버튼이 콘텐츠 안에 위치
+            </div>
+          </div>
+          <div class="phone-bottom-nav">
+            <div class="tab active">📅<span>모임 일정</span></div>
+            <div class="tab">📋<span>내 신청</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body">
+        <div class="phone-frame">
+          <div class="phone-content">
+            <div style="font-size:11px;color:var(--color-primary-400);margin-bottom:12px">← 목록으로</div>
+            <h3 style="font-size:18px;font-weight:800;color:var(--color-primary-900)">데미안</h3>
+            <div style="margin:16px 0;background:var(--color-surface-100);border-radius:var(--radius-md);padding:12px;font-size:13px;color:var(--color-primary-500)">
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">날짜: 3월 22일 (토)</div>
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">시간: 14:00</div>
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">장소: 경주 카페</div>
+              <div style="padding:6px 0;border-bottom:1px solid var(--color-surface-300)">참여: 8명</div>
+              <div style="padding:6px 0">참가비: <span style="color:var(--color-accent-600);font-weight:700">15,000원</span></div>
+            </div>
+            <div style="height:80px;display:flex;align-items:center;justify-content:center;color:var(--color-primary-300);font-size:12px">
+              (콘텐츠 영역)
+            </div>
+          </div>
+          <!-- Sticky button area -->
+          <div class="phone-sticky-btn">
+            <button class="btn-primary">신청하기</button>
+          </div>
+          <div class="phone-bottom-nav">
+            <div class="tab active">📅<span>모임 일정</span></div>
+            <div class="tab">📋<span>내 신청</span></div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--color-primary-500);text-align:center">
+          ✓ 버튼 하단 고정 + 흰 배경 + 상단 그림자<br>
+          ✓ BottomNav와 겹치지 않음
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 4. Admin hide button ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">4</span> 운영자 뷰에서 신청하기 버튼 숨김</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before (운영자 화면)</div>
+      <div class="compare-body">
+        <div style="background:var(--color-surface-50);border-radius:var(--radius-md);padding:16px">
+          <div style="font-size:13px;color:var(--color-primary-400);margin-bottom:8px">모임 상세 내용...</div>
+          <button class="btn-primary" style="margin-bottom:16px">신청하기</button>
+          <div class="admin-before" style="margin-top:0">
+            <div class="admin-title">운영자 관리</div>
+            <div style="font-size:12px;color:var(--color-primary-400)">수정 / 삭제 / 신청자 목록</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--color-error);text-align:center">
+          ✗ 운영자에게도 신청 버튼 노출
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After (운영자 화면)</div>
+      <div class="compare-body">
+        <div style="background:var(--color-surface-50);border-radius:var(--radius-md);padding:16px">
+          <div style="font-size:13px;color:var(--color-primary-400);margin-bottom:8px">모임 상세 내용...</div>
+          <!-- No button -->
+          <div class="admin-after" style="margin-top:0">
+            <div class="admin-title">운영자 관리</div>
+            <div style="font-size:12px;color:var(--color-primary-400)">수정 / 삭제 / 신청자 목록</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--color-primary-600);text-align:center">
+          ✓ isAdmin일 때 버튼 비렌더링
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 5. Admin Section Separation ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">5</span> 운영자 관리 영역 시각 분리</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body">
+        <div style="background:var(--color-surface-50);border-radius:var(--radius-md);padding:16px">
+          <div style="font-size:13px;color:var(--color-primary-400);padding-bottom:16px">콘텐츠 영역...</div>
+          <div class="admin-before">
+            <div class="admin-title">운영자 관리</div>
+            <div class="admin-btns">
+              <button class="btn-edit">수정</button>
+              <button class="btn-delete-before">삭제</button>
+            </div>
+            <div style="font-size:12px;color:var(--color-primary-400)">신청자 목록...</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--color-primary-400);text-align:center">
+          ↑ 구분선 하나로만 분리<br>
+          ↑ 삭제가 수정과 동일한 무게감
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body">
+        <div style="background:var(--color-surface-50);border-radius:var(--radius-md);padding:16px">
+          <div style="font-size:13px;color:var(--color-primary-400);padding-bottom:16px">콘텐츠 영역...</div>
+          <div class="admin-after">
+            <div class="admin-title">운영자 관리</div>
+            <div class="admin-btns" style="align-items:center">
+              <button class="btn-edit" style="flex:none;padding:10px 24px">수정</button>
+              <button class="btn-delete-after">삭제</button>
+            </div>
+            <div style="font-size:12px;color:var(--color-primary-400)">신청자 목록...</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--color-primary-600);text-align:center">
+          ✓ bg-surface-100 배경으로 영역 분리<br>
+          ✓ 삭제: 텍스트 링크로 경량화
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 6. RegistrationCard Cancelled Dimming ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">6</span> RegistrationCard — 취소 카드 비활성화</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body">
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div>
+              <div class="reg-title">데미안</div>
+              <div class="reg-meta">3월 22일 (토) · 14:00</div>
+            </div>
+            <span class="badge badge-registered-before">신청완료</span>
+          </div>
+        </div>
+        <div class="reg-card">
+          <div class="accent-bar-gray"></div>
+          <div class="reg-inner">
+            <div>
+              <div class="reg-title">사피엔스</div>
+              <div class="reg-meta">3월 15일 (토) · 14:00</div>
+            </div>
+            <span class="badge badge-cancelled-before">취소됨</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-400);text-align:center;margin-top:4px">
+          ↑ 취소 카드도 동일한 투명도/배경
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body">
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div>
+              <div class="reg-title">데미안</div>
+              <div class="reg-meta">3월 22일 (토) · 14:00</div>
+            </div>
+            <span class="badge badge-registered-after">신청완료</span>
+          </div>
+        </div>
+        <div class="reg-card dimmed">
+          <div class="accent-bar-gray"></div>
+          <div class="reg-inner">
+            <div>
+              <div class="reg-title">사피엔스</div>
+              <div class="reg-meta">3월 15일 (토) · 14:00</div>
+            </div>
+            <span class="badge badge-cancelled-after">취소됨</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-600);text-align:center;margin-top:4px">
+          ✓ opacity-60 + bg-surface-100 적용
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 7. My Registration Grouping ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">7</span> 내 신청 — 활성/과거 그룹핑</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body">
+        <h3 style="font-size:18px;font-weight:800;color:var(--color-primary-900);margin-bottom:12px">내 신청</h3>
+        <!-- All mixed, date desc -->
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">총, 균, 쇠</div><div class="reg-meta">4월 5일 (토) · 14:00</div></div>
+            <span class="badge badge-registered-before">신청완료</span>
+          </div>
+        </div>
+        <div class="reg-card">
+          <div class="accent-bar-gray"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">사피엔스</div><div class="reg-meta">3월 29일 (토) · 14:00</div></div>
+            <span class="badge badge-cancelled-before">취소됨</span>
+          </div>
+        </div>
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">데미안</div><div class="reg-meta">3월 22일 (토) · 14:00</div></div>
+            <span class="badge badge-registered-before">신청완료</span>
+          </div>
+        </div>
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">아몬드</div><div class="reg-meta">3월 8일 (토) · 14:00</div></div>
+            <span class="badge badge-registered-before">참여 완료</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-400);text-align:center;margin-top:8px">
+          ↑ 날짜 내림차순, 상태 혼재
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body">
+        <h3 style="font-size:18px;font-weight:800;color:var(--color-primary-900);margin-bottom:12px">내 신청</h3>
+
+        <!-- Group 1: Upcoming (date asc) -->
+        <div class="group-label">다가오는 모임</div>
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">데미안</div><div class="reg-meta">3월 22일 (토) · 14:00</div></div>
+            <span class="badge badge-registered-after">신청완료</span>
+          </div>
+        </div>
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">총, 균, 쇠</div><div class="reg-meta">4월 5일 (토) · 14:00</div></div>
+            <span class="badge badge-registered-after">신청완료</span>
+          </div>
+        </div>
+
+        <!-- Group 2: Past (date desc) -->
+        <div class="group-label">지난 내역</div>
+        <div class="reg-card dimmed">
+          <div class="accent-bar-gray"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">사피엔스</div><div class="reg-meta">3월 29일 (토) · 14:00</div></div>
+            <span class="badge badge-cancelled-after">취소됨</span>
+          </div>
+        </div>
+        <div class="reg-card">
+          <div class="accent-bar-success"></div>
+          <div class="reg-inner">
+            <div><div class="reg-title">아몬드</div><div class="reg-meta">3월 8일 (토) · 14:00</div></div>
+            <span class="badge badge-registered-after">참여 완료</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-600);text-align:center;margin-top:8px">
+          ✓ 다가오는: 날짜 오름차순<br>
+          ✓ 지난: 날짜 내림차순 + 취소 dimmed
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 8. Typography Hierarchy ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">8</span> 카드 내부 여백 및 타이포 위계</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body">
+        <div class="card-before">
+          <div class="accent-bar"></div>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill" style="font-size:11px">3월 22일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">데미안 — 자아를 찾는 여정</div>
+            <div class="meta-row" style="margin-top:12px">
+              <span>경주 카페</span>
+              <span class="meta-sep"></span>
+              <span>8명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee">15,000원</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-400)">
+          날짜 pill: 11px · 메타↔제목 간격: 12px<br>
+          참가비: tabular-nums 없음
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body">
+        <div class="card-after">
+          <div class="accent-bar"></div>
+          <div class="inner">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <span class="date-pill" style="font-size:12px">3월 22일 (토)</span>
+              <span class="time-text">14:00</span>
+            </div>
+            <div class="meeting-title">데미안 — 자아를 찾는 여정</div>
+            <div class="meta-row" style="margin-top:16px;color:var(--color-primary-400)">
+              <span>경주 카페</span>
+              <span class="meta-sep"></span>
+              <span>8명 참여</span>
+              <span class="meta-sep"></span>
+              <span class="fee" style="font-variant-numeric:tabular-nums">15,000원</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-600)">
+          날짜 pill: <strong>12px</strong> (시각적 위계 ↑) · 메타↔제목 간격: <strong>16px</strong><br>
+          메타정보: primary-400 톤다운 · 참가비: <strong>tabular-nums</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 9. Form Spacing ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">9</span> 폼 UI 여백 조정 (8px 그리드)</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body" style="background:var(--color-surface-50);border-radius:var(--radius-md);padding:16px">
+        <div class="form-field">
+          <label class="form-label">모임명<span class="req">*</span></label>
+          <input class="form-input" placeholder="독서모임 제목" value="데미안 읽기 모임">
+        </div>
+        <div class="form-field">
+          <label class="form-label">장소<span class="req">*</span></label>
+          <input class="form-input" placeholder="모임 장소" value="경주 카페">
+        </div>
+        <div class="form-field">
+          <label class="form-label">정원<span class="req">*</span></label>
+          <input class="form-input" placeholder="14" value="14">
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-400);text-align:center">
+          라벨↔Input: 6px · Field 간격: 20px
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body" style="background:var(--color-surface-50);border-radius:var(--radius-md);padding:16px">
+        <div class="form-field wider">
+          <label class="form-label wider">모임명<span class="req">*</span></label>
+          <input class="form-input" placeholder="독서모임 제목" value="데미안 읽기 모임">
+        </div>
+        <div class="form-field wider">
+          <label class="form-label wider">장소<span class="req">*</span></label>
+          <input class="form-input" placeholder="모임 장소" value="경주 카페">
+        </div>
+        <div class="form-field wider">
+          <label class="form-label wider">정원<span class="req">*</span></label>
+          <input class="form-input" placeholder="14" value="14">
+        </div>
+        <div style="font-size:11px;color:var(--color-primary-600);text-align:center">
+          라벨↔Input: <strong>8px</strong> · Field 간격: <strong>24px</strong><br>
+          모바일 터치 영역 확보
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 10. Empty State ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">10</span> 빈 상태(empty state) 개선</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before</div>
+      <div class="compare-body">
+        <div style="font-size:12px;font-weight:700;color:var(--color-primary-500);margin-bottom:8px">신청자 목록 (0명)</div>
+        <table class="mini-table">
+          <thead>
+            <tr><th>이름</th><th>신청일</th><th>상태</th></tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="3" style="text-align:center;color:var(--color-primary-400);padding:24px">아직 신청자가 없습니다</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;font-size:11px;color:var(--color-primary-400);text-align:center">
+          ↑ 0명인데 테이블 헤더가 보임
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After</div>
+      <div class="compare-body">
+        <div style="font-size:12px;font-weight:700;color:var(--color-primary-500);margin-bottom:8px">신청자 목록 (0명)</div>
+        <div class="empty-state">
+          아직 신청자가 없습니다
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--color-primary-600);text-align:center">
+          ✓ 테이블 헤더 숨김, 메시지만 표시
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ===== 11. OG Meta Tags ===== -->
+<div class="section">
+  <div class="section-title"><span class="num">11</span> OG 메타 태그 (카카오톡 공유 미리보기)</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-label before">Before (카카오톡 공유)</div>
+      <div class="compare-body" style="display:flex;justify-content:center">
+        <div class="og-preview">
+          <div class="og-body">
+            <div class="og-sitename">brainy-club.com</div>
+            <div class="og-title">지독해 - 독서모임</div>
+            <div class="og-desc">경주/포항 독서모임 지독해...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label after">After (카카오톡 공유)</div>
+      <div class="compare-body" style="display:flex;justify-content:center">
+        <div class="og-preview">
+          <div class="og-body">
+            <div class="og-sitename">지독해</div>
+            <div class="og-title">데미안 — 자아를 찾는 여정</div>
+            <div class="og-desc">3월 22일 (토) 14:00 · 경주 카페 · 참가비 15,000원</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:40px 20px;color:var(--color-primary-400);font-size:13px">
+  — End of Preview —
+</div>
+
+</body>
+</html>

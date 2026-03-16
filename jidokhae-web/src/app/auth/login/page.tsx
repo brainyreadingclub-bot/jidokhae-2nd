@@ -27,70 +27,126 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center gap-12 px-8 py-12 overflow-hidden" style={{ backgroundColor: 'var(--color-primary-700)' }}>
-      {/* Background decoration — layered circles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full opacity-[0.06]" style={{ backgroundColor: 'var(--color-accent-400)' }} />
-        <div className="absolute top-1/4 -left-24 w-56 h-56 rounded-full opacity-[0.04]" style={{ backgroundColor: 'var(--color-primary-300)' }} />
-        <div className="absolute bottom-32 -right-16 w-44 h-44 rounded-full opacity-[0.05]" style={{ backgroundColor: 'var(--color-accent-300)' }} />
-      </div>
+    <div className="flex min-h-screen flex-col overflow-hidden">
+      {/* ── Top Section: Brand Editorial ── */}
+      <section
+        className="relative flex flex-[3] flex-col justify-end px-[var(--spacing-page)] pb-14 md:px-10"
+        style={{ backgroundColor: 'var(--color-primary-900)' }}
+      >
+        {/* Grain texture overlay */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            opacity: 0.035,
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
 
-      {/* Top spacer (removed for centered layout) */}
-
-      {/* Branding */}
-      <div className="relative text-center">
-        {/* Book icon */}
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-80">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            <path d="M8 7h8" />
-            <path d="M8 11h6" />
-          </svg>
+        {/* Organic shapes */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="absolute -top-20 -right-20 h-64 w-64 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-accent-400) 0%, transparent 70%)', opacity: 0.06 }}
+          />
+          <div
+            className="absolute top-1/3 -left-16 h-48 w-48 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-primary-300) 0%, transparent 70%)', opacity: 0.05 }}
+          />
+          <div
+            className="absolute bottom-12 right-8 h-32 w-32 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-accent-300) 0%, transparent 70%)', opacity: 0.04 }}
+          />
         </div>
 
-        <h1 className="text-4xl font-extrabold tracking-tight text-white" style={{ fontFamily: 'var(--font-display)' }}>
-          지독해
-        </h1>
-        <p className="mt-2 text-sm font-medium tracking-wide" style={{ color: 'var(--color-primary-200)' }}>
-          경주 · 포항 독서모임
-        </p>
+        {/* Brand content */}
+        <div className="relative">
+          <h1
+            className="text-[2.75rem] font-bold leading-[1.1] text-white md:text-[3.25rem]"
+            style={{
+              fontFamily: 'var(--font-display)',
+              animation: 'loginFadeUp 600ms ease-out both',
+            }}
+          >
+            지독해
+          </h1>
 
-        {/* Tagline */}
-        <div className="mt-8 mx-auto max-w-[240px]">
-          <p className="text-[13px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
-            책으로 연결되는 우리의 시간,<br />
-            함께 읽고 나누는 즐거움
+          <p
+            className="mt-3 text-caption text-neutral-400"
+            style={{
+              letterSpacing: '0.15em',
+              animation: 'loginFadeUp 600ms ease-out both',
+              animationDelay: '150ms',
+            }}
+          >
+            경주 · 포항 독서모임
+          </p>
+
+          {/* Thin editorial rule */}
+          <div
+            className="mt-6 mb-6 h-px w-[60px] bg-neutral-600"
+            style={{
+              animation: 'loginFadeUp 600ms ease-out both',
+              animationDelay: '300ms',
+            }}
+          />
+
+          <p
+            className="text-subheading text-neutral-300"
+            style={{
+              animation: 'loginFadeUp 600ms ease-out both',
+              animationDelay: '300ms',
+            }}
+          >
+            책으로 연결되는 사람들
           </p>
         </div>
+      </section>
 
-        {/* Functional description */}
-        <p className="mt-3 text-xs font-medium tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          모임 일정 확인 · 신청 · 결제
+      {/* ── Bottom Section: Login Action ── */}
+      <section
+        className="relative z-10 -mt-6 flex flex-[2] flex-col items-center justify-center rounded-t-[24px] px-[var(--spacing-page)] py-10 md:px-10"
+        style={{
+          backgroundColor: 'var(--color-neutral-50)',
+          animation: 'loginSlideUp 500ms ease-out both',
+          animationDelay: '200ms',
+        }}
+      >
+        {/* Social proof */}
+        <p className="mb-6 text-caption text-neutral-500">
+          지금 250명이 함께 읽고 있어요
         </p>
-      </div>
 
-      {/* Bottom section */}
-      <div className="relative w-full max-w-xs space-y-4">
         {/* Kakao Login Button */}
         <button
           onClick={handleKakaoLogin}
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-2.5 rounded-2xl px-6 py-4 text-sm font-bold transition-all disabled:opacity-50 active:scale-[0.98]"
-          style={{ backgroundColor: '#FEE500', color: 'rgba(0,0,0,0.85)' }}
+          className="flex w-full max-w-[320px] items-center justify-center gap-2.5 rounded-[var(--radius-md)] px-6 py-4 text-sm font-bold shadow-sm transition-shadow hover:shadow-md disabled:opacity-50 active:scale-[0.98]"
+          style={{
+            backgroundColor: '#FEE500',
+            color: 'rgba(0,0,0,0.85)',
+            transitionDuration: 'var(--transition-base)',
+          }}
         >
           <KakaoIcon />
           {isLoading ? '로그인 중...' : '카카오로 시작하기'}
         </button>
 
         {errorMessage && (
-          <p className="text-center text-sm" style={{ color: '#F7B87A' }}>{errorMessage}</p>
+          <p className="mt-3 text-center text-sm text-error">{errorMessage}</p>
         )}
 
-        <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        <p className="mt-4 text-small text-neutral-400">
           카카오 계정으로 간편하게 시작하세요
         </p>
-      </div>
+
+        {/* Footer */}
+        <p
+          className="mt-auto pt-6 text-small text-neutral-300"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+        >
+          지독해 · 경주 포항 독서모임
+        </p>
+      </section>
     </div>
   )
 }

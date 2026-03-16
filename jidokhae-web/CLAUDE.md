@@ -49,7 +49,7 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 
 - **Server Components by default.** Only these files use `'use client'`: BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, auth/login/page
 - **No semicolons**, single quotes, function components only
-- **Tailwind v4**: Design tokens in `@theme inline` block in `src/app/globals.css` — NOT in `tailwind.config.ts`
+- **Tailwind v4**: Design tokens in `@theme inline` block in `src/app/globals.css` — NOT in `tailwind.config.ts`. Full token reference: `DESIGN_TOKENS.md`
 - **KST always**: Use `src/lib/kst.ts` functions, never `new Date()` directly
 - **`formatFee()`** returns number-only string (e.g., `"10,000"`) — caller adds '원' suffix
 - **Next.js 16 params**: Dynamic route params are `Promise<{ id: string }>` — must `await` them

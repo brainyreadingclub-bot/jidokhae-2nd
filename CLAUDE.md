@@ -172,7 +172,7 @@ npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
 - **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback
 - **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` to preserve PKCE cookies
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
-- **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Literary Warmth" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Copper (`--color-accent-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Font: Pretendard
+- **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Editorial Organic" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Terracotta (`--color-accent-*`), Neutral: Warm Gray (`--color-neutral-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Fonts: Noto Serif KR (titles), Pretendard (body). See `jidokhae-web/DESIGN_TOKENS.md` for full token reference
 - **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
 - **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
 - **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
