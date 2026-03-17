@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 type Props = {
@@ -11,8 +11,12 @@ export default function PaymentRedirectPage({ params }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
+  const processedRef = useRef(false)
 
   useEffect(() => {
+    if (processedRef.current) return
+    processedRef.current = true
+
     async function processRedirect() {
       const { id: meetingId } = await params
 

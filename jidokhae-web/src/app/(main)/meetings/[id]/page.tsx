@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getProfile } from '@/lib/profile'
 import { getKSTToday, getButtonState, formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
@@ -66,8 +67,8 @@ export default async function MeetingDetailPage({ params }: Props) {
     notFound()
   }
 
-  // Parallel: confirmed count, user's registration, user's role
-  const [countsResult, myRegResult, profileResult] = await Promise.all([
+  // Parallel: confirmed count + user's registration, profile from cache
+  const [countsResult, myRegResult] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
@@ -76,11 +77,6 @@ export default async function MeetingDetailPage({ params }: Props) {
       .eq('meeting_id', id)
       .eq('status', 'confirmed')
       .limit(1),
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single(),
   ])
 
   if (countsResult.error) {
@@ -89,9 +85,9 @@ export default async function MeetingDetailPage({ params }: Props) {
   if (myRegResult.error) {
     throw new Error(`내 신청 조회 실패: ${myRegResult.error.message}`)
   }
-  if (profileResult.error) {
-    throw new Error(`프로필 조회 실패: ${profileResult.error.message}`)
-  }
+
+  // cache hit — layout already fetched this in the same request
+  const profile = await getProfile(user.id)
 
   const confirmedCount = Number(
     (countsResult.data as { meeting_id: string; confirmed_count: number }[] | null)
@@ -100,7 +96,7 @@ export default async function MeetingDetailPage({ params }: Props) {
   const myReg = myRegResult.data?.[0] ?? null
   const hasConfirmed = myReg !== null
   const isFull = confirmedCount >= typedMeeting.capacity
-  const role = profileResult.data?.role ?? 'member'
+  const role = profile.role ?? 'member'
   const isAdmin = role === 'admin'
 
   // Members cannot see deleting meetings

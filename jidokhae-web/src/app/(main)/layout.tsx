@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getProfile } from '@/lib/profile'
 import BottomNav from '@/components/BottomNav'
 import LogoutButton from '@/components/LogoutButton'
 import Footer from '@/components/Footer'
@@ -15,13 +16,9 @@ export default async function MainLayout({
   let nickname = ''
   let role = 'member'
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('nickname, role')
-      .eq('id', user.id)
-      .single()
-    nickname = profile?.nickname || ''
-    role = profile?.role || 'member'
+    const profile = await getProfile(user.id)
+    nickname = profile.nickname || ''
+    role = profile.role || 'member'
   }
 
   return (

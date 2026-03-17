@@ -6,6 +6,7 @@ import { loadTossPayments } from '@tosspayments/payment-sdk'
 import type { ButtonState } from '@/lib/kst'
 import { formatFee } from '@/lib/kst'
 import { calculateRefund } from '@/lib/refund'
+import ModalOverlay from '@/components/ui/ModalOverlay'
 
 type Props = {
   buttonState: ButtonState
@@ -365,32 +366,6 @@ export default function MeetingActionButton({
 }
 
 // --- Sub-components ---
-
-function ModalOverlay({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode
-  onClose?: () => void
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-        onClick={onClose}
-      />
-      <div
-        className="relative w-full max-w-sm rounded-[var(--radius-lg)] p-6 animate-[scaleIn_0.2s_ease-out]"
-        style={{
-          backgroundColor: 'var(--color-surface-50)',
-          boxShadow: 'var(--shadow-elevated)',
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
 
 function StickyBottom({ children }: { children: React.ReactNode }) {
   return (

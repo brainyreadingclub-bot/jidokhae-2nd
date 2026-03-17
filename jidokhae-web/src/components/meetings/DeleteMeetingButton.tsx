@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import ModalOverlay from '@/components/ui/ModalOverlay'
 
 type Props = {
   meetingId: string
@@ -10,32 +11,6 @@ type Props = {
 }
 
 type DeletePhase = 'idle' | 'confirm' | 'processing' | 'partial'
-
-function ModalOverlay({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode
-  onClose?: () => void
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-5">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
-        onClick={onClose}
-      />
-      <div
-        className="relative w-full max-w-sm rounded-[var(--radius-lg)] p-6 animate-[scaleIn_0.2s_ease-out]"
-        style={{
-          backgroundColor: 'var(--color-surface-50)',
-          boxShadow: 'var(--shadow-elevated)',
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
 
 export default function DeleteMeetingButton({
   meetingId,

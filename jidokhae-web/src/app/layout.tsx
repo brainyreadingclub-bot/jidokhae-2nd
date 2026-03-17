@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from 'next'
+import { Noto_Serif_KR } from 'next/font/google'
 import './globals.css'
+
+const notoSerifKR = Noto_Serif_KR({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  display: 'swap',
+  variable: '--font-noto-serif',
+})
 
 export const metadata: Metadata = {
   title: '지독해 - 독서모임',
@@ -19,24 +27,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={notoSerifKR.variable}>
       <head>
         <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap"
           rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
       </head>
-      <body className="min-h-screen antialiased" style={{ backgroundColor: 'var(--color-surface-100)' }}>
-        <div className="mx-auto max-w-screen-sm min-h-screen" style={{ backgroundColor: 'var(--color-surface-50)' }}>
+      <body className="min-h-screen antialiased">
+        <div className="mx-auto max-w-screen-sm min-h-screen bg-surface-50">
           <main>
             {children}
           </main>
