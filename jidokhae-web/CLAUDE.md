@@ -49,7 +49,7 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 
 ## Key Conventions
 
-- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, auth/login/page, payment-redirect/page, payment-fail/page, route group error.tsx files
+- **Server Components by default.** Client Components (`'use client'`, 12 files): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, auth/login/page, payment-redirect/page, payment-fail/page, route group error.tsx files (2)
 - **No semicolons**, single quotes, function components only
 - **Tailwind v4**: Design tokens in `@theme inline` block in `src/app/globals.css` — NOT in `tailwind.config.ts`. Full token reference: `DESIGN_TOKENS.md`
 - **KST always**: Use `src/lib/kst.ts` functions, never `new Date()` directly

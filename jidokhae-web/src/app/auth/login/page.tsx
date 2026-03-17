@@ -140,12 +140,17 @@ export default function LoginPage() {
         </p>
 
         {/* Footer */}
-        <p
-          className="mt-auto pt-6 text-small text-neutral-300"
+        <div
+          className="mt-auto pt-6 text-center"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
         >
-          지독해 · 경주 포항 독서모임
-        </p>
+          <p className="text-small text-neutral-300">
+            지독해 · 경주 포항 독서모임
+          </p>
+          <p className="mt-2 text-[10px] leading-relaxed text-neutral-300/60">
+            상호명: 지독해 | 대표자: 임재윤 | 사업자등록번호: 494-42-01276
+          </p>
+        </div>
       </section>
     </div>
   )

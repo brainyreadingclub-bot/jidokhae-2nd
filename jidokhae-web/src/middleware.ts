@@ -32,6 +32,11 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Public pages: skip getUser() — no auth needed
+  if (pathname.startsWith('/policy')) {
+    return supabaseResponse
+  }
+
   // Session refresh — must call getUser() to refresh expired tokens
   const {
     data: { user },

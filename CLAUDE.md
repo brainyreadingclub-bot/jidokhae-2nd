@@ -28,8 +28,12 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 /검토문서                                        # Review notes & manual test checklists
 ├── mvp 검토.md                                 # MVP review: payment reliability, Kakao in-app browser issues, webhook gaps
 ├── 수정 계획.md                                 # Modification plan: 19 changes across 3 documents (applied to v1.6/v1.3/v1.3)
+├── design-system.md                           # Design system review notes
 ├── M3-수동테스트-체크리스트.md                     # M3 manual test checklist (28 items)
-└── M5-수동테스트-체크리스트.md                     # M5 manual test checklist (cancel + refund, 48 items)
+├── M5-수동테스트-체크리스트.md                     # M5 manual test checklist (cancel + refund, 48 items)
+├── M6-통합테스트-체크리스트.md                     # M6 integration test checklist
+├── M6-프로덕션-배포-가이드.md                     # M6 production deployment guide
+└── ui-review/                                  # UI screenshots organized by user flow (Playwright-captured)
 
 prompts                                          # Implementation prompt template (used when starting WP implementation in jidokhae-web/)
 ```
@@ -69,7 +73,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → WP4-1 → WP4-2 → WP4-3 → WP5-1 → WP5-2 → WP6-1 → WP6-2
 ```
 
-**Current status:** M1–M5 are **completed**. Next is **M6** (통합 검증 + 출시).
+**Current status:** M1–M5 are **completed**. Next is **M6** (통합 검증 + 출시). Note: `milestones.md` checkboxes for M4/M5 may not be fully updated yet.
 
 ---
 
@@ -100,7 +104,7 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 
 | Decision | Detail |
 |----------|--------|
-| Stack | Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Supabase + Vercel |
+| Stack | Next.js 16.1.6 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase + Vercel |
 | Auth | Supabase Auth ↔ Kakao OAuth |
 | Payment | TossPayments 직접 연동 (REST API + @tosspayments/payment-sdk) |
 | DB access | Frontend: Supabase Client (anon key + RLS). Server: API Routes with service_role key |
@@ -148,8 +152,8 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 cd jidokhae-web
 npm run dev         # Start dev server (http://localhost:3000)
 npm run build       # Production build
-npm run lint        # ESLint (eslint-config-next with core-web-vitals + typescript)
-npm run test        # Vitest (unit tests: kst, refund)
+npm run lint        # ESLint 9 flat config (eslint-config-next with core-web-vitals + typescript)
+npm run test        # Vitest 4 (unit tests: kst, refund)
 npm run test:watch  # Vitest watch mode
 npm run prelaunch   # lint + tsc + test + build (full QA pipeline)
 npm run start       # Start production server
@@ -163,27 +167,30 @@ npx vitest run src/lib/__tests__/kst.test.ts
 
 Verification & utility scripts (require `.env.local` with Supabase keys):
 ```bash
-npx tsx scripts/verify-m1.ts       # Verify M1 deliverables
-npx tsx scripts/verify-m1-rls.ts   # Verify RLS policies
-npm run verify:prod                # Verify production deployment
-npm run screenshot                 # Capture UI screenshots for review
+npx tsx scripts/verify-m1.ts         # Verify M1 deliverables
+npx tsx scripts/verify-m1-rls.ts     # Verify RLS policies
+npx tsx scripts/check-member-regs.ts # Check member registrations
+npm run verify:prod                  # Verify production deployment
+npm run screenshot                   # Capture UI screenshots (Playwright)
 ```
 
 ### Architecture
 
-- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback
-- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` to preserve PKCE cookies
+- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback. Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations)
+- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies) and `api/webhooks/` (no session needed — uses TossPayments verification)
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
 - **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Editorial Organic" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Terracotta (`--color-accent-*`), Neutral: Warm Gray (`--color-neutral-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Fonts: Noto Serif KR (titles), Pretendard (body). See `jidokhae-web/DESIGN_TOKENS.md` for full token reference
 - **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
 - **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
 - **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
-- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts`, Supabase responses cast with `as Meeting`
+- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts` and `src/types/registration.ts`, Supabase responses cast with `as Meeting`
 - **Error/Loading boundaries:** Each route group has `error.tsx` and `loading.tsx` files
 
 ### Database Schema
 
-**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking)
+**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean)
+
+**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_meetings_date_status` (home page query)
 
 **Key DB Functions (SECURITY DEFINER):**
 - `is_admin()` — Returns true if current user has admin role. Used in RLS policies
@@ -194,14 +201,14 @@ npm run screenshot                 # Capture UI screenshots for review
 
 ### Code Conventions
 
-- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `DeleteMeetingButton`, `RegistrationCard`, `MeetingCard`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`, 12 files): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files (2). Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
 - **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function
 - **Mutation pattern in client components:** `router.push() + router.refresh()` after mutations (no `revalidatePath`)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
-- **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
+- **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
 - **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment), `registrations/cancel` (M5 cancel), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup). All use service_role Supabase client, cookie-based auth
 - **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper). Shared between API routes — keep logic here, not in route handlers
 - **Unit tests:** Vitest with `@/*` path alias. Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
@@ -216,6 +223,8 @@ npm run screenshot                 # Capture UI screenshots for review
 5. API Route: auth check → `processPaymentConfirmation()` → `confirmPayment()` (money moves) → `confirm_registration()` RPC (atomic DB insert)
 6. Webhook backup at `/api/webhooks/tosspayments` handles missed redirects
 
+**Webhook orderId format:** `jdkh-{meetingId8}-{userId8}-{timestamp}` where `{meetingId8}` and `{userId8}` are the first 8 hex chars of the UUID (dashes stripped). Webhook reconstructs full UUIDs via `LIKE '{8chars}%'` prefix queries.
+
 **Safety patterns:** payment_id idempotency (no double-charge), atomic capacity check via DB function with `FOR UPDATE` lock, rollback refund if DB insert fails
 
 ### Cancel/Refund Flow (M5)
@@ -226,6 +235,22 @@ npm run screenshot                 # Capture UI screenshots for review
 
 **Safety patterns:** optimistic lock with `.eq('status', 'confirmed')` + `.select('id')` to detect 0-row updates, race condition handling via `getPayment()` status check, partial failure retry (meeting stays `deleting`)
 
+### UI Behavior Details
+
+- **MeetingCard capacity threshold:** At 80% capacity (`confirmedCount >= capacity * 0.8`), capacity text turns `text-accent-500` (orange warning)
+- **Status color tokens:** `globals.css` defines `--color-status-open`, `--color-status-closing`, `--color-status-full`, `--color-status-completed`, `--color-status-cancelled` — used by MeetingCard left border
+- **MeetingForm uses browser Supabase client** (anon key + RLS) for create/edit — admin writes go through RLS `is_admin()` policy, not service_role
+- **Admin layout role check** uses anon Supabase client (not service_role) — secure because RLS `profiles_select_own` allows users to read their own profile
+
 ### Environment Variables
 
-See `jidokhae-web/.env.example` for required variables (Supabase URL/keys, TossPayments keys).
+See `jidokhae-web/.env.example` for required variables:
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project
+- `SUPABASE_SERVICE_ROLE_KEY` — Server-side Supabase admin access
+- `NEXT_PUBLIC_TOSSPAYMENTS_CLIENT_KEY` / `TOSSPAYMENTS_SECRET_KEY` — TossPayments payment
+
+### Deployment
+
+- **Vercel** — auto-detected Next.js settings (no `vercel.json`)
+- No Dockerfile, no GitHub Actions CI/CD
+- **Playwright** is a devDependency for `npm run screenshot` (UI screenshot capture), not for E2E testing

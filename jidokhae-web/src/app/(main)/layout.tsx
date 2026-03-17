@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import BottomNav from '@/components/BottomNav'
 import LogoutButton from '@/components/LogoutButton'
+import Footer from '@/components/Footer'
 
 export default async function MainLayout({
   children,
@@ -43,6 +44,7 @@ export default async function MainLayout({
       </header>
       <div className="pb-20">
         {children}
+        <Footer />
       </div>
       <BottomNav />
     </>
