@@ -130,7 +130,10 @@ export default async function MeetingDetailPage({ params }: Props) {
     buttonState.type === 'cancel'
 
   return (
-    <div className={`px-5 pt-4 ${hasStickyButton ? 'pb-36' : 'pb-6'}`}>
+    <div
+      className="px-5 pt-4"
+      style={{ paddingBottom: hasStickyButton ? 'calc(9rem + env(safe-area-inset-bottom, 0px))' : '1.5rem' }}
+    >
       {/* Back link */}
       <Link
         href="/"

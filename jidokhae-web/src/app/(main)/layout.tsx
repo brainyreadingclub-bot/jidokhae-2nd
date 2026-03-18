@@ -39,7 +39,7 @@ export default async function MainLayout({
         </div>
         <LogoutButton />
       </header>
-      <div className="pb-20">
+      <div style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 16px))' }}>
         {children}
         <Footer />
       </div>

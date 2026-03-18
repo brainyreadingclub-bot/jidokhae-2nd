@@ -157,6 +157,7 @@ npm run test        # Vitest 4 (unit tests: kst, refund)
 npm run test:watch  # Vitest watch mode
 npm run prelaunch   # lint + tsc + test + build (full QA pipeline)
 npm run start       # Start production server
+npx tsc --noEmit    # Type check only (no emit)
 ```
 
 Run a single test file:
@@ -176,14 +177,14 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Architecture
 
-- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback. Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations)
-- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies) and `api/webhooks/` (no session needed — uses TossPayments verification)
+- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, refund policy — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations)
+- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), and `api/webhooks/` (no session needed — uses TossPayments verification)
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
 - **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Editorial Organic" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Terracotta (`--color-accent-*`), Neutral: Warm Gray (`--color-neutral-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Fonts: Noto Serif KR (titles), Pretendard (body). See `jidokhae-web/DESIGN_TOKENS.md` for full token reference
 - **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
 - **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
 - **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
-- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts` and `src/types/registration.ts`, Supabase responses cast with `as Meeting`
+- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts` and `src/types/registration.ts`, Supabase responses cast with `as Meeting` or `as Registration`
 - **Error/Loading boundaries:** Each route group has `error.tsx` and `loading.tsx` files
 
 ### Database Schema
@@ -201,7 +202,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Code Conventions
 
-- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`, 12 files): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files (2). Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`, 13 files): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files (2). Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터)
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
 - **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function
@@ -210,8 +211,9 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
 - **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment), `registrations/cancel` (M5 cancel), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup). All use service_role Supabase client, cookie-based auth
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper). Shared between API routes — keep logic here, not in route handlers
-- **Unit tests:** Vitest with `@/*` path alias. Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` for server-side profile fetching). Shared between API routes — keep logic here, not in route handlers
+- **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
+- **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
 
 ### Payment Flow (M4)
