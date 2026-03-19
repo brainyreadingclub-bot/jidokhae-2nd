@@ -4,6 +4,7 @@ import { getKSTToday } from '@/lib/kst'
 import MeetingCard from '@/components/meetings/MeetingCard'
 import EmptyMeetings from '@/components/meetings/EmptyMeetings'
 import WelcomeScreen from '@/components/WelcomeScreen'
+import ProfileSetup from '@/components/ProfileSetup'
 import type { Meeting } from '@/types/meeting'
 
 export default async function HomePage() {
@@ -12,11 +13,14 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // 첫 방문 웰컴 스크린 분기
+  // 첫 방문 웰컴 스크린 → 프로필 설정 이중 게이트
   if (user) {
     const profile = await getProfile(user.id)
     if (!profile.welcomed_at) {
       return <WelcomeScreen nickname={profile.nickname} />
+    }
+    if (!profile.profile_completed_at) {
+      return <ProfileSetup nickname={profile.nickname} email={profile.email} />
     }
   }
 

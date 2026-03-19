@@ -26,13 +26,11 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 └── scenarios.md                               # 146 BDD Scenarios — how to verify each WP
 
 /검토문서                                        # Review notes & manual test checklists
-├── mvp 검토.md                                 # MVP review: payment reliability, Kakao in-app browser issues, webhook gaps
-├── 수정 계획.md                                 # Modification plan: 19 changes across 3 documents (applied to v1.6/v1.3/v1.3)
-├── design-system.md                           # Design system review notes
-├── M3-수동테스트-체크리스트.md                     # M3 manual test checklist (28 items)
-├── M5-수동테스트-체크리스트.md                     # M5 manual test checklist (cancel + refund, 48 items)
-├── M6-통합테스트-체크리스트.md                     # M6 integration test checklist
+├── M6-통합테스트-체크리스트.md                     # M6 integration test checklist (STEP 1~11 통과)
 ├── M6-프로덕션-배포-가이드.md                     # M6 production deployment guide
+├── 사이트 아키텍처 — 현재 + 확장 구조.md           # Site architecture: current + future extension structure
+├── 2026-03-18-작업회고.md                        # Work retrospective
+├── screenshots/                                # Captured screenshots
 └── ui-review/                                  # UI screenshots organized by user flow (Playwright-captured)
 
 prompts                                          # Implementation prompt template (used when starting WP implementation in jidokhae-web/)
@@ -202,7 +200,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Code Conventions
 
-- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`, 13 files): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files (2). Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터)
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files. Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터)
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
 - **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function
@@ -246,7 +244,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Environment Variables
 
-See `jidokhae-web/.env.example` for required variables:
+Copy `jidokhae-web/.env.example` to `jidokhae-web/.env.local` and fill in values:
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project
 - `SUPABASE_SERVICE_ROLE_KEY` — Server-side Supabase admin access
 - `NEXT_PUBLIC_TOSSPAYMENTS_CLIENT_KEY` / `TOSSPAYMENTS_SECRET_KEY` — TossPayments payment

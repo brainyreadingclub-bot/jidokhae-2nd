@@ -266,3 +266,12 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS welcomed_at TIMESTAMPTZ DEF
 
 -- 기존 회원 전원에게 welcomed_at 채우기 (웰컴 스크린이 뜨지 않도록)
 UPDATE public.profiles SET welcomed_at = now() WHERE welcomed_at IS NULL;
+
+-- ============================================================
+-- Phase 1-1: 프로필 설정 — 닉네임/전화번호/지역 수집
+-- Supabase SQL Editor에서 아래 3줄을 수동 실행할 것
+-- 기존 회원은 profile_completed_at = NULL → 프로필 설정 화면 표시 (의도된 동작)
+-- ============================================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT NULL;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS region TEXT DEFAULT NULL CHECK (region IN ('경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주'));
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS profile_completed_at TIMESTAMPTZ DEFAULT NULL;
