@@ -20,53 +20,114 @@ export default function WelcomeScreen({ nickname }: { nickname: string }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-8 animate-[fadeIn_0.4s_ease-out]"
-      style={{
-        backgroundColor: 'var(--color-neutral-50)',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      }}
-    >
-      {/* 로고 */}
-      <p className="font-display text-lg text-primary-700 mb-10">
-        지독해
-      </p>
+    <div className="fixed inset-0 z-[60] flex min-h-screen flex-col overflow-hidden">
+      {/* ── 상단: Dark editorial section ── */}
+      <section
+        className="relative flex flex-[3] flex-col justify-end px-[var(--spacing-page)] pb-14"
+        style={{ backgroundColor: 'var(--color-primary-900)' }}
+      >
+        {/* Grain texture overlay */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            opacity: 0.035,
+            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
 
-      {/* 인사 + 헤드카피 */}
-      <div className="text-center">
-        <p className="font-sans text-base text-neutral-500 mb-3">
-          {displayName}님,
-        </p>
-        <h1 className="font-display text-[1.75rem] font-bold text-primary-900 leading-tight">
-          넷플릭스 말고,
-          <br />
-          할 게 생깁니다.
-        </h1>
-      </div>
+        {/* Organic shapes */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="absolute -top-20 -right-20 h-64 w-64 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-accent-400) 0%, transparent 70%)', opacity: 0.06 }}
+          />
+          <div
+            className="absolute top-1/3 -left-16 h-48 w-48 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-primary-300) 0%, transparent 70%)', opacity: 0.05 }}
+          />
+          <div
+            className="absolute bottom-12 right-8 h-32 w-32 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-accent-300) 0%, transparent 70%)', opacity: 0.04 }}
+          />
+        </div>
 
-      {/* 본문 */}
-      <div className="mt-6 text-center">
-        <p className="font-sans text-base text-neutral-500 leading-relaxed">
+        {/* Brand content */}
+        <div className="relative">
+          <p
+            className="text-xl font-bold text-white"
+            style={{
+              fontFamily: 'var(--font-display)',
+              animation: 'loginFadeUp 600ms ease-out both',
+            }}
+          >
+            지독해
+          </p>
+
+          {/* Editorial rule */}
+          <div
+            className="mt-5 mb-5 h-px w-[60px] bg-neutral-600"
+            style={{
+              animation: 'loginFadeUp 600ms ease-out both',
+              animationDelay: '150ms',
+            }}
+          />
+
+          <p
+            className="text-base text-neutral-400"
+            style={{
+              animation: 'loginFadeUp 600ms ease-out both',
+              animationDelay: '200ms',
+            }}
+          >
+            {displayName}님,
+          </p>
+
+          <h1
+            className="mt-2 text-3xl font-bold leading-tight text-white"
+            style={{
+              fontFamily: 'var(--font-display)',
+              animation: 'loginFadeUp 600ms ease-out both',
+              animationDelay: '300ms',
+            }}
+          >
+            넷플릭스 말고,
+            <br />
+            할 게 생깁니다.
+          </h1>
+        </div>
+      </section>
+
+      {/* ── 하단: Light parchment section ── */}
+      <section
+        className="relative z-10 -mt-6 flex flex-[2] flex-col items-center justify-center rounded-t-[24px] px-[var(--spacing-page)] py-10"
+        style={{
+          backgroundColor: 'var(--color-neutral-50)',
+          animation: 'loginSlideUp 500ms ease-out both',
+          animationDelay: '200ms',
+        }}
+      >
+        <p className="mb-6 text-center font-sans text-base text-neutral-500 leading-relaxed">
           매주 모이는 사람들, 250명.
           <br />
           경주·포항, 3년째.
         </p>
-      </div>
 
-      {/* CTA + 보조 텍스트 */}
-      <div className="mt-10 w-full max-w-xs">
         <button
           onClick={handleCTA}
           disabled={loading}
-          className="w-full py-3.5 bg-primary-600 text-white font-semibold rounded-[12px] transition-colors hover:bg-primary-700 active:bg-primary-800 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex w-full max-w-[320px] items-center justify-center rounded-[var(--radius-md)] px-6 py-4 text-sm font-bold text-white shadow-sm transition-shadow hover:shadow-md disabled:opacity-50 active:scale-[0.98]"
+          style={{
+            backgroundColor: 'var(--color-primary-600)',
+            transitionDuration: 'var(--transition-base)',
+          }}
         >
           {loading ? '잠시만요...' : '이번 달 모임 보기 →'}
         </button>
-        <p className="mt-3 text-center text-[0.8125rem] text-neutral-400">
+
+        <p className="mt-4 text-small text-neutral-400">
           처음 오는 사람이 제일 많습니다.
         </p>
-      </div>
+      </section>
     </div>
   )
 }
