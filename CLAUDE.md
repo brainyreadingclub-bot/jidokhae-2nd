@@ -139,6 +139,8 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 - **Review flow:** `/검토문서` captures post-hoc analysis. When reviews identify issues, create a 수정 계획 (modification plan) listing exact edit locations before modifying core/roadmap docs.
 - **Version awareness:** Core documents carry version numbers (e.g., v1.6, v1.3). Note the version when referencing specific sections, as review-driven edits may change content between versions.
 - **Cross-repo workflow:** The implementation repo lives at `jidokhae-web/` (nested inside this repo). The `prompts` file contains a template for starting WP implementation — substitute `--단계` with the target WP (e.g., `WP1-1`) when using it.
+- **지시서의 enum/선택지 목록은 구현 전에 확인:** 지시서에 고정 목록(예: 지역 3개)이 있어도 실제 서비스 맥락에서 충분한지 사용자에게 먼저 물어볼 것. 구현 후 목록이 바뀌면 DB CHECK 제약까지 연쇄 수정 필요.
+- **DB 마이그레이션 SQL은 코드 확정 후 안내:** CHECK 제약, 컬럼 타입 등 코드와 동기화가 필요한 마이그레이션은 스펙이 확정된 후에 사용자에게 전달. 코드보다 먼저 실행되면 불일치가 발생한다.
 
 ---
 
