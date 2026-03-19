@@ -21,7 +21,7 @@ export default async function AdminLayout({
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') redirect('/')
+  if (profile?.role !== 'admin' && profile?.role !== 'editor') redirect('/')
 
   return (
     <>
@@ -49,7 +49,7 @@ export default async function AdminLayout({
           </span>
         </div>
         <span className="text-[10px] font-bold tracking-wider uppercase text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
-          운영자
+          {profile?.role === 'admin' ? '운영자' : '운영진'}
         </span>
       </header>
       <div>{children}</div>

@@ -7,6 +7,7 @@ type Props = {
   meetingStatus: string
   confirmedCount: number
   registrations: RegistrationWithProfile[]
+  role: string
 }
 
 function formatDate(dateStr: string): string {
@@ -21,6 +22,7 @@ export default function AdminMeetingSection({
   meetingStatus,
   confirmedCount,
   registrations,
+  role,
 }: Props) {
   return (
     <div
@@ -39,13 +41,15 @@ export default function AdminMeetingSection({
         >
           수정
         </Link>
-        <div className="mt-3">
-          <DeleteMeetingButton
-            meetingId={meetingId}
-            meetingStatus={meetingStatus}
-            confirmedCount={confirmedCount}
-          />
-        </div>
+        {role === 'admin' && (
+          <div className="mt-3">
+            <DeleteMeetingButton
+              meetingId={meetingId}
+              meetingStatus={meetingStatus}
+              confirmedCount={confirmedCount}
+            />
+          </div>
+        )}
       </div>
 
       {/* Registrant list */}

@@ -30,7 +30,7 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 - `src/app/(admin)/` — Admin pages (CRUD for meetings)
 - `src/app/auth/` — Login page + OAuth callback
 - `src/app/policy/` — Public pages (about, refund policy — no auth required)
-- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, meetings/[id]/delete, webhooks/tosspayments)
+- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, meetings/[id]/delete, webhooks/tosspayments, welcome, profile/setup)
 
 ### Middleware (`src/middleware.ts`)
 Refreshes Supabase session on every request. Redirects unauthenticated → `/auth/login`, authenticated → away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), and `api/webhooks/` (no session needed).
@@ -52,7 +52,7 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 
 ## Key Conventions
 
-- **Server Components by default.** Client Components (`'use client'`, 13 files): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, ModalOverlay, auth/login/page, payment-redirect/page, payment-fail/page, route group error.tsx files (2). Server Components include Footer (사업자정보 푸터)
+- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, ModalOverlay, WelcomeScreen, ProfileSetup, auth/login/page, payment-redirect/page, payment-fail/page, route group error.tsx files. Server Components include Footer (사업자정보 푸터)
 - **Shared UI:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key, focus management. Used by DeleteMeetingButton, MeetingActionButton
 - **No semicolons**, single quotes, function components only
 - **Tailwind v4**: Design tokens in `@theme inline` block in `src/app/globals.css` — NOT in `tailwind.config.ts`. Full token reference: `DESIGN_TOKENS.md`

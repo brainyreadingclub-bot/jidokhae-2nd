@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getProfile } from '@/lib/profile'
 import { getKSTToday } from '@/lib/kst'
 import AdminMeetingCard from '@/components/admin/AdminMeetingCard'
 import type { Meeting } from '@/types/meeting'
@@ -7,6 +9,10 @@ import type { Meeting } from '@/types/meeting'
 export default async function AdminPage() {
   const kstToday = getKSTToday()
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
+  const profile = await getProfile(user.id)
 
   const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
@@ -66,6 +72,20 @@ export default async function AdminPage() {
           새 모임
         </Link>
       </div>
+
+      {/* 회원 관리 진입점 (admin만) */}
+      {profile.role === 'admin' && (
+        <Link
+          href="/admin/members"
+          className="flex items-center justify-between mb-4 rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-primary-700 transition-colors hover:bg-primary-50"
+          style={{ border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' }}
+        >
+          <span>회원 관리</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+      )}
 
       {typedMeetings.length === 0 ? (
         <div className="py-16 text-center">

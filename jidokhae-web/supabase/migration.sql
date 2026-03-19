@@ -277,3 +277,48 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS region TEXT[] DEFAULT NULL;
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_region_check
   CHECK (region <@ ARRAY['경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주']::TEXT[]);
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS profile_completed_at TIMESTAMPTZ DEFAULT NULL;
+
+-- ============================================================
+-- Phase 1-2: 운영진 권한 위임 — editor 역할 추가
+-- Supabase SQL Editor에서 아래 SQL을 수동 실행할 것
+-- ============================================================
+
+-- 1a. role CHECK 확장 (member, admin → member, editor, admin)
+ALTER TABLE public.profiles DROP CONSTRAINT profiles_role_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check
+  CHECK (role IN ('member', 'editor', 'admin'));
+
+-- 1b. is_editor_or_admin() 함수 추가 (is_admin()은 유지)
+CREATE OR REPLACE FUNCTION public.is_editor_or_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role IN ('editor', 'admin')
+  );
+$$;
+
+-- 1c. meetings INSERT/UPDATE RLS → editor도 허용
+DROP POLICY "meetings_insert_admin" ON public.meetings;
+CREATE POLICY "meetings_insert_editor_or_admin"
+  ON public.meetings FOR INSERT
+  WITH CHECK (public.is_editor_or_admin());
+
+DROP POLICY "meetings_update_admin" ON public.meetings;
+CREATE POLICY "meetings_update_editor_or_admin"
+  ON public.meetings FOR UPDATE
+  USING (public.is_editor_or_admin());
+-- meetings_delete_admin은 유지 (admin만 삭제 가능)
+
+-- 1d. registrations SELECT for editor (신청자 목록 조회용)
+CREATE POLICY "registrations_select_editor_or_admin"
+  ON public.registrations FOR SELECT
+  USING (public.is_editor_or_admin());
+
+-- 1e. 닉네임 partial unique index (빈 문자열 제외)
+CREATE UNIQUE INDEX idx_profiles_nickname_unique
+  ON public.profiles (nickname) WHERE nickname <> '';

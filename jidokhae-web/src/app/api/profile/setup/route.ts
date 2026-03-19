@@ -72,6 +72,23 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createServiceClient()
+
+  // 닉네임 중복 체크 (자기 자신 제외, 빈 문자열 제외)
+  const { data: existing } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('nickname', nickname.trim())
+    .neq('id', user.id)
+    .neq('nickname', '')
+    .limit(1)
+
+  if (existing && existing.length > 0) {
+    return NextResponse.json(
+      { status: 'error', message: '이미 사용 중인 닉네임입니다' },
+      { status: 409 },
+    )
+  }
+
   const { error } = await admin
     .from('profiles')
     .update({

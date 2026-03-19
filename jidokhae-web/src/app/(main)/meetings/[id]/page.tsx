@@ -98,15 +98,16 @@ export default async function MeetingDetailPage({ params }: Props) {
   const isFull = confirmedCount >= typedMeeting.capacity
   const role = profile.role ?? 'member'
   const isAdmin = role === 'admin'
+  const isEditorOrAdmin = role === 'admin' || role === 'editor'
 
   // Members cannot see deleting meetings
   if (typedMeeting.status === 'deleting' && !isAdmin) {
     notFound()
   }
 
-  // Fetch registrations for admin view
+  // Fetch registrations for admin/editor view
   let adminRegistrations: RegistrationWithProfile[] = []
-  if (isAdmin) {
+  if (isEditorOrAdmin) {
     const { data: regs } = await supabase
       .from('registrations')
       .select('*, profiles(nickname)')
@@ -173,13 +174,14 @@ export default async function MeetingDetailPage({ params }: Props) {
         paidAmount={myReg?.paid_amount}
       />
 
-      {/* Admin section */}
-      {isAdmin && (
+      {/* Admin/Editor section */}
+      {isEditorOrAdmin && (
         <AdminMeetingSection
           meetingId={typedMeeting.id}
           meetingStatus={typedMeeting.status}
           confirmedCount={confirmedCount}
           registrations={adminRegistrations}
+          role={role}
         />
       )}
     </div>
