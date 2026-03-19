@@ -273,5 +273,7 @@ UPDATE public.profiles SET welcomed_at = now() WHERE welcomed_at IS NULL;
 -- 기존 회원은 profile_completed_at = NULL → 프로필 설정 화면 표시 (의도된 동작)
 -- ============================================================
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT NULL;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS region TEXT DEFAULT NULL CHECK (region IN ('경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주'));
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS region TEXT[] DEFAULT NULL;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_region_check
+  CHECK (region <@ ARRAY['경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주']::TEXT[]);
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS profile_completed_at TIMESTAMPTZ DEFAULT NULL;

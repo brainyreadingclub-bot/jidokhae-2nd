@@ -15,7 +15,7 @@ export const getProfile = cache(async (userId: string) => {
     role: string
     welcomed_at: string | null
     phone: string | null
-    region: string | null
+    region: string[] | null
     email: string | null
     profile_completed_at: string | null
   }

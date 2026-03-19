@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { nickname?: string; phone?: string; region?: string; email?: string | null }
+  let body: { nickname?: string; phone?: string; region?: string[]; email?: string | null }
   try {
     body = await request.json()
   } catch {
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
   }
 
   const VALID_REGIONS = ['경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주']
-  if (!region || !VALID_REGIONS.includes(region)) {
+  if (!Array.isArray(region) || region.length === 0 || !region.every((r) => VALID_REGIONS.includes(r))) {
     return NextResponse.json(
-      { status: 'error', message: '올바른 지역을 선택해주세요' },
+      { status: 'error', message: '지역을 하나 이상 선택해주세요' },
       { status: 400 },
     )
   }

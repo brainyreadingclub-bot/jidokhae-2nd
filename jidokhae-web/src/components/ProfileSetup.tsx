@@ -22,7 +22,7 @@ export default function ProfileSetup({ nickname, email }: Props) {
   const [form, setForm] = useState({
     nickname: nickname || '',
     phone: '',
-    region: '' as '' | typeof REGIONS[number],
+    regions: [] as string[],
     email: email || '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -35,7 +35,7 @@ export default function ProfileSetup({ nickname, email }: Props) {
     form.nickname.trim().length >= 2 &&
     form.nickname.trim().length <= 20 &&
     /^010\d{7,8}$/.test(form.phone.replace(/\D/g, '')) &&
-    form.region !== ''
+    form.regions.length > 0
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {}
@@ -50,8 +50,8 @@ export default function ProfileSetup({ nickname, email }: Props) {
       newErrors.phone = '010으로 시작하는 휴대폰 번호를 입력해주세요'
     }
 
-    if (!form.region) {
-      newErrors.region = '지역을 선택해주세요'
+    if (form.regions.length === 0) {
+      newErrors.region = '지역을 하나 이상 선택해주세요'
     }
 
     if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
@@ -75,7 +75,7 @@ export default function ProfileSetup({ nickname, email }: Props) {
         body: JSON.stringify({
           nickname: form.nickname.trim(),
           phone: form.phone.replace(/\D/g, ''),
-          region: form.region,
+          region: form.regions,
           email: form.email.trim() || null,
         }),
       })
@@ -171,27 +171,32 @@ export default function ProfileSetup({ nickname, email }: Props) {
           {/* 지역 */}
           <div>
             <label className="mb-2 block text-xs font-bold text-primary-700 tracking-tight">
-              주로 참여할 지역<span className="text-accent-500 ml-0.5">*</span>
+              주로 참여할 지역 (복수 선택 가능)<span className="text-accent-500 ml-0.5">*</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
               {REGIONS.map((r) => (
                 <button
                   key={r}
                   type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, region: r }))}
+                  onClick={() => setForm((prev) => ({
+                    ...prev,
+                    regions: prev.regions.includes(r)
+                      ? prev.regions.filter((v) => v !== r)
+                      : [...prev.regions, r],
+                  }))}
                   className={`py-2.5 rounded-[var(--radius-md)] text-sm transition-colors ${
-                    form.region === r
+                    form.regions.includes(r)
                       ? 'bg-primary-50 border-primary-500 text-primary-700 font-bold'
                       : 'bg-surface-50 border-neutral-200 text-neutral-500'
                   }`}
                   style={{
                     border: `1px solid ${
-                      form.region === r
+                      form.regions.includes(r)
                         ? 'var(--color-primary-500)'
                         : 'var(--color-neutral-200)'
                     }`,
                     backgroundColor:
-                      form.region === r
+                      form.regions.includes(r)
                         ? 'var(--color-primary-50)'
                         : 'var(--color-surface-50)',
                   }}
