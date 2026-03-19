@@ -17,30 +17,35 @@ type Props = {
   currentUserId: string
 }
 
+const SECTIONS = [
+  { key: 'admin', label: '운영자' },
+  { key: 'editor', label: '운영진' },
+  { key: 'member', label: '회원' },
+] as const
+
 export default function MemberList({ profiles, currentUserId }: Props) {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [modal, setModal] = useState<{ userId: string; nickname: string; newRole: string } | null>(null)
 
-  // 정렬: editor → member → 프로필 미완성
-  const sorted = [...profiles].sort((a, b) => {
-    const order = (p: Profile) => {
-      if (p.role === 'admin') return 0
-      if (p.role === 'editor') return 1
-      if (!p.profile_completed_at) return 3
-      return 2
-    }
-    const diff = order(a) - order(b)
-    if (diff !== 0) return diff
-    return (a.nickname || '').localeCompare(b.nickname || '', 'ko')
-  })
-
-  const filtered = sorted.filter((p) => {
+  // 필터링
+  const filtered = profiles.filter((p) => {
     if (!search) return true
     const displayName = p.nickname || '(미설정)'
     return displayName.includes(search)
   })
+
+  // 역할별 그룹화 + 섹션 내 정렬 (닉네임 가나다순, 프로필 미완성 최하단)
+  function getGroup(role: string) {
+    return filtered
+      .filter((p) => p.role === role)
+      .sort((a, b) => {
+        if (!a.profile_completed_at && b.profile_completed_at) return 1
+        if (a.profile_completed_at && !b.profile_completed_at) return -1
+        return (a.nickname || '').localeCompare(b.nickname || '', 'ko')
+      })
+  }
 
   async function handleRoleChange() {
     if (!modal) return
@@ -64,29 +69,77 @@ export default function MemberList({ profiles, currentUserId }: Props) {
   }
 
   function getDisplayName(p: Profile) {
-    if (!p.profile_completed_at) return p.nickname || '(미설정)'
     return p.nickname || '(미설정)'
   }
 
-  function getRoleBadge(role: string) {
+  function getRoleBadge(role: string, clickable: boolean) {
+    const arrow = clickable ? ' ↕' : ''
     if (role === 'admin') {
       return (
-        <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-700" style={{ border: '1px solid var(--color-primary-100)' }}>
+        <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-700" style={{ border: '1px solid var(--color-primary-200)' }}>
           운영자
         </span>
       )
     }
     if (role === 'editor') {
       return (
-        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-accent-600" style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-100)' }}>
-          운영진
+        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-accent-600" style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-200)' }}>
+          운영진{arrow}
         </span>
       )
     }
     return (
-      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-neutral-500" style={{ backgroundColor: 'var(--color-surface-200)', border: '1px solid var(--color-surface-300)' }}>
-        회원
+      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-neutral-500" style={{ backgroundColor: 'var(--color-neutral-100)', border: '1px solid var(--color-neutral-200)' }}>
+        회원{arrow}
       </span>
+    )
+  }
+
+  function renderRow(p: Profile) {
+    const isSelf = p.id === currentUserId
+    const isAdmin = p.role === 'admin'
+    const isLoading = loadingId === p.id
+    const canChange = !isSelf && !isAdmin
+
+    return (
+      <div
+        key={p.id}
+        className="flex items-center justify-between px-3 py-3"
+        style={{ borderBottom: '1px solid var(--color-surface-200)' }}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium text-primary-800 truncate">
+            {getDisplayName(p)}
+            {!p.profile_completed_at && (
+              <span className="ml-1 text-[10px] text-warning">⚠ 미완성</span>
+            )}
+          </div>
+          <div className="text-xs text-primary-500/70 mt-0.5">
+            {p.region && p.region.length > 0 ? p.region.join(', ') : '-'}
+          </div>
+        </div>
+        <div className="ml-3 shrink-0">
+          {canChange ? (
+            <button
+              onClick={() => setModal({
+                userId: p.id,
+                nickname: getDisplayName(p),
+                newRole: p.role === 'editor' ? 'member' : 'editor',
+              })}
+              disabled={isLoading}
+              className="cursor-pointer transition-opacity hover:opacity-70 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <span className="text-xs text-neutral-400">변경 중...</span>
+              ) : (
+                getRoleBadge(p.role, true)
+              )}
+            </button>
+          ) : (
+            getRoleBadge(p.role, false)
+          )}
+        </div>
+      </div>
     )
   }
 
@@ -106,80 +159,44 @@ export default function MemberList({ profiles, currentUserId }: Props) {
       />
 
       {/* 회원 수 */}
-      <p className="text-xs text-neutral-500 mb-3">
+      <p className="text-xs text-neutral-500 mb-4">
         전체 {profiles.length}명 {search && `· 검색 결과 ${filtered.length}명`}
       </p>
 
-      {/* 회원 목록 */}
-      <div
-        className="rounded-[var(--radius-md)] overflow-hidden"
-        style={{ border: '1px solid var(--color-surface-300)' }}
-      >
-        {filtered.length === 0 ? (
-          <p className="text-sm text-primary-400 text-center py-8">
-            검색 결과가 없습니다
-          </p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-100)' }}>
-                <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">닉네임</th>
-                <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">지역</th>
-                <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">역할</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => {
-                const isSelf = p.id === currentUserId
-                const isAdmin = p.role === 'admin'
-                const isLoading = loadingId === p.id
-                const canChange = !isSelf && !isAdmin
+      {/* 역할별 섹션 */}
+      {filtered.length === 0 ? (
+        <p className="text-sm text-primary-400 text-center py-8">
+          검색 결과가 없습니다
+        </p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {SECTIONS.map(({ key, label }) => {
+            const group = getGroup(key)
+            if (group.length === 0) return null
 
-                return (
-                  <tr
-                    key={p.id}
-                    style={{ borderBottom: '1px solid var(--color-surface-200)', backgroundColor: 'var(--color-surface-50)' }}
-                    className="last:border-b-0"
-                  >
-                    <td className="px-3 py-3 text-sm font-medium text-primary-800">
-                      <div>
-                        {getDisplayName(p)}
-                        {!p.profile_completed_at && (
-                          <span className="ml-1 text-[10px] text-warning">⚠ 미완성</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 text-sm text-primary-500/70">
-                      {p.region && p.region.length > 0 ? p.region.join(', ') : '-'}
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      {canChange ? (
-                        <button
-                          onClick={() => setModal({
-                            userId: p.id,
-                            nickname: getDisplayName(p),
-                            newRole: p.role === 'editor' ? 'member' : 'editor',
-                          })}
-                          disabled={isLoading}
-                          className="disabled:opacity-50"
-                        >
-                          {isLoading ? (
-                            <span className="text-xs text-neutral-400">변경 중...</span>
-                          ) : (
-                            getRoleBadge(p.role)
-                          )}
-                        </button>
-                      ) : (
-                        getRoleBadge(p.role)
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+            return (
+              <div key={key}>
+                {/* 섹션 헤더 */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-px flex-1" style={{ backgroundColor: 'var(--color-surface-300)' }} />
+                  <span className="text-xs font-bold text-neutral-500 whitespace-nowrap">
+                    {label} ({group.length}명)
+                  </span>
+                  <div className="h-px flex-1" style={{ backgroundColor: 'var(--color-surface-300)' }} />
+                </div>
+
+                {/* 멤버 리스트 */}
+                <div
+                  className="rounded-[var(--radius-md)] overflow-hidden"
+                  style={{ border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' }}
+                >
+                  {group.map((p) => renderRow(p))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* 역할 변경 확인 모달 */}
       {modal && (
