@@ -20,10 +20,10 @@ export default function WelcomeScreen({ nickname }: { nickname: string }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex min-h-screen flex-col overflow-hidden">
-      {/* ── 상단: Dark editorial section ── */}
+    <div className="fixed inset-0 z-[60] flex min-h-screen flex-col overflow-hidden animate-[fadeIn_300ms_ease-out_both]">
+      {/* ── 상단: Dark editorial section (40%) ── */}
       <section
-        className="relative flex flex-[3] flex-col justify-end px-[var(--spacing-page)] pb-14"
+        className="relative flex flex-[2] flex-col justify-end px-[var(--spacing-page)] pb-14"
         style={{ backgroundColor: 'var(--color-primary-900)' }}
       >
         {/* Grain texture overlay */}
@@ -55,40 +55,21 @@ export default function WelcomeScreen({ nickname }: { nickname: string }) {
         <div className="relative">
           <p
             className="text-xl font-bold text-white"
-            style={{
-              fontFamily: 'var(--font-display)',
-              animation: 'loginFadeUp 600ms ease-out both',
-            }}
+            style={{ fontFamily: 'var(--font-display)' }}
           >
             지독해
           </p>
 
           {/* Editorial rule */}
-          <div
-            className="mt-5 mb-5 h-px w-[60px] bg-neutral-600"
-            style={{
-              animation: 'loginFadeUp 600ms ease-out both',
-              animationDelay: '150ms',
-            }}
-          />
+          <div className="mt-5 mb-5 h-px w-[60px] bg-neutral-600" />
 
-          <p
-            className="text-base text-neutral-400"
-            style={{
-              animation: 'loginFadeUp 600ms ease-out both',
-              animationDelay: '200ms',
-            }}
-          >
+          <p className="text-base text-neutral-400">
             {displayName}님,
           </p>
 
           <h1
             className="mt-2 text-3xl font-bold leading-tight text-white"
-            style={{
-              fontFamily: 'var(--font-display)',
-              animation: 'loginFadeUp 600ms ease-out both',
-              animationDelay: '300ms',
-            }}
+            style={{ fontFamily: 'var(--font-display)' }}
           >
             넷플릭스 말고,
             <br />
@@ -98,13 +79,10 @@ export default function WelcomeScreen({ nickname }: { nickname: string }) {
       </section>
 
       {/* ── 하단: Light parchment section ── */}
+      {/* ── 하단: Light parchment section (60%) ── */}
       <section
-        className="relative z-10 -mt-6 flex flex-[2] flex-col items-center justify-center rounded-t-[24px] px-[var(--spacing-page)] py-10"
-        style={{
-          backgroundColor: 'var(--color-neutral-50)',
-          animation: 'loginSlideUp 500ms ease-out both',
-          animationDelay: '200ms',
-        }}
+        className="relative z-10 -mt-6 flex flex-[3] flex-col items-center justify-center rounded-t-[24px] px-[var(--spacing-page)] py-10"
+        style={{ backgroundColor: 'var(--color-neutral-50)' }}
       >
         <p className="mb-6 text-center font-sans text-base text-neutral-500 leading-relaxed">
           매주 모이는 사람들, 250명.
