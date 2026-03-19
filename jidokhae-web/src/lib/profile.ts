@@ -5,10 +5,10 @@ export const getProfile = cache(async (userId: string) => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('profiles')
-    .select('nickname, role')
+    .select('nickname, role, welcomed_at')
     .eq('id', userId)
     .single()
 
   if (error) throw new Error(`프로필 조회 실패: ${error.message}`)
-  return data as { nickname: string; role: string }
+  return data as { nickname: string; role: string; welcomed_at: string | null }
 })

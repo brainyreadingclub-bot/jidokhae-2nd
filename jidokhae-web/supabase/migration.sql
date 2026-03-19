@@ -257,3 +257,12 @@ CREATE OR REPLACE TRIGGER meetings_updated_at
   BEFORE UPDATE ON public.meetings
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at();
+
+-- ============================================================
+-- 2026-03-19: 웰컴 스크린 — 첫 방문 여부 추적
+-- Supabase SQL Editor에서 아래 2줄을 수동 실행할 것
+-- ============================================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS welcomed_at TIMESTAMPTZ DEFAULT NULL;
+
+-- 기존 회원 전원에게 welcomed_at 채우기 (웰컴 스크린이 뜨지 않도록)
+UPDATE public.profiles SET welcomed_at = now() WHERE welcomed_at IS NULL;
