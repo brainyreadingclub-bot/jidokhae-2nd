@@ -73,7 +73,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → WP4-1 → WP4-2 → WP4-3 → WP5-1 → WP5-2 → WP6-1 → WP6-2
 ```
 
-**Current status:** M1–M5 are **completed**. Next is **M6** (통합 검증 + 출시). Note: `milestones.md` checkboxes for M4/M5 may not be fully updated yet.
+**Current status:** M1–M5 are **completed**. M6 WP6-1 (E2E 검증) **completed** (2026-03-19). WP6-2 (프로덕션 배포) **in progress** — TossPayments 라이브 키 심사 대기 중.
 
 ---
 
