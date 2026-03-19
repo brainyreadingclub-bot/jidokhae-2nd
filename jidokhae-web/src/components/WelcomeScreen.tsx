@@ -14,9 +14,8 @@ export default function WelcomeScreen({ nickname }: { nickname: string }) {
     try {
       await fetch('/api/welcome', { method: 'POST' })
     } catch {
-      // 실패해도 메인으로 이동 — 진입을 막지 않음
+      // 실패 시 refresh로 재시도 가능
     }
-    router.push('/')
     router.refresh()
   }
 
