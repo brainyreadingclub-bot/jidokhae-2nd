@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { nickname?: string; phone?: string; region?: string[]; email?: string | null }
+  let body: { nickname?: string; real_name?: string; phone?: string; region?: string[]; email?: string | null }
   try {
     body = await request.json()
   } catch {
@@ -39,9 +39,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { nickname, phone, region, email } = body
+  const { nickname, real_name, phone, region, email } = body
 
   // 서버 유효성 검사
+  if (!real_name || real_name.trim().length < 2 || real_name.trim().length > 20) {
+    return NextResponse.json(
+      { status: 'error', message: '실명은 2~20자로 입력해주세요' },
+      { status: 400 },
+    )
+  }
+
   if (!nickname || nickname.trim().length < 2 || nickname.trim().length > 20) {
     return NextResponse.json(
       { status: 'error', message: '닉네임은 2~20자로 입력해주세요' },
@@ -92,6 +99,7 @@ export async function POST(request: NextRequest) {
   const { error } = await admin
     .from('profiles')
     .update({
+      real_name: real_name!.trim(),
       nickname: nickname.trim(),
       phone,
       region,

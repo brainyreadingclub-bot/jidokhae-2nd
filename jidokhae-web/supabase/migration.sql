@@ -322,3 +322,8 @@ CREATE POLICY "registrations_select_editor_or_admin"
 -- 1e. 닉네임 partial unique index (빈 문자열 제외)
 CREATE UNIQUE INDEX idx_profiles_nickname_unique
   ON public.profiles (nickname) WHERE nickname <> '';
+
+-- ============================================================
+-- 프로필 설정 — 실명 필드 추가
+-- ============================================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS real_name TEXT DEFAULT NULL;
