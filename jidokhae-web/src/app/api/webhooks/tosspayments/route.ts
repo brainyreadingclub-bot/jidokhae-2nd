@@ -61,18 +61,19 @@ export async function POST(request: NextRequest) {
   const meetingId8 = parts[1]
   const userId8 = parts[2]
 
-  // Look up full IDs by prefix
-  const { data: meetings } = await supabase
-    .from('meetings')
-    .select('id')
-    .like('id', `${meetingId8}%`)
-    .limit(1)
-
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id')
-    .like('id', `${userId8}%`)
-    .limit(1)
+  // Look up full IDs by prefix (parallel)
+  const [{ data: meetings }, { data: profiles }] = await Promise.all([
+    supabase
+      .from('meetings')
+      .select('id')
+      .like('id', `${meetingId8}%`)
+      .limit(1),
+    supabase
+      .from('profiles')
+      .select('id')
+      .like('id', `${userId8}%`)
+      .limit(1),
+  ])
 
   if (!meetings?.length || !profiles?.length) {
     console.error(`[webhook] Could not resolve IDs from orderId: ${orderId}`)

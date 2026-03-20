@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getProfile } from '@/lib/profile'
 import Link from 'next/link'
 import Footer from '@/components/Footer'
 
@@ -15,13 +16,9 @@ export default async function AdminLayout({
 
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const profile = await getProfile(user.id)
 
-  if (profile?.role !== 'admin' && profile?.role !== 'editor') redirect('/')
+  if (profile.role !== 'admin' && profile.role !== 'editor') redirect('/')
 
   return (
     <>
@@ -49,7 +46,7 @@ export default async function AdminLayout({
           </span>
         </div>
         <span className="text-[10px] font-bold tracking-wider uppercase text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
-          {profile?.role === 'admin' ? '운영자' : '운영진'}
+          {profile.role === 'admin' ? '운영자' : '운영진'}
         </span>
       </header>
       <div>{children}</div>
