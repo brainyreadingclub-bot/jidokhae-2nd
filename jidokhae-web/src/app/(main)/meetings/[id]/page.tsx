@@ -182,6 +182,7 @@ export default async function MeetingDetailPage({ params }: Props) {
           confirmedCount={confirmedCount}
           registrations={adminRegistrations}
           role={role}
+          meetingDate={typedMeeting.date}
         />
       )}
     </div>

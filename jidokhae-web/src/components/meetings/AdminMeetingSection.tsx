@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
+import AttendanceToggle from './AttendanceToggle'
+import { getKSTToday } from '@/lib/kst'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
@@ -8,6 +10,7 @@ type Props = {
   confirmedCount: number
   registrations: RegistrationWithProfile[]
   role: string
+  meetingDate: string
 }
 
 function formatDate(dateStr: string): string {
@@ -23,7 +26,9 @@ export default function AdminMeetingSection({
   confirmedCount,
   registrations,
   role,
+  meetingDate,
 }: Props) {
+  const showAttendance = meetingDate <= getKSTToday()
   return (
     <div
       className="mt-8 rounded-[var(--radius-lg)] p-4"
@@ -80,6 +85,11 @@ export default function AdminMeetingSection({
                   <th className="px-4 py-2.5 text-right text-xs font-bold text-primary-500">
                     상태
                   </th>
+                  {showAttendance && (
+                    <th className="px-2 py-2.5 text-center text-xs font-bold text-primary-500">
+                      참석
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -112,6 +122,18 @@ export default function AdminMeetingSection({
                         </span>
                       )}
                     </td>
+                    {showAttendance && (
+                      <td className="px-2 py-1 text-center">
+                        {reg.status === 'confirmed' ? (
+                          <AttendanceToggle
+                            registrationId={reg.id}
+                            attended={reg.attended}
+                          />
+                        ) : (
+                          <span className="text-primary-300">-</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

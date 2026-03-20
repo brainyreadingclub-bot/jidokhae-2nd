@@ -11,6 +11,7 @@ export type Registration = {
   refunded_amount: number | null
   created_at: string
   cancelled_at: string | null
+  attended: boolean | null
 }
 
 export type RegistrationWithMeeting = Registration & {
