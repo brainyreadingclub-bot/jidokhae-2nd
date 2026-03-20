@@ -71,7 +71,7 @@ export default function WelcomeScreen({ nickname }: { nickname: string }) {
             className="mt-2 text-3xl font-bold leading-tight text-white"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            넷플릭스 말고,
+            <span className="text-neutral-400">넷플릭스 말고,</span>
             <br />
             할 게 생깁니다.
           </h1>
