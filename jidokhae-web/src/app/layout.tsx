@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: '경주/포항 독서모임 지독해. 모임 일정 확인, 신청, 결제를 한 곳에서.',
   openGraph: {
     title: '지독해 — 로컬 기반 독서모임',
-    description: '매주 책으로 모이는 사람들. 넷플릭스 말고, 할 게 생깁니다.',
+    description: '매주 책으로 모이는 사람들.',
     siteName: '지독해',
     type: 'website',
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '지독해 — 로컬 기반 독서모임',
-    description: '매주 책으로 모이는 사람들. 넷플릭스 말고, 할 게 생깁니다.',
+    description: '매주 책으로 모이는 사람들.',
     images: ['https://brainy-club.com/og-image.png'],
   },
 }
