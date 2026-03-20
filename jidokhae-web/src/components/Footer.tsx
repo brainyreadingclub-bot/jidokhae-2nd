@@ -9,10 +9,24 @@ export default function Footer() {
       <div className="space-y-1.5">
         <p>상호명: 지독해 | 대표자: 임재윤</p>
         <p>사업자등록번호: 494-42-01276</p>
-        <p>주소: 경상북도 경주시 태종로 801-11 208호</p>
-        <p>연락처: 010-8470-8730</p>
+        <p>주소: 경상북도 경주시 태종로 801-11 (황오동) 208호</p>
+        <p>연락처: 0507-1396-7908</p>
       </div>
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Link
+          href="/policy/terms"
+          className="text-primary-600 hover:text-primary-700 underline"
+        >
+          이용약관
+        </Link>
+        <span>|</span>
+        <Link
+          href="/policy/privacy"
+          className="text-primary-600 hover:text-primary-700 underline"
+        >
+          개인정보처리방침
+        </Link>
+        <span>|</span>
         <Link
           href="/policy/refund"
           className="text-primary-600 hover:text-primary-700 underline"
