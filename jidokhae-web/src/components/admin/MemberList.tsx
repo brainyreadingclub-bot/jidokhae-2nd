@@ -7,6 +7,7 @@ import ModalOverlay from '@/components/ui/ModalOverlay'
 type Profile = {
   id: string
   nickname: string
+  real_name: string | null
   role: string
   region: string[] | null
   profile_completed_at: string | null
@@ -69,6 +70,7 @@ export default function MemberList({ profiles, currentUserId }: Props) {
   }
 
   function getDisplayName(p: Profile) {
+    if (p.real_name) return `${p.real_name} (${p.nickname})`
     return p.nickname || '(미설정)'
   }
 
@@ -110,7 +112,7 @@ export default function MemberList({ profiles, currentUserId }: Props) {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-primary-800 truncate">
             {getDisplayName(p)}
-            {!p.profile_completed_at && (
+            {(!p.profile_completed_at || !p.real_name) && (
               <span className="ml-1 text-[10px] text-warning">⚠ 미완성</span>
             )}
           </div>

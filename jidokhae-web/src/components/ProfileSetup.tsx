@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 type Props = {
   nickname: string
   email: string | null
+  phone?: string | null
+  region?: string[] | null
+  realName?: string | null
 }
 
 function formatPhone(value: string): string {
@@ -17,13 +20,13 @@ function formatPhone(value: string): string {
 
 const REGIONS = ['경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주'] as const
 
-export default function ProfileSetup({ nickname, email }: Props) {
+export default function ProfileSetup({ nickname, email, phone, region, realName }: Props) {
   const router = useRouter()
   const [form, setForm] = useState({
-    real_name: '',
+    real_name: realName || '',
     nickname: nickname || '',
-    phone: '',
-    regions: [] as string[],
+    phone: phone ? formatPhone(phone) : '',
+    regions: region || ([] as string[]),
     email: email || '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})

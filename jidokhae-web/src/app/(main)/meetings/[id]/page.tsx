@@ -118,7 +118,7 @@ export default async function MeetingDetailPage({ params }: Props) {
   if (isEditorOrAdmin) {
     const { data: regs } = await supabase
       .from('registrations')
-      .select('*, profiles(nickname)')
+      .select('*, profiles(nickname, real_name)')
       .eq('meeting_id', id)
       .order('created_at', { ascending: false })
 

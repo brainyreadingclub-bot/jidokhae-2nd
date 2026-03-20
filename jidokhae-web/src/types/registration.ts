@@ -19,5 +19,5 @@ export type RegistrationWithMeeting = Registration & {
 }
 
 export type RegistrationWithProfile = Registration & {
-  profiles: { nickname: string }
+  profiles: { nickname: string; real_name: string | null }
 }

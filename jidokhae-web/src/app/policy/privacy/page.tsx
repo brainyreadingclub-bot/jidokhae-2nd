@@ -34,7 +34,7 @@ export default function PrivacyPolicyPage() {
 
           <p className="mt-4 font-semibold text-neutral-700">나. 서비스 이용 시 이용자가 직접 입력</p>
           <ul className="mt-2 ml-4 space-y-1">
-            <li>- 닉네임(서비스 내 표시용), 전화번호, 지역, 이메일(선택), 실명(선택)</li>
+            <li>- 실명, 닉네임(서비스 내 표시용), 전화번호, 지역, 이메일(선택)</li>
           </ul>
 
           <p className="mt-4 font-semibold text-neutral-700">다. 서비스 이용 과정에서 자동 생성</p>

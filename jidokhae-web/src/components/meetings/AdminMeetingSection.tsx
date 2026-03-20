@@ -100,7 +100,9 @@ export default function AdminMeetingSection({
                     className="last:border-b-0"
                   >
                     <td className="px-4 py-3 text-sm font-medium text-primary-800">
-                      {reg.profiles?.nickname || '(알 수 없음)'}
+                      {reg.profiles?.real_name
+                        ? `${reg.profiles.real_name} (${reg.profiles.nickname})`
+                        : reg.profiles?.nickname || '(알 수 없음)'}
                     </td>
                     <td className="px-4 py-3 text-sm text-primary-500/70">
                       {formatDate(reg.created_at)}

@@ -327,3 +327,11 @@ CREATE UNIQUE INDEX idx_profiles_nickname_unique
 -- 프로필 설정 — 실명 필드 추가
 -- ============================================================
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS real_name TEXT DEFAULT NULL;
+
+-- ============================================================
+-- profiles SELECT RLS — editor도 전체 프로필 조회 허용
+-- ============================================================
+DROP POLICY IF EXISTS "profiles_select_admin" ON public.profiles;
+CREATE POLICY "profiles_select_editor_or_admin"
+  ON public.profiles FOR SELECT
+  USING (public.is_editor_or_admin());

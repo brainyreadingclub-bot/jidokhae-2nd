@@ -13,7 +13,7 @@ export default async function MembersPage() {
 
   const { data: profiles, error } = await supabase
     .from('profiles')
-    .select('id, nickname, role, region, profile_completed_at')
+    .select('id, nickname, real_name, role, region, profile_completed_at')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -26,7 +26,7 @@ export default async function MembersPage() {
         회원 관리
       </h1>
       <MemberList
-        profiles={(profiles ?? []) as { id: string; nickname: string; role: string; region: string[] | null; profile_completed_at: string | null }[]}
+        profiles={(profiles ?? []) as { id: string; nickname: string; real_name: string | null; role: string; region: string[] | null; profile_completed_at: string | null }[]}
         currentUserId={user.id}
       />
     </div>

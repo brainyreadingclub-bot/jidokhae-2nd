@@ -19,8 +19,16 @@ export default async function HomePage() {
     if (!profile.welcomed_at) {
       return <WelcomeScreen nickname={profile.nickname} />
     }
-    if (!profile.profile_completed_at) {
-      return <ProfileSetup nickname={profile.nickname} email={profile.email} />
+    if (!profile.profile_completed_at || !profile.real_name) {
+      return (
+        <ProfileSetup
+          nickname={profile.nickname}
+          email={profile.email}
+          phone={profile.phone}
+          region={profile.region}
+          realName={profile.real_name}
+        />
+      )
     }
   }
 
