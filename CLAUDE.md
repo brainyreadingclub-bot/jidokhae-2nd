@@ -195,6 +195,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 **Key DB Functions (SECURITY DEFINER):**
 - `is_admin()` — Returns true if current user has admin role. Used in RLS policies
+- `is_editor_or_admin()` — Returns true if current user has editor or admin role. Used in meetings INSERT/UPDATE RLS, registrations SELECT RLS, profiles SELECT RLS
 - `confirm_registration(p_user_id, p_meeting_id, p_payment_id, p_paid_amount)` — Atomic capacity check + INSERT with `FOR UPDATE` row lock. Returns: 'success' | 'not_found' | 'not_active' | 'already_registered' | 'full'
 - `get_confirmed_counts(meeting_ids UUID[])` — Batch count of confirmed registrations per meeting (avoids N+1 queries)
 
@@ -202,7 +203,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Code Conventions
 
-- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `WelcomeScreen`, `ProfileSetup`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files. Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터)
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `WelcomeScreen`, `ProfileSetup`, `AttendanceToggle`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files. Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터)
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
 - **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function
@@ -210,7 +211,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
-- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment), `registrations/cancel` (M5 cancel), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup), `welcome` (첫 방문 welcomed_at 업데이트), `profile/setup` (프로필 설정 저장). All use service_role Supabase client, cookie-based auth
+- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment), `registrations/cancel` (M5 cancel), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup), `welcome` (첫 방문 welcomed_at 업데이트), `profile/setup` (프로필 설정 저장). All use service_role Supabase client, cookie-based auth
 - **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` for server-side profile fetching). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
@@ -242,7 +243,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **MeetingCard capacity threshold:** At 80% capacity (`confirmedCount >= capacity * 0.8`), capacity text turns `text-accent-500` (orange warning)
 - **Status color tokens:** `globals.css` defines `--color-status-open`, `--color-status-closing`, `--color-status-full`, `--color-status-completed`, `--color-status-cancelled` — used by MeetingCard left border
 - **MeetingForm uses browser Supabase client** (anon key + RLS) for create/edit — admin writes go through RLS `is_admin()` policy, not service_role
-- **Admin layout role check** uses anon Supabase client (not service_role) — secure because RLS `profiles_select_own` allows users to read their own profile
+- **Admin layout role check** uses `getProfile()` (cached via React `cache()`) — same request deduplication with other profile reads. Checks for `admin` or `editor` role
 
 ### Environment Variables
 
