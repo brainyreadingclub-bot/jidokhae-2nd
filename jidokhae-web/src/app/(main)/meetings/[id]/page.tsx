@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: 'https://brainy-club.com/og-image.png',
           width: 1200,
           height: 630,
-          alt: '지독해 — 경주·포항 독서모임',
+          alt: '지독해 — 로컬 기반 독서모임',
         },
       ],
     },
