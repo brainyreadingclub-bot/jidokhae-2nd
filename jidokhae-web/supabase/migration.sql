@@ -335,3 +335,48 @@ DROP POLICY IF EXISTS "profiles_select_admin" ON public.profiles;
 CREATE POLICY "profiles_select_editor_or_admin"
   ON public.profiles FOR SELECT
   USING (public.is_editor_or_admin());
+
+-- ============================================================
+-- Phase 2-1: 알림톡 — notifications 테이블
+-- ============================================================
+CREATE TABLE public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT NOT NULL
+    CHECK (type IN ('meeting_remind', 'registration_confirm')),
+  recipient_id UUID NOT NULL REFERENCES public.profiles(id),
+  recipient_phone TEXT NOT NULL,
+  meeting_id UUID REFERENCES public.meetings(id),
+  registration_id UUID REFERENCES public.registrations(id),
+  template_code TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'sent', 'failed', 'skipped')),
+  solapi_message_id TEXT,
+  error_message TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  sent_at TIMESTAMPTZ
+);
+
+-- 조건부 UNIQUE INDEX — 중복 발송 DB 수준 차단
+-- INSERT(pending) 단계에서 UNIQUE 위반 → Solapi 발송 전에 중복 차단
+-- meeting_remind: 한 사람에게 같은 모임 리마인드 1회만
+CREATE UNIQUE INDEX idx_notifications_remind_unique
+  ON public.notifications(recipient_id, meeting_id)
+  WHERE type = 'meeting_remind';
+
+-- registration_confirm: 같은 registration에 확인 알림 1회만 (재신청 시 새 registration → 새 알림 OK)
+CREATE UNIQUE INDEX idx_notifications_confirm_unique
+  ON public.notifications(registration_id)
+  WHERE type = 'registration_confirm';
+
+-- 조회용 인덱스
+CREATE INDEX idx_notifications_meeting_type
+  ON public.notifications(meeting_id, type);
+CREATE INDEX idx_notifications_created
+  ON public.notifications(created_at DESC);
+
+-- RLS
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "notifications_select_admin"
+  ON public.notifications FOR SELECT
+  USING (public.is_admin());

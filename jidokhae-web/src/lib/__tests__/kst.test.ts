@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   getKSTToday,
+  getTomorrowKST,
   toKSTDate,
   formatKoreanDate,
   formatKoreanTime,
@@ -26,6 +27,25 @@ describe('getKSTToday', () => {
     const today = getKSTToday()
     const parsed = new Date(today + 'T00:00:00')
     expect(parsed.toString()).not.toBe('Invalid Date')
+  })
+})
+
+// ─── getTomorrowKST ───
+
+describe('getTomorrowKST', () => {
+  it('YYYY-MM-DD 형식 반환', () => {
+    const tomorrow = getTomorrowKST()
+    expect(tomorrow).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('오늘보다 하루 뒤의 날짜 반환', () => {
+    const today = getKSTToday()
+    const tomorrow = getTomorrowKST()
+    const todayDate = new Date(today + 'T12:00:00+09:00')
+    const tomorrowDate = new Date(tomorrow + 'T12:00:00+09:00')
+    const diffMs = tomorrowDate.getTime() - todayDate.getTime()
+    const diffDays = diffMs / (24 * 60 * 60 * 1000)
+    expect(diffDays).toBe(1)
   })
 })
 

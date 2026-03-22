@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { processPaymentConfirmation } from '@/lib/payment'
+import { sendRegistrationConfirmNotification } from '@/lib/notification'
 
 export async function POST(request: NextRequest) {
   // Authenticate user via Supabase session cookies
@@ -60,6 +61,15 @@ export async function POST(request: NextRequest) {
     meetingId,
     user.id,
   )
+
+  // 신청 완료 알림톡 — 실패해도 결제 응답에 영향 없음
+  if (result.status === 'success') {
+    try {
+      await sendRegistrationConfirmNotification(meetingId, user.id, result.registrationId)
+    } catch (error) {
+      console.error('[confirm] 신청 완료 알림톡 발송 실패:', error)
+    }
+  }
 
   const httpStatus = result.status === 'error' ? 500 : 200
   return NextResponse.json(result, { status: httpStatus })

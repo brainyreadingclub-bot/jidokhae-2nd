@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getPayment } from '@/lib/tosspayments'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { cancelPayment } from '@/lib/tosspayments'
+import { sendRegistrationConfirmNotification } from '@/lib/notification'
 
 export async function POST(request: NextRequest) {
   let body: {
@@ -93,7 +94,23 @@ export async function POST(request: NextRequest) {
 
   const rpcResult = result as string
 
-  if (rpcResult === 'full' || rpcResult === 'already_registered') {
+  if (rpcResult === 'success') {
+    // registrationId 조회 (RPC는 문자열만 반환)
+    try {
+      const { data: reg } = await supabase
+        .from('registrations')
+        .select('id')
+        .eq('payment_id', paymentKey)
+        .eq('status', 'confirmed')
+        .limit(1)
+
+      if (reg?.[0]?.id) {
+        await sendRegistrationConfirmNotification(meetingId, userId, reg[0].id)
+      }
+    } catch (error) {
+      console.error('[webhook] 신청 완료 알림톡 발송 실패:', error)
+    }
+  } else if (rpcResult === 'full' || rpcResult === 'already_registered') {
     // Refund since DB rejected
     try {
       await cancelPayment(paymentKey, rpcResult === 'full' ? '정원 마감' : '중복 신청')

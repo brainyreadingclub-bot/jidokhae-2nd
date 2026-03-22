@@ -14,6 +14,16 @@ export function getKSTToday(): string {
   }).format(new Date())
 }
 
+/** Returns tomorrow's date as "YYYY-MM-DD" in KST */
+export function getTomorrowKST(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(Date.now() + 24 * 60 * 60 * 1000))
+}
+
 /** Converts any Date to "YYYY-MM-DD" in KST */
 export function toKSTDate(date: Date): string {
   return new Intl.DateTimeFormat('en-CA', {
