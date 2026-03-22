@@ -6,14 +6,16 @@ import type { RegistrationWithMeeting } from '@/types/registration'
 
 type Props = {
   registration: RegistrationWithMeeting
-  badge: { label: string; color: 'success' | 'gray' }
+  badge: { label: string; color: 'success' | 'gray' | 'accent' }
 }
 
 export default function RegistrationCard({ registration, badge }: Props) {
   const meeting = registration.meetings
   const isDeleted =
     meeting.status === 'deleted' || meeting.status === 'deleting'
-  const isCancelled = registration.status === 'cancelled'
+  const isCancelled = registration.status === 'cancelled' ||
+    registration.status === 'waitlist_cancelled' ||
+    registration.status === 'waitlist_refunded'
 
   const isMuted = isCancelled || isDeleted
 
@@ -41,12 +43,16 @@ export default function RegistrationCard({ registration, badge }: Props) {
             className={`ml-3 inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-tight ${
               badge.color === 'success'
                 ? 'bg-primary-50 text-primary-700'
-                : 'text-neutral-500'
+                : badge.color === 'accent'
+                  ? 'bg-accent-50 text-accent-700'
+                  : 'text-neutral-500'
             }`}
             style={
               badge.color === 'success'
                 ? { border: '1px solid var(--color-primary-100)' }
-                : { backgroundColor: 'var(--color-neutral-200)', border: '1px solid var(--color-neutral-300)' }
+                : badge.color === 'accent'
+                  ? { border: '1px solid var(--color-accent-200)' }
+                  : { backgroundColor: 'var(--color-neutral-200)', border: '1px solid var(--color-neutral-300)' }
             }
           >
             {badge.label}

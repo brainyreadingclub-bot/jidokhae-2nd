@@ -1,11 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { processUserCancel } from '@/lib/cancel'
-import { promoteNextWaitlisted } from '@/lib/waitlist'
+import { processWaitlistCancel } from '@/lib/waitlist'
 
 export async function POST(request: NextRequest) {
-  // Authenticate user via Supabase session cookies
-  // (same pattern as /api/registrations/confirm/route.ts)
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -14,9 +11,7 @@ export async function POST(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll() {
-          // No-op: API route doesn't need to set cookies
-        },
+        setAll() {},
       },
     },
   )
@@ -50,17 +45,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const result = await processUserCancel(registrationId, user.id)
-
-  // 확정자 취소 성공 시 → 대기자 자동 승격
-  if (result.status === 'success') {
-    try {
-      await promoteNextWaitlisted(result.meetingId)
-    } catch (error) {
-      console.error('[cancel] 대기자 승격 실패:', error)
-      // 승격 실패해도 취소 자체는 성공
-    }
-  }
+  const result = await processWaitlistCancel(registrationId, user.id)
 
   const httpStatus = result.status === 'error' ? 500 : 200
   return NextResponse.json(result, { status: httpStatus })

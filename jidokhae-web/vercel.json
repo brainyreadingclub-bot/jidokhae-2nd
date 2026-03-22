@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/waitlist-refund",
+      "schedule": "30 9 * * *"
+    },
+    {
       "path": "/api/cron/meeting-remind",
       "schedule": "0 10 * * *"
     }

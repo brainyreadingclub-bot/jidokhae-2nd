@@ -8,12 +8,14 @@ type MeetingCardProps = {
   meeting: Meeting
   confirmedCount: number
   isRegistered: boolean
+  isWaitlisted?: boolean
 }
 
 export default function MeetingCard({
   meeting,
   confirmedCount,
   isRegistered,
+  isWaitlisted,
 }: MeetingCardProps) {
   const isFull = confirmedCount >= meeting.capacity
   const isAlmostFull = !isFull && confirmedCount >= meeting.capacity * 0.8
@@ -21,16 +23,20 @@ export default function MeetingCard({
   // Status-based left border color
   const borderColor = isRegistered
     ? 'var(--color-accent-500)'
-    : isFull
-      ? 'var(--color-status-full)'
-      : 'var(--color-status-open)'
+    : isWaitlisted
+      ? 'var(--color-accent-400)'
+      : isFull
+        ? 'var(--color-status-full)'
+        : 'var(--color-status-open)'
 
-  // Status badge config
+  // Status badge config (priority: registered > waitlisted > full > default)
   const badge = isRegistered
     ? { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }
-    : isFull
-      ? { label: '마감', classes: 'bg-neutral-100 text-neutral-500 border-neutral-200' }
-      : { label: '모집중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
+    : isWaitlisted
+      ? { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
+      : isFull
+        ? { label: '마감', classes: 'bg-neutral-100 text-neutral-500 border-neutral-200' }
+        : { label: '모집중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
 
   // Capacity color
   const capacityClass = isFull

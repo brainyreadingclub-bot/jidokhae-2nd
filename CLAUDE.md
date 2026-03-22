@@ -118,6 +118,9 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 | Webhook backup | TossPayments Webhook (`/api/webhooks/tosspayments`) as backup when frontend redirect fails. Signature verification required |
 | payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
 | Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
+| Alimtalk (알림톡) | Solapi SDK → KakaoTalk 알림톡. 2종: 신청 확인 (이벤트) + 모임 리마인드 (Vercel Cron KST 19:00) |
+| Notification dedup | INSERT(pending) → Solapi 발송 → UPDATE(sent/failed). Partial UNIQUE INDEX로 발송 전 중복 차단 |
+| Cron auth | Vercel Cron sends `Authorization: Bearer CRON_SECRET` header. Middleware excludes `api/cron/` |
 
 ## Key Business Rules
 
@@ -178,7 +181,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 ### Architecture
 
 - **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, refund policy — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations). Admin routes: `admin/page` (dashboard), `admin/meetings/new` (create), `admin/meetings/[id]/edit` (edit), `admin/members` (회원 관리)
-- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), and `api/webhooks/` (no session needed — uses TossPayments verification)
+- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth)
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
 - **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Editorial Organic" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Terracotta (`--color-accent-*`), Neutral: Warm Gray (`--color-neutral-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Fonts: Noto Serif KR (titles), Pretendard (body). See `jidokhae-web/DESIGN_TOKENS.md` for full token reference
 - **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
@@ -189,9 +192,9 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Database Schema
 
-**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean)
+**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped)
 
-**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_meetings_date_status` (home page query)
+**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지)
 
 **Key DB Functions (SECURITY DEFINER):**
 - `is_admin()` — Returns true if current user has admin role. Used in RLS policies
@@ -210,9 +213,9 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Mutation pattern in client components:** `router.push() + router.refresh()` after mutations (no `revalidatePath`)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
-- **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
-- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment), `registrations/cancel` (M5 cancel), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup), `welcome` (첫 방문 welcomed_at 업데이트), `profile/setup` (프로필 설정 저장), `admin/members` (회원 목록/역할 관리). All use service_role Supabase client, cookie-based auth
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` for server-side profile fetching). Shared between API routes — keep logic here, not in route handlers
+- **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
+- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 알림톡), `welcome` (첫 방문 welcomed_at 업데이트), `profile/setup` (프로필 설정 저장), `admin/members` (회원 목록/역할 관리). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` for server-side profile fetching), `notification.ts` (알림톡 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
@@ -237,6 +240,17 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 3. Admin delete: `POST /api/meetings/[id]/delete` → set `deleting` → `Promise.allSettled` parallel refund → `deleted`
 
 **Safety patterns:** optimistic lock with `.eq('status', 'confirmed')` + `.select('id')` to detect 0-row updates, race condition handling via `getPayment()` status check, partial failure retry (meeting stays `deleting`)
+
+### Notification Flow (Phase 2-1)
+
+**알림톡 2종:** Solapi SDK (`src/lib/solapi.ts`) → KakaoTalk 알림톡
+
+1. **신청 완료 확인** (이벤트 기반): 결제 성공 → API Route/웹훅에서 `sendRegistrationConfirmNotification()` 호출 (fire-and-forget, try-catch)
+2. **모임 전날 리마인드** (Vercel Cron): `GET /api/cron/meeting-remind` — 매일 KST 19:00 (UTC `0 10 * * *`). 내일 active 모임의 confirmed 신청자에게 발송
+
+**중복 방지 패턴:** INSERT(pending) → Solapi 발송 → UPDATE(sent/failed). Partial UNIQUE INDEX가 INSERT 단계에서 위반 → 발송 전 중복 차단. 에러코드 `23505` = skip 처리.
+
+**알림은 부가 기능** — 실패해도 결제/신청 흐름을 중단시키지 않음. `payment.ts`는 수정하지 않고 API Route 레벨에서 호출.
 
 ### UI Behavior Details
 

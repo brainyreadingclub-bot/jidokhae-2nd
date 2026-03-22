@@ -11,7 +11,12 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import type { Meeting } from '@/types/meeting'
 
-type NotificationType = 'meeting_remind' | 'registration_confirm'
+type NotificationType =
+  | 'meeting_remind'
+  | 'registration_confirm'
+  | 'waitlist_confirm'
+  | 'waitlist_promoted'
+  | 'waitlist_refunded'
 
 type SendNotificationParams = {
   type: NotificationType
@@ -155,6 +160,107 @@ export async function sendRegistrationConfirmNotification(
       '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
       '#{장소}': (meeting as Meeting).location,
       '#{결제금액}': formatFee((meeting as Meeting).fee),
+    },
+  })
+}
+
+// ─── 대기 신청 완료 알림 ───
+
+export async function sendWaitlistConfirmNotification(
+  meetingId: string,
+  userId: string,
+  registrationId: string,
+) {
+  const supabase = createServiceClient()
+
+  const { data: meeting } = await supabase
+    .from('meetings')
+    .select('title, date, time, location, fee')
+    .eq('id', meetingId)
+    .single()
+
+  if (!meeting) return
+
+  const profile = await getProfileForNotification(userId)
+  const displayName = profile.real_name || profile.nickname
+
+  await sendNotification({
+    type: 'waitlist_confirm',
+    recipientId: userId,
+    recipientPhone: profile.phone,
+    meetingId,
+    registrationId,
+    templateCode: process.env.SOLAPI_TEMPLATE_WAITLIST_CONFIRM!,
+    variables: {
+      '#{회원명}': displayName,
+      '#{모임명}': (meeting as Meeting).title,
+      '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
+      '#{장소}': (meeting as Meeting).location,
+      '#{결제금액}': formatFee((meeting as Meeting).fee),
+    },
+  })
+}
+
+// ─── 대기 승격 확정 알림 ───
+
+export async function sendWaitlistPromotedNotification(
+  meetingId: string,
+  userId: string,
+  registrationId: string,
+) {
+  const supabase = createServiceClient()
+
+  const { data: meeting } = await supabase
+    .from('meetings')
+    .select('id, title, date, time, location, fee')
+    .eq('id', meetingId)
+    .single()
+
+  if (!meeting) return
+
+  const profile = await getProfileForNotification(userId)
+  const displayName = profile.real_name || profile.nickname
+
+  await sendNotification({
+    type: 'waitlist_promoted',
+    recipientId: userId,
+    recipientPhone: profile.phone,
+    meetingId,
+    registrationId,
+    templateCode: process.env.SOLAPI_TEMPLATE_WAITLIST_PROMOTED!,
+    variables: {
+      '#{회원명}': displayName,
+      '#{모임명}': (meeting as Meeting).title,
+      '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
+      '#{장소}': (meeting as Meeting).location,
+      '#{결제금액}': formatFee((meeting as Meeting).fee),
+      '#{모임ID}': (meeting as Meeting).id,
+    },
+  })
+}
+
+// ─── 미승격 자동 환불 알림 ───
+
+export async function sendWaitlistRefundedNotification(
+  userId: string,
+  registrationId: string,
+  meetingTitle: string,
+  refundedAmount: number,
+) {
+  const profile = await getProfileForNotification(userId)
+  const displayName = profile.real_name || profile.nickname
+
+  await sendNotification({
+    type: 'waitlist_refunded',
+    recipientId: userId,
+    recipientPhone: profile.phone,
+    meetingId: '',
+    registrationId,
+    templateCode: process.env.SOLAPI_TEMPLATE_WAITLIST_REFUNDED!,
+    variables: {
+      '#{회원명}': displayName,
+      '#{모임명}': meetingTitle,
+      '#{결제금액}': formatFee(refundedAmount),
     },
   })
 }

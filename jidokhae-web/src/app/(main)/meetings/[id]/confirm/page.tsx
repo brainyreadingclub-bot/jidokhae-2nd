@@ -5,12 +5,13 @@ import type { Meeting } from '@/types/meeting'
 
 type Props = {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ paymentKey?: string }>
+  searchParams: Promise<{ paymentKey?: string; type?: string }>
 }
 
 export default async function ConfirmPage({ params, searchParams }: Props) {
   const { id } = await params
-  const { paymentKey: paymentId } = await searchParams
+  const { paymentKey: paymentId, type } = await searchParams
+  const isWaitlisted = type === 'waitlisted'
   const supabase = await createClient()
 
   // Fetch meeting info
@@ -60,10 +61,19 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
           </svg>
         </div>
 
-        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">신청이 완료되었습니다</h1>
+        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">
+          {isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
+        </h1>
         <p className="mt-2 text-sm text-primary-500/70">
-          모임에 참여해 주셔서 감사합니다
+          {isWaitlisted
+            ? '취소자 발생 시 자동으로 참여가 확정됩니다'
+            : '모임에 참여해 주셔서 감사합니다'}
         </p>
+        {isWaitlisted && (
+          <p className="mt-1 text-xs text-primary-400">
+            모임 전날까지 승격되지 않으면 자동 전액 환불됩니다
+          </p>
+        )}
       </div>
 
       {/* Meeting summary */}

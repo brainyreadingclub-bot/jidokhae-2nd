@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getPayment } from '@/lib/tosspayments'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { cancelPayment } from '@/lib/tosspayments'
-import { sendRegistrationConfirmNotification } from '@/lib/notification'
+import { sendRegistrationConfirmNotification, sendWaitlistConfirmNotification } from '@/lib/notification'
 
 export async function POST(request: NextRequest) {
   let body: {
@@ -40,12 +40,12 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceClient()
 
-  // Idempotency: already registered?
+  // Idempotency: already registered or waitlisted?
   const { data: existing } = await supabase
     .from('registrations')
     .select('id')
     .eq('payment_id', paymentKey)
-    .eq('status', 'confirmed')
+    .in('status', ['confirmed', 'waitlisted'])
     .limit(1)
 
   if (existing && existing.length > 0) {
@@ -95,7 +95,6 @@ export async function POST(request: NextRequest) {
   const rpcResult = result as string
 
   if (rpcResult === 'success') {
-    // registrationId 조회 (RPC는 문자열만 반환)
     try {
       const { data: reg } = await supabase
         .from('registrations')
@@ -109,6 +108,22 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       console.error('[webhook] 신청 완료 알림톡 발송 실패:', error)
+    }
+  } else if (rpcResult === 'waitlisted') {
+    // 대기 신청 — 환불하지 않음, 알림톡 발송
+    try {
+      const { data: reg } = await supabase
+        .from('registrations')
+        .select('id')
+        .eq('payment_id', paymentKey)
+        .eq('status', 'waitlisted')
+        .limit(1)
+
+      if (reg?.[0]?.id) {
+        await sendWaitlistConfirmNotification(meetingId, userId, reg[0].id)
+      }
+    } catch (error) {
+      console.error('[webhook] 대기 신청 알림톡 발송 실패:', error)
     }
   } else if (rpcResult === 'full' || rpcResult === 'already_registered') {
     // Refund since DB rejected

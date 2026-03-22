@@ -76,19 +76,23 @@ export type ButtonState =
   | { type: 'cancel' }
   | { type: 'attended' }
   | { type: 'none' }
+  | { type: 'join_waitlist' }
+  | { type: 'waitlist_cancel' }
 
-/** Computes the action button state for a meeting detail page (PRD §6-2) */
+/** Computes the action button state for a meeting detail page (PRD §6-2 + Phase 2-2 대기) */
 export function getButtonState(
   meetingDate: string,
   kstToday: string,
   hasConfirmed: boolean,
   isFull: boolean,
+  hasWaitlisted: boolean = false,
 ): ButtonState {
   const timing = getMeetingTiming(meetingDate, kstToday)
 
   if (timing === 'before_or_today') {
     if (hasConfirmed) return { type: 'cancel' }
-    if (isFull) return { type: 'full' }
+    if (hasWaitlisted) return { type: 'waitlist_cancel' }
+    if (isFull) return { type: 'join_waitlist' }
     return { type: 'register' }
   }
 

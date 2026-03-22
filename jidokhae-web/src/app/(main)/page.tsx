@@ -60,8 +60,8 @@ export default async function HomePage() {
 
   const meetingIds = typedMeetings.map((m) => m.id)
 
-  // Parallel: confirmed counts + user's registrations
-  const [countsResult, myRegsResult] = await Promise.all([
+  // Parallel: confirmed counts + user's confirmed regs + user's waitlisted regs
+  const [countsResult, myRegsResult, myWaitlistResult] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: meetingIds }),
     user
       ? supabase
@@ -71,6 +71,14 @@ export default async function HomePage() {
           .eq('status', 'confirmed')
           .in('meeting_id', meetingIds)
       : Promise.resolve({ data: [] as { meeting_id: string }[], error: null }),
+    user
+      ? supabase
+          .from('registrations')
+          .select('meeting_id')
+          .eq('user_id', user.id)
+          .eq('status', 'waitlisted')
+          .in('meeting_id', meetingIds)
+      : Promise.resolve({ data: [] as { meeting_id: string }[], error: null }),
   ])
 
   if (countsResult.error) {
@@ -78,6 +86,9 @@ export default async function HomePage() {
   }
   if ('error' in myRegsResult && myRegsResult.error) {
     throw new Error(`내 신청 조회 실패: ${myRegsResult.error.message}`)
+  }
+  if ('error' in myWaitlistResult && myWaitlistResult.error) {
+    throw new Error(`대기 신청 조회 실패: ${myWaitlistResult.error.message}`)
   }
 
   const countMap = new Map<string, number>(
@@ -93,6 +104,11 @@ export default async function HomePage() {
       (r: { meeting_id: string }) => r.meeting_id,
     ),
   )
+  const waitlistedSet = new Set(
+    (myWaitlistResult.data ?? []).map(
+      (r: { meeting_id: string }) => r.meeting_id,
+    ),
+  )
 
   return (
     <div className="px-5 pt-6">
@@ -104,6 +120,7 @@ export default async function HomePage() {
             meeting={meeting}
             confirmedCount={countMap.get(meeting.id) ?? 0}
             isRegistered={registeredSet.has(meeting.id)}
+            isWaitlisted={waitlistedSet.has(meeting.id)}
           />
         ))}
       </div>

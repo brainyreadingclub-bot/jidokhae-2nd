@@ -380,3 +380,143 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "notifications_select_admin"
   ON public.notifications FOR SELECT
   USING (public.is_admin());
+
+-- ============================================================
+-- Phase 2-2: 대기 신청 + 자동 승격
+-- ============================================================
+
+-- registrations status CHECK 확장
+ALTER TABLE public.registrations DROP CONSTRAINT registrations_status_check;
+ALTER TABLE public.registrations ADD CONSTRAINT registrations_status_check
+  CHECK (status IN ('confirmed', 'cancelled', 'waitlisted', 'waitlist_cancelled', 'waitlist_refunded'));
+
+-- registrations cancel_type CHECK 확장
+ALTER TABLE public.registrations DROP CONSTRAINT registrations_cancel_type_check;
+ALTER TABLE public.registrations ADD CONSTRAINT registrations_cancel_type_check
+  CHECK (cancel_type IN (NULL, 'user_cancelled', 'meeting_deleted', 'waitlist_user_cancelled', 'waitlist_auto_refunded'));
+
+-- 대기자 순번 조회용 인덱스
+CREATE INDEX idx_registrations_waitlist
+  ON public.registrations(meeting_id, created_at)
+  WHERE status = 'waitlisted';
+
+-- confirm_registration() RPC 수정 — 정원 초과 시 waitlisted INSERT
+CREATE OR REPLACE FUNCTION public.confirm_registration(
+  p_user_id UUID,
+  p_meeting_id UUID,
+  p_payment_id TEXT,
+  p_paid_amount INTEGER
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = ''
+AS $$
+DECLARE
+  v_capacity INTEGER;
+  v_status TEXT;
+  v_confirmed_count INTEGER;
+  v_duplicate_count INTEGER;
+BEGIN
+  -- 1. Lock the meeting row
+  SELECT capacity, status INTO v_capacity, v_status
+  FROM public.meetings WHERE id = p_meeting_id FOR UPDATE;
+
+  IF NOT FOUND THEN RETURN 'not_found'; END IF;
+  IF v_status <> 'active' THEN RETURN 'not_active'; END IF;
+
+  -- 2. 중복 체크 (confirmed OR waitlisted)
+  SELECT COUNT(*) INTO v_duplicate_count
+  FROM public.registrations
+  WHERE user_id = p_user_id
+    AND meeting_id = p_meeting_id
+    AND status IN ('confirmed', 'waitlisted');
+
+  IF v_duplicate_count > 0 THEN RETURN 'already_registered'; END IF;
+
+  -- 3. 정원 체크
+  SELECT COUNT(*) INTO v_confirmed_count
+  FROM public.registrations
+  WHERE meeting_id = p_meeting_id AND status = 'confirmed';
+
+  -- 4. 정원 미달 → confirmed, 초과 → waitlisted
+  IF v_confirmed_count < v_capacity THEN
+    INSERT INTO public.registrations (user_id, meeting_id, status, payment_id, paid_amount)
+    VALUES (p_user_id, p_meeting_id, 'confirmed', p_payment_id, p_paid_amount);
+    RETURN 'success';
+  ELSE
+    INSERT INTO public.registrations (user_id, meeting_id, status, payment_id, paid_amount)
+    VALUES (p_user_id, p_meeting_id, 'waitlisted', p_payment_id, p_paid_amount);
+    RETURN 'waitlisted';
+  END IF;
+END;
+$$;
+
+-- promote_next_waitlisted() — 원자적 대기자 승격
+CREATE OR REPLACE FUNCTION public.promote_next_waitlisted(
+  p_meeting_id UUID
+)
+RETURNS TABLE(promoted_id UUID, promoted_user_id UUID)
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = ''
+AS $$
+DECLARE
+  v_capacity INTEGER;
+  v_confirmed_count INTEGER;
+  v_next_id UUID;
+  v_next_user_id UUID;
+BEGIN
+  -- 1. Lock the meeting row
+  SELECT capacity INTO v_capacity
+  FROM public.meetings WHERE id = p_meeting_id FOR UPDATE;
+
+  IF NOT FOUND THEN RETURN; END IF;
+
+  -- 2. 현재 confirmed 수
+  SELECT COUNT(*) INTO v_confirmed_count
+  FROM public.registrations
+  WHERE meeting_id = p_meeting_id AND status = 'confirmed';
+
+  -- 3. 정원 충분이면 종료
+  IF v_confirmed_count >= v_capacity THEN RETURN; END IF;
+
+  -- 4. 가장 오래된 waitlisted 찾기
+  SELECT id, user_id INTO v_next_id, v_next_user_id
+  FROM public.registrations
+  WHERE meeting_id = p_meeting_id AND status = 'waitlisted'
+  ORDER BY created_at ASC
+  LIMIT 1;
+
+  IF v_next_id IS NULL THEN RETURN; END IF;
+
+  -- 5. 승격: waitlisted → confirmed
+  UPDATE public.registrations
+  SET status = 'confirmed'
+  WHERE id = v_next_id AND status = 'waitlisted';
+
+  -- 6. 결과 반환
+  promoted_id := v_next_id;
+  promoted_user_id := v_next_user_id;
+  RETURN NEXT;
+END;
+$$;
+
+-- notifications type CHECK 확장
+ALTER TABLE public.notifications DROP CONSTRAINT notifications_type_check;
+ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check
+  CHECK (type IN (
+    'meeting_remind', 'registration_confirm',
+    'waitlist_confirm', 'waitlist_promoted', 'waitlist_refunded'
+  ));
+
+-- 대기 알림 중복 방지 인덱스
+CREATE UNIQUE INDEX idx_notifications_waitlist_confirm_unique
+  ON public.notifications(registration_id)
+  WHERE type = 'waitlist_confirm';
+
+CREATE UNIQUE INDEX idx_notifications_waitlist_promoted_unique
+  ON public.notifications(registration_id)
+  WHERE type = 'waitlist_promoted';
+
+CREATE UNIQUE INDEX idx_notifications_waitlist_refunded_unique
+  ON public.notifications(registration_id)
+  WHERE type = 'waitlist_refunded';

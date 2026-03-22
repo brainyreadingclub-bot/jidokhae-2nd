@@ -17,9 +17,12 @@ type Props = {
   userId: string
   registrationId?: string
   paidAmount?: number | null
+  waitlistRegistrationId?: string
+  waitlistPaidAmount?: number | null
 }
 
 type CancelPhase = 'idle' | 'info' | 'confirm' | 'processing' | 'complete'
+type WaitlistCancelPhase = 'idle' | 'confirm' | 'processing' | 'complete'
 
 export default function MeetingActionButton({
   buttonState,
@@ -30,6 +33,8 @@ export default function MeetingActionButton({
   userId,
   registrationId,
   paidAmount,
+  waitlistRegistrationId,
+  waitlistPaidAmount,
 }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -39,6 +44,7 @@ export default function MeetingActionButton({
     refundedAmount: number
     refundRate: number
   } | null>(null)
+  const [waitlistCancelPhase, setWaitlistCancelPhase] = useState<WaitlistCancelPhase>('idle')
 
   function showToast(msg: string) {
     setToast(msg)
@@ -113,11 +119,39 @@ export default function MeetingActionButton({
     }
   }
 
+  async function handleWaitlistCancelConfirm() {
+    if (!waitlistRegistrationId) return
+    setWaitlistCancelPhase('processing')
+
+    try {
+      const res = await fetch('/api/registrations/waitlist-cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId: waitlistRegistrationId }),
+      })
+
+      const data = await res.json()
+
+      if (data.status === 'success') {
+        setWaitlistCancelPhase('complete')
+        router.refresh()
+      } else {
+        setWaitlistCancelPhase('idle')
+        showToast(data.message || '대기 취소에 실패했습니다')
+      }
+    } catch {
+      setWaitlistCancelPhase('idle')
+      showToast('네트워크 오류가 발생했습니다')
+    }
+  }
+
   // Determine if we should show a sticky button
   const showStickyButton =
     (buttonState.type === 'register') ||
     (buttonState.type === 'full') ||
-    (buttonState.type === 'cancel' && cancelPhase === 'idle')
+    (buttonState.type === 'cancel' && cancelPhase === 'idle') ||
+    (buttonState.type === 'join_waitlist') ||
+    (buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle')
 
   return (
     <>
@@ -168,6 +202,45 @@ export default function MeetingActionButton({
               취소하기
             </button>
           )}
+
+          {buttonState.type === 'join_waitlist' && (
+            <div>
+              <button
+                onClick={handleRegister}
+                disabled={loading}
+                className="w-full rounded-[var(--radius-lg)] bg-accent-500 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-accent-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ boxShadow: '0 4px 14px rgba(180, 100, 60, 0.25)' }}
+              >
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Spinner />
+                    결제 진행 중...
+                  </span>
+                ) : (
+                  '대기 신청하기'
+                )}
+              </button>
+              <p className="mt-2 text-center text-xs text-primary-400 leading-relaxed">
+                취소자 발생 시 자동으로 참여가 확정됩니다.
+                <br />
+                모임 전날까지 승격되지 않으면 자동 전액 환불됩니다.
+              </p>
+            </div>
+          )}
+
+          {buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle' && (
+            <button
+              onClick={() => setWaitlistCancelPhase('confirm')}
+              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
+            >
+              대기 취소하기
+            </button>
+          )}
         </StickyBottom>
       )}
 
@@ -211,6 +284,74 @@ export default function MeetingActionButton({
             ) : (
               '환불 불가 기간으로 환불 금액이 없습니다'
             )}
+          </p>
+          <button
+            onClick={() => router.push('/')}
+            className="mt-4 w-full rounded-[var(--radius-lg)] bg-primary-600 py-3.5 text-sm font-bold text-white transition-all hover:bg-primary-700 active:scale-[0.98]"
+          >
+            모임 일정으로
+          </button>
+        </div>
+      )}
+
+      {/* === Waitlist info card === */}
+      {buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle' && (
+        <div
+          className="mt-8 rounded-[var(--radius-lg)] p-5"
+          style={{
+            backgroundColor: 'var(--color-surface-50)',
+            border: '1px solid var(--color-accent-200)',
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-[11px] font-bold text-accent-700 border border-accent-200">
+              대기 중
+            </span>
+            {waitlistPaidAmount != null && (
+              <span className="text-sm font-bold text-primary-800">
+                {formatFee(waitlistPaidAmount)}원
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-primary-500 leading-relaxed">
+            자리가 나면 자동으로 참여가 확정됩니다.
+            <br />
+            모임 전날까지 승격되지 않으면 자동 전액 환불됩니다.
+          </p>
+        </div>
+      )}
+
+      {/* === Waitlist cancel complete === */}
+      {waitlistCancelPhase === 'complete' && (
+        <div
+          className="mt-8 rounded-[var(--radius-lg)] p-6 text-center"
+          style={{
+            backgroundColor: 'var(--color-surface-50)',
+            border: '1px solid var(--color-surface-300)',
+          }}
+        >
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-primary-600"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h3 className="text-base font-bold text-primary-900">대기 취소 완료</h3>
+          <p className="mt-2 text-sm text-primary-600/70">
+            결제 금액이 전액 환불됩니다.
+            <br />
+            <span className="text-xs text-primary-400">
+              영업일 기준 3~5일 내 환불됩니다
+            </span>
           </p>
           <button
             onClick={() => router.push('/')}
@@ -345,6 +486,47 @@ export default function MeetingActionButton({
           <div className="flex flex-col items-center py-4">
             <Spinner />
             <p className="mt-3 text-sm text-primary-500">취소 처리 중...</p>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* === Waitlist Cancel Confirm Modal === */}
+      {waitlistCancelPhase === 'confirm' && (
+        <ModalOverlay onClose={() => setWaitlistCancelPhase('idle')}>
+          <h3 className="text-base font-bold text-primary-900 text-center">
+            대기를 취소하시겠습니까?
+          </h3>
+          <p className="mt-3 text-sm text-primary-600/70 text-center">
+            결제 금액이 전액 환불됩니다.
+          </p>
+          <div className="mt-5 flex gap-2">
+            <button
+              onClick={() => setWaitlistCancelPhase('idle')}
+              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
+            >
+              닫기
+            </button>
+            <button
+              onClick={handleWaitlistCancelConfirm}
+              className="flex-1 rounded-[var(--radius-md)] bg-error py-2.5 text-sm font-bold text-white transition-colors hover:bg-error/90"
+            >
+              대기 취소
+            </button>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* === Waitlist Cancel Processing Modal === */}
+      {waitlistCancelPhase === 'processing' && (
+        <ModalOverlay>
+          <div className="flex flex-col items-center py-4">
+            <Spinner />
+            <p className="mt-3 text-sm text-primary-500">대기 취소 처리 중...</p>
           </div>
         </ModalOverlay>
       )}

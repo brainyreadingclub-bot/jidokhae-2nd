@@ -170,8 +170,8 @@ describe('getButtonState', () => {
       expect(getButtonState(FUTURE, TODAY, false, false)).toEqual({ type: 'register' })
     })
 
-    it('미신청 + 정원 초과 → full', () => {
-      expect(getButtonState(FUTURE, TODAY, false, true)).toEqual({ type: 'full' })
+    it('미신청 + 정원 초과 + 미대기 → join_waitlist', () => {
+      expect(getButtonState(FUTURE, TODAY, false, true, false)).toEqual({ type: 'join_waitlist' })
     })
 
     it('신청완료 → cancel', () => {
@@ -188,6 +188,16 @@ describe('getButtonState', () => {
 
     it('당일 + 신청완료 → cancel', () => {
       expect(getButtonState(TODAY, TODAY, true, false)).toEqual({ type: 'cancel' })
+    })
+  })
+
+  describe('대기 상태', () => {
+    it('대기 중 → waitlist_cancel', () => {
+      expect(getButtonState(FUTURE, TODAY, false, true, true)).toEqual({ type: 'waitlist_cancel' })
+    })
+
+    it('대기 중 + 정원 여유 → waitlist_cancel (이미 대기 신청한 상태)', () => {
+      expect(getButtonState(FUTURE, TODAY, false, false, true)).toEqual({ type: 'waitlist_cancel' })
     })
   })
 

@@ -16,7 +16,7 @@ export default async function MyPage() {
     .from('registrations')
     .select('*, meetings(*)')
     .eq('user_id', user.id)
-    .in('status', ['confirmed', 'cancelled'])
+    .in('status', ['confirmed', 'cancelled', 'waitlisted', 'waitlist_cancelled', 'waitlist_refunded'])
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -35,17 +35,23 @@ export default async function MyPage() {
     )
   }
 
-  // Group: upcoming (confirmed + future date, ascending) vs past (rest, descending)
+  // Group: upcoming (confirmed/waitlisted + future date, ascending) vs past (rest, descending)
+  const isUpcoming = (r: RegistrationWithMeeting) =>
+    (r.status === 'confirmed' || r.status === 'waitlisted') && r.meetings.date >= kstToday
+
   const upcoming = typedRegs
-    .filter((r) => r.status === 'confirmed' && r.meetings.date >= kstToday)
+    .filter(isUpcoming)
     .sort((a, b) => a.meetings.date.localeCompare(b.meetings.date))
 
   const past = typedRegs
-    .filter((r) => !(r.status === 'confirmed' && r.meetings.date >= kstToday))
+    .filter((r) => !isUpcoming(r))
     .sort((a, b) => b.meetings.date.localeCompare(a.meetings.date))
 
-  function getBadge(reg: RegistrationWithMeeting): { label: string; color: 'success' | 'gray' } {
+  function getBadge(reg: RegistrationWithMeeting): { label: string; color: 'success' | 'gray' | 'accent' } {
     if (reg.status === 'cancelled') return { label: '취소됨', color: 'gray' }
+    if (reg.status === 'waitlisted') return { label: '대기 중', color: 'accent' }
+    if (reg.status === 'waitlist_cancelled') return { label: '대기 취소', color: 'gray' }
+    if (reg.status === 'waitlist_refunded') return { label: '대기 환불', color: 'gray' }
     if (reg.meetings.date < kstToday) return { label: '참여 완료', color: 'success' }
     return { label: '신청완료', color: 'success' }
   }

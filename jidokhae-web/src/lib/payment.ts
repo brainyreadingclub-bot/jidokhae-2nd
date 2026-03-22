@@ -8,6 +8,7 @@ import { confirmPayment, cancelPayment } from '@/lib/tosspayments'
 
 export type ConfirmResult =
   | { status: 'success'; registrationId: string }
+  | { status: 'waitlisted'; registrationId: string }
   | { status: 'full'; message: string }
   | { status: 'already_registered'; message: string }
   | { status: 'error'; message: string }
@@ -21,16 +22,18 @@ export async function processPaymentConfirmation(
 ): Promise<ConfirmResult> {
   const supabase = createServiceClient()
 
-  // Layer 1: Idempotency — already confirmed with this paymentKey?
+  // Layer 1: Idempotency — already confirmed or waitlisted with this paymentKey?
   const { data: existing } = await supabase
     .from('registrations')
-    .select('id')
+    .select('id, status')
     .eq('payment_id', paymentKey)
-    .eq('status', 'confirmed')
+    .in('status', ['confirmed', 'waitlisted'])
     .limit(1)
 
   if (existing && existing.length > 0) {
-    return { status: 'success', registrationId: existing[0].id }
+    return existing[0].status === 'waitlisted'
+      ? { status: 'waitlisted', registrationId: existing[0].id }
+      : { status: 'success', registrationId: existing[0].id }
   }
 
   // Verify meeting exists and is active
@@ -91,7 +94,20 @@ export async function processPaymentConfirmation(
     return { status: 'success', registrationId: reg?.[0]?.id ?? '' }
   }
 
+  if (rpcResult === 'waitlisted') {
+    // 대기 신청 — 결제 유지, 환불하지 않음
+    const { data: reg } = await supabase
+      .from('registrations')
+      .select('id')
+      .eq('payment_id', paymentKey)
+      .eq('status', 'waitlisted')
+      .limit(1)
+
+    return { status: 'waitlisted', registrationId: reg?.[0]?.id ?? '' }
+  }
+
   if (rpcResult === 'full') {
+    // 방어 코드 — confirm_registration()이 더 이상 'full' 반환하지 않지만 안전을 위해 유지
     await safeCancel(paymentKey, '정원 마감으로 인한 환불')
     return { status: 'full', message: '마감되었습니다' }
   }

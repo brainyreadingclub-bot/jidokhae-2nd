@@ -10,7 +10,7 @@ import { calculateRefund } from '@/lib/refund'
 import { getKSTToday } from '@/lib/kst'
 
 export type CancelResult =
-  | { status: 'success'; refundedAmount: number; refundRate: number }
+  | { status: 'success'; refundedAmount: number; refundRate: number; meetingId: string }
   | { status: 'already_cancelled' }
   | { status: 'error'; message: string }
 
@@ -105,5 +105,5 @@ export async function processUserCancel(
     return { status: 'already_cancelled' }
   }
 
-  return { status: 'success', refundedAmount: refundAmount, refundRate }
+  return { status: 'success', refundedAmount: refundAmount, refundRate, meetingId: reg.meeting_id }
 }

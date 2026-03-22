@@ -69,16 +69,16 @@ export async function POST(request: NextRequest, { params }: Params) {
     )
   }
 
-  // 4. Fetch all confirmed registrations
+  // 4. Fetch all confirmed + waitlisted registrations
   const { data: registrations } = await adminSupabase
     .from('registrations')
-    .select('id, payment_id, paid_amount')
+    .select('id, payment_id, paid_amount, status')
     .eq('meeting_id', meetingId)
-    .eq('status', 'confirmed')
+    .in('status', ['confirmed', 'waitlisted'])
 
   const confirmedRegs = registrations ?? []
 
-  // 5. No confirmed registrations → go straight to 'deleted'
+  // 5. No registrations to refund → go straight to 'deleted'
   if (confirmedRegs.length === 0) {
     await adminSupabase
       .from('meetings')
@@ -111,16 +111,17 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
 
       // Update registration status
+      const isWaitlisted = (reg as { status: string }).status === 'waitlisted'
       const { error } = await adminSupabase
         .from('registrations')
         .update({
-          status: 'cancelled',
-          cancel_type: 'meeting_deleted',
+          status: isWaitlisted ? 'waitlist_refunded' : 'cancelled',
+          cancel_type: isWaitlisted ? 'waitlist_auto_refunded' : 'meeting_deleted',
           refunded_amount: reg.paid_amount ?? 0,
           cancelled_at: new Date().toISOString(),
         })
         .eq('id', reg.id)
-        .eq('status', 'confirmed')
+        .eq('status', (reg as { status: string }).status)
 
       if (error) {
         throw new Error(`DB 업데이트 실패: ${reg.id}`)

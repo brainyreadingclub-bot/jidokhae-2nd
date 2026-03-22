@@ -30,10 +30,10 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 - `src/app/(admin)/` — Admin pages (CRUD for meetings)
 - `src/app/auth/` — Login page + OAuth callback
 - `src/app/policy/` — Public pages (about, terms, privacy, refund — no auth required)
-- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, welcome, profile/setup, admin/members)
+- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, cron/meeting-remind, welcome, profile/setup, admin/members)
 
 ### Middleware (`src/middleware.ts`)
-Refreshes Supabase session on every request. Redirects unauthenticated → `/auth/login`, authenticated → away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), and `api/webhooks/` (no session needed).
+Refreshes Supabase session on every request. Redirects unauthenticated → `/auth/login`, authenticated → away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth).
 
 ### Data Access Pattern
 - **Server Components** (default): Use `src/lib/supabase/server.ts` (anon key + RLS)
@@ -45,8 +45,10 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - `cancel.ts` — User cancellation flow
 - `refund.ts` — Refund amount calculation
 - `tosspayments.ts` — TossPayments API wrapper
-- `kst.ts` — KST date utilities (getKSTToday, formatKoreanDate, formatKoreanTime, formatFee, getButtonState)
+- `kst.ts` — KST date utilities (getKSTToday, getTomorrowKST, formatKoreanDate, formatKoreanTime, formatFee, getButtonState)
 - `profile.ts` — Cached `getProfile(userId)` for server-side profile fetching
+- `notification.ts` — 알림톡 발송 + notifications 이력 기록 (INSERT pending → 발송 → UPDATE sent/failed)
+- `solapi.ts` — Solapi SDK 래퍼 (KakaoTalk 알림톡)
 
 Logic is shared between API routes — keep it in `src/lib/`, not in route handlers.
 

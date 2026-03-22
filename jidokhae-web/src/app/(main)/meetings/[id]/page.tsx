@@ -75,8 +75,8 @@ export default async function MeetingDetailPage({ params }: Props) {
     notFound()
   }
 
-  // Parallel: confirmed count + user's registration, profile from cache
-  const [countsResult, myRegResult] = await Promise.all([
+  // Parallel: confirmed count + user's confirmed reg + user's waitlisted reg
+  const [countsResult, myRegResult, myWaitlistResult] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
@@ -85,6 +85,13 @@ export default async function MeetingDetailPage({ params }: Props) {
       .eq('meeting_id', id)
       .eq('status', 'confirmed')
       .limit(1),
+    supabase
+      .from('registrations')
+      .select('id, paid_amount')
+      .eq('user_id', user.id)
+      .eq('meeting_id', id)
+      .eq('status', 'waitlisted')
+      .limit(1),
   ])
 
   if (countsResult.error) {
@@ -92,6 +99,9 @@ export default async function MeetingDetailPage({ params }: Props) {
   }
   if (myRegResult.error) {
     throw new Error(`내 신청 조회 실패: ${myRegResult.error.message}`)
+  }
+  if (myWaitlistResult.error) {
+    throw new Error(`대기 신청 조회 실패: ${myWaitlistResult.error.message}`)
   }
 
   // cache hit — layout already fetched this in the same request
@@ -102,7 +112,9 @@ export default async function MeetingDetailPage({ params }: Props) {
       ?.find((c) => c.meeting_id === id)?.confirmed_count ?? 0,
   )
   const myReg = myRegResult.data?.[0] ?? null
+  const myWaitlistReg = myWaitlistResult.data?.[0] ?? null
   const hasConfirmed = myReg !== null
+  const hasWaitlisted = myWaitlistReg !== null
   const isFull = confirmedCount >= typedMeeting.capacity
   const role = profile.role ?? 'member'
   const isAdmin = role === 'admin'
@@ -131,12 +143,15 @@ export default async function MeetingDetailPage({ params }: Props) {
     kstToday,
     hasConfirmed,
     isFull,
+    hasWaitlisted,
   )
 
   const hasStickyButton =
     buttonState.type === 'register' ||
     buttonState.type === 'full' ||
-    buttonState.type === 'cancel'
+    buttonState.type === 'cancel' ||
+    buttonState.type === 'join_waitlist' ||
+    buttonState.type === 'waitlist_cancel'
 
   return (
     <div
@@ -180,6 +195,8 @@ export default async function MeetingDetailPage({ params }: Props) {
         userId={user.id}
         registrationId={myReg?.id}
         paidAmount={myReg?.paid_amount}
+        waitlistRegistrationId={myWaitlistReg?.id}
+        waitlistPaidAmount={myWaitlistReg?.paid_amount}
       />
 
       {/* Admin/Editor section */}

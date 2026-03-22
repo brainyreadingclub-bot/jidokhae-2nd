@@ -52,6 +52,13 @@ export default function PaymentRedirectPage({ params }: Props) {
           return
         }
 
+        if (data.status === 'waitlisted') {
+          router.replace(
+            `/meetings/${meetingId}/confirm?type=waitlisted`,
+          )
+          return
+        }
+
         if (data.status === 'full') {
           setError('마감되었습니다')
         } else if (data.status === 'already_registered') {

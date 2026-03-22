@@ -61,6 +61,23 @@ export default function RefundPolicyPage() {
         </ul>
       </section>
 
+      {/* 대기 신청 안내 */}
+      <section className="mt-8">
+        <h2
+          className="text-lg font-bold text-neutral-800"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          대기 신청 안내
+        </h2>
+
+        <ul className="mt-4 space-y-2 text-sm text-neutral-600 leading-relaxed">
+          <li>• 정원이 가득 찬 모임에 대기 신청을 할 수 있습니다.</li>
+          <li>• 대기 신청 시 참가비가 결제되며, 취소자 발생 시 자동으로 참여가 확정됩니다.</li>
+          <li>• 대기 신청은 언제든 취소할 수 있으며, 전액 환불됩니다.</li>
+          <li>• 모임 전날까지 승격되지 않으면 자동으로 전액 환불됩니다.</li>
+        </ul>
+      </section>
+
       {/* 운영자에 의한 모임 취소 */}
       <section className="mt-8">
         <h2
