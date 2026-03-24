@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This is the **planning and specification repository** for JIDOKHAE 2nd — a rewrite of the reading club web service with a tighter MVP scope. It contains only planning documents (no source code).
-
-The actual implementation codebase lives at `jidokhae-web/` (nested inside this repo).
+This is the **planning and specification repository** for JIDOKHAE 2nd — a rewrite of the reading club web service with a tighter MVP scope. It contains planning documents and the implementation codebase.
 
 **Project:** JIDOKHAE (지독해) — A web service for a reading club in Gyeongju/Pohang, Korea (250 members). Members browse meeting schedules, register with payment, and manage cancellations/refunds.
+
+The actual implementation codebase lives at `jidokhae-web/` (nested inside this repo).
 
 ---
 
@@ -29,11 +29,14 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 ├── M6-통합테스트-체크리스트.md                     # M6 integration test checklist (STEP 1~11 통과)
 ├── M6-프로덕션-배포-가이드.md                     # M6 production deployment guide
 ├── 사이트 아키텍처 — 현재 + 확장 구조.md           # Site architecture: current + future extension structure
-├── 2026-03-18-작업회고.md                        # Work retrospective
-├── screenshots/                                # Captured screenshots
+├── # Phase 2-2 대기 신청 + 자동 승격 설계서.md    # Waitlist design spec
+├── Phase-2-3-검토의견.md                        # Phase 2-3 review feedback
+├── Phase-2-3-백오피스-지시서.md                  # Phase 2-3 backoffice instructions
+├── 2026-03-18-작업회고.md                       # Work retrospective
+├── 2026-03-19-작업회고.md                       # Work retrospective
 └── ui-review/                                  # UI screenshots organized by user flow (Playwright-captured)
 
-prompts                                          # Implementation prompt template (used when starting WP implementation in jidokhae-web/)
+prompts                                          # Implementation prompt template (used when starting WP implementation)
 ```
 
 ## Document Hierarchy (when conflicts arise)
@@ -65,36 +68,31 @@ Milestone (목표)           → "무엇을 달성할 것인가"
        └─ Scenario (검증)  → "어떻게 확인할 것인가" (1 Scenario = 1 행동 = 1 검증)
 ```
 
-**Dependency flow:**
-
-```
-WP1-1 → WP1-2 → WP1-3 → WP2-1 → WP2-2 → WP3-1 → WP3-2 → WP3-3 → WP4-1 → WP4-2 → WP4-3 → WP5-1 → WP5-2 → WP6-1 → WP6-2
-```
-
-**Current status:** M1–M5 are **completed**. M6 WP6-1 (E2E 검증) **completed** (2026-03-19). WP6-2 (프로덕션 배포) **in progress** — TossPayments 라이브 키 심사 대기 중.
+**Current status:** M1–M6 MVP **completed**. Phase 2 확장 진행 중 — 알림톡(Phase 2-1) 구현 완료, 대기 신청(Phase 2-2) 구현 완료, 백오피스(Phase 2-3) 진행 중 (기본 4기능 완료, 지시서 8개 작업 중 나머지 미구현).
 
 ---
 
-## MVP Scope Summary
+## MVP + Phase 2 Scope
 
-**In scope:** Kakao login → Meeting list → Registration with payment → Cancellation/refund → Admin CRUD
+**MVP (완료):** Kakao login → Meeting list → Registration with payment → Cancellation/refund → Admin CRUD → E2E 검증 + 배포
 
-**Out of scope (future):** Waitlist, notifications/alimtalk, badges/praise, bean (콩) points, landing page, admin dashboard, AI chatbot, book tracking
+**Phase 2 (완료/진행중):**
+- Phase 2-1: 알림톡 (Solapi → KakaoTalk 5종) ✅
+- Phase 2-2: 대기 신청 + 자동 승격 ✅
+- Phase 2-3: 백오피스 — 기본 기능(회원관리, 출석 토글, 프로필 설정, 웰컴 스크린) ✅ / 고급 기능(상수 통합, site_settings, venues, 대시보드, 회원 강화, 기간 필터) 🔲
+
+**Out of scope (future):** Badges/praise, bean (콩) points, landing page, admin analytics dashboard, AI chatbot, book tracking
 
 ## Milestone Overview
 
-```
-M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Cancel/Refund) → M6 (Integration QA)
-```
-
-| Milestone | WPs | Scenarios | Key Deliverable |
-|-----------|:---:|:---------:|-----------------|
-| M1 프로젝트 기반 구축 | 3 | 25 | Next.js + Supabase DB + Layout |
-| M2 인증 (카카오 로그인) | 2 | 16 | Kakao OAuth + Session + Access control |
-| M3 모임 일정 조회 + 운영자 CRUD | 3 | 30 | Meeting list/detail + Admin CRUD |
-| M4 결제 + 신청 | 3 | 29 | TossPayments payment pipeline + Registration UX |
-| M5 취소 + 환불 | 2 | 24 | Self-cancel + Batch refund on deletion |
-| M6 통합 검증 + 출시 | 2 | 22 | E2E verification + Production deploy |
+| Milestone | WPs | Key Deliverable |
+|-----------|:---:|-----------------|
+| M1 프로젝트 기반 구축 | 3 | Next.js + Supabase DB + Layout |
+| M2 인증 (카카오 로그인) | 2 | Kakao OAuth + Session + Access control |
+| M3 모임 일정 조회 + 운영자 CRUD | 3 | Meeting list/detail + Admin CRUD |
+| M4 결제 + 신청 | 3 | TossPayments payment pipeline + Registration UX |
+| M5 취소 + 환불 | 2 | Self-cancel + Batch refund on deletion |
+| M6 통합 검증 + 출시 | 2 | E2E verification + Production deploy |
 
 ---
 
@@ -131,20 +129,22 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 - **Refund policy:** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
 - **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page
-- **Button logic:** Determined by `confirmed` registration existence + meeting timing (5 states — see PRD §6-2)
-- **Deletion refund:** Always 100% regardless of refund policy dates
+- **Button logic:** Determined by `confirmed`/`waitlisted` registration existence + meeting timing (see PRD §6-2)
+- **Deletion refund:** Always 100% regardless of refund policy dates (confirmed + waitlisted 모두)
 - **Duplicate prevention:** DB Function detects existing confirmed registration and rejects
+- **대기 취소:** 항상 100% 전액 환불 (환불 규칙 미적용)
+- **돈 안전성:** `waitlisted` 상태에서 safeCancel/부분환불 절대 금지. 대기 취소/크론 환불/모임 삭제에서만 환불
 
 ---
 
 ## Working with This Repository
 
 - **Language:** All planning documents are written in Korean. Maintain Korean when editing core and roadmap documents.
-- **Core documents are authoritative:** `/core` documents define the spec. When implementing in the separate `jidokhae-web/` codebase, always cross-reference these specs — do not rely on memory or summaries alone.
-- **Roadmap documents track execution:** `/roadmap` is maintained by Claude. When a WP is completed in the implementation repo, update `milestones.md` status and mark completed scenarios in `scenarios.md`.
+- **Core documents are authoritative:** `/core` documents define the spec. When implementing, always cross-reference these specs — do not rely on memory or summaries alone.
+- **Roadmap documents track execution:** `/roadmap` is maintained by Claude. When a WP is completed, update `milestones.md` status and mark completed scenarios in `scenarios.md`.
 - **Review flow:** `/검토문서` captures post-hoc analysis. When reviews identify issues, create a 수정 계획 (modification plan) listing exact edit locations before modifying core/roadmap docs.
-- **Version awareness:** Core documents carry version numbers (e.g., v1.6, v1.3). Note the version when referencing specific sections, as review-driven edits may change content between versions.
-- **Cross-repo workflow:** The implementation repo lives at `jidokhae-web/` (nested inside this repo). The `prompts` file contains a template for starting WP implementation — substitute `--단계` with the target WP (e.g., `WP1-1`) when using it.
+- **Version awareness:** Core documents carry version numbers (e.g., v1.6, v1.3). Note the version when referencing specific sections.
+- **Cross-repo workflow:** The implementation repo lives at `jidokhae-web/`. The `prompts` file contains a template for starting WP implementation — substitute `--단계` with the target WP (e.g., `WP1-1`) when using it.
 - **지시서의 enum/선택지 목록은 구현 전에 확인:** 지시서에 고정 목록(예: 지역 3개)이 있어도 실제 서비스 맥락에서 충분한지 사용자에게 먼저 물어볼 것. 구현 후 목록이 바뀌면 DB CHECK 제약까지 연쇄 수정 필요.
 - **DB 마이그레이션 SQL은 코드 확정 후 안내:** CHECK 제약, 컬럼 타입 등 코드와 동기화가 필요한 마이그레이션은 스펙이 확정된 후에 사용자에게 전달. 코드보다 먼저 실행되면 불일치가 발생한다.
 
@@ -183,21 +183,21 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Architecture
 
-- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, refund policy — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations). Admin routes: `admin/page` (dashboard), `admin/meetings/new` (create), `admin/meetings/[id]/edit` (edit), `admin/members` (회원 관리)
+- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, terms, privacy, refund — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations). Admin routes: `admin/page` (dashboard), `admin/meetings/new` (create), `admin/meetings/[id]/edit` (edit), `admin/members` (회원 관리)
 - **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth)
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
 - **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Editorial Organic" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Terracotta (`--color-accent-*`), Neutral: Warm Gray (`--color-neutral-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Fonts: Noto Serif KR (titles), Pretendard (body). See `jidokhae-web/DESIGN_TOKENS.md` for full token reference
 - **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
 - **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
 - **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
-- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts` and `src/types/registration.ts`, Supabase responses cast with `as Meeting` or `as Registration`
+- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts`, `src/types/registration.ts`, `src/types/notification.ts`, Supabase responses cast with `as Meeting` or `as Registration`
 - **Error/Loading boundaries:** Each route group has `error.tsx` and `loading.tsx` files
 
 ### Database Schema
 
-**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean, status: confirmed/cancelled/waitlisted/waitlist_cancelled/waitlist_refunded), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped)
+**Tables:** `profiles` (user info, role, phone, region, real_name, welcomed_at), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean, status: confirmed/cancelled/waitlisted/waitlist_cancelled/waitlist_refunded), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped)
 
-**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_registrations_waitlist` (partial — 대기자 순번), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지)
+**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_registrations_waitlist` (partial — 대기자 순번), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지), `idx_profiles_nickname_unique` (partial — WHERE nickname <> '')
 
 **Key DB Functions (SECURITY DEFINER):**
 - `is_admin()` — Returns true if current user has admin role. Used in RLS policies
@@ -206,20 +206,20 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - `promote_next_waitlisted(p_meeting_id)` — Atomic waitlist promotion with `FOR UPDATE` lock. Returns promoted (id, user_id) or empty
 - `get_confirmed_counts(meeting_ids UUID[])` — Batch count of confirmed registrations per meeting (avoids N+1 queries)
 
-**Triggers:** `on_auth_user_created` auto-creates profile from Kakao metadata on signup
+**Triggers:** `on_auth_user_created` auto-creates profile from Kakao metadata on signup. `meetings_updated_at` auto-updates `updated_at` on meeting changes.
 
 ### Code Conventions
 
 - **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `WelcomeScreen`, `ProfileSetup`, `AttendanceToggle`, `MemberList`, `auth/login/page`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files. Server Components: `MeetingDetailInfo`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터)
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
-- **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` SECURITY DEFINER function
+- **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` / `is_editor_or_admin()` SECURITY DEFINER functions
 - **Mutation pattern in client components:** `router.push() + router.refresh()` after mutations (no `revalidatePath`)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
-- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `admin/members`. All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼). Shared between API routes — keep logic here, not in route handlers
+- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `admin/members/role`. All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
@@ -230,7 +230,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 2. User completes card payment on TossPayments page
 3. TossPayments redirects to `/meetings/[id]/payment-redirect?paymentKey=...&orderId=...&amount=...`
 4. Redirect page calls `POST /api/registrations/confirm` with those params
-5. API Route: auth check → `processPaymentConfirmation()` → `confirmPayment()` (money moves) → `confirm_registration()` RPC (atomic DB insert)
+5. API Route: auth check → `processPaymentConfirmation()` → `confirmPayment()` (money moves) → `confirm_registration()` RPC (atomic DB insert — returns 'success' or 'waitlisted')
 6. Webhook backup at `/api/webhooks/tosspayments` handles missed redirects
 
 **Webhook orderId format:** `jdkh-{meetingId8}-{userId8}-{timestamp}` where `{meetingId8}` and `{userId8}` are the first 8 hex chars of the UUID (dashes stripped). Webhook reconstructs full UUIDs via `LIKE '{8chars}%'` prefix queries.
@@ -240,14 +240,14 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 ### Cancel/Refund Flow (M5)
 
 1. User clicks "취소하기" → info modal (refund rate/amount) → confirm modal → API call
-2. `POST /api/registrations/cancel` → `processUserCancel()` → `cancelPayment()` (TossPayments) → DB update
-3. Admin delete: `POST /api/meetings/[id]/delete` → set `deleting` → `Promise.allSettled` parallel refund → `deleted`
+2. `POST /api/registrations/cancel` → `processUserCancel()` → `cancelPayment()` (TossPayments) → DB update → `promoteNextWaitlisted()` (자동 승격)
+3. Admin delete: `POST /api/meetings/[id]/delete` → set `deleting` → `Promise.allSettled` parallel refund (confirmed + waitlisted 모두) → `deleted`
 
 **Safety patterns:** optimistic lock with `.eq('status', 'confirmed')` + `.select('id')` to detect 0-row updates, race condition handling via `getPayment()` status check, partial failure retry (meeting stays `deleting`)
 
 ### Notification Flow (Phase 2-1)
 
-**알림톡 2종:** Solapi SDK (`src/lib/solapi.ts`) → KakaoTalk 알림톡
+**알림톡 5종:** Solapi SDK (`src/lib/solapi.ts`) → KakaoTalk 알림톡
 
 1. **신청 완료 확인** (이벤트 기반): 결제 성공 → API Route/웹훅에서 `sendRegistrationConfirmNotification()` 호출 (fire-and-forget, try-catch)
 2. **모임 전날 리마인드** (Vercel Cron): `GET /api/cron/meeting-remind` — 매일 KST 19:00 (UTC `0 10 * * *`). 내일 active 모임의 confirmed 신청자에게 발송
@@ -273,8 +273,9 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 - **MeetingCard capacity threshold:** At 80% capacity (`confirmedCount >= capacity * 0.8`), capacity text turns `text-accent-500` (orange warning)
 - **Status color tokens:** `globals.css` defines `--color-status-open`, `--color-status-closing`, `--color-status-full`, `--color-status-completed`, `--color-status-cancelled` — used by MeetingCard left border
-- **MeetingForm uses browser Supabase client** (anon key + RLS) for create/edit — admin writes go through RLS `is_admin()` policy, not service_role
+- **MeetingForm uses browser Supabase client** (anon key + RLS) for create/edit — admin writes go through RLS `is_editor_or_admin()` policy, not service_role
 - **Admin layout role check** uses `getProfile()` (cached via React `cache()`) — same request deduplication with other profile reads. Checks for `admin` or `editor` role
+- **WelcomeScreen + ProfileSetup gates** on home page: first-time users see welcome → profile setup → meeting list
 
 ### Environment Variables
 
@@ -282,9 +283,14 @@ Copy `jidokhae-web/.env.example` to `jidokhae-web/.env.local` and fill in values
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project
 - `SUPABASE_SERVICE_ROLE_KEY` — Server-side Supabase admin access
 - `NEXT_PUBLIC_TOSSPAYMENTS_CLIENT_KEY` / `TOSSPAYMENTS_SECRET_KEY` — TossPayments payment
+- `SOLAPI_API_KEY` / `SOLAPI_API_SECRET` — Solapi 알림톡 API
+- `SOLAPI_KAKAO_CHANNEL` / `SOLAPI_SENDER_PHONE` — KakaoTalk 채널 + 발신번호
+- `SOLAPI_TEMPLATE_REMIND` / `SOLAPI_TEMPLATE_CONFIRM` / `SOLAPI_TEMPLATE_WAITLIST_CONFIRM` / `SOLAPI_TEMPLATE_WAITLIST_PROMOTED` / `SOLAPI_TEMPLATE_WAITLIST_REFUNDED` — 알림톡 템플릿 ID 5종
+- `CRON_SECRET` — Vercel Cron 인증 토큰
 
 ### Deployment
 
-- **Vercel** — auto-detected Next.js settings (no `vercel.json`)
+- **Vercel** — auto-detected Next.js settings + `vercel.json` for cron schedules
+- `vercel.json` defines 2 cron jobs: `/api/cron/waitlist-refund` (UTC `30 9 * * *` = KST 18:30), `/api/cron/meeting-remind` (UTC `0 10 * * *` = KST 19:00)
 - No Dockerfile, no GitHub Actions CI/CD
 - **Playwright** is a devDependency for `npm run screenshot` (UI screenshot capture), not for E2E testing
