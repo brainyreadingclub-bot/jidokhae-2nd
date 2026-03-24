@@ -30,7 +30,7 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 - `src/app/(admin)/` — Admin pages (CRUD for meetings)
 - `src/app/auth/` — Login page + OAuth callback
 - `src/app/policy/` — Public pages (about, terms, privacy, refund — no auth required)
-- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, cron/meeting-remind, welcome, profile/setup, admin/members)
+- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members)
 
 ### Middleware (`src/middleware.ts`)
 Refreshes Supabase session on every request. Redirects unauthenticated → `/auth/login`, authenticated → away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth).
@@ -42,7 +42,8 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 
 ### Business Logic (`src/lib/`)
 - `payment.ts` — Payment confirmation flow
-- `cancel.ts` — User cancellation flow
+- `cancel.ts` — User cancellation flow (returns meetingId for promotion trigger)
+- `waitlist.ts` — 대기 승격 래퍼 (promote RPC + 알림톡) + 대기 취소 (100% 환불)
 - `refund.ts` — Refund amount calculation
 - `tosspayments.ts` — TossPayments API wrapper
 - `kst.ts` — KST date utilities (getKSTToday, getTomorrowKST, formatKoreanDate, formatKoreanTime, formatFee, getButtonState)

@@ -118,7 +118,10 @@ M1 (Foundation) → M2 (Auth) → M3 (Meeting CRUD) → M4 (Payment) → M5 (Can
 | Webhook backup | TossPayments Webhook (`/api/webhooks/tosspayments`) as backup when frontend redirect fails. Signature verification required |
 | payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
 | Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
-| Alimtalk (알림톡) | Solapi SDK → KakaoTalk 알림톡. 2종: 신청 확인 (이벤트) + 모임 리마인드 (Vercel Cron KST 19:00) |
+| Waitlist | B안: 대기 시 미리 결제 → 승격 시 자동 확정 → 미승격 시 전날 자동 전액 환불. `confirm_registration()` RPC가 정원 초과 시 `waitlisted` INSERT |
+| Waitlist promotion | `promote_next_waitlisted()` DB 함수 (FOR UPDATE 락). 취소 API에서 동기 호출. 승격 알림톡 자동 발송 |
+| Waitlist refund cron | `/api/cron/waitlist-refund` (KST 18:30) — catch-up 쿼리(`date <= tomorrow`)로 실패 건 자동 재시도 |
+| Alimtalk (알림톡) | Solapi SDK → KakaoTalk 알림톡. 5종: 신청 확인, 모임 리마인드, 대기 확인, 승격 확정, 미승격 환불 |
 | Notification dedup | INSERT(pending) → Solapi 발송 → UPDATE(sent/failed). Partial UNIQUE INDEX로 발송 전 중복 차단 |
 | Cron auth | Vercel Cron sends `Authorization: Bearer CRON_SECRET` header. Middleware excludes `api/cron/` |
 
@@ -192,14 +195,15 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Database Schema
 
-**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped)
+**Tables:** `profiles` (user info, role), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean, status: confirmed/cancelled/waitlisted/waitlist_cancelled/waitlist_refunded), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped)
 
-**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지)
+**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_registrations_waitlist` (partial — 대기자 순번), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지)
 
 **Key DB Functions (SECURITY DEFINER):**
 - `is_admin()` — Returns true if current user has admin role. Used in RLS policies
 - `is_editor_or_admin()` — Returns true if current user has editor or admin role. Used in meetings INSERT/UPDATE RLS, registrations SELECT RLS, profiles SELECT RLS
-- `confirm_registration(p_user_id, p_meeting_id, p_payment_id, p_paid_amount)` — Atomic capacity check + INSERT with `FOR UPDATE` row lock. Returns: 'success' | 'not_found' | 'not_active' | 'already_registered' | 'full'
+- `confirm_registration(p_user_id, p_meeting_id, p_payment_id, p_paid_amount)` — Atomic capacity check + INSERT with `FOR UPDATE` row lock. Returns: 'success' | 'not_found' | 'not_active' | 'already_registered' | 'waitlisted'
+- `promote_next_waitlisted(p_meeting_id)` — Atomic waitlist promotion with `FOR UPDATE` lock. Returns promoted (id, user_id) or empty
 - `get_confirmed_counts(meeting_ids UUID[])` — Batch count of confirmed registrations per meeting (avoids N+1 queries)
 
 **Triggers:** `on_auth_user_created` auto-creates profile from Kakao metadata on signup
@@ -214,8 +218,8 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
-- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 알림톡), `welcome` (첫 방문 welcomed_at 업데이트), `profile/setup` (프로필 설정 저장), `admin/members` (회원 목록/역할 관리). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` for server-side profile fetching), `notification.ts` (알림톡 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼). Shared between API routes — keep logic here, not in route handlers
+- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `admin/members`. All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
@@ -247,10 +251,23 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 1. **신청 완료 확인** (이벤트 기반): 결제 성공 → API Route/웹훅에서 `sendRegistrationConfirmNotification()` 호출 (fire-and-forget, try-catch)
 2. **모임 전날 리마인드** (Vercel Cron): `GET /api/cron/meeting-remind` — 매일 KST 19:00 (UTC `0 10 * * *`). 내일 active 모임의 confirmed 신청자에게 발송
+3. **대기 신청 확인** (이벤트 기반): 결제 성공 → confirm/webhook에서 `sendWaitlistConfirmNotification()` 호출
+4. **대기 승격 확정** (이벤트 기반): 확정자 취소 → `promoteNextWaitlisted()` → `sendWaitlistPromotedNotification()` 자동 발송
+5. **미승격 자동 환불** (Vercel Cron): `GET /api/cron/waitlist-refund` — 매일 KST 18:30 (UTC `30 9 * * *`). `date <= tomorrow` catch-up 쿼리로 실패 건 자동 재시도
 
 **중복 방지 패턴:** INSERT(pending) → Solapi 발송 → UPDATE(sent/failed). Partial UNIQUE INDEX가 INSERT 단계에서 위반 → 발송 전 중복 차단. 에러코드 `23505` = skip 처리.
 
 **알림은 부가 기능** — 실패해도 결제/신청 흐름을 중단시키지 않음. `payment.ts`는 수정하지 않고 API Route 레벨에서 호출.
+
+### Waitlist Flow (Phase 2-2)
+
+1. **대기 신청**: 정원 초과 → TossPayments 결제(기존과 동일) → `confirm_registration()` RPC가 `waitlisted` INSERT → 결제 유지, 환불 안 함
+2. **자동 승격**: 확정자 취소 → cancel API에서 `promoteNextWaitlisted()` 호출 → DB 함수가 FOR UPDATE 락으로 원자적 승격 → 알림톡
+3. **대기 취소**: `POST /api/registrations/waitlist-cancel` → 항상 100% 전액 환불 (환불 규칙 미적용)
+4. **크론 자동 환불**: 매일 KST 18:30, `date <= tomorrow`인 모임의 waitlisted → 전액 환불 + 알림톡
+5. **모임 삭제**: confirmed + waitlisted 모두 100% 환불
+
+**돈 안전성 규칙:** `waitlisted` → safeCancel/환불 절대 금지. 대기 취소/크론 환불/모임 삭제에서만 환불.
 
 ### UI Behavior Details
 
