@@ -4,6 +4,7 @@ export type Meeting = {
   date: string // "YYYY-MM-DD"
   time: string // "HH:MM:SS"
   location: string
+  venue_id: string | null
   capacity: number
   fee: number
   status: 'active' | 'deleting' | 'deleted'

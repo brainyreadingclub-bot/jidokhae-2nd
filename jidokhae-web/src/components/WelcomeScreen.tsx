@@ -3,7 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function WelcomeScreen({ nickname }: { nickname: string }) {
+type Props = {
+  nickname: string
+  settings: Record<string, string>
+}
+
+export default function WelcomeScreen({ nickname, settings }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
@@ -85,9 +90,9 @@ export default function WelcomeScreen({ nickname }: { nickname: string }) {
         style={{ backgroundColor: 'var(--color-neutral-50)' }}
       >
         <p className="mb-6 text-center font-sans text-base text-neutral-500 leading-relaxed">
-          매주 모이는 사람들, 250명.
+          매주 모이는 사람들, {settings['member_count'] ?? '250'}명.
           <br />
-          경주·포항, 3년째.
+          {settings['active_regions_label'] ?? '경주·포항'}, 3년째.
         </p>
 
         <button

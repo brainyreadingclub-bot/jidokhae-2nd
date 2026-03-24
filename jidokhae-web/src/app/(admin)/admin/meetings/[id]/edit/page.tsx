@@ -11,30 +11,26 @@ export default async function EditMeetingPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: meeting, error: meetingError } = await supabase
-    .from('meetings')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const [meetingResult, countsResult, venuesResult] = await Promise.all([
+    supabase.from('meetings').select('*').eq('id', id).single(),
+    supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
+    supabase.from('venues').select('id, name').eq('status', 'active').order('name'),
+  ])
 
-  if (meetingError && meetingError.code !== 'PGRST116') {
-    throw new Error(`모임 조회 실패: ${meetingError.message}`)
+  if (meetingResult.error && meetingResult.error.code !== 'PGRST116') {
+    throw new Error(`모임 조회 실패: ${meetingResult.error.message}`)
   }
 
-  const typed = meeting as Meeting | null
+  const typed = meetingResult.data as Meeting | null
   if (!typed || typed.status === 'deleted') {
     notFound()
   }
 
-  const { data: counts, error: countsError } = await supabase.rpc('get_confirmed_counts', {
-    meeting_ids: [typed.id],
-  })
-
-  if (countsError) {
-    throw new Error(`참가자 수 조회 실패: ${countsError.message}`)
+  if (countsResult.error) {
+    throw new Error(`참가자 수 조회 실패: ${countsResult.error.message}`)
   }
   const confirmedCount = Number(
-    (counts as { meeting_id: string; confirmed_count: number }[] | null)
+    (countsResult.data as { meeting_id: string; confirmed_count: number }[] | null)
       ?.find((c) => c.meeting_id === typed.id)?.confirmed_count ?? 0,
   )
 
@@ -45,10 +41,12 @@ export default async function EditMeetingPage({ params }: Props) {
         mode="edit"
         meetingId={typed.id}
         confirmedCount={confirmedCount}
+        venues={venuesResult.data ?? []}
         initialValues={{
           title: typed.title,
           date: typed.date,
           time: typed.time,
+          venue_id: typed.venue_id ?? '',
           location: typed.location,
           capacity: String(typed.capacity),
           fee: String(typed.fee),

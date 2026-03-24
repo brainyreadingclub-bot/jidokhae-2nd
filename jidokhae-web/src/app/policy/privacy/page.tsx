@@ -1,11 +1,15 @@
 import type { Metadata } from 'next'
+import { getSiteSettings } from '@/lib/site-settings'
 
 export const metadata: Metadata = {
   title: '개인정보처리방침 | 지독해',
   description: '지독해 서비스 개인정보처리방침',
 }
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const settings = await getSiteSettings()
+  const representative = settings['representative'] ?? '임재윤'
+  const contactPhone = settings['phone'] ?? '0507-1396-7908'
   return (
     <main className="px-[var(--spacing-page)] py-8">
       <h1
@@ -172,8 +176,8 @@ export default function PrivacyPolicyPage() {
           9. 개인정보보호 책임자
         </h2>
         <ul className="mt-4 space-y-2 text-sm text-neutral-600 leading-relaxed">
-          <li>- 책임자: 임재윤(대표)</li>
-          <li>- 연락처: 0507-1396-7908</li>
+          <li>- 책임자: {representative}(대표)</li>
+          <li>- 연락처: {contactPhone}</li>
         </ul>
       </section>
 

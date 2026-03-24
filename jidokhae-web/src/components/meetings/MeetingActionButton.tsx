@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { loadTossPayments } from '@tosspayments/payment-sdk'
 import type { ButtonState } from '@/lib/kst'
 import { formatFee } from '@/lib/kst'
-import { calculateRefund } from '@/lib/refund'
+import { calculateRefund, getRefundRuleText } from '@/lib/refund'
 import ModalOverlay from '@/components/ui/ModalOverlay'
 
 type Props = {
@@ -411,7 +411,7 @@ export default function MeetingActionButton({
             </p>
           )}
           <div className="mt-4 text-xs text-primary-400 text-center">
-            모임 3일 전: 100% · 2일 전: 50% · 전날/당일: 0%
+            {getRefundRuleText()}
           </div>
           <div className="mt-5 flex gap-2">
             <button

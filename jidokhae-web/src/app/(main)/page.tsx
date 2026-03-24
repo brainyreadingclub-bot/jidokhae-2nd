@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/profile'
 import { getKSTToday } from '@/lib/kst'
+import { getSiteSettings } from '@/lib/site-settings'
 import MeetingCard from '@/components/meetings/MeetingCard'
 import EmptyMeetings from '@/components/meetings/EmptyMeetings'
 import WelcomeScreen from '@/components/WelcomeScreen'
@@ -17,7 +18,8 @@ export default async function HomePage() {
   if (user) {
     const profile = await getProfile(user.id)
     if (!profile.welcomed_at) {
-      return <WelcomeScreen nickname={profile.nickname} />
+      const settings = await getSiteSettings()
+      return <WelcomeScreen nickname={profile.nickname} settings={settings} />
     }
     if (!profile.profile_completed_at || !profile.real_name) {
       return (

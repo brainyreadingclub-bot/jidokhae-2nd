@@ -11,11 +11,15 @@ type Profile = {
   role: string
   region: string[] | null
   profile_completed_at: string | null
+  phone: string | null
+  email: string | null
+  created_at: string
 }
 
 type Props = {
   profiles: Profile[]
   currentUserId: string
+  viewerRole: 'admin' | 'editor'
 }
 
 const SECTIONS = [
@@ -24,20 +28,28 @@ const SECTIONS = [
   { key: 'member', label: '회원' },
 ] as const
 
-export default function MemberList({ profiles, currentUserId }: Props) {
+export default function MemberList({ profiles, currentUserId, viewerRole }: Props) {
   const router = useRouter()
   const [search, setSearch] = useState('')
+  const [filterIncomplete, setFilterIncomplete] = useState(false)
+  const [filterNoPhone, setFilterNoPhone] = useState(false)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [modal, setModal] = useState<{ userId: string; nickname: string; newRole: string } | null>(null)
 
   // 필터링
   const filtered = profiles.filter((p) => {
-    if (!search) return true
-    const displayName = p.nickname || '(미설정)'
-    return displayName.includes(search)
+    if (search) {
+      const q = search.toLowerCase()
+      const matchNick = (p.nickname || '').toLowerCase().includes(q)
+      const matchName = (p.real_name || '').toLowerCase().includes(q)
+      if (!matchNick && !matchName) return false
+    }
+    if (filterIncomplete && p.profile_completed_at) return false
+    if (filterNoPhone && p.phone) return false
+    return true
   })
 
-  // 역할별 그룹화 + 섹션 내 정렬 (닉네임 가나다순, 프로필 미완성 최하단)
+  // 역할별 그룹화 + 섹션 내 정렬
   function getGroup(role: string) {
     return filtered
       .filter((p) => p.role === role)
@@ -74,6 +86,11 @@ export default function MemberList({ profiles, currentUserId }: Props) {
     return p.nickname || '(미설정)'
   }
 
+  function formatJoinDate(dateStr: string): string {
+    const d = new Date(dateStr)
+    return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`
+  }
+
   function getRoleBadge(role: string, clickable: boolean) {
     const arrow = clickable ? ' ↕' : ''
     if (role === 'admin') {
@@ -101,7 +118,7 @@ export default function MemberList({ profiles, currentUserId }: Props) {
     const isSelf = p.id === currentUserId
     const isAdmin = p.role === 'admin'
     const isLoading = loadingId === p.id
-    const canChange = !isSelf && !isAdmin
+    const canChange = viewerRole === 'admin' && !isSelf && !isAdmin
 
     return (
       <div
@@ -116,9 +133,28 @@ export default function MemberList({ profiles, currentUserId }: Props) {
               <span className="ml-1 text-[10px] text-warning">⚠ 미완성</span>
             )}
           </div>
-          <div className="text-xs text-primary-500/70 mt-0.5">
-            {p.region && p.region.length > 0 ? p.region.join(', ') : '-'}
+          <div className="text-xs text-primary-500/70 mt-0.5 flex items-center gap-2">
+            <span>{p.region && p.region.length > 0 ? p.region.join(', ') : '-'}</span>
+            <span>·</span>
+            <span>{formatJoinDate(p.created_at)}</span>
+            {/* 전화번호: admin은 전체, editor는 아이콘만 */}
+            {viewerRole === 'admin' && p.phone && (
+              <>
+                <span>·</span>
+                <span>{p.phone}</span>
+              </>
+            )}
+            {viewerRole === 'editor' && (
+              <>
+                <span>·</span>
+                <span>{p.phone ? '📱' : '—'}</span>
+              </>
+            )}
           </div>
+          {/* 이메일: admin only */}
+          {viewerRole === 'admin' && p.email && (
+            <div className="text-xs text-primary-400 mt-0.5 truncate">{p.email}</div>
+          )}
         </div>
         <div className="ml-3 shrink-0">
           {canChange ? (
@@ -150,19 +186,41 @@ export default function MemberList({ profiles, currentUserId }: Props) {
       {/* 검색 */}
       <input
         type="text"
-        placeholder="닉네임 검색"
+        placeholder="닉네임 또는 실명 검색"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full mb-4 px-4 py-2.5 rounded-[var(--radius-md)] text-sm outline-none transition-colors"
+        className="w-full mb-3 px-4 py-2.5 rounded-[var(--radius-md)] text-sm outline-none transition-colors"
         style={{
           border: '1px solid var(--color-surface-300)',
           backgroundColor: 'var(--color-surface-50)',
         }}
       />
 
+      {/* 필터 토글 */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setFilterIncomplete(!filterIncomplete)}
+          className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+            filterIncomplete ? 'bg-primary-600 text-white' : 'text-primary-600 hover:bg-primary-50'
+          }`}
+          style={!filterIncomplete ? { border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' } : undefined}
+        >
+          프로필 미완성
+        </button>
+        <button
+          onClick={() => setFilterNoPhone(!filterNoPhone)}
+          className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+            filterNoPhone ? 'bg-primary-600 text-white' : 'text-primary-600 hover:bg-primary-50'
+          }`}
+          style={!filterNoPhone ? { border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' } : undefined}
+        >
+          전화번호 미등록
+        </button>
+      </div>
+
       {/* 회원 수 */}
       <p className="text-xs text-neutral-500 mb-4">
-        전체 {profiles.length}명 {search && `· 검색 결과 ${filtered.length}명`}
+        전체 {profiles.length}명 {(search || filterIncomplete || filterNoPhone) && `· 검색 결과 ${filtered.length}명`}
       </p>
 
       {/* 역할별 섹션 */}

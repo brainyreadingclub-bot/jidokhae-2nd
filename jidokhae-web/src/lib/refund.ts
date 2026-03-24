@@ -3,16 +3,30 @@
  * Used by both client (info display) and server (actual refund).
  * Pure function — no external dependencies except KST utility.
  *
- * PRD §7 환불 규칙:
- *   days_remaining >= 3 → 100%
- *   days_remaining >= 2 → 50%
- *   days_remaining < 2  → 0% (취소는 가능, 환불 없음)
- *
  * 기준: paid_amount (meetings.fee가 아님)
  * 날짜 단위 계산 (시간 무관)
  */
 
 import { getKSTToday } from '@/lib/kst'
+
+export const REFUND_RULES = [
+  { daysBeforeMeeting: 3, rate: 100, label: '모임 3일 전까지', rateLabel: '참가비 100% 환불' },
+  { daysBeforeMeeting: 2, rate: 50, label: '모임 2일 전', rateLabel: '참가비 50% 환불' },
+] as const
+
+export const REFUND_DEFAULT = {
+  rate: 0,
+  label: '모임 전일 · 당일',
+  rateLabel: '환불 없음 (취소는 가능)',
+} as const
+
+/** 취소 모달용 한 줄 요약 */
+export function getRefundRuleText(): string {
+  return REFUND_RULES
+    .map(r => `${r.daysBeforeMeeting}일 전: ${r.rate}%`)
+    .concat([`전날/당일: ${REFUND_DEFAULT.rate}%`])
+    .join(' · ')
+}
 
 export type RefundInfo = {
   refundRate: number // 0 | 50 | 100
@@ -27,19 +41,16 @@ export function calculateRefund(
 ): RefundInfo {
   const today = kstToday ?? getKSTToday()
 
-  // 두 날짜 모두 "YYYY-MM-DD" KST 문자열이므로
-  // 동일 방식으로 파싱하면 차이 계산이 정확함
   const meetingMs = new Date(meetingDate + 'T00:00:00').getTime()
   const todayMs = new Date(today + 'T00:00:00').getTime()
   const daysRemaining = Math.floor((meetingMs - todayMs) / (1000 * 60 * 60 * 24))
 
-  let refundRate: number
-  if (daysRemaining >= 3) {
-    refundRate = 100
-  } else if (daysRemaining >= 2) {
-    refundRate = 50
-  } else {
-    refundRate = 0
+  let refundRate: number = REFUND_DEFAULT.rate
+  for (const rule of REFUND_RULES) {
+    if (daysRemaining >= rule.daysBeforeMeeting) {
+      refundRate = rule.rate
+      break
+    }
   }
 
   return {

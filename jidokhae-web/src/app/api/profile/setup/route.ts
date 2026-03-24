@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
+import { VALID_REGIONS } from '@/lib/regions'
 
 export async function POST(request: NextRequest) {
   const supabase = createServerClient(
@@ -63,8 +64,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const VALID_REGIONS = ['경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주']
-  if (!Array.isArray(region) || region.length === 0 || !region.every((r) => VALID_REGIONS.includes(r))) {
+  if (!Array.isArray(region) || region.length === 0 || !region.every((r: string) => (VALID_REGIONS as readonly string[]).includes(r))) {
     return NextResponse.json(
       { status: 'error', message: '지역을 하나 이상 선택해주세요' },
       { status: 400 },

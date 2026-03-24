@@ -1,12 +1,16 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { getSiteSettings } from '@/lib/site-settings'
 
 export const metadata: Metadata = {
   title: '서비스 소개 | 지독해',
   description: '경주·포항 독서모임 지독해 — 일정 확인부터 신청, 결제까지 한 곳에서',
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const settings = await getSiteSettings()
+  const regionsLabel = settings['active_regions_label'] ?? '경주 · 포항'
+  const memberCount = settings['member_count'] ?? '250'
   return (
     <div className="flex min-h-screen flex-col">
       {/* ── Hero Section ── */}
@@ -39,7 +43,7 @@ export default function AboutPage() {
           <p
             className="text-caption tracking-[0.15em] text-neutral-400"
           >
-            경주 · 포항 독서모임
+            {regionsLabel} 독서모임
           </p>
           <h1
             className="mt-3 text-[2.25rem] font-bold leading-[1.15] text-white"
@@ -50,7 +54,7 @@ export default function AboutPage() {
           <div className="mt-5 h-px w-[48px] bg-neutral-600" />
           <p className="mt-5 text-sm leading-relaxed text-neutral-300">
             책을 읽고, 사람을 만나고, 생각을 나누는 모임.<br />
-            경주와 포항에서 250명이 함께하고 있어요.
+            {regionsLabel.replace(' · ', '와 ')}에서 {memberCount}명이 함께하고 있어요.
           </p>
         </div>
       </section>

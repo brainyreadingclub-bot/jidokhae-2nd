@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { VALID_REGIONS } from '@/lib/regions'
 
 type Props = {
   nickname: string
@@ -17,8 +18,6 @@ function formatPhone(value: string): string {
   if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
   return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
 }
-
-const REGIONS = ['경주', '포항', '울산', '부산', '대구', '창원', '대전', '광주', '전주', '수원', '인천', '서울', '제주'] as const
 
 export default function ProfileSetup({ nickname, email, phone, region, realName }: Props) {
   const router = useRouter()
@@ -205,7 +204,7 @@ export default function ProfileSetup({ nickname, email, phone, region, realName 
               주로 참여할 지역 (복수 선택 가능)<span className="text-accent-500 ml-0.5">*</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {REGIONS.map((r) => (
+              {VALID_REGIONS.map((r) => (
                 <button
                   key={r}
                   type="button"

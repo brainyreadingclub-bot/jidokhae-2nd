@@ -8,9 +8,15 @@ type MeetingValues = {
   title: string
   date: string
   time: string
+  venue_id: string
   location: string
   capacity: string
   fee: string
+}
+
+type VenueOption = {
+  id: string
+  name: string
 }
 
 type Props = {
@@ -18,18 +24,20 @@ type Props = {
   meetingId?: string
   initialValues?: Partial<MeetingValues>
   confirmedCount?: number
+  venues?: VenueOption[]
 }
 
 const defaultValues: MeetingValues = {
   title: '',
   date: '',
   time: '',
+  venue_id: '',
   location: '',
   capacity: '',
   fee: '',
 }
 
-export default function MeetingForm({ mode, meetingId, initialValues, confirmedCount = 0 }: Props) {
+export default function MeetingForm({ mode, meetingId, initialValues, confirmedCount = 0, venues = [] }: Props) {
   const router = useRouter()
   const [values, setValues] = useState<MeetingValues>({
     ...defaultValues,
@@ -40,6 +48,20 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
 
   function handleChange(field: keyof MeetingValues, value: string) {
     setValues((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function handleVenueChange(venueId: string) {
+    if (venueId) {
+      const venue = venues.find((v) => v.id === venueId)
+      setValues((prev) => ({
+        ...prev,
+        venue_id: venueId,
+        location: venue?.name ?? prev.location,
+      }))
+    } else {
+      // "기타" 선택 — location 유지
+      setValues((prev) => ({ ...prev, venue_id: '' }))
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -69,6 +91,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
       date: values.date,
       time: values.time,
       location: values.location.trim(),
+      venue_id: values.venue_id || null,
       capacity,
       fee,
     }
@@ -154,6 +177,22 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
           />
         </Field>
       </div>
+
+      {venues.length > 0 && (
+        <Field label="공간">
+          <select
+            value={values.venue_id}
+            onChange={(e) => handleVenueChange(e.target.value)}
+            className={inputClassName}
+            style={inputStyle}
+          >
+            <option value="">기타 (직접 입력)</option>
+            {venues.map((v) => (
+              <option key={v.id} value={v.id}>{v.name}</option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       <Field label="장소" required>
         <input

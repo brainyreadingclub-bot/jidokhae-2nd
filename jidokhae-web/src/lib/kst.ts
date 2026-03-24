@@ -60,6 +60,42 @@ export function formatFee(fee: number): string {
   return fee.toLocaleString('ko-KR')
 }
 
+/** Returns current KST month as "YYYY-MM" */
+export function getKSTMonth(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+  }).format(new Date()).slice(0, 7)
+}
+
+/** Returns start/end dates for a given month ("YYYY-MM") */
+export function getMonthRange(month: string): { start: string; end: string } {
+  const [year, m] = month.split('-').map(Number)
+  const start = `${year}-${String(m).padStart(2, '0')}-01`
+  const end = m === 12
+    ? `${year + 1}-01-01`
+    : `${year}-${String(m + 1).padStart(2, '0')}-01`
+  return { start, end }
+}
+
+/** Returns the previous month as "YYYY-MM" */
+export function getPrevMonth(month: string): string {
+  const [year, m] = month.split('-').map(Number)
+  if (m === 1) return `${year - 1}-12`
+  return `${year}-${String(m - 1).padStart(2, '0')}`
+}
+
+/** Returns "YYYY-MM-DD" for 7 days from a given date */
+export function getWeekLater(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + 7)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export type MeetingTiming = 'before_or_today' | 'after'
 
 /** Determines if a meeting is upcoming or past based on KST dates */

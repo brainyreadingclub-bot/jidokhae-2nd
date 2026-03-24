@@ -9,11 +9,11 @@ export default async function MembersPage() {
   if (!user) redirect('/auth/login')
 
   const profile = await getProfile(user.id)
-  if (profile.role !== 'admin') redirect('/')
+  if (profile.role !== 'admin' && profile.role !== 'editor') redirect('/')
 
   const { data: profiles, error } = await supabase
     .from('profiles')
-    .select('id, nickname, real_name, role, region, profile_completed_at')
+    .select('id, nickname, real_name, role, region, profile_completed_at, phone, email, created_at')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -26,8 +26,9 @@ export default async function MembersPage() {
         회원 관리
       </h1>
       <MemberList
-        profiles={(profiles ?? []) as { id: string; nickname: string; real_name: string | null; role: string; region: string[] | null; profile_completed_at: string | null }[]}
+        profiles={(profiles ?? []) as { id: string; nickname: string; real_name: string | null; role: string; region: string[] | null; profile_completed_at: string | null; phone: string | null; email: string | null; created_at: string }[]}
         currentUserId={user.id}
+        viewerRole={profile.role as 'admin' | 'editor'}
       />
     </div>
   )

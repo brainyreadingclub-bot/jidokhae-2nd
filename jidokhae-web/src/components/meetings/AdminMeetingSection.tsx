@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
 import AttendanceToggle from './AttendanceToggle'
-import { getKSTToday } from '@/lib/kst'
+import { getKSTToday, formatFee } from '@/lib/kst'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
@@ -11,6 +11,13 @@ type Props = {
   registrations: RegistrationWithProfile[]
   role: string
   meetingDate: string
+}
+
+const CANCEL_TYPE_LABELS: Record<string, string> = {
+  user_cancelled: '회원 취소',
+  meeting_deleted: '모임 삭제',
+  waitlist_user_cancelled: '대기 취소',
+  waitlist_auto_refunded: '자동 환불',
 }
 
 function formatDate(dateStr: string): string {
@@ -34,6 +41,16 @@ export default function AdminMeetingSection({
   const waitlistedRegs = registrations
     .filter((r) => r.status === 'waitlisted' || r.status === 'waitlist_cancelled' || r.status === 'waitlist_refunded')
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
+
+  // 요약 통계 계산
+  const totalPaid = confirmedRegs
+    .filter((r) => r.status === 'confirmed')
+    .reduce((sum, r) => sum + (r.paid_amount ?? 0), 0)
+  const totalRefunded = confirmedRegs
+    .filter((r) => r.status === 'cancelled' && r.refunded_amount)
+    .reduce((sum, r) => sum + (r.refunded_amount ?? 0), 0)
+  const netRevenue = totalPaid - totalRefunded
+  const attendedCount = confirmedRegs.filter((r) => r.status === 'confirmed' && r.attended).length
 
   function getStatusBadge(status: string) {
     if (status === 'confirmed') {
@@ -84,6 +101,41 @@ export default function AdminMeetingSection({
         취소됨
       </span>
     )
+  }
+
+  function getAmountSubtext(reg: RegistrationWithProfile) {
+    if (reg.status === 'confirmed' && reg.paid_amount) {
+      return (
+        <div className="text-xs text-primary-500/70 mt-0.5">
+          {formatFee(reg.paid_amount)}원
+        </div>
+      )
+    }
+    if (reg.status === 'cancelled') {
+      return (
+        <div className="mt-0.5">
+          {reg.refunded_amount ? (
+            <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}원</div>
+          ) : null}
+          {reg.cancel_type && (
+            <div className="text-xs text-primary-400">
+              ({CANCEL_TYPE_LABELS[reg.cancel_type] ?? reg.cancel_type})
+            </div>
+          )}
+        </div>
+      )
+    }
+    if ((reg.status === 'waitlisted' || reg.status === 'waitlist_cancelled' || reg.status === 'waitlist_refunded') && reg.paid_amount) {
+      return (
+        <div className="mt-0.5">
+          <div className="text-xs text-primary-500/70">{formatFee(reg.paid_amount)}원</div>
+          {reg.refunded_amount ? (
+            <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}원</div>
+          ) : null}
+        </div>
+      )
+    }
+    return null
   }
 
   function renderTable(regs: RegistrationWithProfile[], showQueueNumber: boolean) {
@@ -142,6 +194,7 @@ export default function AdminMeetingSection({
                 </td>
                 <td className="px-4 py-3 text-right">
                   {getStatusBadge(reg.status)}
+                  {getAmountSubtext(reg)}
                 </td>
                 {!showQueueNumber && showAttendance && (
                   <td className="px-2 py-1 text-center">
@@ -190,6 +243,34 @@ export default function AdminMeetingSection({
           </div>
         )}
       </div>
+
+      {/* 결제/환불 요약 카드 */}
+      {confirmedRegs.length > 0 && (
+        <div
+          className="mb-5 rounded-[var(--radius-md)] px-4 py-3"
+          style={{ border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' }}
+        >
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <div className="text-xs text-primary-500 mb-1">총 결제</div>
+              <div className="text-sm font-bold text-primary-800">{formatFee(totalPaid)}원</div>
+            </div>
+            <div>
+              <div className="text-xs text-primary-500 mb-1">환불</div>
+              <div className="text-sm font-bold text-primary-800">{formatFee(totalRefunded)}원</div>
+            </div>
+            <div>
+              <div className="text-xs text-primary-500 mb-1">순매출</div>
+              <div className="text-sm font-bold text-primary-800">{formatFee(netRevenue)}원</div>
+            </div>
+          </div>
+          {showAttendance && confirmedCount > 0 && (
+            <div className="mt-2.5 pt-2.5 text-center text-xs text-primary-500" style={{ borderTop: '1px solid var(--color-surface-300)' }}>
+              참석률 {Math.round((attendedCount / confirmedCount) * 100)}% ({attendedCount}/{confirmedCount}명)
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Confirmed registrant list */}
       <div>

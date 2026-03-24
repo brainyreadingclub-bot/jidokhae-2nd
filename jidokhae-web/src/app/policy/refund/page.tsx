@@ -1,11 +1,15 @@
 import type { Metadata } from 'next'
+import { REFUND_RULES, REFUND_DEFAULT } from '@/lib/refund'
+import { getSiteSettings } from '@/lib/site-settings'
 
 export const metadata: Metadata = {
   title: '환불정책 | 지독해',
   description: '지독해 모임 참가비 환불 기준 안내',
 }
 
-export default function RefundPolicyPage() {
+export default async function RefundPolicyPage() {
+  const settings = await getSiteSettings()
+  const supportContact = settings['support_contact'] ?? '카카오톡 \'단무지\'에게 1:1 채팅으로 연락해 주세요.'
   return (
     <main className="px-[var(--spacing-page)] py-8">
       <h1
@@ -37,17 +41,15 @@ export default function RefundPolicyPage() {
               </tr>
             </thead>
             <tbody className="text-neutral-600">
+              {REFUND_RULES.map((rule) => (
+                <tr key={rule.daysBeforeMeeting} className="border-t border-surface-300">
+                  <td className="px-4 py-3">{rule.label}</td>
+                  <td className="px-4 py-3">{rule.rateLabel}</td>
+                </tr>
+              ))}
               <tr className="border-t border-surface-300">
-                <td className="px-4 py-3">모임 3일 전까지</td>
-                <td className="px-4 py-3">참가비 100% 환불</td>
-              </tr>
-              <tr className="border-t border-surface-300">
-                <td className="px-4 py-3">모임 2일 전</td>
-                <td className="px-4 py-3">참가비 50% 환불</td>
-              </tr>
-              <tr className="border-t border-surface-300">
-                <td className="px-4 py-3">모임 전일 · 당일</td>
-                <td className="px-4 py-3">환불 없음 (취소는 가능)</td>
+                <td className="px-4 py-3">{REFUND_DEFAULT.label}</td>
+                <td className="px-4 py-3">{REFUND_DEFAULT.rateLabel}</td>
               </tr>
             </tbody>
           </table>
@@ -103,7 +105,7 @@ export default function RefundPolicyPage() {
         </h2>
 
         <p className="mt-4 text-sm text-neutral-600 leading-relaxed">
-          환불 관련 문의는 카카오톡 &lsquo;단무지&rsquo;에게 1:1 채팅으로 연락해 주세요.
+          {supportContact}
         </p>
       </section>
     </main>
