@@ -90,6 +90,24 @@ export default async function AboutPage() {
         </div>
       </section>
 
+      {/* ── Fee Info ── */}
+      <section
+        className="px-[var(--spacing-page)] pb-6"
+        style={{ backgroundColor: 'var(--color-surface-50)' }}
+      >
+        <div
+          className="rounded-[var(--radius-md)] border border-surface-300 px-5 py-4"
+          style={{ backgroundColor: 'var(--color-surface-100)' }}
+        >
+          <p className="text-sm font-bold text-neutral-800">
+            참가비 안내
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-neutral-500">
+            정기모임 참가비는 <span className="font-semibold text-neutral-700">11,000원</span>이며, 카드 결제로 간편하게 신청할 수 있습니다.
+          </p>
+        </div>
+      </section>
+
       {/* ── Info Links ── */}
       <section
         className="px-[var(--spacing-page)] pb-10"
