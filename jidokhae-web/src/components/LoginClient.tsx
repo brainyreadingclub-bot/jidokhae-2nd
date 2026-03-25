@@ -13,10 +13,6 @@ export default function LoginClient({ settings }: Props) {
 
   const memberCount = settings['member_count'] ?? '250'
   const regionsLabel = settings['active_regions_label'] ?? '경주 · 포항'
-  const companyName = settings['company_name'] ?? '지독해'
-  const representative = settings['representative'] ?? '임재윤'
-  const businessNumber = settings['business_number'] ?? '494-42-01276'
-
   async function handleKakaoLogin() {
     setIsLoading(true)
     setErrorMessage('')
@@ -147,19 +143,6 @@ export default function LoginClient({ settings }: Props) {
         <p className="mt-4 text-small text-neutral-400">
           카카오 계정으로 간편하게 시작하세요
         </p>
-
-        {/* Footer */}
-        <div
-          className="mt-auto pt-6 text-center"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
-        >
-          <p className="text-small text-neutral-300">
-            {companyName} · {regionsLabel} 독서모임
-          </p>
-          <p className="mt-2 text-[10px] leading-relaxed text-neutral-300/60">
-            상호명: {companyName} | 대표자: {representative} | 사업자등록번호: {businessNumber}
-          </p>
-        </div>
       </section>
     </div>
   )

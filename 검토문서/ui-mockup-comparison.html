@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지독해 2nd — UI/UX 개선 Before/After 목업</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --primary-50: #F0F7F4;
+    --primary-100: #D9EDE3;
+    --primary-200: #B3DBC7;
+    --primary-300: #7CC0A0;
+    --primary-400: #4A9E76;
+    --primary-500: #2D7D5F;
+    --primary-600: #1B6347;
+    --primary-700: #1B4332;
+    --primary-800: #163528;
+    --primary-900: #0F2318;
+    --accent-50: #FFF5F2;
+    --accent-100: #FFE8E0;
+    --accent-200: #FFCBB8;
+    --accent-300: #F5A889;
+    --accent-400: #E3825C;
+    --accent-500: #C75B3A;
+    --accent-600: #A84A2E;
+    --neutral-50: #FDFBF7;
+    --neutral-100: #FAF6EF;
+    --neutral-200: #F0EBE1;
+    --neutral-300: #E4DDD1;
+    --neutral-400: #C4BAA8;
+    --neutral-500: #9E9484;
+    --neutral-600: #7A7164;
+    --neutral-700: #5C544A;
+    --neutral-800: #3D3732;
+    --neutral-900: #1F1B17;
+    --surface-50: #FEFCF9;
+    --surface-100: #FDF8F1;
+    --surface-200: #FAF3E8;
+    --surface-300: #F5EBD9;
+    --error: #B5403A;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --font-display: 'Noto Serif KR', Georgia, serif;
+    --font-sans: 'Pretendard', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: #f3f0ea;
+    color: var(--neutral-900);
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 20px 80px;
+  }
+
+  h1.page-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    text-align: center;
+    color: var(--primary-900);
+    margin-bottom: 8px;
+  }
+  .page-subtitle {
+    text-align: center;
+    color: var(--neutral-500);
+    font-size: 0.875rem;
+    margin-bottom: 48px;
+  }
+
+  .section {
+    max-width: 900px;
+    margin: 0 auto 64px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary-600);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    color: var(--primary-900);
+  }
+  .section-verdict {
+    margin-left: 44px;
+    margin-bottom: 24px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--primary-700);
+  }
+  .verdict-accept { background: var(--primary-50); border-left: 3px solid var(--primary-500); }
+  .verdict-partial { background: var(--accent-50); border-left: 3px solid var(--accent-400); }
+  .verdict-reject { background: #fef2f2; border-left: 3px solid var(--error); }
+  .verdict-label {
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .verdict-accept .verdict-label { color: var(--primary-600); }
+  .verdict-partial .verdict-label { color: var(--accent-600); }
+  .verdict-reject .verdict-label { color: var(--error); }
+
+  .comparison {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .phone-frame {
+    width: 375px;
+    border-radius: 36px;
+    background: white;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 28px;
+    background: #111;
+    border-radius: 0 0 16px 16px;
+    z-index: 10;
+  }
+  .phone-label {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    padding: 3px 12px;
+    border-radius: 100px;
+    display: inline-block;
+  }
+  .label-before { background: var(--neutral-200); color: var(--neutral-600); }
+  .label-after { background: var(--primary-100); color: var(--primary-700); }
+
+  .phone-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── Screen internals ── */
+  .screen { min-height: 700px; position: relative; }
+
+  /* Login screens */
+  .login-top {
+    background: var(--primary-900);
+    padding: 56px 24px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .login-top .grain {
+    position: absolute; inset: 0;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .login-top .orb1 {
+    position: absolute; top: -40px; right: -40px;
+    width: 180px; height: 180px; border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-400) 0%, transparent 70%);
+    opacity: 0.07;
+  }
+  .login-top .orb2 {
+    position: absolute; top: 35%; left: -40px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle, var(--primary-300) 0%, transparent 70%);
+    opacity: 0.06;
+  }
+  .login-top h2 {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.1;
+    position: relative;
+  }
+  .login-top .subtitle {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--neutral-400);
+    letter-spacing: 0.15em;
+    position: relative;
+  }
+  .login-top .rule {
+    width: 60px; height: 1px;
+    background: var(--neutral-600);
+    margin: 20px 0;
+    position: relative;
+  }
+  .login-top .tagline {
+    font-size: 1rem;
+    color: var(--neutral-300);
+    position: relative;
+  }
+
+  .login-bottom {
+    background: var(--neutral-50);
+    border-radius: 24px 24px 0 0;
+    margin-top: -20px;
+    position: relative;
+    z-index: 2;
+    padding: 36px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .social-proof {
+    font-size: 0.8rem;
+    color: var(--neutral-500);
+    margin-bottom: 20px;
+  }
+  .kakao-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    background: #FEE500;
+    color: rgba(0,0,0,0.85);
+    font-weight: 700;
+    font-size: 0.875rem;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .kakao-icon { width: 18px; height: 18px; }
+  .login-helper {
+    margin-top: 14px;
+    font-size: 0.75rem;
+    color: var(--neutral-400);
+  }
+  .login-footer {
+    margin-top: auto;
+    padding-top: 24px;
+    text-align: center;
+  }
+  .login-footer p:first-child {
+    font-size: 0.72rem;
+    color: var(--neutral-300);
+  }
+  .login-footer p:last-child {
+    font-size: 0.6rem;
+    color: rgba(196, 186, 168, 0.5);
+    margin-top: 6px;
+  }
+
+  /* Welcome screen */
+  .welcome-bottom {
+    background: var(--neutral-50);
+    border-radius: 24px 24px 0 0;
+    margin-top: -20px;
+    position: relative;
+    z-index: 2;
+    padding: 36px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .welcome-desc {
+    font-size: 0.95rem;
+    color: var(--neutral-500);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .cta-primary {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    background: var(--primary-600);
+    color: white;
+    font-weight: 700;
+    font-size: 0.875rem;
+    border: none;
+    text-align: center;
+  }
+  .cta-text {
+    margin-top: 14px;
+    font-size: 0.75rem;
+    color: var(--neutral-400);
+  }
+
+  /* Profile setup */
+  .profile-screen {
+    background: var(--neutral-50);
+    padding: 48px 28px 28px;
+    min-height: 700px;
+  }
+  .profile-heading {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .profile-heading h2 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-900);
+  }
+  .profile-heading p {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--neutral-500);
+    line-height: 1.5;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary-700);
+    margin-bottom: 6px;
+  }
+  .form-label .req { color: var(--accent-500); margin-left: 2px; }
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--surface-300);
+    background: var(--surface-50);
+    font-size: 0.85rem;
+    color: var(--primary-900);
+    font-family: var(--font-sans);
+    outline: none;
+  }
+  .form-input::placeholder { color: var(--primary-300); }
+  .region-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .region-btn {
+    padding: 8px 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--neutral-200);
+    background: var(--surface-50);
+    font-size: 0.82rem;
+    color: var(--neutral-500);
+    text-align: center;
+    cursor: pointer;
+  }
+  .region-btn.selected {
+    border-color: var(--primary-500);
+    background: var(--primary-50);
+    color: var(--primary-700);
+    font-weight: 700;
+  }
+  .region-btn.highlight {
+    border-color: var(--primary-400);
+    background: var(--primary-50);
+    color: var(--primary-600);
+    font-weight: 600;
+    position: relative;
+  }
+  .btn-submit {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius-md);
+    background: var(--primary-600);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    margin-top: 18px;
+  }
+  .btn-submit:disabled, .btn-submit.disabled {
+    opacity: 0.4;
+  }
+  .skip-link {
+    display: block;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.75rem;
+    color: var(--neutral-400);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  /* Meeting list */
+  .meeting-list-screen {
+    background: var(--surface-100);
+    padding: 48px 20px 80px;
+    min-height: 700px;
+  }
+  .meeting-header h2 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--primary-900);
+    letter-spacing: -0.02em;
+  }
+  .meeting-summary {
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+    margin-top: 4px;
+  }
+  .meeting-cards {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .m-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(45,90,61,0.06);
+    border-left: 4px solid var(--primary-500);
+    position: relative;
+  }
+  .m-card.full { border-left-color: var(--neutral-400); }
+  .m-card.registered { border-left-color: var(--accent-500); }
+  .m-card .badge {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 100px;
+  }
+  .badge-open { background: var(--primary-50); color: var(--primary-600); }
+  .badge-registered { background: var(--accent-50); color: var(--accent-600); }
+  .badge-full { background: var(--neutral-100); color: var(--neutral-500); }
+  .m-card .date-row {
+    font-size: 0.72rem;
+    color: var(--neutral-500);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .m-card .title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--primary-900);
+    margin-top: 6px;
+    line-height: 1.35;
+    padding-right: 56px;
+  }
+  .m-card .meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 0.72rem;
+    color: var(--neutral-500);
+  }
+  .m-card .meta .capacity-warn { color: var(--accent-500); font-weight: 600; }
+
+  /* Date group header */
+  .date-group {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--neutral-400);
+    letter-spacing: 0.03em;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--neutral-200);
+  }
+  .date-group:first-child { margin-top: 0; }
+
+  /* After card: bigger title */
+  .m-card-after .title {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  .m-card-after .meta {
+    color: var(--neutral-400);
+    font-size: 0.7rem;
+  }
+
+  /* Meeting detail */
+  .detail-screen {
+    background: var(--surface-100);
+    padding: 48px 20px 100px;
+    min-height: 700px;
+  }
+  .detail-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-900);
+    line-height: 1.35;
+  }
+  .info-grid {
+    margin-top: 20px;
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--surface-300);
+  }
+  .info-row {
+    display: flex;
+    padding: 12px 16px;
+    align-items: center;
+    border-bottom: 1px solid var(--surface-200);
+    font-size: 0.85rem;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label {
+    width: 52px;
+    font-size: 0.72rem;
+    color: var(--neutral-500);
+    flex-shrink: 0;
+  }
+  .info-value {
+    color: var(--primary-800);
+    font-weight: 500;
+  }
+  .info-value.fee { color: var(--accent-600); font-weight: 700; }
+  .info-value.capacity-warn { color: var(--accent-500); }
+
+  .description-block {
+    margin-top: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--surface-300);
+  }
+  .description-block h4 {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--neutral-500);
+    margin-bottom: 8px;
+  }
+  .description-block p {
+    font-size: 0.85rem;
+    color: var(--primary-800);
+    line-height: 1.65;
+  }
+
+  .sticky-btn {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 24px;
+    background: linear-gradient(transparent, var(--surface-100) 20%);
+  }
+  .btn-register {
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius-lg);
+    background: var(--primary-600);
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    box-shadow: 0 4px 14px rgba(27,67,50,0.25);
+  }
+
+  /* Payment confirm sheet */
+  .confirm-sheet {
+    margin-top: 16px;
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--surface-300);
+    padding: 18px;
+  }
+  .confirm-sheet h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-900);
+    margin-bottom: 12px;
+  }
+  .confirm-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid var(--surface-200);
+  }
+  .confirm-row:last-of-type { border-bottom: none; }
+  .confirm-row .label { color: var(--neutral-500); }
+  .confirm-row .value { color: var(--primary-800); font-weight: 500; }
+  .confirm-row .value.fee { color: var(--accent-600); font-weight: 700; font-size: 0.95rem; }
+  .refund-notice {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--surface-100);
+    font-size: 0.72rem;
+    color: var(--neutral-600);
+    line-height: 1.55;
+  }
+  .refund-notice strong { color: var(--primary-700); }
+  .btn-pay {
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius-lg);
+    background: var(--primary-600);
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    margin-top: 14px;
+    box-shadow: 0 4px 14px rgba(27,67,50,0.25);
+  }
+
+  /* Payment result screens */
+  .result-screen {
+    background: var(--surface-100);
+    padding: 48px 20px 28px;
+    min-height: 700px;
+    display: flex;
+    flex-direction: column;
+  }
+  .result-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .result-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .result-icon.success {
+    background: var(--primary-50);
+    border: 1px solid var(--primary-100);
+    color: var(--primary-600);
+  }
+  .result-icon.error-icon {
+    background: rgba(181,64,58,0.08);
+    border: 1px solid rgba(181,64,58,0.15);
+    color: var(--error);
+  }
+  .result-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--primary-900);
+  }
+  .result-sub {
+    margin-top: 8px;
+    font-size: 0.82rem;
+    color: rgba(45,125,95,0.6);
+  }
+  .result-alimtalk {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--primary-400);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .result-card {
+    width: 100%;
+    margin-top: 28px;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+    background: var(--surface-100);
+    border: 1px solid var(--surface-300);
+    text-align: left;
+  }
+  .result-card h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary-900);
+  }
+  .result-card .info {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--primary-700);
+    line-height: 1.7;
+  }
+  .btn-group {
+    margin-top: 28px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn-secondary {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius-lg);
+    background: white;
+    color: var(--primary-700);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: 1px solid var(--neutral-300);
+    text-align: center;
+  }
+  .btn-full-primary {
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius-lg);
+    background: var(--primary-600);
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(27,67,50,0.25);
+  }
+
+  /* Fail screen */
+  .fail-msg {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--error);
+  }
+  .fail-sub {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--neutral-400);
+  }
+  .fail-timer {
+    margin-top: 4px;
+    font-size: 0.7rem;
+    color: var(--neutral-300);
+  }
+
+  /* My page empty */
+  .my-screen {
+    background: var(--surface-100);
+    padding: 48px 20px 80px;
+    min-height: 700px;
+  }
+  .my-header h2 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--neutral-800);
+  }
+  .empty-box {
+    margin-top: 16px;
+    padding: 32px 16px;
+    border-radius: var(--radius-md);
+    background: var(--surface-50);
+    border: 1px dashed var(--neutral-300);
+    text-align: center;
+    color: var(--neutral-400);
+    font-size: 0.8rem;
+  }
+  .empty-cta {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 10px 24px;
+    border-radius: var(--radius-md);
+    background: var(--primary-600);
+    color: white;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-decoration: none;
+  }
+
+  /* Section divider */
+  .divider {
+    max-width: 900px;
+    margin: 0 auto 48px;
+    border: none;
+    border-top: 1px solid var(--neutral-200);
+  }
+
+  /* Arrow between phones */
+  .arrow-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--primary-400);
+    padding-top: 24px;
+  }
+
+  /* Bottom nav mock */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: white;
+    border-top: 1px solid var(--neutral-200);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 0.6rem;
+    color: var(--neutral-400);
+  }
+  .bottom-nav .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .bottom-nav .tab.active { color: var(--primary-600); }
+  .tab-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--neutral-200);
+  }
+  .tab.active .tab-icon { background: var(--primary-100); }
+
+  /* Change highlight */
+  .change-highlight {
+    position: relative;
+  }
+  .change-highlight::after {
+    content: 'NEW';
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--accent-500);
+    color: white;
+    font-size: 0.5rem;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .change-border {
+    outline: 2px dashed var(--accent-400);
+    outline-offset: 4px;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Section sub-label */
+  .section-sublabel {
+    margin-left: 44px;
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">지독해 2nd — UI/UX 개선 Before / After</h1>
+<p class="page-subtitle">전문가 패널 리뷰 기반 개선안 비교 목업 | 2026-03-24</p>
+
+<!-- ============================================ -->
+<!-- 1. Profile Flow Change -->
+<!-- ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">1</span>
+    <h2 class="section-title">온보딩 플로우 변경 — 프로필 Lazy Collection</h2>
+  </div>
+  <div class="section-verdict verdict-accept">
+    <div class="verdict-label">수용 — 크리티컬</div>
+    가치를 먼저 보여주고, 정보는 나중에. 웰컴 → <strong>바로 모임 목록</strong> → 첫 결제 시 프로필 수집으로 변경.
+  </div>
+  <p class="section-sublabel">현재: 로그인 → 웰컴 → <b>프로필 강제</b> → 모임 목록 &nbsp;|&nbsp; 개선: 로그인 → 웰컴 → <b>모임 목록</b> → 첫 결제 시 프로필</p>
+
+  <div class="comparison">
+    <!-- BEFORE -->
+    <div class="phone-col">
+      <span class="phone-label label-before">BEFORE — 프로필 강제</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="profile-screen">
+            <div class="profile-heading">
+              <h2>회원님, 반갑습니다!</h2>
+              <p>모임 안내와 리마인드 알림을 위해<br>아래 정보를 입력해주세요.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">실명<span class="req">*</span></label>
+              <input class="form-input" placeholder="홍길동" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">닉네임<span class="req">*</span></label>
+              <input class="form-input" value="카카오닉네임" disabled style="color: var(--primary-900);">
+            </div>
+            <div class="form-group">
+              <label class="form-label">전화번호<span class="req">*</span></label>
+              <input class="form-input" placeholder="010-0000-0000" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">주로 참여할 지역 (복수 선택 가능)<span class="req">*</span></label>
+              <div class="region-grid">
+                <div class="region-btn">경주</div>
+                <div class="region-btn">포항</div>
+                <div class="region-btn">울산</div>
+                <div class="region-btn">부산</div>
+                <div class="region-btn">대구</div>
+                <div class="region-btn">창원</div>
+                <div class="region-btn">대전</div>
+                <div class="region-btn">광주</div>
+                <div class="region-btn">전주</div>
+                <div class="region-btn">수원</div>
+                <div class="region-btn">인천</div>
+                <div class="region-btn">서울</div>
+                <div class="region-btn">제주</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">이메일 (선택)</label>
+              <input class="form-input" placeholder="email@example.com" disabled>
+            </div>
+            <button class="btn-submit disabled">시작하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- AFTER -->
+    <div class="phone-col">
+      <span class="phone-label label-after">AFTER — 바로 모임 목록</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="meeting-list-screen">
+            <div class="meeting-header">
+              <h2>모임 일정</h2>
+              <div class="meeting-summary change-highlight" style="display:inline-block;">이번 달 4개 모임</div>
+            </div>
+            <div class="meeting-cards">
+              <div class="m-card registered m-card-after">
+                <span class="badge badge-registered">신청완료</span>
+                <div class="date-row">3월 29일 (토) · 14:00</div>
+                <div class="title">에밀 아자르 &lt;자기 앞의 생&gt;</div>
+                <div class="meta">
+                  <span>경주 황리단길</span>
+                  <span class="capacity-warn">18/20명</span>
+                  <span>10,000원</span>
+                </div>
+              </div>
+              <div class="m-card m-card-after">
+                <span class="badge badge-open">모집중</span>
+                <div class="date-row">4월 5일 (토) · 14:00</div>
+                <div class="title">무라카미 하루키 &lt;상실의 시대&gt;</div>
+                <div class="meta">
+                  <span>포항 영일대</span>
+                  <span>8/20명</span>
+                  <span>10,000원</span>
+                </div>
+              </div>
+              <div class="m-card m-card-after">
+                <span class="badge badge-open">모집중</span>
+                <div class="date-row">4월 12일 (토) · 10:00</div>
+                <div class="title">올더스 헉슬리 &lt;멋진 신세계&gt;</div>
+                <div class="meta">
+                  <span>경주 동궁원</span>
+                  <span>3/15명</span>
+                  <span>10,000원</span>
+                </div>
+              </div>
+              <div class="m-card full m-card-after">
+                <span class="badge badge-full">마감</span>
+                <div class="date-row">4월 19일 (토) · 14:00</div>
+                <div class="title">정세랑 &lt;시선으로부터,&gt;</div>
+                <div class="meta">
+                  <span>포항 구룡포</span>
+                  <span style="color: var(--neutral-400);">20/20명</span>
+                  <span>10,000원</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab active"><div class="tab-icon"></div>모임</div>
+            <div class="tab"><div class="tab-icon"></div>내 신청</div>
+            <div class="tab"><div class="tab-icon"></div>더보기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ============================================ -->
+<!-- 2. Pre-payment Confirmation -->
+<!-- ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">2</span>
+    <h2 class="section-title">결제 전 확인 스텝 + 모임 설명(description)</h2>
+  </div>
+  <div class="section-verdict verdict-accept">
+    <div class="verdict-label">수용 — 크리티컬 + 높음</div>
+    "신청하기" → 바로 TossPayments가 아닌, 결제 정보 확인 시트를 중간에 삽입. 모임 설명 영역도 추가.
+  </div>
+
+  <div class="comparison">
+    <!-- BEFORE -->
+    <div class="phone-col">
+      <span class="phone-label label-before">BEFORE — 상세 (설명 없음, 바로 결제)</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="detail-screen">
+            <h1 class="detail-title">에밀 아자르 &lt;자기 앞의 생&gt;</h1>
+
+            <div class="info-grid">
+              <div class="info-row">
+                <span class="info-label">날짜</span>
+                <span class="info-value">2026년 3월 29일 (토)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">시간</span>
+                <span class="info-value">오후 2:00</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">장소</span>
+                <span class="info-value">경주 황리단길 북카페</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">참여</span>
+                <span class="info-value capacity-warn">18/20명</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">참가비</span>
+                <span class="info-value fee">10,000원</span>
+              </div>
+            </div>
+
+            <div style="margin-top:40px; text-align:center; color: var(--neutral-400); font-size: 0.8rem;">
+              (모임 설명 영역 없음)
+            </div>
+
+            <div class="sticky-btn">
+              <button class="btn-register">신청하기</button>
+              <div style="text-align:center; margin-top:6px; font-size:0.7rem; color: var(--neutral-400);">
+                ↓ 바로 TossPayments SDK 호출
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- AFTER -->
+    <div class="phone-col">
+      <span class="phone-label label-after">AFTER — 설명 + 결제 확인 시트</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="detail-screen" style="padding-bottom: 28px;">
+            <h1 class="detail-title">에밀 아자르 &lt;자기 앞의 생&gt;</h1>
+
+            <div class="info-grid">
+              <div class="info-row">
+                <span class="info-label">날짜</span>
+                <span class="info-value">2026년 3월 29일 (토)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">시간</span>
+                <span class="info-value">오후 2:00</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">장소</span>
+                <span class="info-value">경주 황리단길 북카페</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">참여</span>
+                <span class="info-value capacity-warn">18/20명</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">참가비</span>
+                <span class="info-value fee">10,000원</span>
+              </div>
+            </div>
+
+            <!-- NEW: Description -->
+            <div class="description-block change-border">
+              <h4>모임 소개</h4>
+              <p>에밀 아자르(로맹 가리)의 대표작을 함께 읽습니다. 파리 벨빌 거리에서 펼쳐지는 이 이야기는 삶의 끝자락에서도 빛나는 사랑에 대해 이야기합니다.<br><br>책을 다 읽고 오지 않아도 괜찮아요. 함께 이야기 나누는 것이 중요합니다.</p>
+            </div>
+
+            <!-- NEW: Payment confirmation sheet -->
+            <div class="confirm-sheet change-border">
+              <h4>결제 정보 확인</h4>
+              <div class="confirm-row">
+                <span class="label">모임</span>
+                <span class="value">에밀 아자르 &lt;자기 앞의 생&gt;</span>
+              </div>
+              <div class="confirm-row">
+                <span class="label">일시</span>
+                <span class="value">3월 29일 (토) 14:00</span>
+              </div>
+              <div class="confirm-row">
+                <span class="label">결제금액</span>
+                <span class="value fee">10,000원</span>
+              </div>
+              <div class="refund-notice">
+                <strong>환불 규정</strong><br>
+                3일 전: 100% · 2일 전: 50% · 1일 전~당일: 환불 불가 (취소는 가능)
+              </div>
+              <button class="btn-pay">결제하기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ============================================ -->
+<!-- 3. Payment Result -->
+<!-- ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">3</span>
+    <h2 class="section-title">결제 성공 / 실패 화면 개선</h2>
+  </div>
+  <div class="section-verdict verdict-accept">
+    <div class="verdict-label">수용 — 중간</div>
+    성공: 알림톡 안내 + "내 신청 보기" 듀얼 CTA. 실패: 5초 + 수동 버튼.
+  </div>
+
+  <div class="comparison" style="align-items: flex-start;">
+    <!-- SUCCESS BEFORE -->
+    <div class="phone-col">
+      <span class="phone-label label-before">BEFORE — 결제 성공</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="result-screen">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding-top: 80px;">
+              <div class="result-icon success">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="result-title">신청이 완료되었습니다</div>
+              <div class="result-sub">모임에 참여해 주셔서 감사합니다</div>
+
+              <div class="result-card">
+                <h3>에밀 아자르 &lt;자기 앞의 생&gt;</h3>
+                <div class="info" style="margin-top: 8px;">
+                  <div>날짜 · 2026년 3월 29일 (토)</div>
+                  <div>시간 · 오후 2:00</div>
+                  <div>장소 · 경주 황리단길 북카페</div>
+                  <div style="border-top: 1px solid var(--surface-300); margin-top:8px; padding-top:8px;">결제 · <span style="color: var(--accent-600); font-weight:700;">10,000원</span></div>
+                </div>
+              </div>
+
+              <div style="width:100%; margin-top: 28px;">
+                <button class="btn-full-primary">모임 일정으로</button>
+              </div>
+              <div style="margin-top:8px; text-align:center; font-size:0.7rem; color:var(--neutral-400);">
+                (CTA 1개만 존재)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- SUCCESS AFTER -->
+    <div class="phone-col">
+      <span class="phone-label label-after">AFTER — 결제 성공</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="result-screen">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; padding-top: 80px;">
+              <div class="result-icon success">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="result-title">신청이 완료되었습니다</div>
+              <div class="result-sub">모임에 참여해 주셔서 감사합니다</div>
+              <!-- NEW -->
+              <div class="result-alimtalk change-highlight" style="display:inline-flex;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color: var(--primary-400);"><path d="M12 2C6.48 2 2 5.58 2 10c0 2.5 1.5 4.7 3.8 6.1L4.5 21l5-3.2c.8.1 1.6.2 2.5.2 5.52 0 10-3.58 10-8S17.52 2 12 2z"/></svg>
+                카카오톡으로 상세 안내를 보내드렸습니다
+              </div>
+
+              <div class="result-card">
+                <h3>에밀 아자르 &lt;자기 앞의 생&gt;</h3>
+                <div class="info" style="margin-top: 8px;">
+                  <div>날짜 · 2026년 3월 29일 (토)</div>
+                  <div>시간 · 오후 2:00</div>
+                  <div>장소 · 경주 황리단길 북카페</div>
+                  <div style="border-top: 1px solid var(--surface-300); margin-top:8px; padding-top:8px;">결제 · <span style="color: var(--accent-600); font-weight:700;">10,000원</span></div>
+                </div>
+              </div>
+
+              <!-- NEW: Dual CTA -->
+              <div class="btn-group change-border" style="width:100%;">
+                <button class="btn-full-primary">모임 일정으로</button>
+                <button class="btn-secondary">내 신청 보기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fail screens -->
+  <div class="comparison" style="margin-top: 32px; align-items: flex-start;">
+    <!-- FAIL BEFORE -->
+    <div class="phone-col">
+      <span class="phone-label label-before">BEFORE — 결제 실패</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="result-screen">
+            <div class="result-center">
+              <div class="result-icon error-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="fail-msg">결제가 취소되었습니다</div>
+              <div class="fail-sub">잠시 후 모임 페이지로 이동합니다...</div>
+              <div class="fail-timer" style="margin-top: 16px; font-size: 1.2rem; color: var(--error); font-weight: 700;">2초</div>
+              <div style="margin-top: 8px; font-size: 0.65rem; color: var(--neutral-300);">(수동 버튼 없음, 2초 자동 이동)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- FAIL AFTER -->
+    <div class="phone-col">
+      <span class="phone-label label-after">AFTER — 결제 실패</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="result-screen">
+            <div class="result-center">
+              <div class="result-icon error-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="fail-msg">결제가 취소되었습니다</div>
+              <div class="fail-sub">5초 후 모임 페이지로 이동합니다</div>
+
+              <!-- NEW: Manual button -->
+              <div style="width: 100%; max-width: 280px; margin-top: 28px;" class="change-border">
+                <button class="btn-secondary" style="width: 100%;">모임으로 돌아가기</button>
+              </div>
+              <div style="margin-top: 8px; font-size: 0.65rem; color: var(--neutral-300);">(5초 대기 + 수동 버튼)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ============================================ -->
+<!-- 4. My Page Empty State -->
+<!-- ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">4</span>
+    <h2 class="section-title">내 신청 — Empty State CTA</h2>
+  </div>
+  <div class="section-verdict verdict-accept">
+    <div class="verdict-label">수용 — 낮음</div>
+    빈 상태에서 다음 행동을 안내하는 CTA 추가.
+  </div>
+
+  <div class="comparison">
+    <!-- BEFORE -->
+    <div class="phone-col">
+      <span class="phone-label label-before">BEFORE</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="my-screen">
+            <div class="my-header">
+              <h2>내 신청</h2>
+            </div>
+            <h3 style="margin-top:20px; font-size:0.7rem; font-weight:700; color:var(--primary-500);">다가오는 모임</h3>
+            <div class="empty-box" style="margin-top:10px;">
+              신청한 모임이 없어요
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="tab-icon"></div>모임</div>
+            <div class="tab active"><div class="tab-icon"></div>내 신청</div>
+            <div class="tab"><div class="tab-icon"></div>더보기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- AFTER -->
+    <div class="phone-col">
+      <span class="phone-label label-after">AFTER</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="my-screen">
+            <div class="my-header">
+              <h2>내 신청</h2>
+            </div>
+            <h3 style="margin-top:20px; font-size:0.7rem; font-weight:700; color:var(--primary-500);">다가오는 모임</h3>
+            <div class="empty-box change-border" style="margin-top:10px;">
+              신청한 모임이 없어요
+              <br>
+              <a class="empty-cta" href="#">모임 둘러보기</a>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="tab"><div class="tab-icon"></div>모임</div>
+            <div class="tab active"><div class="tab-icon"></div>내 신청</div>
+            <div class="tab"><div class="tab-icon"></div>더보기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ============================================ -->
+<!-- 5. Profile at Payment (Lazy) -->
+<!-- ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">5</span>
+    <h2 class="section-title">첫 결제 시 프로필 수집 (Lazy Collection 상세)</h2>
+  </div>
+  <div class="section-verdict verdict-accept">
+    <div class="verdict-label">수용 — #1과 연결</div>
+    프로필 미완성 사용자가 "신청하기" 클릭 → 프로필 입력(최소 필드) → 결제 확인 → 결제로 자연스럽게 이어지는 플로우.
+  </div>
+
+  <div class="comparison">
+    <!-- BEFORE: full profile screen -->
+    <div class="phone-col">
+      <span class="phone-label label-before">BEFORE — 5개 필드 + 13개 지역</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="profile-screen">
+            <div class="profile-heading">
+              <h2>회원님, 반갑습니다!</h2>
+              <p>모임 안내와 리마인드 알림을 위해<br>아래 정보를 입력해주세요.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">실명<span class="req">*</span></label>
+              <input class="form-input" placeholder="홍길동" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">닉네임<span class="req">*</span></label>
+              <input class="form-input" placeholder="닉네임" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">전화번호<span class="req">*</span></label>
+              <input class="form-input" placeholder="010-0000-0000" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">주로 참여할 지역<span class="req">*</span></label>
+              <div class="region-grid">
+                <div class="region-btn">경주</div><div class="region-btn">포항</div><div class="region-btn">울산</div>
+                <div class="region-btn">부산</div><div class="region-btn">대구</div><div class="region-btn">창원</div>
+                <div class="region-btn">대전</div><div class="region-btn">광주</div><div class="region-btn">전주</div>
+                <div class="region-btn">수원</div><div class="region-btn">인천</div><div class="region-btn">서울</div>
+                <div class="region-btn">제주</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">이메일 (선택)</label>
+              <input class="form-input" placeholder="email@example.com" disabled>
+            </div>
+            <button class="btn-submit disabled">시작하기</button>
+            <div style="margin-top: 12px; text-align:center; font-size:0.65rem; color:var(--neutral-300);">필수 5개 필드 · 스킵 불가</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-col">→</div>
+
+    <!-- AFTER: minimal profile inline -->
+    <div class="phone-col">
+      <span class="phone-label label-after">AFTER — 최소 필드만 (결제 직전)</span>
+      <div class="phone-frame">
+        <div class="screen">
+          <div class="detail-screen" style="padding-bottom: 28px;">
+            <div style="text-align:center; margin-bottom: 20px;">
+              <div style="font-size:0.7rem; font-weight:700; color:var(--accent-500); letter-spacing:0.05em; margin-bottom:4px;">STEP 1 / 2</div>
+              <h2 style="font-family:var(--font-display); font-size:1.1rem; font-weight:700; color:var(--primary-900);">결제를 위해 정보를 입력해주세요</h2>
+              <p style="margin-top:6px; font-size:0.75rem; color:var(--neutral-500);">알림톡 수신과 현장 확인에 사용됩니다</p>
+            </div>
+
+            <div class="change-border" style="padding: 4px;">
+              <div class="form-group">
+                <label class="form-label">실명<span class="req">*</span></label>
+                <input class="form-input" value="임재윤" disabled style="color: var(--primary-900);">
+              </div>
+              <div class="form-group">
+                <label class="form-label">전화번호<span class="req">*</span></label>
+                <input class="form-input" value="010-1234-5678" disabled style="color: var(--primary-900);">
+              </div>
+              <div class="form-group">
+                <label class="form-label">주로 참여할 지역<span class="req">*</span></label>
+                <div class="region-grid" style="grid-template-columns: repeat(4, 1fr);">
+                  <div class="region-btn highlight selected" style="border-color:var(--primary-500); background:var(--primary-50); color:var(--primary-700); font-weight:700;">경주</div>
+                  <div class="region-btn highlight">포항</div>
+                  <div class="region-btn">울산</div>
+                  <div class="region-btn">부산</div>
+                  <div class="region-btn">대구</div>
+                  <div class="region-btn">기타</div>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-submit" style="margin-top: 20px;">다음: 결제 정보 확인</button>
+            <div style="margin-top: 10px; text-align:center; font-size:0.65rem; color:var(--neutral-300);">필수 3개 필드 · 닉네임/이메일은 나중에</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ============================================ -->
+<!-- 6. Rejected items -->
+<!-- ============================================ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">6</span>
+    <h2 class="section-title">기각 항목 — 변경하지 않는 것들</h2>
+  </div>
+
+  <div class="section-verdict verdict-reject">
+    <div class="verdict-label">기각 — 4건</div>
+    <strong>로그인 사업자정보 제거:</strong> 전자상거래법상 첫 진입점에 사업자 정보 접근 필요. 현행 유지.<br>
+    <strong>웰컴 스크린 → 토스트 간소화:</strong> 브랜드 첫 인상의 핵심 터치포인트. "넷플릭스 말고, 할 게 생깁니다" 임팩트 유지.<br>
+    <strong>Noto Serif KR 확대 사용:</strong> 타이틀 전용 세리프 + 본문 산세리프 = Editorial 디자인 정석. 의도된 설계.<br>
+    <strong>카드에 책 이미지:</strong> Meeting 모델에 책 정보 없음. MVP 스코프 밖 (향후 book tracking과 함께).
+  </div>
+
+  <div class="section-verdict verdict-partial">
+    <div class="verdict-label">보류 — Phase 3+</div>
+    어드민 대시보드 · 누적 참여 통계 · 히어로 카드/D-day · 접근성 체계화 · 상태 필터<br>
+    → 250명 규모 독서 모임 MVP에서 현 시점 ROI가 낮거나 후속 기능과 함께 진행해야 효과적.
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ============================================ -->
+<!-- Summary -->
+<!-- ============================================ -->
+<div class="section" style="margin-bottom: 0;">
+  <div class="section-header">
+    <span class="section-num" style="background: var(--accent-600);">!</span>
+    <h2 class="section-title">실행 요약</h2>
+  </div>
+  <div style="margin-left: 44px; font-size: 0.85rem; line-height: 1.8; color: var(--primary-800);">
+    <table style="width:100%; border-collapse: collapse; font-size: 0.8rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--primary-200);">
+          <th style="text-align:left; padding:8px 4px; color: var(--primary-700);">우선순위</th>
+          <th style="text-align:left; padding:8px 4px; color: var(--primary-700);">항목</th>
+          <th style="text-align:left; padding:8px 4px; color: var(--primary-700);">영향 범위</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--neutral-200);">
+          <td style="padding:8px 4px;"><span style="background:var(--error); color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700;">크리티컬</span></td>
+          <td style="padding:8px 4px;">프로필 Lazy Collection</td>
+          <td style="padding:8px 4px; font-size:0.75rem; color:var(--neutral-600);">page.tsx 게이트, MeetingActionButton, ProfileSetup</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--neutral-200);">
+          <td style="padding:8px 4px;"><span style="background:var(--error); color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700;">크리티컬</span></td>
+          <td style="padding:8px 4px;">결제 전 확인 스텝</td>
+          <td style="padding:8px 4px; font-size:0.75rem; color:var(--neutral-600);">MeetingActionButton (바텀시트 추가)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--neutral-200);">
+          <td style="padding:8px 4px;"><span style="background:var(--accent-500); color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700;">높음</span></td>
+          <td style="padding:8px 4px;">Description 필드</td>
+          <td style="padding:8px 4px; font-size:0.75rem; color:var(--neutral-600);">DB migration, Meeting 타입, MeetingForm, 상세 페이지</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--neutral-200);">
+          <td style="padding:8px 4px;"><span style="background:var(--primary-500); color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700;">중간</span></td>
+          <td style="padding:8px 4px;">결제 실패 5초 + 수동 버튼</td>
+          <td style="padding:8px 4px; font-size:0.75rem; color:var(--neutral-600);">payment-fail, payment-redirect</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--neutral-200);">
+          <td style="padding:8px 4px;"><span style="background:var(--primary-500); color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700;">중간</span></td>
+          <td style="padding:8px 4px;">결제 성공 화면 보강</td>
+          <td style="padding:8px 4px; font-size:0.75rem; color:var(--neutral-600);">confirm/page.tsx</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--neutral-200);">
+          <td style="padding:8px 4px;"><span style="background:var(--neutral-400); color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700;">낮음</span></td>
+          <td style="padding:8px 4px;">Empty State CTA</td>
+          <td style="padding:8px 4px; font-size:0.75rem; color:var(--neutral-600);">my/page.tsx</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 4px;"><span style="background:var(--neutral-400); color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:700;">낮음</span></td>
+          <td style="padding:8px 4px;">지역 그리드 순서</td>
+          <td style="padding:8px 4px; font-size:0.75rem; color:var(--neutral-600);">ProfileSetup</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>
