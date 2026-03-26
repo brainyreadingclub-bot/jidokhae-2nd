@@ -33,7 +33,7 @@ export async function getMonthlyRevenue(
     let totalPaid = 0
     let totalRefunded = 0
     for (const r of data) {
-      if (r.status === 'confirmed' && r.paid_amount) totalPaid += r.paid_amount
+      if (r.paid_amount) totalPaid += r.paid_amount
       if (r.refunded_amount && r.refunded_amount > 0) totalRefunded += r.refunded_amount
     }
     return { totalPaid, totalRefunded, netRevenue: totalPaid - totalRefunded }
