@@ -68,7 +68,7 @@ export default async function MyPage() {
 
   return (
     <div className="px-5 pt-6">
-      <h1 className="text-xl font-extrabold text-neutral-800 tracking-tight">내 신청</h1>
+      <h1 className="text-xl font-extrabold text-neutral-800 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>내 신청</h1>
 
       <h2 className="mt-5 mb-3 text-xs font-bold text-primary-500 tracking-tight">다가오는 모임</h2>
       {upcoming.length > 0 ? (
