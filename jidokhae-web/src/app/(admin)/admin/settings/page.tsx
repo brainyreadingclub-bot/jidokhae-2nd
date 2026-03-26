@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { getSiteSettings } from '@/lib/site-settings'
 import SiteSettingsForm from '@/components/admin/SiteSettingsForm'
@@ -8,7 +9,7 @@ import type { Venue } from '@/types/venue'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
   if (!user) redirect('/auth/login')
 
   const profile = await getProfile(user.id)

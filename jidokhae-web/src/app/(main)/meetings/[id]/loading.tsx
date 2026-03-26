@@ -1,33 +1,17 @@
+import Link from 'next/link'
+
 export default function MeetingDetailLoading() {
   return (
-    <div className="px-4 pt-4 pb-6">
-      {/* Back link */}
-      <div className="mb-4 h-5 w-16 animate-pulse rounded bg-gray-100" />
-
-      {/* Title */}
-      <div className="h-6 w-3/4 animate-pulse rounded bg-gray-100" />
-
-      {/* Date & time */}
-      <div className="mt-3 flex items-center gap-2">
-        <div className="h-5 w-24 animate-pulse rounded-[var(--radius-sm)] bg-gray-100" />
-        <div className="h-4 w-14 animate-pulse rounded bg-gray-100" />
-      </div>
-
-      {/* Location */}
-      <div className="mt-3 h-4 w-32 animate-pulse rounded bg-gray-100" />
-
-      {/* Participant count */}
-      <div className="mt-2 h-4 w-20 animate-pulse rounded bg-gray-100" />
-
-      {/* Description block */}
-      <div className="mt-6 space-y-2">
-        <div className="h-4 w-full animate-pulse rounded bg-gray-100" />
-        <div className="h-4 w-5/6 animate-pulse rounded bg-gray-100" />
-        <div className="h-4 w-2/3 animate-pulse rounded bg-gray-100" />
-      </div>
-
-      {/* Action button */}
-      <div className="mt-8 h-12 w-full animate-pulse rounded-[var(--radius-md)] bg-gray-100" />
+    <div className="px-5 pt-4">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-400 hover:text-primary-600 transition-colors mb-5"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        목록으로
+      </Link>
     </div>
   )
 }
