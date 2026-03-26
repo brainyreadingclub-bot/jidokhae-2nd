@@ -68,7 +68,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
        └─ Scenario (검증)  → "어떻게 확인할 것인가" (1 Scenario = 1 행동 = 1 검증)
 ```
 
-**Current status:** M1–M6 MVP **completed**. Phase 2 확장 진행 중 — 알림톡(Phase 2-1) 구현 완료, 대기 신청(Phase 2-2) 구현 완료, 백오피스(Phase 2-3) 진행 중 (기본 4기능 완료, 지시서 8개 작업 중 나머지 미구현).
+**Current status:** M1–M6 MVP **completed**. Phase 2 확장 완료 — 알림톡(Phase 2-1) ✅, 대기 신청(Phase 2-2) ✅, 백오피스(Phase 2-3) ✅.
 
 ---
 
@@ -79,7 +79,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 **Phase 2 (완료/진행중):**
 - Phase 2-1: 알림톡 (Solapi → KakaoTalk 5종) ✅
 - Phase 2-2: 대기 신청 + 자동 승격 ✅
-- Phase 2-3: 백오피스 — 기본 기능(회원관리, 출석 토글, 프로필 설정, 웰컴 스크린) ✅ / 고급 기능(상수 통합, site_settings, venues, 대시보드, 회원 강화, 기간 필터) 🔲
+- Phase 2-3: 백오피스 — 기본 기능(회원관리, 출석 토글, 프로필 설정, 웰컴 스크린) ✅ / 고급 기능: 상수 통합 ✅, site_settings ✅, venues ✅, 대시보드 ✅, 회원 강화 ✅, 기간 필터 ✅
 
 **Out of scope (future):** Badges/praise, bean (콩) points, landing page, admin analytics dashboard, AI chatbot, book tracking
 
@@ -183,19 +183,19 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Architecture
 
-- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, terms, privacy, refund — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations). Admin routes: `admin/page` (dashboard), `admin/meetings/new` (create), `admin/meetings/[id]/edit` (edit), `admin/members` (회원 관리)
+- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, terms, privacy, refund — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations). Admin routes: `admin/page` (dashboard), `admin/meetings/new` (create), `admin/meetings/[id]/edit` (edit), `admin/members` (회원 관리), `admin/settings` (사이트 설정 + 공간 관리)
 - **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth)
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
 - **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Editorial Organic" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Terracotta (`--color-accent-*`), Neutral: Warm Gray (`--color-neutral-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Fonts: Noto Serif KR (titles), Pretendard (body). See `jidokhae-web/DESIGN_TOKENS.md` for full token reference
 - **Layout:** Mobile-first single-column (`max-w-screen-sm`), bottom tab navigation (`BottomNav`), iOS safe area support
 - **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
 - **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
-- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts`, `src/types/registration.ts`, `src/types/notification.ts`, Supabase responses cast with `as Meeting` or `as Registration`
+- **No generated Supabase types** — manual type definitions in `src/types/meeting.ts`, `src/types/registration.ts`, `src/types/notification.ts`, `src/types/venue.ts`, Supabase responses cast with `as Meeting` or `as Registration`
 - **Error/Loading boundaries:** Each route group has `error.tsx` and `loading.tsx` files
 
 ### Database Schema
 
-**Tables:** `profiles` (user info, role, phone, region, real_name, welcomed_at), `meetings` (schedule, capacity, fee, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean, status: confirmed/cancelled/waitlisted/waitlist_cancelled/waitlist_refunded), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped)
+**Tables:** `profiles` (user info, role, phone, region, real_name, welcomed_at), `meetings` (schedule, capacity, fee, venue_id, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean, status: confirmed/cancelled/waitlisted/waitlist_cancelled/waitlist_refunded), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped), `site_settings` (key-value 운영 설정), `venues` (공간 + 정산 설정), `venue_settlements` (월별 공간 정산 이력)
 
 **Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_registrations_waitlist` (partial — 대기자 순번), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지), `idx_profiles_nickname_unique` (partial — WHERE nickname <> '')
 
@@ -218,8 +218,8 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanTime()`, `formatFee()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
-- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `admin/members/role` (역할 변경). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼). Shared between API routes — keep logic here, not in route handlers
+- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `admin/members/role` (역할 변경), `admin/settings` (site_settings UPSERT), `admin/venues` (공간 CRUD), `admin/venues/[id]` (공간 수정), `admin/venues/settle` (정산 확정). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (월별 매출 집계 `getMonthlyRevenue()`). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
