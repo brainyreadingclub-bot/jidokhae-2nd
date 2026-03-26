@@ -96,6 +96,21 @@ export function getWeekLater(dateStr: string): string {
   return `${y}-${m}-${day}`
 }
 
+/** "2026-03-29" → "3월 29일 토요일" (full weekday name) */
+export function formatKoreanDateFull(dateStr: string): string {
+  const [, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(`${dateStr}T12:00:00+09:00`)
+  const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
+  return `${month}월 ${day}일 ${days[date.getUTCDay()]}`
+}
+
+/** Returns the number of days between two "YYYY-MM-DD" dates (target - from) */
+export function getDaysUntil(targetDate: string, fromDate: string): number {
+  const target = new Date(targetDate + 'T00:00:00')
+  const from = new Date(fromDate + 'T00:00:00')
+  return Math.round((target.getTime() - from.getTime()) / (24 * 60 * 60 * 1000))
+}
+
 export type MeetingTiming = 'before_or_today' | 'after'
 
 /** Determines if a meeting is upcoming or past based on KST dates */

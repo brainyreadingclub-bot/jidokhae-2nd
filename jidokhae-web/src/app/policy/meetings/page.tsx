@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getKSTToday } from '@/lib/kst'
 import { getSiteSettings } from '@/lib/site-settings'
 import MeetingCard from '@/components/meetings/MeetingCard'
+import DateSectionHeader from '@/components/meetings/DateSectionHeader'
 import EmptyMeetings from '@/components/meetings/EmptyMeetings'
 import type { Meeting } from '@/types/meeting'
 
@@ -101,17 +102,39 @@ export default async function PublicMeetingsPage() {
         {typedMeetings.length === 0 ? (
           <EmptyMeetings />
         ) : (
-          <div className="flex flex-col gap-3">
-            {typedMeetings.map((meeting) => (
-              <MeetingCard
-                key={meeting.id}
-                meeting={meeting}
-                confirmedCount={countMap.get(meeting.id) ?? 0}
-                isRegistered={false}
-                isWaitlisted={false}
-                basePath="/policy/meetings"
-              />
-            ))}
+          <div className="flex flex-col gap-5">
+            {(() => {
+              const groups: { date: string; meetings: Meeting[] }[] = []
+              let curDate = ''
+              let curGroup: Meeting[] = []
+              for (const m of typedMeetings) {
+                if (m.date !== curDate) {
+                  if (curGroup.length > 0) groups.push({ date: curDate, meetings: curGroup })
+                  curDate = m.date
+                  curGroup = [m]
+                } else {
+                  curGroup.push(m)
+                }
+              }
+              if (curGroup.length > 0) groups.push({ date: curDate, meetings: curGroup })
+              return groups.map((group) => (
+                <div key={group.date}>
+                  <DateSectionHeader date={group.date} kstToday={kstToday} />
+                  <div className="flex flex-col gap-3">
+                    {group.meetings.map((meeting) => (
+                      <MeetingCard
+                        key={meeting.id}
+                        meeting={meeting}
+                        confirmedCount={countMap.get(meeting.id) ?? 0}
+                        isRegistered={false}
+                        isWaitlisted={false}
+                        basePath="/policy/meetings"
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))
+            })()}
           </div>
         )}
       </section>

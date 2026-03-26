@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/profile'
 import { getKSTToday } from '@/lib/kst'
 import { getSiteSettings } from '@/lib/site-settings'
-import MeetingCard from '@/components/meetings/MeetingCard'
+import MeetingsView from '@/components/meetings/MeetingsView'
 import EmptyMeetings from '@/components/meetings/EmptyMeetings'
 import WelcomeScreen from '@/components/WelcomeScreen'
 import ProfileSetup from '@/components/ProfileSetup'
@@ -54,7 +54,7 @@ export default async function HomePage() {
   if (typedMeetings.length === 0) {
     return (
       <div className="px-5 pt-6">
-        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">모임 일정</h1>
+        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>모임 일정</h1>
         <EmptyMeetings />
       </div>
     )
@@ -93,38 +93,28 @@ export default async function HomePage() {
     throw new Error(`대기 신청 조회 실패: ${myWaitlistResult.error.message}`)
   }
 
-  const countMap = new Map<string, number>(
-    (countsResult.data ?? []).map(
-      (c: { meeting_id: string; confirmed_count: number }) => [
-        c.meeting_id,
-        Number(c.confirmed_count),
-      ] as [string, number],
-    ),
+  const countMap: Record<string, number> = {}
+  for (const c of (countsResult.data ?? []) as { meeting_id: string; confirmed_count: number }[]) {
+    countMap[c.meeting_id] = Number(c.confirmed_count)
+  }
+  const registeredArr = (myRegsResult.data ?? []).map(
+    (r: { meeting_id: string }) => r.meeting_id,
   )
-  const registeredSet = new Set(
-    (myRegsResult.data ?? []).map(
-      (r: { meeting_id: string }) => r.meeting_id,
-    ),
-  )
-  const waitlistedSet = new Set(
-    (myWaitlistResult.data ?? []).map(
-      (r: { meeting_id: string }) => r.meeting_id,
-    ),
+  const waitlistedArr = (myWaitlistResult.data ?? []).map(
+    (r: { meeting_id: string }) => r.meeting_id,
   )
 
   return (
     <div className="px-5 pt-6">
-      <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">모임 일정</h1>
-      <div className="mt-4 flex flex-col gap-3">
-        {typedMeetings.map((meeting) => (
-          <MeetingCard
-            key={meeting.id}
-            meeting={meeting}
-            confirmedCount={countMap.get(meeting.id) ?? 0}
-            isRegistered={registeredSet.has(meeting.id)}
-            isWaitlisted={waitlistedSet.has(meeting.id)}
-          />
-        ))}
+      <h1 className="text-xl font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>모임 일정</h1>
+      <div className="mt-4">
+        <MeetingsView
+          meetings={typedMeetings}
+          countMap={countMap}
+          registeredSet={registeredArr}
+          waitlistedSet={waitlistedArr}
+          kstToday={kstToday}
+        />
       </div>
     </div>
   )
