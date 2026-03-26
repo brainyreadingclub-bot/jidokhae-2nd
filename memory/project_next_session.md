@@ -4,24 +4,25 @@
 
 ## 현재 진행 상태
 
-- Phase 2-3 백오피스: 기본 4기능 + 고급 6기능 중 5개 완료, **기간 필터 미구현**
-- **이번 세션에서 수정한 2건** (미커밋):
-  1. `AdminMeetingSection.tsx`: totalPaid에서 `.filter(confirmed)` 제거 → cancelled의 paid_amount도 합산
-  2. `AdminMeetingSection.tsx`: 신청자 라벨 "(3명)" → "(3명 확정 · 4명 취소)"
-  3. `dashboard.ts`: aggregate에서 `r.status === 'confirmed'` 조건 제거
+- Phase 2-3 백오피스: **완료** (기본 4기능 + 고급 6기능 모두 완료, 기간 필터 포함)
+- **UI 디테일 개선 4건 완료 + 푸시됨:**
+  1. `MyRegistrationContent.tsx`: Empty State CTA 회귀 수정 (모임 둘러보기 링크 복원)
+  2. `MeetingDetailInfo.tsx` + `MeetingCard.tsx`: 0명일 때 "N명 모집 중" 표시 + "모집 중" 띄어쓰기 통일
+  3. `MeetingDetailInfo.tsx`: 참가비 아이콘 DollarSign → Banknote
+  4. `MeetingForm.tsx`: 참가비 입력 실시간 콤마 포맷팅
+- CLAUDE.md: capacity display 규칙 0명 예외 추가, 누락 lib 파일/컴포넌트 보완
 
 ## 다음 할 일 (우선순위 순)
 
-1. **위 2건 커밋 + 푸시** — 사용자 확인 대기 중
-2. **기간 필터 구현** — Phase 2-3 마지막 미구현 항목 (작업 8: 진행 중/지난 달/전체 탭)
-3. 기간 필터 완료 후 → Phase 2-3 완료 선언
+1. **PG 심사 통과 대기** — TossPayments 승인 후 실결제 테스트
+2. 사용자가 새 지시서를 전달하면 실행
 
 ## 블로커
 
-- 없음 (커밋 승인만 필요)
+- PG 심사 승인 대기 중
 
 ## 주의사항
 
-- Windows 환경: preview_start는 `cmd /c` 래퍼 필요 (feedback_2026-03-26_preview-windows.md 참조)
-- 집계 로직 수정 시: A - B 패턴에서 행 범위 일치 확인 (feedback_2026-03-26_aggregate-logic.md 참조)
-- CLAUDE.md에 worktree 경로가 반영되어 있음 — 메인 브랜치 머지 시 .claude/ 변경 주의
+- Windows 환경: preview_start는 `cmd /c` 래퍼 필요 (feedback_2026-03-26_preview-windows.md)
+- 집계 로직 수정 시: A - B 행 범위 일치 확인 (feedback_2026-03-26_aggregate-logic.md)
+- 같은 파일 다중 작업 시: 편집-커밋 순차 실행 (feedback_2026-03-26_commit-ordering.md)
