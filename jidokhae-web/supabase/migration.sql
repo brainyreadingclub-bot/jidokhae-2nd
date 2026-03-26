@@ -520,3 +520,99 @@ CREATE UNIQUE INDEX idx_notifications_waitlist_promoted_unique
 CREATE UNIQUE INDEX idx_notifications_waitlist_refunded_unique
   ON public.notifications(registration_id)
   WHERE type = 'waitlist_refunded';
+
+-- ============================================================
+-- Phase 2-3: 백오피스 — site_settings + venues + venue_settlements
+-- Supabase SQL Editor에서 아래 SQL을 수동 실행할 것
+-- ============================================================
+
+-- 1. site_settings 테이블
+CREATE TABLE public.site_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "site_settings_select_all"
+  ON public.site_settings FOR SELECT
+  USING (true);
+
+CREATE POLICY "site_settings_insert_admin"
+  ON public.site_settings FOR INSERT
+  WITH CHECK (public.is_admin());
+
+CREATE POLICY "site_settings_update_admin"
+  ON public.site_settings FOR UPDATE
+  USING (public.is_admin());
+
+-- 초기 데이터
+INSERT INTO public.site_settings (key, value) VALUES
+  ('member_count', '250'),
+  ('active_regions_label', '경주 · 포항'),
+  ('company_name', '지독해'),
+  ('representative', '임재윤'),
+  ('business_number', '494-42-01276'),
+  ('address', '경상북도 경주시 태종로 801-11 (황오동) 208호'),
+  ('phone', '0507-1396-7908'),
+  ('support_contact', '카카오톡 ''단무지''에게 1:1 채팅으로 연락해 주세요.');
+
+-- 2. venues 테이블
+CREATE TABLE public.venues (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  settlement_type TEXT NOT NULL DEFAULT 'percentage'
+    CHECK (settlement_type IN ('percentage', 'fixed', 'none')),
+  settlement_rate INTEGER DEFAULT 80
+    CHECK (settlement_rate >= 0 AND settlement_rate <= 100),
+  settlement_fixed INTEGER DEFAULT 0
+    CHECK (settlement_fixed >= 0),
+  contact_name TEXT,
+  contact_info TEXT,
+  status TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'inactive')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.venues ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "venues_select_all"
+  ON public.venues FOR SELECT USING (true);
+CREATE POLICY "venues_insert_admin"
+  ON public.venues FOR INSERT WITH CHECK (public.is_admin());
+CREATE POLICY "venues_update_admin"
+  ON public.venues FOR UPDATE USING (public.is_admin());
+
+-- meetings에 venue_id 추가
+ALTER TABLE public.meetings ADD COLUMN venue_id UUID REFERENCES public.venues(id);
+
+-- 3. venue_settlements 테이블
+CREATE TABLE public.venue_settlements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  venue_id UUID NOT NULL REFERENCES public.venues(id),
+  month TEXT NOT NULL,
+  total_paid INTEGER NOT NULL,
+  settlement_amount INTEGER NOT NULL,
+  settled_at TIMESTAMPTZ,
+  settled_by UUID REFERENCES public.profiles(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (venue_id, month)
+);
+
+ALTER TABLE public.venue_settlements ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "venue_settlements_select_admin"
+  ON public.venue_settlements FOR SELECT
+  USING (public.is_admin());
+CREATE POLICY "venue_settlements_insert_admin"
+  ON public.venue_settlements FOR INSERT
+  WITH CHECK (public.is_admin());
+CREATE POLICY "venue_settlements_update_admin"
+  ON public.venue_settlements FOR UPDATE
+  USING (public.is_admin());
+
+-- 초기 공간 데이터
+INSERT INTO public.venues (name, settlement_type, settlement_rate, contact_name) VALUES
+  ('우연히 책방', 'percentage', 80, '우연히 책방 담당자'),
+  ('공간 지그시', 'percentage', 80, '공간 지그시 담당자');

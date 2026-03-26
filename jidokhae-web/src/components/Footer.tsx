@@ -23,6 +23,13 @@ export default async function Footer() {
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Link
+          href="/policy/meetings"
+          className="text-primary-600 hover:text-primary-700 underline"
+        >
+          모임 일정
+        </Link>
+        <span>|</span>
+        <Link
           href="/policy/terms"
           className="text-primary-600 hover:text-primary-700 underline"
         >

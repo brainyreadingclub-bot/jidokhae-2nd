@@ -9,6 +9,7 @@ type MeetingCardProps = {
   confirmedCount: number
   isRegistered: boolean
   isWaitlisted?: boolean
+  basePath?: string
 }
 
 export default function MeetingCard({
@@ -16,6 +17,7 @@ export default function MeetingCard({
   confirmedCount,
   isRegistered,
   isWaitlisted,
+  basePath = '/meetings',
 }: MeetingCardProps) {
   const isFull = confirmedCount >= meeting.capacity
   const isAlmostFull = !isFull && confirmedCount >= meeting.capacity * 0.8
@@ -47,7 +49,7 @@ export default function MeetingCard({
 
   return (
     <Link
-      href={`/meetings/${meeting.id}`}
+      href={`${basePath}/${meeting.id}`}
       className="group relative block overflow-hidden rounded-[var(--radius-md)] border border-neutral-200 bg-white shadow-sm transition-all hover:-translate-y-px hover:shadow-md"
       style={{ borderLeft: `4px solid ${borderColor}` }}
     >

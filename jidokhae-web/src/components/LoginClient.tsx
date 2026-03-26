@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 type Props = {
@@ -143,6 +144,16 @@ export default function LoginClient({ settings }: Props) {
         <p className="mt-4 text-small text-neutral-400">
           카카오 계정으로 간편하게 시작하세요
         </p>
+
+        <Link
+          href="/policy/meetings"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
+        >
+          모임 일정 먼저 보기
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
       </section>
     </div>
   )

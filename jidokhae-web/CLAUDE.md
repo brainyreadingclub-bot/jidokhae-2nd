@@ -27,10 +27,10 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 
 ### Route Groups
 - `src/app/(main)/` — Authenticated member pages (meeting list, detail, my-registrations)
-- `src/app/(admin)/` — Admin pages (CRUD for meetings)
-- `src/app/auth/` — Login page + OAuth callback
+- `src/app/(admin)/` — Admin pages (CRUD for meetings, members, settings, venues)
+- `src/app/auth/` — Login page + OAuth callback (auth layout includes Footer for PG 심사)
 - `src/app/policy/` — Public pages (about, terms, privacy, refund — no auth required)
-- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members)
+- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members, admin/settings, admin/venues, admin/venues/[id], admin/venues/settle)
 
 ### Middleware (`src/middleware.ts`)
 Refreshes Supabase session on every request. Redirects unauthenticated → `/auth/login`, authenticated → away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth).
@@ -50,12 +50,15 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - `profile.ts` — Cached `getProfile(userId)` for server-side profile fetching
 - `notification.ts` — 알림톡 발송 + notifications 이력 기록 (INSERT pending → 발송 → UPDATE sent/failed)
 - `solapi.ts` — Solapi SDK 래퍼 (KakaoTalk 알림톡)
+- `site-settings.ts` — Cached `getSiteSettings()` for site configuration
+- `dashboard.ts` — Dashboard aggregations (revenue, meetings, members, alerts, venue settlements)
+- `regions.ts` — Valid regions constant (`VALID_REGIONS`)
 
 Logic is shared between API routes — keep it in `src/lib/`, not in route handlers.
 
 ## Key Conventions
 
-- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, auth/login/page, payment-redirect/page, payment-fail/page, route group error.tsx files. Server Components include Footer (사업자정보 푸터)
+- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, LoginClient, SiteSettingsForm, VenueManager, VenueSettlementTable, payment-redirect/page, payment-fail/page, route group error.tsx files. Server Components include Footer (사업자정보 푸터). Note: auth/login/page is a Server Component that renders `<LoginClient />`
 - **Shared UI:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key, focus management. Used by DeleteMeetingButton, MeetingActionButton
 - **No semicolons**, single quotes, function components only
 - **Tailwind v4**: Design tokens in `@theme inline` block in `src/app/globals.css` — NOT in `tailwind.config.ts`. Full token reference: `DESIGN_TOKENS.md`
@@ -65,7 +68,7 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 - **Mutation pattern**: `router.push() + router.refresh()` after mutations (no `revalidatePath`)
 - **Parallel fetching**: `Promise.all()` in page components for concurrent Supabase queries
 - **Inline SVG icons** — no icon library
-- **Manual types**: `src/types/meeting.ts`, `src/types/registration.ts` — no generated Supabase types, cast with `as Meeting`/`as Registration`
+- **Manual types**: `src/types/meeting.ts`, `src/types/registration.ts`, `src/types/notification.ts`, `src/types/venue.ts` — no generated Supabase types, cast with `as Meeting`/`as Registration`
 - **DB migrations**: `supabase/migration.sql` — run manually in Supabase SQL Editor (no CLI)
 - **Path alias**: `@/*` → `./src/*` (works in tests too via vitest `tsconfigPaths` plugin)
 - **PostCSS**: Uses `@tailwindcss/postcss` plugin (`postcss.config.mjs`)
