@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import BottomNav from '@/components/BottomNav'
 import LogoutButton from '@/components/LogoutButton'
@@ -10,8 +10,7 @@ export default async function MainLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
 
   let nickname = ''
   let role = 'member'
