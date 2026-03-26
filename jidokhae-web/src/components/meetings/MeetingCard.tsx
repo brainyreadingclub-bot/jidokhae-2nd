@@ -38,7 +38,7 @@ export default function MeetingCard({
       ? { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
       : isFull
         ? { label: '마감', classes: 'bg-neutral-100 text-neutral-500 border-neutral-200' }
-        : { label: '모집중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
+        : { label: '모집 중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
 
   // Capacity color
   const capacityClass = isFull
@@ -101,7 +101,10 @@ export default function MeetingCard({
               <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            <span className="font-mono tabular-nums">{confirmedCount}/{meeting.capacity}</span>명
+            {confirmedCount === 0
+              ? <span>{meeting.capacity}명 모집 중</span>
+              : <><span className="font-mono tabular-nums">{confirmedCount}/{meeting.capacity}</span>명</>
+            }
           </span>
 
           <span className="h-3 w-px bg-neutral-200" />

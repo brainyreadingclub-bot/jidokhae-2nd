@@ -80,14 +80,15 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }:
             </svg>
           }
           label="참여"
-          value={`${confirmedCount}/${capacity}명`}
-          valueClassName={`${capacityClass} font-mono tabular-nums`}
+          value={confirmedCount === 0 ? `${capacity}명 모집 중` : `${confirmedCount}/${capacity}명`}
+          valueClassName={confirmedCount === 0 ? capacityClass : `${capacityClass} font-mono tabular-nums`}
         />
         <InfoRow
           icon={
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              <rect width="20" height="12" x="2" y="6" rx="2" />
+              <circle cx="12" cy="12" r="2" />
+              <path d="M6 12h.01M18 12h.01" />
             </svg>
           }
           label="참가비"
