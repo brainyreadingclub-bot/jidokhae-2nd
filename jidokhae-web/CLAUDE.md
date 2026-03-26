@@ -29,7 +29,7 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 - `src/app/(main)/` — Authenticated member pages (meeting list, detail, my-registrations)
 - `src/app/(admin)/` — Admin pages (CRUD for meetings, members, settings, venues)
 - `src/app/auth/` — Login page + OAuth callback (auth layout includes Footer for PG 심사)
-- `src/app/policy/` — Public pages (about, terms, privacy, refund — no auth required)
+- `src/app/policy/` — Public pages (about, terms, privacy, refund, meetings list/detail — no auth required)
 - `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members, admin/settings, admin/venues, admin/venues/[id], admin/venues/settle)
 
 ### Middleware (`src/middleware.ts`)
@@ -46,7 +46,7 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - `waitlist.ts` — 대기 승격 래퍼 (promote RPC + 알림톡) + 대기 취소 (100% 환불)
 - `refund.ts` — Refund amount calculation
 - `tosspayments.ts` — TossPayments API wrapper
-- `kst.ts` — KST date utilities (getKSTToday, getTomorrowKST, formatKoreanDate, formatKoreanTime, formatFee, getButtonState)
+- `kst.ts` — KST date utilities (getKSTToday, getTomorrowKST, formatKoreanDate, formatKoreanDateFull, formatKoreanTime, formatFee, getDaysUntil, getButtonState)
 - `profile.ts` — Cached `getProfile(userId)` for server-side profile fetching
 - `notification.ts` — 알림톡 발송 + notifications 이력 기록 (INSERT pending → 발송 → UPDATE sent/failed)
 - `solapi.ts` — Solapi SDK 래퍼 (KakaoTalk 알림톡)
@@ -58,7 +58,7 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 
 ## Key Conventions
 
-- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, LoginClient, SiteSettingsForm, VenueManager, VenueSettlementTable, payment-redirect/page, payment-fail/page, route group error.tsx files. Server Components include Footer (사업자정보 푸터). Note: auth/login/page is a Server Component that renders `<LoginClient />`
+- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, MeetingsView, CalendarStrip, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, LoginClient, SiteSettingsForm, VenueManager, VenueSettlementTable, payment-redirect/page, payment-fail/page, route group error.tsx files. Server Components include DateSectionHeader, MeetingDetailInfo, Footer (사업자정보 푸터). Note: auth/login/page is a Server Component that renders `<LoginClient />`
 - **Shared UI:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key, focus management. Used by DeleteMeetingButton, MeetingActionButton
 - **No semicolons**, single quotes, function components only
 - **Tailwind v4**: Design tokens in `@theme inline` block in `src/app/globals.css` — NOT in `tailwind.config.ts`. Full token reference: `DESIGN_TOKENS.md`

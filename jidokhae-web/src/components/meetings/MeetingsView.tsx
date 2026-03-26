@@ -131,8 +131,22 @@ export default function MeetingsView({
         kstToday={kstToday}
       />
 
+      {/* Reset filter button */}
+      {selectedDate && (
+        <button
+          type="button"
+          onClick={() => handleDateSelect(null)}
+          className="mt-4 flex items-center gap-1.5 text-[13px] font-medium text-primary-500 hover:text-primary-700 transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          전체 일정 보기
+        </button>
+      )}
+
       {/* Date-grouped meeting list */}
-      <div className="mt-5 flex flex-col gap-5">
+      <div className={`${selectedDate ? 'mt-3' : 'mt-5'} flex flex-col gap-5`}>
         {visibleGroups.length === 0 && selectedDate && (
           <div className="py-8 text-center text-sm text-neutral-400">
             선택한 날짜에 모임이 없습니다

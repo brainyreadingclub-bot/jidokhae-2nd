@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>지독해 — 홈 화면 UI/UX 검토 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary-50: #F0F7F4;
+    --color-primary-100: #D9EDE3;
+    --color-primary-200: #B3DBC7;
+    --color-primary-300: #7CC0A0;
+    --color-primary-400: #4A9E76;
+    --color-primary-500: #2D7D5F;
+    --color-primary-600: #1B6347;
+    --color-primary-700: #1B4332;
+    --color-primary-800: #163528;
+    --color-primary-900: #0F2318;
+    --color-accent-50: #FFF5F2;
+    --color-accent-100: #FFE8E0;
+    --color-accent-200: #FFCBB8;
+    --color-accent-400: #E3825C;
+    --color-accent-500: #C75B3A;
+    --color-accent-600: #A84A2E;
+    --color-accent-700: #863B25;
+    --color-neutral-50: #FDFBF7;
+    --color-neutral-100: #FAF6EF;
+    --color-neutral-200: #F0EBE1;
+    --color-neutral-300: #E4DDD1;
+    --color-neutral-400: #C4BAA8;
+    --color-neutral-500: #9E9484;
+    --color-neutral-600: #7A7164;
+    --color-neutral-700: #5C544A;
+    --color-neutral-800: #3D3732;
+    --color-neutral-900: #1F1B17;
+    --color-surface-50: #FEFCF9;
+    --color-surface-100: #FDF8F1;
+    --color-surface-200: #FAF3E8;
+    --color-surface-300: #F5EBD9;
+    --color-status-open: #2D7D5F;
+    --color-status-full: #C4BAA8;
+    --color-error: #B5403A;
+    --font-display: 'Noto Serif KR', Georgia, serif;
+    --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+    --shadow-sm: 0 1px 3px rgba(45,90,61,0.06), 0 1px 2px rgba(45,90,61,0.04);
+    --spacing-card: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-surface-100);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    gap: 48px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.012;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ─── Review Panel ─── */
+  .review-panel {
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+    z-index: 2;
+  }
+  .review-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .review-header h1 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-primary-900);
+    letter-spacing: -0.02em;
+  }
+  .review-header p {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    color: var(--color-neutral-500);
+  }
+
+  /* ─── Section ─── */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-primary-500);
+    margin-bottom: 16px;
+  }
+  .section-label::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 1px;
+    background: var(--color-primary-200);
+  }
+
+  /* ─── Comparison ─── */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 700px) {
+    .comparison { grid-template-columns: 1fr; }
+  }
+  .comp-column {
+    position: relative;
+  }
+  .comp-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .comp-tag.before {
+    background: var(--color-neutral-200);
+    color: var(--color-neutral-600);
+  }
+  .comp-tag.after {
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+  }
+
+  /* ─── Phone Frame ─── */
+  .phone-frame {
+    width: 100%;
+    max-width: 375px;
+    margin: 0 auto;
+    background: var(--color-surface-50);
+    border-radius: 24px;
+    border: 1px solid var(--color-neutral-200);
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(45,90,61,0.08);
+  }
+  .phone-content {
+    padding: 20px;
+  }
+
+  /* ─── Page Title ─── */
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-primary-900);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  /* ─── Summary Header ─── */
+  .summary-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8125rem;
+    color: var(--color-primary-500);
+    margin-bottom: 12px;
+  }
+  .summary-dot { color: var(--color-neutral-300); }
+
+  /* ─── Calendar Strip ─── */
+  .calendar-strip {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface-100);
+    border: 1px solid var(--color-surface-300);
+  }
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+  }
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cal-nav-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--color-primary-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s;
+  }
+  .cal-nav-btn:hover { background: var(--color-primary-50); }
+  .cal-month {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-primary-800);
+    min-width: 90px;
+    text-align: center;
+  }
+  .cal-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cal-today-btn {
+    border: none;
+    background: transparent;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--color-primary-500);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .cal-today-btn:hover { background: var(--color-primary-50); }
+
+  .cal-dow {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 0 12px 4px;
+  }
+  .cal-dow span {
+    text-align: center;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-neutral-400);
+  }
+  .cal-dow span:first-child { color: var(--color-accent-400); }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 0 12px 12px;
+    gap: 2px 0;
+  }
+  .cal-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    width: 40px;
+    margin: 0 auto;
+    border-radius: 50%;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    position: relative;
+    border: none;
+    background: transparent;
+    cursor: default;
+    transition: background 0.15s;
+  }
+  .cal-day.has-meeting {
+    color: var(--color-primary-800);
+    cursor: pointer;
+  }
+  .cal-day.has-meeting:hover { background: var(--color-primary-50); }
+  .cal-day.today {
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-weight: 600;
+  }
+  .cal-day.selected {
+    background: var(--color-primary-600);
+    color: white;
+    font-weight: 700;
+  }
+  .cal-day.empty { color: var(--color-neutral-300); }
+  .cal-day.sunday:not(.selected) { color: var(--color-accent-400); }
+  .cal-dot {
+    position: absolute;
+    bottom: 2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary-400);
+  }
+  .cal-dot.registered { background: var(--color-accent-500); }
+
+  /* ─── Filter Chip (NEW — the fix) ─── */
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 14px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: chipIn 0.25s ease-out;
+  }
+  .filter-chip:hover {
+    background: var(--color-primary-100);
+    border-color: var(--color-primary-300);
+  }
+  .filter-chip .x-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-primary-200);
+    color: var(--color-primary-600);
+    font-size: 11px;
+    font-weight: 700;
+    transition: background 0.15s;
+  }
+  .filter-chip:hover .x-icon {
+    background: var(--color-primary-300);
+  }
+  @keyframes chipIn {
+    from { opacity: 0; transform: translateY(-4px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+  .show-all-link {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary-400);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .show-all-link:hover { color: var(--color-primary-600); }
+
+  /* ─── Date Section Header ─── */
+  .date-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0 8px;
+  }
+  .date-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-primary-700);
+    white-space: nowrap;
+  }
+  .dday-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .dday-badge.today {
+    background: var(--color-accent-50);
+    color: var(--color-accent-600);
+    border-color: var(--color-accent-200);
+  }
+  .dday-badge.tomorrow {
+    background: var(--color-primary-50);
+    color: var(--color-primary-600);
+    border-color: var(--color-primary-200);
+  }
+  .dday-badge.future {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-500);
+    border-color: var(--color-neutral-200);
+  }
+  .date-line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-neutral-200);
+  }
+
+  /* ─── Meeting Card ─── */
+  .meeting-card {
+    position: relative;
+    display: block;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-neutral-200);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+  }
+  .meeting-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(45,90,61,0.08);
+  }
+  .meeting-card-inner {
+    padding: var(--spacing-card);
+  }
+  .card-badge {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid;
+  }
+  .card-badge.registered {
+    background: var(--color-accent-50);
+    color: var(--color-accent-700);
+    border-color: var(--color-accent-200);
+  }
+  .card-badge.open {
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    border-color: var(--color-primary-200);
+  }
+  .card-badge.full {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-500);
+    border-color: var(--color-neutral-200);
+  }
+  .card-date-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .card-date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-50);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary-700);
+  }
+  .card-date-pill svg { opacity: 0.6; }
+  .card-time {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-neutral-600);
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+    color: var(--color-neutral-900);
+    padding-right: 64px;
+  }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 0.75rem;
+    color: var(--color-neutral-400);
+  }
+  .card-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .card-meta-divider {
+    width: 1px;
+    height: 12px;
+    background: var(--color-neutral-200);
+  }
+  .card-fee {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--color-accent-600);
+  }
+  .card-capacity {
+    font-family: var(--font-mono);
+  }
+  .card-capacity.warning { color: var(--color-accent-500); }
+  .card-capacity.ok { color: var(--color-primary-600); }
+
+  /* ─── UX Review Note ─── */
+  .ux-note {
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    border-left: 3px solid;
+    margin: 16px 0;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+  }
+  .ux-note.problem {
+    background: rgba(181,64,58,0.04);
+    border-color: var(--color-error);
+    color: var(--color-neutral-700);
+  }
+  .ux-note.solution {
+    background: rgba(45,125,95,0.04);
+    border-color: var(--color-primary-500);
+    color: var(--color-neutral-700);
+  }
+  .ux-note.info {
+    background: rgba(58,138,140,0.04);
+    border-color: #3A8A8C;
+    color: var(--color-neutral-700);
+  }
+  .ux-note strong {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 700;
+    color: var(--color-neutral-800);
+  }
+
+  /* ─── Annotations ─── */
+  .annotated {
+    position: relative;
+  }
+  .annotation {
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translate(100%, -50%);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-600);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .annotation::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 4px solid transparent;
+    border-right-color: var(--color-primary-600);
+  }
+  @media (max-width: 700px) {
+    .annotation { display: none; }
+  }
+
+  .spacer { height: 20px; }
+  .card-gap { height: 12px; }
+</style>
+</head>
+<body>
+
+<div class="review-panel">
+  <div class="review-header">
+    <h1>지독해 홈 화면 — UI/UX 검토</h1>
+    <p>캘린더 스트립 + 날짜 그룹핑 + 필터 UX 개선안</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- SECTION 1: 핵심 문제 — 필터 해제 UX -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-label">Issue #1 — 날짜 필터 해제 발견성</div>
+
+    <div class="ux-note problem">
+      <strong>문제</strong>
+      날짜를 선택하면 리스트가 필터링되지만, 사용자가 전체 목록으로 돌아가는 방법을 알 수 없음.<br>
+      • "오늘" 버튼은 날짜 이동 기능으로 인식됨 (필터 해제 = 숨겨진 기능)<br>
+      • 같은 날짜를 다시 탭하면 해제되지만, 이것도 발견하기 어려움<br>
+      • 캘린더를 이리저리 만지다가 "다시 전체 보기"가 불가능해 보임
+    </div>
+
+    <div class="ux-note solution">
+      <strong>해결: 필터 활성 칩 (Filter Active Chip)</strong>
+      날짜 선택 시 캘린더와 리스트 사이에 "3월 29일 토요일만 표시 중 ✕" 칩을 표시.<br>
+      칩을 누르면 즉시 필터 해제. 필터 상태가 항상 눈에 보이고, 해제 방법이 자명함.
+    </div>
+
+    <div class="comparison">
+      <!-- BEFORE -->
+      <div class="comp-column">
+        <div class="comp-tag before">현재 (Before)</div>
+        <div class="phone-frame">
+          <div class="phone-content">
+            <div class="page-title">모임 일정</div>
+            <div class="spacer"></div>
+            <div class="summary-header">
+              <span>이번 달 4회 모임</span>
+              <span class="summary-dot">·</span>
+              <span>내 신청 2건</span>
+            </div>
+
+            <div class="calendar-strip">
+              <div class="cal-header">
+                <div class="cal-nav">
+                  <button class="cal-nav-btn">‹</button>
+                  <span class="cal-month">2026년 3월</span>
+                  <button class="cal-nav-btn">›</button>
+                </div>
+                <div class="cal-actions">
+                  <button class="cal-today-btn">오늘</button>
+                  <button class="cal-nav-btn">▾</button>
+                </div>
+              </div>
+              <div class="cal-dow">
+                <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+              </div>
+              <div class="cal-grid">
+                <button class="cal-day sunday empty">22</button>
+                <button class="cal-day empty">23</button>
+                <button class="cal-day empty">24</button>
+                <button class="cal-day empty">25</button>
+                <button class="cal-day today">26</button>
+                <button class="cal-day empty">27</button>
+                <button class="cal-day has-meeting selected">29<span class="cal-dot registered"></span></button>
+              </div>
+            </div>
+
+            <!-- 필터 걸린 상태 — 아무 표시 없음 -->
+            <div class="spacer"></div>
+
+            <div class="date-header">
+              <span class="date-label">3월 29일 토요일</span>
+              <span class="dday-badge future">D-3</span>
+              <span class="date-line"></span>
+            </div>
+            <div class="meeting-card" style="border-left: 4px solid var(--color-accent-500);">
+              <span class="card-badge registered">신청완료</span>
+              <div class="meeting-card-inner">
+                <div class="card-date-row">
+                  <span class="card-date-pill">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    3월 29일 (토)
+                  </span>
+                  <span class="card-time">오후 2:00</span>
+                </div>
+                <h3 class="card-title">3월 경주 독서모임</h3>
+                <div class="card-meta">
+                  <span class="card-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    경주 황리단길 카페
+                  </span>
+                  <span class="card-meta-divider"></span>
+                  <span class="card-meta-item card-capacity ok">12/14명</span>
+                  <span class="card-meta-divider"></span>
+                  <span class="card-fee">11,000원</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 나머지 카드가 안 보임 — 사용자는 왜 1개만 보이는지 의아 -->
+            <div style="padding: 32px 0; text-align: center;">
+              <span style="font-size: 0.75rem; color: var(--color-neutral-400);">← 다른 모임이 안 보임. 전체 보기 방법은?</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AFTER -->
+      <div class="comp-column">
+        <div class="comp-tag after">개선안 (After)</div>
+        <div class="phone-frame">
+          <div class="phone-content">
+            <div class="page-title">모임 일정</div>
+            <div class="spacer"></div>
+            <div class="summary-header">
+              <span>이번 달 4회 모임</span>
+              <span class="summary-dot">·</span>
+              <span>내 신청 2건</span>
+            </div>
+
+            <div class="calendar-strip">
+              <div class="cal-header">
+                <div class="cal-nav">
+                  <button class="cal-nav-btn">‹</button>
+                  <span class="cal-month">2026년 3월</span>
+                  <button class="cal-nav-btn">›</button>
+                </div>
+                <div class="cal-actions">
+                  <button class="cal-today-btn">오늘</button>
+                  <button class="cal-nav-btn">▾</button>
+                </div>
+              </div>
+              <div class="cal-dow">
+                <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+              </div>
+              <div class="cal-grid">
+                <button class="cal-day sunday empty">22</button>
+                <button class="cal-day empty">23</button>
+                <button class="cal-day empty">24</button>
+                <button class="cal-day empty">25</button>
+                <button class="cal-day today">26</button>
+                <button class="cal-day empty">27</button>
+                <button class="cal-day has-meeting selected">29<span class="cal-dot registered"></span></button>
+              </div>
+            </div>
+
+            <!-- ✅ 필터 활성 칩 — 명확한 해제 UI -->
+            <div class="filter-row annotated">
+              <button class="filter-chip" onclick="this.parentElement.style.display='none'">
+                3월 29일 토요일만 표시 중
+                <span class="x-icon">✕</span>
+              </button>
+              <span class="annotation">NEW: 필터 칩</span>
+            </div>
+
+            <div class="date-header">
+              <span class="date-label">3월 29일 토요일</span>
+              <span class="dday-badge future">D-3</span>
+              <span class="date-line"></span>
+            </div>
+            <div class="meeting-card" style="border-left: 4px solid var(--color-accent-500);">
+              <span class="card-badge registered">신청완료</span>
+              <div class="meeting-card-inner">
+                <div class="card-date-row">
+                  <span class="card-date-pill">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    3월 29일 (토)
+                  </span>
+                  <span class="card-time">오후 2:00</span>
+                </div>
+                <h3 class="card-title">3월 경주 독서모임</h3>
+                <div class="card-meta">
+                  <span class="card-meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    경주 황리단길 카페
+                  </span>
+                  <span class="card-meta-divider"></span>
+                  <span class="card-meta-item card-capacity ok">12/14명</span>
+                  <span class="card-meta-divider"></span>
+                  <span class="card-fee">11,000원</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- SECTION 2: 전체 홈 화면 (필터 미적용 상태) -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-label">Full View — 필터 미적용 상태</div>
+
+    <div style="max-width: 375px; margin: 0 auto;">
+      <div class="phone-frame">
+        <div class="phone-content">
+          <div class="page-title">모임 일정</div>
+          <div class="spacer"></div>
+          <div class="summary-header">
+            <span>이번 달 4회 모임</span>
+            <span class="summary-dot">·</span>
+            <span>내 신청 2건</span>
+          </div>
+
+          <!-- Calendar: 필터 없음, 오늘 표시 -->
+          <div class="calendar-strip">
+            <div class="cal-header">
+              <div class="cal-nav">
+                <button class="cal-nav-btn">‹</button>
+                <span class="cal-month">2026년 3월</span>
+                <button class="cal-nav-btn">›</button>
+              </div>
+              <div class="cal-actions">
+                <button class="cal-today-btn">오늘</button>
+                <button class="cal-nav-btn">▾</button>
+              </div>
+            </div>
+            <div class="cal-dow">
+              <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+            </div>
+            <div class="cal-grid">
+              <button class="cal-day sunday empty">22</button>
+              <button class="cal-day empty">23</button>
+              <button class="cal-day empty">24</button>
+              <button class="cal-day empty">25</button>
+              <button class="cal-day today has-meeting">26<span class="cal-dot registered"></span></button>
+              <button class="cal-day empty">27</button>
+              <button class="cal-day has-meeting">29<span class="cal-dot"></span></button>
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <!-- 오늘 모임 -->
+          <div class="date-header">
+            <span class="date-label">3월 26일 목요일</span>
+            <span class="dday-badge today">오늘</span>
+            <span class="date-line"></span>
+          </div>
+          <div class="meeting-card" style="border-left: 4px solid var(--color-accent-500);">
+            <span class="card-badge registered">신청완료</span>
+            <div class="meeting-card-inner">
+              <div class="card-date-row">
+                <span class="card-date-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  3월 26일 (목)
+                </span>
+                <span class="card-time">오후 7:00</span>
+              </div>
+              <h3 class="card-title">경주 야간 독서모임</h3>
+              <div class="card-meta">
+                <span class="card-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  경주 동궁원 카페
+                </span>
+                <span class="card-meta-divider"></span>
+                <span class="card-meta-item card-capacity warning">11/14명</span>
+                <span class="card-meta-divider"></span>
+                <span class="card-fee">11,000원</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+
+          <!-- D-3 모임 -->
+          <div class="date-header">
+            <span class="date-label">3월 29일 토요일</span>
+            <span class="dday-badge future">D-3</span>
+            <span class="date-line"></span>
+          </div>
+          <div class="meeting-card" style="border-left: 4px solid var(--color-status-open);">
+            <span class="card-badge open">모집중</span>
+            <div class="meeting-card-inner">
+              <div class="card-date-row">
+                <span class="card-date-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  3월 29일 (토)
+                </span>
+                <span class="card-time">오후 2:00</span>
+              </div>
+              <h3 class="card-title">포항 주말 독서모임</h3>
+              <div class="card-meta">
+                <span class="card-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  포항 영일대 카페
+                </span>
+                <span class="card-meta-divider"></span>
+                <span class="card-meta-item card-capacity ok">7/14명</span>
+                <span class="card-meta-divider"></span>
+                <span class="card-fee">11,000원</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-gap"></div>
+          <div class="meeting-card" style="border-left: 4px solid var(--color-status-full);">
+            <span class="card-badge full">마감</span>
+            <div class="meeting-card-inner">
+              <div class="card-date-row">
+                <span class="card-date-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  3월 29일 (토)
+                </span>
+                <span class="card-time">오후 4:00</span>
+              </div>
+              <h3 class="card-title">경주 고전문학 읽기</h3>
+              <div class="card-meta">
+                <span class="card-meta-item">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  경주 황리단길 카페
+                </span>
+                <span class="card-meta-divider"></span>
+                <span class="card-meta-item card-capacity" style="color: var(--color-neutral-400);">14/14명</span>
+                <span class="card-meta-divider"></span>
+                <span class="card-fee">11,000원</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- SECTION 3: UX 검토 종합 -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-label">UX 검토 종합</div>
+
+    <div class="ux-note solution">
+      <strong>잘된 것</strong>
+      • D-day 배지 (오늘/내일/D-N) — 시간 감각을 즉시 제공, 스캔 효율 높음<br>
+      • 날짜별 그룹핑 — 같은 날짜 카드의 날짜 중복 정보가 DateSectionHeader로 통합<br>
+      • 캘린더 dot — 모임 있는 날짜/신청한 날짜 시각적 구분 (primary vs accent)<br>
+      • 헤더 요약 — "이번 달 N회 모임 · 내 신청 N건" 한 줄로 전체 현황 파악<br>
+      • 카드 좌측 컬러 보더 — 상태(신청완료/모집중/마감)를 스캔 가능한 시각 패턴<br>
+      • font-display(Noto Serif KR) 적용 — 제목에 서체 감성이 살아남
+    </div>
+
+    <div class="ux-note problem">
+      <strong>개선 필요</strong>
+      • <b>필터 해제 발견성</b> — 필터 활성 칩 추가 필요 (위 제안대로)<br>
+      • <b>카드 내 날짜 정보 중복</b> — DateSectionHeader가 이미 날짜를 표시하는데, 카드 안에도 날짜 pill이 있음. 같은 날짜 그룹 안에서는 시간만 보여도 충분. (단, 단독 카드일 때는 필요하므로 조건부 숨김 검토)<br>
+      • <b>주간 뷰 가로 스크롤</b> — 5주 분량이 inline-flex로 들어가 있는데, 스크롤 힌트가 없어서 좌우로 넘길 수 있는지 모를 수 있음. 좌우 fade gradient나 스와이프 힌트 고려
+    </div>
+
+    <div class="ux-note info">
+      <strong>추가 제안 (우선순위 낮음)</strong>
+      • 캘린더 주간↔월간 전환 시 높이 변화에 부드러운 transition 추가<br>
+      • 빈 날짜 선택 시 "모임이 없습니다" 대신 필터가 아예 안 걸리게 처리 (현재는 disabled로 막혀 있어 OK)<br>
+      • 카드의 hover → 모바일에서는 active:scale 축소가 더 효과적 (현재 hover:-translate-y 적용됨)
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
