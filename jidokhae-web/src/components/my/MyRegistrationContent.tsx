@@ -28,7 +28,18 @@ export default async function MyRegistrationContent() {
 
   if (typedRegs.length === 0) {
     return (
-      <p className="mt-4 text-caption text-neutral-400">신청 내역이 없습니다</p>
+      <div className="mt-4">
+        <p className="text-caption text-neutral-400">신청 내역이 없습니다</p>
+        <Link
+          href="/"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+        >
+          모임 둘러보기
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+      </div>
     )
   }
 
@@ -62,8 +73,17 @@ export default async function MyRegistrationContent() {
           ))}
         </div>
       ) : (
-        <div className="rounded-[var(--radius-md)] bg-surface-50 border border-dashed border-neutral-300 py-8 text-center text-caption text-neutral-400">
-          신청한 모임이 없어요
+        <div className="rounded-[var(--radius-md)] bg-surface-50 border border-dashed border-neutral-300 py-8 text-center">
+          <p className="text-caption text-neutral-400">신청한 모임이 없어요</p>
+          <Link
+            href="/"
+            className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+          >
+            모임 둘러보기
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </Link>
         </div>
       )}
 
