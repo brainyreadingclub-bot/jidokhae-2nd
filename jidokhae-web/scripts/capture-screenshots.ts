@@ -23,7 +23,47 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const COOKIE_NAME = 'sb-ycqqzzvyixvtdorjxkrn-auth-token'
 const MAX_CHUNK_SIZE = 3180
 const TEMP_PASSWORD = `temp-screenshot-${crypto.randomUUID()}`
-const OUTPUT_DIR = path.join(process.cwd(), '..', '검토문서', 'ui-review')
+const OUTPUT_BASE = path.join(process.cwd(), '..', '검토문서', 'ui-review')
+const TODAY = new Date().toISOString().split('T')[0]
+const OUTPUT_DIR = path.join(OUTPUT_BASE, TODAY)
+const LATEST_DIR = path.join(OUTPUT_BASE, 'latest')
+const MAX_KEEP = 5
+
+// ── 히스토리 관리 ──
+function cleanOldCaptures() {
+  if (!fs.existsSync(OUTPUT_BASE)) return 0
+  const dirs = fs.readdirSync(OUTPUT_BASE)
+    .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort()
+    .reverse()
+
+  let cleaned = 0
+  for (let i = MAX_KEEP; i < dirs.length; i++) {
+    fs.rmSync(path.join(OUTPUT_BASE, dirs[i]), { recursive: true, force: true })
+    cleaned++
+  }
+  return cleaned
+}
+
+function copyDirRecursive(src: string, dest: string) {
+  fs.mkdirSync(dest, { recursive: true })
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcPath, destPath)
+    } else {
+      fs.copyFileSync(srcPath, destPath)
+    }
+  }
+}
+
+function copyToLatest() {
+  if (fs.existsSync(LATEST_DIR)) {
+    fs.rmSync(LATEST_DIR, { recursive: true, force: true })
+  }
+  copyDirRecursive(OUTPUT_DIR, LATEST_DIR)
+}
 
 // ── Base64URL 인코딩 (@supabase/ssr 호환) ──
 function stringToBase64URL(str: string): string {
@@ -345,7 +385,7 @@ async function main() {
     { flow: 'Flow 1: 온보딩', desc: '로그인 페이지', path: '/auth/login', dir: 'flow1-onboarding', file: '1-1-login.png', ctx: 'unauth' },
 
     // Flow 2: 모임 탐색 (회원 시점)
-    { flow: 'Flow 2: 모임 탐색', desc: '메인 — 모임 목록', path: '/', dir: 'flow2-browse', file: '2-1-meeting-list.png', ctx: 'admin' },
+    { flow: 'Flow 2: 모임 탐색', desc: '홈 — 모임 목록 (캘린더 스트립)', path: '/', dir: 'flow2-browse', file: '2-1-meeting-list.png', ctx: 'member' },
     { flow: 'Flow 2: 모임 탐색', desc: '모임 상세 (회원 시점)', path: `/meetings/${meetingId}`, dir: 'flow2-browse', file: '2-2-meeting-detail-member.png', ctx: 'member' },
 
     // Flow 3: 결제 결과
@@ -353,15 +393,24 @@ async function main() {
     { flow: 'Flow 3: 결제 결과', desc: '결제 실패', path: `/meetings/${meetingId}/payment-fail?code=PAY_PROCESS_CANCELED&message=${encodeURIComponent('사용자가 결제를 취소했습니다')}`, dir: 'flow3-payment', file: '3-2-payment-fail.png', ctx: 'member' },
 
     // Flow 4: 내 신청
-    { flow: 'Flow 4: 내 신청 관리', desc: '내 신청 목록', path: '/my', dir: 'flow4-my-registrations', file: '4-1-my-registrations.png', ctx: 'admin' },
+    { flow: 'Flow 4: 내 신청 관리', desc: '내 신청 목록 (회원)', path: '/my', dir: 'flow4-my-registrations', file: '4-1-my-registrations-member.png', ctx: 'member' },
+    { flow: 'Flow 4: 내 신청 관리', desc: '내 신청 목록 (운영자)', path: '/my', dir: 'flow4-my-registrations', file: '4-2-my-registrations-admin.png', ctx: 'admin' },
 
     // Flow 5: 운영자 관리
-    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '운영 대시보드', path: '/admin', dir: 'flow5-admin-manage', file: '5-1-admin-dashboard.png', ctx: 'admin' },
-    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 생성 폼', path: '/admin/meetings/new', dir: 'flow5-admin-manage', file: '5-2-meeting-create-form.png', ctx: 'admin' },
-    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 수정 폼', path: `/admin/meetings/${meetingId}/edit`, dir: 'flow5-admin-manage', file: '5-3-meeting-edit-form.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '운영 대시보드', path: '/admin', dir: 'flow5-admin', file: '5-1-admin-dashboard.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 생성 폼', path: '/admin/meetings/new', dir: 'flow5-admin', file: '5-2-meeting-create-form.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 수정 폼', path: `/admin/meetings/${meetingId}/edit`, dir: 'flow5-admin', file: '5-3-meeting-edit-form.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '모임 상세 (관리 영역 포함)', path: `/meetings/${meetingId}`, dir: 'flow5-admin', file: '5-4-meeting-detail-admin.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '회원 관리', path: '/admin/members', dir: 'flow5-admin', file: '5-5-admin-members.png', ctx: 'admin' },
+    { flow: 'Flow 5: 운영자 — 모임 관리', desc: '사이트 설정', path: '/admin/settings', dir: 'flow5-admin', file: '5-6-admin-settings.png', ctx: 'admin' },
 
-    // Flow 6: 운영자 모임 상세
-    { flow: 'Flow 6: 운영자 — 모임 상세', desc: '모임 상세 (관리 영역 포함)', path: `/meetings/${meetingId}`, dir: 'flow6-admin-detail', file: '6-1-meeting-detail-admin.png', ctx: 'admin' },
+    // Flow 6: 공개 페이지 (비인증)
+    { flow: 'Flow 6: 공개 페이지', desc: '공개 모임 목록', path: '/policy/meetings', dir: 'flow6-public', file: '6-1-public-meetings.png', ctx: 'unauth' },
+    { flow: 'Flow 6: 공개 페이지', desc: '공개 모임 상세', path: `/policy/meetings/${meetingId}`, dir: 'flow6-public', file: '6-2-public-meeting-detail.png', ctx: 'unauth' },
+    { flow: 'Flow 6: 공개 페이지', desc: '서비스 소개', path: '/policy/about', dir: 'flow6-public', file: '6-3-about.png', ctx: 'unauth' },
+    { flow: 'Flow 6: 공개 페이지', desc: '이용약관', path: '/policy/terms', dir: 'flow6-public', file: '6-4-terms.png', ctx: 'unauth' },
+    { flow: 'Flow 6: 공개 페이지', desc: '개인정보처리방침', path: '/policy/privacy', dir: 'flow6-public', file: '6-5-privacy.png', ctx: 'unauth' },
+    { flow: 'Flow 6: 공개 페이지', desc: '환불규정', path: '/policy/refund', dir: 'flow6-public', file: '6-6-refund.png', ctx: 'unauth' },
   ]
 
   for (const p of pages) {
@@ -381,6 +430,13 @@ async function main() {
   const readmePath = path.join(OUTPUT_DIR, 'README.md')
   fs.writeFileSync(readmePath, readme, 'utf-8')
   console.log(`  → ${path.relative(process.cwd(), readmePath)}`)
+
+  // 5.5. latest 복사 + 이전 캡처 정리
+  console.log('\n=== 4.5. 히스토리 관리 ===\n')
+  copyToLatest()
+  console.log(`  latest/ 업데이트 완료`)
+  const cleaned = cleanOldCaptures()
+  if (cleaned > 0) console.log(`  이전 캡처 ${cleaned}개 삭제 (최근 ${MAX_KEEP}개 유지)`)
 
   // 6. 정리
   console.log('\n=== 5. 정리 ===\n')
@@ -411,6 +467,7 @@ async function main() {
   console.log('\n' + '═'.repeat(50))
   console.log(`  📸 캡처 완료: ${successCount}/${totalCount}장`)
   console.log(`  📁 저장 위치: ${OUTPUT_DIR}`)
+  console.log(`  📁 latest:    ${LATEST_DIR}`)
   console.log('═'.repeat(50) + '\n')
 }
 

@@ -15,7 +15,7 @@
 - **로그인 페이지**: `flow1-onboarding/1-1-login.png`
 ### Flow 2: 모임 탐색
 
-- **메인 — 모임 목록**: `flow2-browse/2-1-meeting-list.png`
+- **홈 — 모임 목록 (캘린더 스트립)**: `flow2-browse/2-1-meeting-list.png`
 - **모임 상세 (회원 시점)**: `flow2-browse/2-2-meeting-detail-member.png`
 ### Flow 3: 결제 결과
 
@@ -23,15 +23,24 @@
 - **결제 실패**: `flow3-payment/3-2-payment-fail.png`
 ### Flow 4: 내 신청 관리
 
-- **내 신청 목록**: `flow4-my-registrations/4-1-my-registrations.png`
+- **내 신청 목록 (회원)**: `flow4-my-registrations/4-1-my-registrations-member.png`
+- **내 신청 목록 (운영자)**: `flow4-my-registrations/4-2-my-registrations-admin.png`
 ### Flow 5: 운영자 — 모임 관리
 
-- **운영 대시보드**: `flow5-admin-manage/5-1-admin-dashboard.png`
-- **모임 생성 폼**: `flow5-admin-manage/5-2-meeting-create-form.png`
-- **모임 수정 폼**: `flow5-admin-manage/5-3-meeting-edit-form.png`
-### Flow 6: 운영자 — 모임 상세
+- **운영 대시보드**: `flow5-admin/5-1-admin-dashboard.png`
+- **모임 생성 폼**: `flow5-admin/5-2-meeting-create-form.png`
+- **모임 수정 폼**: `flow5-admin/5-3-meeting-edit-form.png`
+- **모임 상세 (관리 영역 포함)**: `flow5-admin/5-4-meeting-detail-admin.png`
+- **회원 관리**: `flow5-admin/5-5-admin-members.png`
+- **사이트 설정**: `flow5-admin/5-6-admin-settings.png`
+### Flow 6: 공개 페이지
 
-- **모임 상세 (관리 영역 포함)**: `flow6-admin-detail/6-1-meeting-detail-admin.png`
+- **공개 모임 목록**: `flow6-public/6-1-public-meetings.png`
+- **공개 모임 상세**: `flow6-public/6-2-public-meeting-detail.png`
+- **서비스 소개**: `flow6-public/6-3-about.png`
+- **이용약관**: `flow6-public/6-4-terms.png`
+- **개인정보처리방침**: `flow6-public/6-5-privacy.png`
+- **환불규정**: `flow6-public/6-6-refund.png`
 
 ## AI 리뷰 요청 사항
 
@@ -46,4 +55,4 @@
 7. **운영자 화면**: 모임 관리 흐름이 효율적인가? 불필요한 단계는 없는가?
 
 ---
-*캡처 일시: 2026-03-14*
+*캡처 일시: 2026-03-26*
