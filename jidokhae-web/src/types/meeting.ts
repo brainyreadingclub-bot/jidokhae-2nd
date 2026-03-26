@@ -1,6 +1,7 @@
 export type Meeting = {
   id: string
   title: string
+  description: string | null
   date: string // "YYYY-MM-DD"
   time: string // "HH:MM:SS"
   location: string

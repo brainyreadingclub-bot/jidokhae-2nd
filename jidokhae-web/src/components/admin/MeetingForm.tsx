@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 type MeetingValues = {
   title: string
+  description: string
   date: string
   time: string
   venue_id: string
@@ -29,6 +30,7 @@ type Props = {
 
 const defaultValues: MeetingValues = {
   title: '',
+  description: '',
   date: '',
   time: '',
   venue_id: '',
@@ -88,6 +90,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
     const supabase = createClient()
     const meetingData = {
       title: values.title.trim(),
+      description: values.description.trim() || null,
       date: values.date,
       time: values.time,
       location: values.location.trim(),
@@ -153,6 +156,18 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
           onChange={(e) => handleChange('title', e.target.value)}
           placeholder="독서모임 제목"
           className={inputClassName}
+          style={inputStyle}
+        />
+      </Field>
+
+      <Field label="모임 소개">
+        <textarea
+          value={values.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+          placeholder="모임에 대한 간단한 소개 (선택)"
+          maxLength={1000}
+          rows={3}
+          className={`${inputClassName} resize-none`}
           style={inputStyle}
         />
       </Field>

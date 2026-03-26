@@ -23,6 +23,13 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }:
         {meeting.title}
       </h1>
 
+      {/* Description */}
+      {meeting.description && (
+        <p className="text-sm leading-relaxed text-primary-600/80 whitespace-pre-line">
+          {meeting.description}
+        </p>
+      )}
+
       {/* Info grid */}
       <div
         className="rounded-[var(--radius-lg)] p-4 space-y-0"
