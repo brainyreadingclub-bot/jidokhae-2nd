@@ -215,7 +215,7 @@ export default async function AdminPage({ searchParams }: Props) {
 
       {/* ── 모임 목록 헤더 + 필터 탭 ── */}
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-extrabold text-primary-900 tracking-tight">모임 목록</h1>
+        <h1 className="text-lg font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>모임 목록</h1>
         <Link
           href="/admin/meetings/new"
           className="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-4 py-2 text-xs font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.97]"

@@ -61,7 +61,7 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
           </svg>
         </div>
 
-        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight">
+        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
           {isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
         </h1>
         <p className="mt-2 text-sm text-primary-500/70">

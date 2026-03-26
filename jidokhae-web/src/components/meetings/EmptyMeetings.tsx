@@ -1,4 +1,10 @@
-export default function EmptyMeetings() {
+import Link from 'next/link'
+
+type Props = {
+  showBrowseLink?: boolean
+}
+
+export default function EmptyMeetings({ showBrowseLink = false }: Props) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
       {/* Book icon */}
@@ -32,6 +38,17 @@ export default function EmptyMeetings() {
       <p className="mt-1.5 text-xs text-primary-400 leading-relaxed">
         새로운 모임이 등록되면<br />여기에 표시됩니다
       </p>
+      {showBrowseLink && (
+        <Link
+          href="/"
+          className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+        >
+          모임 둘러보기
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </Link>
+      )}
     </div>
   )
 }

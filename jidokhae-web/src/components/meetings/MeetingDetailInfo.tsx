@@ -19,7 +19,7 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }:
   return (
     <div className="space-y-6">
       {/* Title */}
-      <h1 className="text-xl font-extrabold text-primary-900 leading-snug tracking-tight">
+      <h1 className="text-xl font-extrabold text-primary-900 leading-snug tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
         {meeting.title}
       </h1>
 

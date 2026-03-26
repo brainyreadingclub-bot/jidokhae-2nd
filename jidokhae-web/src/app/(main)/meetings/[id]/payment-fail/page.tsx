@@ -11,10 +11,12 @@ export default function PaymentFailPage({ params }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [message, setMessage] = useState('결제가 취소되었습니다')
+  const [meetingId, setMeetingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function handleFail() {
-      const { id: meetingId } = await params
+      const { id } = await params
+      setMeetingId(id)
       const code = searchParams.get('code')
       const msg = searchParams.get('message')
 
@@ -24,7 +26,7 @@ export default function PaymentFailPage({ params }: Props) {
         setMessage(decodeURIComponent(msg))
       }
 
-      setTimeout(() => router.replace(`/meetings/${meetingId}`), 2000)
+      setTimeout(() => router.replace(`/meetings/${id}`), 5000)
     }
     handleFail()
   }, [params, searchParams, router])
@@ -57,8 +59,17 @@ export default function PaymentFailPage({ params }: Props) {
         </div>
         <p className="text-sm font-bold text-error">{message}</p>
         <p className="mt-2 text-xs text-primary-400">
-          잠시 후 모임 페이지로 이동합니다...
+          5초 후 자동으로 이동합니다
         </p>
+        {meetingId && (
+          <button
+            onClick={() => router.replace(`/meetings/${meetingId}`)}
+            className="mt-4 rounded-[var(--radius-md)] px-5 py-2.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+            style={{ border: '1px solid var(--color-surface-300)' }}
+          >
+            모임으로 돌아가기
+          </button>
+        )}
       </div>
     </div>
   )

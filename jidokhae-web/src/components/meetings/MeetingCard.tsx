@@ -76,12 +76,12 @@ export default function MeetingCard({
         </div>
 
         {/* Title */}
-        <h3 className="pr-16 text-[15px] font-semibold leading-snug text-neutral-900 transition-colors group-hover:text-primary-600">
+        <h3 className="pr-16 text-[16px] font-bold leading-snug tracking-tight text-neutral-900 transition-colors group-hover:text-primary-600">
           {meeting.title}
         </h3>
 
         {/* Details row */}
-        <div className="mt-4 flex items-center gap-3 text-caption text-neutral-500">
+        <div className="mt-4 flex items-center gap-3 text-[12px] text-neutral-400">
           {/* Location */}
           <span className="flex items-center gap-1">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
@@ -107,7 +107,7 @@ export default function MeetingCard({
           <span className="h-3 w-px bg-neutral-200" />
 
           {/* Fee */}
-          <span className="font-mono font-semibold tabular-nums text-accent-600">
+          <span className="font-mono font-bold tabular-nums text-accent-600">
             {formatFee(meeting.fee)}원
           </span>
         </div>
