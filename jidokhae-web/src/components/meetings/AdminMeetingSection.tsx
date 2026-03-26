@@ -44,7 +44,6 @@ export default function AdminMeetingSection({
 
   // 요약 통계 계산
   const totalPaid = confirmedRegs
-    .filter((r) => r.status === 'confirmed')
     .reduce((sum, r) => sum + (r.paid_amount ?? 0), 0)
   const totalRefunded = confirmedRegs
     .filter((r) => r.status === 'cancelled' && r.refunded_amount)
@@ -275,7 +274,7 @@ export default function AdminMeetingSection({
       {/* Confirmed registrant list */}
       <div>
         <h3 className="text-xs font-bold text-primary-500 mb-3 tracking-tight">
-          신청자 목록 ({confirmedCount}명)
+          신청자 목록 ({confirmedCount}명 확정{confirmedRegs.length > confirmedCount ? ` · ${confirmedRegs.length - confirmedCount}명 취소` : ''})
         </h3>
         {confirmedRegs.length === 0 ? (
           <p className="text-sm text-primary-400 text-center py-8">
