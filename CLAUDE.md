@@ -128,7 +128,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **결제 완료 = 신청 확정** — No payment-less registrations exist
 - **Refund policy:** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
-- **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page
+- **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 0명일 때는 "N명 모집 중" 형식으로 표시 (social proof 역효과 방지)
 - **Button logic:** Determined by `confirmed`/`waitlisted` registration existence + meeting timing (see PRD §6-2)
 - **Deletion refund:** Always 100% regardless of refund policy dates (confirmed + waitlisted 모두)
 - **Duplicate prevention:** DB Function detects existing confirmed registration and rejects
@@ -192,6 +192,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Path alias:** `@/*` maps to `./src/*` (configured in `tsconfig.json`)
 - **DB migrations:** `supabase/migration.sql` (full schema) + `fix-rls-recursion.sql` (RLS patches) — run manually in Supabase SQL Editor (no CLI migration)
 - **No generated Supabase types** — manual type definitions in `src/types/meeting.ts`, `src/types/registration.ts`, `src/types/notification.ts`, `src/types/venue.ts`, Supabase responses cast with `as Meeting` or `as Registration`
+- **Component directories:** `src/components/` organized by domain — `admin/`, `meetings/`, `registrations/`, `home/`, `my/`, `skeletons/`, `ui/`
 - **Error/Loading boundaries:** Each route group has `error.tsx` and `loading.tsx` files
 
 ### Database Schema
@@ -211,7 +212,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Code Conventions
 
-- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `MeetingsView`, `CalendarStrip`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `WelcomeScreen`, `ProfileSetup`, `AttendanceToggle`, `MemberList`, `LoginClient`, `SiteSettingsForm`, `VenueManager`, `VenueSettlementTable`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files. Server Components: `MeetingDetailInfo`, `DateSectionHeader`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터). Note: `auth/login/page` is a Server Component that renders `<LoginClient />` (Client Component)
+- **Server Components by default** — pages are async Server Components that fetch data and pass props down. Client Components (`'use client'`): `BottomNav`, `LogoutButton`, `MeetingActionButton`, `MeetingForm`, `MeetingCard`, `MeetingsView`, `CalendarStrip`, `DeleteMeetingButton`, `RegistrationCard`, `ModalOverlay`, `WelcomeScreen`, `ProfileSetup`, `AttendanceToggle`, `MemberList`, `LoginClient`, `SiteSettingsForm`, `VenueManager`, `VenueSettlementTable`, `AdminDashboardContent`, `HomeContent`, `MeetingDetailContent`, `MyRegistrationContent`, `payment-redirect/page`, `payment-fail/page`, route group `error.tsx` files. Server Components: `MeetingDetailInfo`, `DateSectionHeader`, `AdminMeetingCard`, `AdminMeetingSection`, `EmptyMeetings`, `Footer` (사업자정보 푸터). Note: `auth/login/page` is a Server Component that renders `<LoginClient />` (Client Component)
 - **No semicolons**, single quotes, function components only
 - **Inline SVG icons** — no icon library. Icons defined as inline SVG in components
 - **Admin access dual-layered:** layout-level role check (redirect) + DB-level RLS via `is_admin()` / `is_editor_or_admin()` SECURITY DEFINER functions
@@ -220,7 +221,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanDateFull()`, `formatKoreanTime()`, `formatFee()`, `getDaysUntil()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
 - **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `admin/members/role` (역할 변경), `admin/settings` (site_settings UPSERT), `admin/venues` (공간 CRUD), `admin/venues/[id]` (공간 수정), `admin/venues/settle` (정산 확정). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수), `tosspayments.ts` (TossPayments API wrapper), `profile.ts` (cached `getProfile()` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수), `tosspayments.ts` (TossPayments API wrapper), `auth.ts` (cached `getUser()` via React `cache()` — safe only after middleware session refresh), `profile.ts` (cached `getProfile()` via React `cache()`), `meeting.ts` (cached `getMeeting(id)` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
