@@ -28,6 +28,16 @@ type Props = {
   venues?: VenueOption[]
 }
 
+function formatNumberInput(value: string): string {
+  const num = value.replace(/[^0-9]/g, '')
+  if (!num) return ''
+  return Number(num).toLocaleString()
+}
+
+function parseNumberInput(value: string): string {
+  return value.replace(/[^0-9]/g, '')
+}
+
 const defaultValues: MeetingValues = {
   title: '',
   description: '',
@@ -234,12 +244,11 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
         </Field>
         <Field label="참가비 (원)" required>
           <input
-            type="number"
-            min="0"
-            step="1000"
-            value={values.fee}
-            onChange={(e) => handleChange('fee', e.target.value)}
-            placeholder="10000"
+            type="text"
+            inputMode="numeric"
+            value={values.fee ? formatNumberInput(values.fee) : ''}
+            onChange={(e) => handleChange('fee', parseNumberInput(e.target.value))}
+            placeholder="10,000"
             className={inputClassName}
             style={inputStyle}
           />
