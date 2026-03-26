@@ -1,6 +1,6 @@
 export default function MeetingDetailSkeleton() {
   return (
-    <div>
+    <div style={{ paddingBottom: 'calc(9rem + env(safe-area-inset-bottom, 0px))' }}>
       {/* Title */}
       <div className="h-6 w-3/4 animate-pulse rounded bg-gray-100" />
 
