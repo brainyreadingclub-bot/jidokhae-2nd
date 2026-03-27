@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 
 type Props = {
   meetingDates: Set<string>
@@ -115,21 +115,9 @@ export default function CalendarStrip({
 }: Props) {
   const [isMonthView, setIsMonthView] = useState(false)
   const [viewDate, setViewDate] = useState(() => parseDate(kstToday))
-  const weekScrollRef = useRef<HTMLDivElement>(null)
 
   const viewYear = viewDate.getUTCFullYear()
   const viewMonth = viewDate.getUTCMonth()
-
-  useEffect(() => {
-    if (!isMonthView && weekScrollRef.current) {
-      // weekRows: i=-1(index 0), i=0(index 1), i=1(index 2), ...
-      // index 1 = viewDate의 주 (중앙 행)
-      const rows = weekScrollRef.current.querySelectorAll('[data-week-row]')
-      if (rows[1]) {
-        ;(rows[1] as HTMLElement).scrollIntoView({ inline: 'start', block: 'nearest' })
-      }
-    }
-  }, [isMonthView, viewDate])
 
   const handlePrev = useCallback(() => {
     if (isMonthView) {
@@ -156,15 +144,8 @@ export default function CalendarStrip({
     onDateSelect(selectedDate === dateStr ? null : dateStr)
   }, [selectedDate, onDateSelect])
 
-  // Compute week dates for scrollable strip
-  const weekRows = useMemo(() => {
-    const rows: Date[][] = []
-    for (let i = -1; i <= 3; i++) {
-      const base = new Date(viewDate.getTime() + i * 7 * 24 * 60 * 60 * 1000)
-      rows.push(getWeekDatesArr(base))
-    }
-    return rows
-  }, [viewDate])
+  // Compute current week dates
+  const currentWeek = useMemo(() => getWeekDatesArr(viewDate), [viewDate])
 
   // Compute month grid
   const monthWeeks = useMemo(
@@ -180,7 +161,21 @@ export default function CalendarStrip({
     onDateClick: handleDateClick,
   }
 
-  const monthLabel = `${viewYear}년 ${viewMonth + 1}월`
+  const monthLabel = useMemo(() => {
+    if (isMonthView) {
+      return `${viewYear}년 ${viewMonth + 1}월`
+    }
+    // 주간뷰: 주의 첫 날(일요일) 기준 월 표시
+    const weekStart = currentWeek[0]
+    const startMonth = weekStart.getUTCMonth()
+    const weekEnd = currentWeek[6]
+    const endMonth = weekEnd.getUTCMonth()
+    if (startMonth === endMonth) {
+      return `${weekStart.getUTCFullYear()}년 ${startMonth + 1}월`
+    }
+    // 두 달에 걸치면 "3-4월" 형식
+    return `${weekStart.getUTCFullYear()}년 ${startMonth + 1}-${endMonth + 1}월`
+  }, [isMonthView, viewYear, viewMonth, currentWeek])
 
   return (
     <div
@@ -268,18 +263,12 @@ export default function CalendarStrip({
             ))}
           </div>
         ) : (
-          <div ref={weekScrollRef} className="overflow-x-auto scrollbar-hide -mx-1 snap-x snap-mandatory">
-            <div className="inline-flex gap-0">
-              {weekRows.map((week, wi) => (
-                <div key={wi} data-week-row className="grid grid-cols-7 gap-0 px-1 snap-start" style={{ minWidth: '100%' }}>
-                  {week.map((d, di) => (
-                    <div key={di} className="flex justify-center">
-                      <DayCell date={d} {...dayCellProps} />
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-7 gap-0">
+            {currentWeek.map((d, di) => (
+              <div key={di} className="flex justify-center">
+                <DayCell date={d} {...dayCellProps} />
+              </div>
+            ))}
           </div>
         )}
       </div>
