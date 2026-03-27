@@ -37,6 +37,11 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 └── ui-review/                                  # UI screenshots organized by user flow (Playwright-captured)
 
 prompts                                          # Implementation prompt template (used when starting WP implementation)
+
+/memory                                          # Session continuity (maintained by Claude)
+├── MEMORY.md                                    # Index of all memory entries
+├── project_next_session.md                      # Handoff doc — current status, next tasks, blockers (overwritten each session)
+└── feedback_*.md                                # Lessons learned from past sessions (one file per lesson)
 ```
 
 ## Document Hierarchy (when conflicts arise)
@@ -172,6 +177,8 @@ cd jidokhae-web
 npx vitest run src/lib/__tests__/kst.test.ts
 ```
 
+**Local preview limitation:** `(main)` route group pages require Kakao OAuth login. Since the OAuth callback redirects to the production domain (not localhost), **authenticated pages cannot be tested locally**. Use Vercel production/preview deployments to verify `(main)` and `(admin)` page changes. Only `policy/*` and `auth/*` pages are accessible on localhost.
+
 Verification & utility scripts (require `.env.local` with Supabase keys):
 ```bash
 npx tsx scripts/verify-m1.ts         # Verify M1 deliverables
@@ -277,6 +284,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Status color tokens:** `globals.css` defines `--color-status-open`, `--color-status-closing`, `--color-status-full`, `--color-status-completed`, `--color-status-cancelled` — used by MeetingCard left border
 - **MeetingForm uses browser Supabase client** (anon key + RLS) for create/edit — admin writes go through RLS `is_editor_or_admin()` policy, not service_role
 - **Admin layout role check** uses `getProfile()` (cached via React `cache()`) — same request deduplication with other profile reads. Checks for `admin` or `editor` role
+- **CalendarStrip** (`src/components/meetings/CalendarStrip.tsx`): Weekly view shows **single week** with `<` `>` button navigation (no horizontal scroll). Month view toggles to full month grid. Month label shows "N-M월" when week spans month boundary. All date arithmetic uses `getUTC*()` methods with `parseDate()` (`+09:00` KST offset)
 - **WelcomeScreen + ProfileSetup gates** on home page: first-time users see welcome → profile setup → meeting list
 
 ### Environment Variables
