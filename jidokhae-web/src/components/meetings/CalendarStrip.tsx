@@ -122,15 +122,14 @@ export default function CalendarStrip({
 
   useEffect(() => {
     if (!isMonthView && weekScrollRef.current) {
-      const todayEl = weekScrollRef.current.querySelector('[data-today="true"]')
-      if (todayEl) {
-        const weekRow = todayEl.closest('[data-week-row]')
-        if (weekRow) {
-          weekRow.scrollIntoView({ inline: 'start', block: 'nearest' })
-        }
+      // weekRows: i=-1(index 0), i=0(index 1), i=1(index 2), ...
+      // index 1 = viewDate의 주 (중앙 행)
+      const rows = weekScrollRef.current.querySelectorAll('[data-week-row]')
+      if (rows[1]) {
+        ;(rows[1] as HTMLElement).scrollIntoView({ inline: 'start', block: 'nearest' })
       }
     }
-  }, [isMonthView])
+  }, [isMonthView, viewDate])
 
   const handlePrev = useCallback(() => {
     if (isMonthView) {
