@@ -124,7 +124,10 @@ export default function CalendarStrip({
     if (!isMonthView && weekScrollRef.current) {
       const todayEl = weekScrollRef.current.querySelector('[data-today="true"]')
       if (todayEl) {
-        todayEl.scrollIntoView({ inline: 'center', block: 'nearest' })
+        const weekRow = todayEl.closest('[data-week-row]')
+        if (weekRow) {
+          weekRow.scrollIntoView({ inline: 'start', block: 'nearest' })
+        }
       }
     }
   }, [isMonthView])
@@ -266,10 +269,10 @@ export default function CalendarStrip({
             ))}
           </div>
         ) : (
-          <div ref={weekScrollRef} className="overflow-x-auto scrollbar-hide -mx-1">
+          <div ref={weekScrollRef} className="overflow-x-auto scrollbar-hide -mx-1 snap-x snap-mandatory">
             <div className="inline-flex gap-0">
               {weekRows.map((week, wi) => (
-                <div key={wi} className="grid grid-cols-7 gap-0 px-1" style={{ minWidth: '100%' }}>
+                <div key={wi} data-week-row className="grid grid-cols-7 gap-0 px-1 snap-start" style={{ minWidth: '100%' }}>
                   {week.map((d, di) => (
                     <div key={di} className="flex justify-center">
                       <DayCell date={d} {...dayCellProps} />

@@ -106,8 +106,8 @@ export function formatKoreanDateFull(dateStr: string): string {
 
 /** Returns the number of days between two "YYYY-MM-DD" dates (target - from) */
 export function getDaysUntil(targetDate: string, fromDate: string): number {
-  const target = new Date(targetDate + 'T00:00:00')
-  const from = new Date(fromDate + 'T00:00:00')
+  const target = new Date(targetDate + 'T00:00:00+09:00')
+  const from = new Date(fromDate + 'T00:00:00+09:00')
   return Math.round((target.getTime() - from.getTime()) / (24 * 60 * 60 * 1000))
 }
 

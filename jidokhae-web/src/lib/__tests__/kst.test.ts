@@ -11,6 +11,7 @@ import {
   formatKoreanDate,
   formatKoreanTime,
   formatFee,
+  getDaysUntil,
   getMeetingTiming,
   getButtonState,
 } from '@/lib/kst'
@@ -139,6 +140,30 @@ describe('formatFee', () => {
 
   it('100000 → "100,000"', () => {
     expect(formatFee(100000)).toBe('100,000')
+  })
+})
+
+// ─── getDaysUntil ───
+
+describe('getDaysUntil', () => {
+  it('같은 날 → 0', () => {
+    expect(getDaysUntil('2026-03-27', '2026-03-27')).toBe(0)
+  })
+
+  it('3일 후 → 3', () => {
+    expect(getDaysUntil('2026-03-30', '2026-03-27')).toBe(3)
+  })
+
+  it('1일 전 → -1', () => {
+    expect(getDaysUntil('2026-03-26', '2026-03-27')).toBe(-1)
+  })
+
+  it('월 경계 (3월 → 4월)', () => {
+    expect(getDaysUntil('2026-04-01', '2026-03-27')).toBe(5)
+  })
+
+  it('연 경계 (12월 → 1월)', () => {
+    expect(getDaysUntil('2027-01-01', '2026-12-31')).toBe(1)
   })
 })
 
