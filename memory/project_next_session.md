@@ -1,28 +1,31 @@
 # 다음 세션 핸드오프
 
-**마지막 갱신:** 2026-03-26
+**마지막 갱신:** 2026-03-27
 
 ## 현재 진행 상태
 
-- Phase 2-3 백오피스: **완료** (기본 4기능 + 고급 6기능 모두 완료, 기간 필터 포함)
-- **UI 디테일 개선 4건 완료 + 푸시됨:**
-  1. `MyRegistrationContent.tsx`: Empty State CTA 회귀 수정 (모임 둘러보기 링크 복원)
-  2. `MeetingDetailInfo.tsx` + `MeetingCard.tsx`: 0명일 때 "N명 모집 중" 표시 + "모집 중" 띄어쓰기 통일
-  3. `MeetingDetailInfo.tsx`: 참가비 아이콘 DollarSign → Banknote
-  4. `MeetingForm.tsx`: 참가비 입력 실시간 콤마 포맷팅
-- CLAUDE.md: capacity display 규칙 0명 예외 추가, 누락 lib 파일/컴포넌트 보완
+- Phase 2-3 백오피스: **완료**
+- UI 디테일 개선 4건: **완료 + 푸시됨** (전 세션)
+- **CalendarStrip 주간뷰 버그 수정 완료 + 푸시됨:**
+  - 가로 스크롤 구조 제거 → 단일 주간 표시로 단순화
+  - `<` `>` 버튼으로만 주 이동, 월 경계 시 "3-4월" 형식 레이블
+  - `kst.ts`: getDaysUntil KST 타임존 명시 (+09:00) + 테스트 5건 추가
+- **Vercel 배포 후 사용자 확인 대기 중** (커밋 `1d5e304`)
 
 ## 다음 할 일 (우선순위 순)
 
-1. **PG 심사 통과 대기** — TossPayments 승인 후 실결제 테스트
-2. 사용자가 새 지시서를 전달하면 실행
+1. **Vercel 배포 확인** — 주간 캘린더: > 버튼 주 이동 + 월 레이블 변경, 오늘 버튼 복귀, 스크롤바 제거 확인
+2. **PG 심사 통과 대기** — TossPayments 승인 후 실결제 테스트
+3. 사용자가 새 지시서를 전달하면 실행
 
 ## 블로커
 
 - PG 심사 승인 대기 중
+- CalendarStrip 수정 Vercel 배포 확인 (사용자 직접 확인 필요)
 
 ## 주의사항
 
+- **(main) 라우트 그룹 페이지는 카카오 로그인 필수** → 로컬 프리뷰 불가, Vercel에서만 확인
+- 가로 스크롤 UI 사용 시: 스크롤바 숨김 + 상태 동기화 사전 검증 (feedback_2026-03-27_scroll-ui-pitfall.md)
 - Windows 환경: preview_start는 `cmd /c` 래퍼 필요 (feedback_2026-03-26_preview-windows.md)
-- 집계 로직 수정 시: A - B 행 범위 일치 확인 (feedback_2026-03-26_aggregate-logic.md)
 - 같은 파일 다중 작업 시: 편집-커밋 순차 실행 (feedback_2026-03-26_commit-ordering.md)
