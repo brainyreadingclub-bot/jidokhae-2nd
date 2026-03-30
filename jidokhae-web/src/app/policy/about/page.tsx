@@ -104,6 +104,7 @@ export default async function AboutPage() {
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-neutral-500">
             정기모임 참가비는 <span className="font-semibold text-neutral-700">11,000원</span>이며, 카드 결제로 간편하게 신청할 수 있습니다.
+            <br />결제 완료 즉시 모임 참여가 확정됩니다.
           </p>
         </div>
       </section>
