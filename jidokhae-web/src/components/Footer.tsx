@@ -12,44 +12,38 @@ export default async function Footer() {
 
   return (
     <footer
-      className="border-t border-surface-300 px-5 py-6 text-small text-neutral-400"
+      className="border-t border-surface-300 px-5 py-4"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
     >
-      <div className="space-y-1.5">
-        <p>상호명: {companyName} | 대표자: {representative}</p>
-        <p>사업자등록번호: {businessNumber}</p>
-        <p>주소: {address}</p>
-        <p>연락처: {phone}</p>
-      </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 text-small">
         <Link
           href="/policy/meetings"
           className="text-primary-600 hover:text-primary-700 underline"
         >
           모임 일정
         </Link>
-        <span>|</span>
+        <span className="text-neutral-300">|</span>
         <Link
           href="/policy/terms"
           className="text-primary-600 hover:text-primary-700 underline"
         >
           이용약관
         </Link>
-        <span>|</span>
+        <span className="text-neutral-300">|</span>
         <Link
           href="/policy/privacy"
           className="text-primary-600 hover:text-primary-700 underline"
         >
           개인정보처리방침
         </Link>
-        <span>|</span>
+        <span className="text-neutral-300">|</span>
         <Link
           href="/policy/refund"
           className="text-primary-600 hover:text-primary-700 underline"
         >
           환불정책
         </Link>
-        <span>|</span>
+        <span className="text-neutral-300">|</span>
         <Link
           href="/policy/about"
           className="text-primary-600 hover:text-primary-700 underline"
@@ -57,7 +51,11 @@ export default async function Footer() {
           서비스 소개
         </Link>
       </div>
-      <p className="mt-3">&copy; 2026 {companyName}</p>
+      <div className="mt-3 text-[11px] text-neutral-400 leading-relaxed">
+        <p>{companyName} | 대표 {representative} | 사업자등록번호 {businessNumber} (간이과세자)</p>
+        <p>{address} | {phone}</p>
+      </div>
+      <p className="mt-2 text-[11px] text-neutral-400">&copy; 2026 {companyName}</p>
     </footer>
   )
 }
