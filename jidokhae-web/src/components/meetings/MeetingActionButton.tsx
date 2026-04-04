@@ -7,6 +7,7 @@ import type { ButtonState } from '@/lib/kst'
 import { formatFee } from '@/lib/kst'
 import { calculateRefund, getRefundRuleText } from '@/lib/refund'
 import ModalOverlay from '@/components/ui/ModalOverlay'
+import { trackEvent } from '@/lib/analytics'
 
 type Props = {
   buttonState: ButtonState
@@ -56,6 +57,14 @@ export default function MeetingActionButton({
     if (loading) return
     setLoading(true)
 
+    trackEvent('begin_checkout', {
+      item_id: meetingId,
+      item_name: meetingTitle,
+      value: meetingFee,
+      currency: 'KRW',
+      registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
+    })
+
     const meetingId8 = meetingId.replace(/-/g, '').slice(0, 8)
     const userId8 = userId.replace(/-/g, '').slice(0, 8)
     const orderId = `jdkh-${meetingId8}-${userId8}-${Date.now()}`
@@ -99,6 +108,13 @@ export default function MeetingActionButton({
       const data = await res.json()
 
       if (data.status === 'success') {
+        trackEvent('refund', {
+          item_id: meetingId,
+          value: data.refundedAmount,
+          currency: 'KRW',
+          refund_rate: data.refundRate,
+          cancel_type: 'confirmed',
+        })
         setCancelResult({
           refundedAmount: data.refundedAmount,
           refundRate: data.refundRate,
@@ -133,6 +149,13 @@ export default function MeetingActionButton({
       const data = await res.json()
 
       if (data.status === 'success') {
+        trackEvent('refund', {
+          item_id: meetingId,
+          value: waitlistPaidAmount ?? 0,
+          currency: 'KRW',
+          refund_rate: 100,
+          cancel_type: 'waitlist',
+        })
         setWaitlistCancelPhase('complete')
         router.refresh()
       } else {

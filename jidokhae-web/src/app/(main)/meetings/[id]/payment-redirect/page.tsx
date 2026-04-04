@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { trackEvent } from '@/lib/analytics'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -46,6 +47,13 @@ export default function PaymentRedirectPage({ params }: Props) {
         const data = await res.json()
 
         if (data.status === 'success') {
+          trackEvent('purchase', {
+            transaction_id: orderId,
+            value: Number(amount),
+            currency: 'KRW',
+            meeting_id: meetingId,
+            registration_type: 'confirmed',
+          })
           router.replace(
             `/meetings/${meetingId}/confirm?paymentKey=${paymentKey}`,
           )
@@ -53,11 +61,23 @@ export default function PaymentRedirectPage({ params }: Props) {
         }
 
         if (data.status === 'waitlisted') {
+          trackEvent('purchase', {
+            transaction_id: orderId,
+            value: Number(amount),
+            currency: 'KRW',
+            meeting_id: meetingId,
+            registration_type: 'waitlisted',
+          })
           router.replace(
             `/meetings/${meetingId}/confirm?type=waitlisted`,
           )
           return
         }
+
+        trackEvent('purchase_failed', {
+          meeting_id: meetingId,
+          reason: data.status,
+        })
 
         if (data.status === 'full') {
           setError('마감되었습니다')

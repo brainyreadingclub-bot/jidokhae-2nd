@@ -7,6 +7,7 @@ import { getKSTToday, getButtonState } from '@/lib/kst'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
+import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 export default async function MeetingDetailContent({ id }: { id: string }) {
@@ -97,6 +98,11 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
 
   return (
     <div style={{ paddingBottom: hasStickyButton ? 'calc(9rem + env(safe-area-inset-bottom, 0px))' : '1.5rem' }}>
+      <TrackMeetingView
+        meetingId={typedMeeting.id}
+        title={typedMeeting.title}
+        fee={typedMeeting.fee}
+      />
       <MeetingDetailInfo
         meeting={typedMeeting}
         confirmedCount={confirmedCount}

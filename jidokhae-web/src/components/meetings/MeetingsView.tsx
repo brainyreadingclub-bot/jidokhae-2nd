@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import { trackEvent } from '@/lib/analytics'
 import CalendarStrip from './CalendarStrip'
 import DateSectionHeader from './DateSectionHeader'
 import MeetingCard from './MeetingCard'
@@ -87,6 +88,14 @@ export default function MeetingsView({
     () => registeredSet.length + waitlistedSet.length,
     [registeredSet, waitlistedSet],
   )
+
+  useEffect(() => {
+    trackEvent('view_item_list', {
+      item_list_name: 'meetings',
+      items_count: meetings.length,
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleDateSelect = useCallback((date: string | null) => {
     setSelectedDate(date)

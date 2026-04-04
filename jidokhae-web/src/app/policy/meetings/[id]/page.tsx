@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
+import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 import type { Meeting } from '@/types/meeting'
 import type { Metadata } from 'next'
 
@@ -100,6 +101,12 @@ export default async function PublicMeetingDetailPage({ params }: Props) {
         </svg>
         목록으로
       </Link>
+
+      <TrackMeetingView
+        meetingId={typedMeeting.id}
+        title={typedMeeting.title}
+        fee={typedMeeting.fee}
+      />
 
       {/* Meeting info */}
       <MeetingDetailInfo

@@ -1,6 +1,14 @@
+import { Suspense } from 'react'
 import type { Metadata, Viewport } from 'next'
 import { Noto_Serif_KR } from 'next/font/google'
+import Script from 'next/script'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import RouteChangeTracker from '@/components/analytics/RouteChangeTracker'
 import './globals.css'
+
+const RAW_GA_ID = process.env.NEXT_PUBLIC_GA_ID
+const GA_ID = /^G-[A-Z0-9]+$/.test(RAW_GA_ID ?? '') ? RAW_GA_ID : null
 
 const notoSerifKR = Noto_Serif_KR({
   subsets: ['latin'],
@@ -61,6 +69,31 @@ export default function RootLayout({
             {children}
           </main>
         </div>
+        <Suspense fallback={null}>
+          <RouteChangeTracker />
+        </Suspense>
+        <Analytics />
+        <SpeedInsights />
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script
+              id="ga-init"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${GA_ID}', { send_page_view: false });
+                `,
+              }}
+            />
+          </>
+        )}
       </body>
     </html>
   )
