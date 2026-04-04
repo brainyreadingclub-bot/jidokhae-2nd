@@ -81,10 +81,11 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 **MVP (완료):** Kakao login → Meeting list → Registration with payment → Cancellation/refund → Admin CRUD → E2E 검증 + 배포
 
-**Phase 2 (완료/진행중):**
+**Phase 2 (완료):**
 - Phase 2-1: 알림톡 (Solapi → KakaoTalk 5종) ✅
 - Phase 2-2: 대기 신청 + 자동 승격 ✅
 - Phase 2-3: 백오피스 — 기본 기능(회원관리, 출석 토글, 프로필 설정, 웰컴 스크린) ✅ / 고급 기능: 상수 통합 ✅, site_settings ✅, venues ✅, 대시보드 ✅, 회원 강화 ✅, 기간 필터 ✅
+- Phase 2-4: 사용자 흐름 추적 (Vercel Analytics + GA4) ✅
 
 **Out of scope (future):** Badges/praise, bean (콩) points, landing page, admin analytics dashboard, AI chatbot, book tracking
 
@@ -297,6 +298,27 @@ Copy `jidokhae-web/.env.example` to `jidokhae-web/.env.local` and fill in values
 - `SOLAPI_KAKAO_CHANNEL` / `SOLAPI_SENDER_PHONE` — KakaoTalk 채널 + 발신번호
 - `SOLAPI_TEMPLATE_REMIND` / `SOLAPI_TEMPLATE_CONFIRM` / `SOLAPI_TEMPLATE_WAITLIST_CONFIRM` / `SOLAPI_TEMPLATE_WAITLIST_PROMOTED` / `SOLAPI_TEMPLATE_WAITLIST_REFUNDED` — 알림톡 템플릿 ID 5종
 - `CRON_SECRET` — Vercel Cron 인증 토큰
+- `NEXT_PUBLIC_GA_ID` — GA4 측정 ID (예: `G-0N0VWXM2JB`)
+
+### Analytics (Phase 2-4)
+
+**Vercel Analytics** (페이지뷰, 디바이스, 리퍼러) + **GA4** (이벤트 퍼널, 전환율 분석) 조합.
+
+- **글로벌 설정:** `src/app/layout.tsx` — `<Analytics />`, `<SpeedInsights />`, GA4 `<Script>` (GA_ID 포맷 검증 후 조건부 렌더링)
+- **SPA 라우트 추적:** `src/components/analytics/RouteChangeTracker.tsx` — `usePathname()` + `useSearchParams()` 감시, 민감 파라미터(`paymentKey`, `orderId`, `amount`) 자동 필터링
+- **이벤트 유틸리티:** `src/lib/analytics.ts` — `trackEvent(name, params)` 래퍼 (`window.gtag?.()` 안전 호출)
+- **타입:** `src/types/gtag.d.ts` — `window.gtag` 글로벌 타입 선언
+
+**추적 퍼널 (GA4 Ecommerce 표준):**
+
+| 이벤트 | 위치 | 트리거 |
+|--------|------|--------|
+| `view_item_list` | `MeetingsView.tsx` | 모임 목록 마운트 시 1회 |
+| `view_item` | `TrackMeetingView.tsx` | 모임 상세 진입 (인증+공개 페이지) |
+| `begin_checkout` | `MeetingActionButton.tsx` | 신청/대기신청 버튼 클릭 |
+| `purchase` | `payment-redirect/page.tsx` | 결제 성공 (confirmed/waitlisted 구분) |
+| `purchase_failed` | `payment-redirect/page.tsx` | 결제 실패/정원 초과 |
+| `refund` | `MeetingActionButton.tsx` | 취소 완료 (confirmed/waitlist 구분) |
 
 ### Deployment
 

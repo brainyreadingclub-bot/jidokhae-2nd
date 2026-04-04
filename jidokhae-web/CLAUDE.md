@@ -76,3 +76,4 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 - **Path alias**: `@/*` → `./src/*` (works in tests too via vitest `tsconfigPaths` plugin)
 - **PostCSS**: Uses `@tailwindcss/postcss` plugin (`postcss.config.mjs`)
 - **ESLint**: Flat config in `eslint.config.mjs` — `eslint-config-next` (core-web-vitals + typescript)
+- **Analytics**: `src/lib/analytics.ts` (`trackEvent()` 래퍼), `src/components/analytics/` (RouteChangeTracker, TrackMeetingView). GA4 이벤트 추가 시 `trackEvent()` 사용, 새 추적 컴포넌트는 `analytics/` 디렉토리에 배치
