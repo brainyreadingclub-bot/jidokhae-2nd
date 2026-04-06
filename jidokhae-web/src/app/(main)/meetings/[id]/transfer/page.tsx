@@ -7,6 +7,7 @@ import { getSiteSettings } from '@/lib/site-settings'
 import { formatFee } from '@/lib/kst'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import TransferForm from '@/components/meetings/TransferForm'
+import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -34,6 +35,7 @@ export default async function TransferPage({ params }: Props) {
   const bankAccount = settings.bank_account ?? ''
   const bankHolder = settings.bank_holder ?? ''
   const realName = profile.real_name ?? profile.nickname
+  const depositorName = `${meeting.title} ${realName}`
 
   return (
     <div className="mx-auto max-w-screen-sm px-5 py-8">
@@ -80,34 +82,7 @@ export default async function TransferPage({ params }: Props) {
       </div>
 
       {/* Depositor name guidance */}
-      <div
-        className="mt-5 rounded-xl p-4"
-        style={{
-          backgroundColor: 'var(--color-accent-50)',
-          border: '1px solid var(--color-accent-200)',
-        }}
-      >
-        <div className="flex items-start gap-2.5">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-accent-500 flex-shrink-0 mt-0.5"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="12" />
-            <line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <p className="text-sm text-accent-700 leading-relaxed">
-            입금자명을 <span className="font-bold">&apos;{realName}&apos;</span>(으)로 입금해주세요
-          </p>
-        </div>
-      </div>
+      <CopyableDepositorName depositorName={depositorName} />
 
       {/* Transfer form (submit button) */}
       <div className="mt-8">
