@@ -60,6 +60,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  if (registrationIds.length > 50) {
+    return NextResponse.json(
+      { status: 'error', message: '한 번에 최대 50건까지 처리할 수 있습니다' },
+      { status: 400 },
+    )
+  }
+
   let confirmed = 0
   let failed = 0
 

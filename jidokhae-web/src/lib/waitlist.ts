@@ -104,7 +104,7 @@ export async function processWaitlistCancel(
     .update({
       status: 'waitlist_cancelled',
       cancel_type: 'waitlist_user_cancelled',
-      refunded_amount: paidAmount,
+      refunded_amount: reg.payment_method === 'transfer' ? 0 : paidAmount,
       cancelled_at: new Date().toISOString(),
     })
     .eq('id', registrationId)

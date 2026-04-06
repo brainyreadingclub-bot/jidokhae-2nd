@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
+  try {
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -100,4 +101,11 @@ export async function POST(request: NextRequest) {
 
   // pending_transfer 또는 waitlisted
   return NextResponse.json({ status: result })
+  } catch (error) {
+    console.error('[transfer] 예기치 않은 오류:', error)
+    return NextResponse.json(
+      { status: 'error', message: '서버 오류가 발생했습니다' },
+      { status: 500 },
+    )
+  }
 }

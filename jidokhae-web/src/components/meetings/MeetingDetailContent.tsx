@@ -28,7 +28,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
-      .select('id, paid_amount, payment_id')
+      .select('id, paid_amount, payment_id, payment_method')
       .eq('user_id', user.id)
       .eq('meeting_id', id)
       .eq('status', 'confirmed')
@@ -151,6 +151,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         waitlistPaidAmount={myWaitlistReg?.paid_amount}
         pendingTransferRegistrationId={myPendingTransfer?.id}
         paymentMode={paymentMode}
+        registrationPaymentMethod={myReg?.payment_method}
       />
 
       {isEditorOrAdmin && (

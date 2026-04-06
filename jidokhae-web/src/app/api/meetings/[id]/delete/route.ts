@@ -103,7 +103,7 @@ export async function POST(request: NextRequest, { params }: Params) {
           .update({
             status: isPending ? 'cancelled' : isWaitlisted ? 'waitlist_refunded' : 'cancelled',
             cancel_type: isPending ? 'meeting_deleted' : isWaitlisted ? 'waitlist_auto_refunded' : 'meeting_deleted',
-            refunded_amount: isPending ? 0 : null,
+            refunded_amount: (isPending || isWaitlisted) ? 0 : null,
             cancelled_at: new Date().toISOString(),
           })
           .eq('id', reg.id)
