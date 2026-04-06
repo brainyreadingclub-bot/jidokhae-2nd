@@ -47,3 +47,6 @@ next-env.d.ts
 
 # screenshots (test artifacts)
 /screenshots/
+
+# Claude Code - machine-specific
+.claude/settings.local.json

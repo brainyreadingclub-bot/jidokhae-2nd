@@ -24,6 +24,18 @@
 | 지금 (심사 전) | `transfer_only` | 계좌이체만 |
 | 심사 통과 후 | `card_only` | 카드결제만 (이체 제거) |
 
+### ⚠ 의도적 Tradeoff 선언
+
+이 브릿지는 다음 PRD 원칙을 **의도적으로 일시 위반**합니다:
+
+| PRD 원칙 | 위반 내용 | 허용 근거 |
+|----------|----------|----------|
+| "결제 완료 = 신청 확정" | 이체는 "신청 접수 → 입금 대기 → 운영자 확인 → 확정" | 심사 전 한정, 출시 우선 |
+| "운영자 개입 월 0건" | 입금 확인 + 수동 환불 필요 | 250명 규모에서 월 수건, 운영 가능 |
+| "자동 환불" | 이체 건은 운영자 수동 이체 | 심사 통과 후 카드 전환 시 해소 |
+
+**심사 통과 후 `card_only` 전환 시 모든 위반이 자동 해소됩니다.**
+
 ---
 
 ## 2. 사용자 흐름 (회원)
@@ -69,7 +81,15 @@ UI 형태 결정 근거 (행동심리학):
 - 계좌 정보 재표시 (미입금 시 참조)
 - "신청 취소" 버튼
 
-### 2-3. 취소 흐름
+### 2-3. My 페이지 (`/my`)
+
+`MyRegistrationContent` 변경:
+- 상태 필터에 `pending_transfer` 추가 (기존: confirmed/waitlisted만 조회)
+- 뱃지: `pending_transfer` → "입금 대기" (accent 컬러, 기존 "대기 중"과 구분)
+- `isUpcoming` 판정: `pending_transfer`도 포함 (활성 신청)
+- 카드에 계좌 정보 재표시 (미입금 시 참조 가능)
+
+### 2-4. 취소 흐름
 
 **`pending_transfer` 상태에서 취소:**
 - TossPayments API 호출 없음 (결제 자체가 없으므로)
@@ -84,12 +104,34 @@ UI 형태 결정 근거 (행동심리학):
 - 환불 규칙 적용: 3일전 100%, 2일전 50%, 전일/당일 0%
 - 사용자 안내: "취소 접수됨. 환불은 운영자가 처리 후 입금됩니다."
 
-### 2-4. 대기 신청
+### 2-5. 대기 신청
 
 정원 초과 시:
 - 기존과 동일하게 `waitlisted` 상태, `payment_method: 'transfer'`
 - 대기 승격 시: `waitlisted` → `pending_transfer` (카드는 자동 `confirmed`이지만, 이체는 입금 미확인)
 - 대기 취소: TossPayments API 호출 없음, DB만 업데이트
+
+### 2-6. 알림톡 분기
+
+이체 건은 알림톡 내용이 달라야 합니다:
+
+| 알림 종류 | 카드 | 이체 |
+|----------|------|------|
+| 신청 확인 | "신청이 완료되었습니다" | 발송 안 함 (입금 미확인) |
+| 운영자 입금 확인 | 해당 없음 | (향후) "입금이 확인되어 참여가 확정되었습니다" |
+| 대기 승격 | "자리가 나서 참여가 확정되었습니다" | "자리가 났습니다. 아래 계좌로 입금해주세요" (계좌 정보 포함) |
+| 리마인드 | confirmed만 대상 | `pending_transfer`는 리마인드 대상 아님 (미입금) |
+
+> **Phase 1 (지금):** 알림톡 분기 없이 출시. 이체 건 알림은 향후 추가.
+> **이유:** Solapi 템플릿 추가 심사가 필요하므로, 출시 속도를 위해 알림 없이 시작.
+
+### 2-7. 환불률 계산 기준
+
+환불률은 **모임일 - 취소일** 기준 (기존 로직 그대로):
+- 신청일, 입금 확인일과 무관
+- `calculateRefund(meetingDate, paidAmount, kstToday)` 함수 그대로 사용
+- `pending_transfer` 취소: 환불 계산 불필요 (미입금이므로)
+- `confirmed` + `transfer` 취소: 환불 규칙 적용, 운영자 수동 이체
 
 ---
 
@@ -237,27 +279,69 @@ type Registration = {
 
 ---
 
-## 6. 기존 코드 영향 범위
+## 6. 기존 코드 영향 범위 (전체)
 
-### 6-1. 클라이언트 컴포넌트
+### 6-1. 새로 생성할 파일
+
+| 파일 | 용도 |
+|------|------|
+| `src/app/(main)/meetings/[id]/transfer/page.tsx` | 계좌이체 안내 페이지 |
+| `src/app/api/registrations/transfer/route.ts` | 이체 신청 API |
+| `src/app/api/admin/registrations/confirm-transfer/route.ts` | 운영자 입금 확인 API |
+| `src/app/api/admin/registrations/mark-refunded/route.ts` | 운영자 환불 완료 API |
+
+### 6-2. 수정할 클라이언트 컴포넌트
 
 | 컴포넌트 | 변경 |
 |---------|------|
-| `MeetingActionButton` | `payment_mode` 분기: `transfer_only` → 이체 안내 페이지로 이동, `card_only` → 기존 TossPayments 흐름 |
-| `getButtonState()` (kst.ts) | `pending_transfer` 상태 처리 추가 → 새 버튼 상태 반환 |
-| `MeetingDetailContent` | `pending_transfer` 상태 안내 박스 표시 |
-| 대시보드 (`AdminDashboardContent`) | 입금 대기 건수 카드 추가 |
-| 모임 편집 신청자 목록 | 입금확인 버튼 + 일괄 확인 UI |
+| `MeetingActionButton` | `payment_mode` 분기: `transfer_only` → 이체 안내 페이지로 이동 |
+| `MeetingDetailContent` | `pending_transfer` 상태 조회 + 안내 박스 표시 |
+| `MyRegistrationContent` | 상태 필터에 `pending_transfer` 추가 + "입금 대기" 뱃지 |
+| `AdminDashboardContent` | 입금 대기 건수 카드 추가 |
+| `AdminMeetingSection` | 입금확인 버튼 + 체크박스 일괄 확인 UI |
+| `confirm/page.tsx` | `?type=pending_transfer` 분기 + 계좌 정보 재표시 |
 
-### 6-2. 서버 컴포넌트 / 라이브러리
+### 6-3. 수정할 서버 컴포넌트 / 라이브러리
 
 | 파일 | 변경 |
 |------|------|
-| `src/lib/cancel.ts` | `payment_method` 분기 추가 |
-| `src/lib/site-settings.ts` | 계좌 정보 키 로드 |
-| `src/lib/kst.ts` | `getButtonState()` 확장 |
-| `src/lib/dashboard.ts` | 입금 대기 집계 추가 |
-| `src/types/registration.ts` | `payment_method`, `pending_transfer` 추가 |
+| `src/lib/cancel.ts` | `payment_method` 분기: transfer면 TossPayments API 스킵 |
+| `src/lib/waitlist.ts` | 승격 결과가 `pending_transfer`일 때 처리 분기 |
+| `src/lib/kst.ts` | `getButtonState()` — `pending_transfer` 상태 반환 추가 |
+| `src/lib/site-settings.ts` | `bank_name`, `bank_account`, `bank_holder`, `payment_mode` 키 로드 |
+| `src/lib/dashboard.ts` | 입금 대기 집계 + 환불 필요 건수 추가 |
+| `src/types/registration.ts` | `payment_method` 필드 + `pending_transfer` 상태 추가 |
+
+### 6-4. 수정할 API Routes
+
+| API | 변경 |
+|-----|------|
+| `registrations/cancel` | `payment_method` 조회 + transfer면 TossPayments 스킵. `pending_transfer`도 취소 허용 |
+| `meetings/[id]/delete` | 상태 필터에 `pending_transfer` 추가. transfer 건은 환불 없이 취소 |
+| `cron/waitlist-refund` | transfer 건은 TossPayments 환불 스킵, 환불 필요 목록에 추가 |
+
+### 6-5. DB 변경 (Supabase SQL Editor)
+
+| 대상 | 변경 |
+|------|------|
+| `registrations` 테이블 | `payment_method` 컬럼 추가 + CHECK 제약 |
+| `registrations.status` CHECK | `pending_transfer` 값 추가 |
+| `confirm_registration()` RPC | 정원 카운트에 `pending_transfer` 포함 |
+| `get_confirmed_counts()` RPC | `pending_transfer` 카운트 포함 |
+| `promote_next_waitlisted()` RPC | `payment_method` 분기 추가 |
+| 새 RPC: `register_transfer()` | FOR UPDATE 락 + 원자적 정원 체크 + INSERT |
+| `site_settings` 데이터 | `payment_mode`, `bank_name`, `bank_account`, `bank_holder` INSERT |
+
+### 6-6. 변경 불필요 확인 완료
+
+| 파일 | 이유 |
+|------|------|
+| `middleware.ts` | 새 라우트에 특별 처리 불필요 |
+| `webhooks/tosspayments` | 이체 건은 웹훅 발생 안 함 |
+| `cron/meeting-remind` | confirmed만 대상, `pending_transfer` 자동 제외 |
+| `registrations/attendance` | confirmed만 대상 |
+| RLS 정책 | status 값에 무관, 기존 정책 유효 |
+| `MeetingCard`, `MeetingDetailInfo` | `get_confirmed_counts()` RPC 업데이트로 자동 반영 |
 
 ---
 

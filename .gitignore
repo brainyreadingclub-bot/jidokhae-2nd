@@ -1,1 +1,10 @@
-.claude/
+# Claude Code - machine-specific (ignore)
+.claude/settings.local.json
+.claude/worktrees/
+.claude/plugins/
+
+# Claude Code - shared (tracked)
+# .claude/skills/       → custom skills (portable)
+# .claude/commands/      → custom commands (portable)
+# .claude/launch.json    → dev server configs (portable)
+# .claude/settings.json  → plugin config (portable)
