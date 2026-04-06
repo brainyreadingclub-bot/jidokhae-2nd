@@ -20,6 +20,8 @@ type Props = {
   paidAmount?: number | null
   waitlistRegistrationId?: string
   waitlistPaidAmount?: number | null
+  pendingTransferRegistrationId?: string
+  paymentMode?: string
 }
 
 type CancelPhase = 'idle' | 'info' | 'confirm' | 'processing' | 'complete'
@@ -36,6 +38,8 @@ export default function MeetingActionButton({
   paidAmount,
   waitlistRegistrationId,
   waitlistPaidAmount,
+  pendingTransferRegistrationId,
+  paymentMode,
 }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -52,11 +56,26 @@ export default function MeetingActionButton({
     setTimeout(() => setToast(null), 3000)
   }
 
-  // --- Register (기존 M4 코드 그대로) ---
+  // --- Register ---
   async function handleRegister() {
     if (loading) return
     setLoading(true)
 
+    // 계좌이체 모드: 이체 안내 페이지로 이동
+    if (paymentMode === 'transfer_only') {
+      trackEvent('begin_checkout', {
+        item_id: meetingId,
+        item_name: meetingTitle,
+        value: meetingFee,
+        currency: 'KRW',
+        registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
+        payment_method: 'transfer',
+      })
+      router.push(`/meetings/${meetingId}/transfer`)
+      return
+    }
+
+    // 카드결제 모드: TossPayments SDK
     trackEvent('begin_checkout', {
       item_id: meetingId,
       item_name: meetingTitle,
@@ -86,6 +105,30 @@ export default function MeetingActionButton({
     } catch {
       showToast('결제 요청에 실패했습니다')
       setLoading(false)
+    }
+  }
+
+  // --- Pending transfer cancel ---
+  async function handlePendingTransferCancel() {
+    if (!pendingTransferRegistrationId) return
+    setCancelPhase('processing')
+    try {
+      const res = await fetch('/api/registrations/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId: pendingTransferRegistrationId }),
+      })
+      const data = await res.json()
+      if (data.status === 'success' || data.status === 'already_cancelled') {
+        setCancelPhase('idle')
+        router.refresh()
+      } else {
+        setCancelPhase('idle')
+        showToast(data.message || '취소에 실패했습니다')
+      }
+    } catch {
+      setCancelPhase('idle')
+      showToast('네트워크 오류가 발생했습니다')
     }
   }
 
@@ -174,7 +217,8 @@ export default function MeetingActionButton({
     (buttonState.type === 'full') ||
     (buttonState.type === 'cancel' && cancelPhase === 'idle') ||
     (buttonState.type === 'join_waitlist') ||
-    (buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle')
+    (buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle') ||
+    (buttonState.type === 'pending_transfer')
 
   return (
     <>
@@ -262,6 +306,28 @@ export default function MeetingActionButton({
               }}
             >
               대기 취소하기
+            </button>
+          )}
+
+          {buttonState.type === 'pending_transfer' && (
+            <button
+              onClick={handlePendingTransferCancel}
+              disabled={cancelPhase === 'processing'}
+              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98] disabled:opacity-50"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
+            >
+              {cancelPhase === 'processing' ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner />
+                  취소 처리 중...
+                </span>
+              ) : (
+                '신청 취소'
+              )}
             </button>
           )}
         </StickyBottom>

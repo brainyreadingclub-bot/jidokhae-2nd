@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   // catch-up 쿼리: 내일 이전 모임 중 아직 waitlisted인 건도 포함
   const { data: waitlistedRegs, error: queryError } = await supabase
     .from('registrations')
-    .select('id, user_id, payment_id, paid_amount, meeting_id, meetings(title, date)')
+    .select('id, user_id, payment_id, paid_amount, meeting_id, payment_method, meetings(title, date)')
     .eq('status', 'waitlisted')
     .lte('meetings.date', tomorrow)
 
@@ -45,6 +45,21 @@ export async function GET(request: NextRequest) {
 
   for (const reg of regsToRefund) {
     try {
+      // 계좌이체: TossPayments 환불 스킵, DB만 업데이트
+      if (reg.payment_method === 'transfer') {
+        await supabase.from('registrations')
+          .update({
+            status: 'waitlist_refunded',
+            cancel_type: 'waitlist_auto_refunded',
+            refunded_amount: 0,
+            cancelled_at: new Date().toISOString(),
+          })
+          .eq('id', reg.id)
+          .eq('status', 'waitlisted')
+        refunded++
+        continue
+      }
+
       // TossPayments 전액 환불 (재시도 안전: 이미 환불된 건 허용)
       if (reg.payment_id) {
         try {

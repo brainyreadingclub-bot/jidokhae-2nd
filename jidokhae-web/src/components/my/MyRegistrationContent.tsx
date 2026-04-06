@@ -16,7 +16,7 @@ export default async function MyRegistrationContent() {
     .from('registrations')
     .select('*, meetings(*)')
     .eq('user_id', user.id)
-    .in('status', ['confirmed', 'cancelled', 'waitlisted', 'waitlist_cancelled', 'waitlist_refunded'])
+    .in('status', ['confirmed', 'cancelled', 'waitlisted', 'waitlist_cancelled', 'waitlist_refunded', 'pending_transfer'])
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -44,7 +44,7 @@ export default async function MyRegistrationContent() {
   }
 
   const isUpcoming = (r: RegistrationWithMeeting) =>
-    (r.status === 'confirmed' || r.status === 'waitlisted') && r.meetings.date >= kstToday
+    (r.status === 'confirmed' || r.status === 'waitlisted' || r.status === 'pending_transfer') && r.meetings.date >= kstToday
 
   const upcoming = typedRegs
     .filter(isUpcoming)
@@ -59,6 +59,7 @@ export default async function MyRegistrationContent() {
     if (reg.status === 'waitlisted') return { label: '대기 중', color: 'accent' }
     if (reg.status === 'waitlist_cancelled') return { label: '대기 취소', color: 'gray' }
     if (reg.status === 'waitlist_refunded') return { label: '대기 환불', color: 'gray' }
+    if (reg.status === 'pending_transfer') return { label: '입금 대기', color: 'accent' }
     if (reg.meetings.date < kstToday) return { label: '참여 완료', color: 'success' }
     return { label: '신청완료', color: 'success' }
   }

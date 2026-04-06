@@ -129,19 +129,22 @@ export type ButtonState =
   | { type: 'none' }
   | { type: 'join_waitlist' }
   | { type: 'waitlist_cancel' }
+  | { type: 'pending_transfer' }
 
-/** Computes the action button state for a meeting detail page (PRD §6-2 + Phase 2-2 대기) */
+/** Computes the action button state for a meeting detail page (PRD §6-2 + Phase 2-2 대기 + 계좌이체 브릿지) */
 export function getButtonState(
   meetingDate: string,
   kstToday: string,
   hasConfirmed: boolean,
   isFull: boolean,
   hasWaitlisted: boolean = false,
+  hasPendingTransfer: boolean = false,
 ): ButtonState {
   const timing = getMeetingTiming(meetingDate, kstToday)
 
   if (timing === 'before_or_today') {
     if (hasConfirmed) return { type: 'cancel' }
+    if (hasPendingTransfer) return { type: 'pending_transfer' }
     if (hasWaitlisted) return { type: 'waitlist_cancel' }
     if (isFull) return { type: 'join_waitlist' }
     return { type: 'register' }

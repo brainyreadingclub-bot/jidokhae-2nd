@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
 import AttendanceToggle from './AttendanceToggle'
+import ConfirmTransferButton from '@/components/admin/ConfirmTransferButton'
+import MarkRefundedButton from '@/components/admin/MarkRefundedButton'
 import { getKSTToday, formatFee } from '@/lib/kst'
 import type { RegistrationWithProfile } from '@/types/registration'
 
@@ -37,7 +39,7 @@ export default function AdminMeetingSection({
 }: Props) {
   const showAttendance = meetingDate <= getKSTToday()
 
-  const confirmedRegs = registrations.filter((r) => r.status === 'confirmed' || r.status === 'cancelled')
+  const confirmedRegs = registrations.filter((r) => r.status === 'confirmed' || r.status === 'cancelled' || r.status === 'pending_transfer')
   const waitlistedRegs = registrations
     .filter((r) => r.status === 'waitlisted' || r.status === 'waitlist_cancelled' || r.status === 'waitlist_refunded')
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -52,6 +54,16 @@ export default function AdminMeetingSection({
   const attendedCount = confirmedRegs.filter((r) => r.status === 'confirmed' && r.attended).length
 
   function getStatusBadge(status: string) {
+    if (status === 'pending_transfer') {
+      return (
+        <span
+          className="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-bold text-accent-700"
+          style={{ border: '1px solid var(--color-accent-200)' }}
+        >
+          입금 대기
+        </span>
+      )
+    }
     if (status === 'confirmed') {
       return (
         <span
@@ -102,7 +114,20 @@ export default function AdminMeetingSection({
     )
   }
 
+  function getPaymentMethodLabel(method: string | null | undefined) {
+    if (method === 'transfer') return '이체'
+    if (method === 'card') return '카드'
+    return null
+  }
+
   function getAmountSubtext(reg: RegistrationWithProfile) {
+    if (reg.status === 'pending_transfer' && reg.paid_amount) {
+      return (
+        <div className="text-xs text-accent-500/70 mt-0.5">
+          {formatFee(reg.paid_amount)}원 (입금 대기)
+        </div>
+      )
+    }
     if (reg.status === 'confirmed' && reg.paid_amount) {
       return (
         <div className="text-xs text-primary-500/70 mt-0.5">
@@ -192,8 +217,23 @@ export default function AdminMeetingSection({
                   {formatDate(reg.created_at)}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {getStatusBadge(reg.status)}
-                  {getAmountSubtext(reg)}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1.5">
+                      {getStatusBadge(reg.status)}
+                      {getPaymentMethodLabel(reg.payment_method) && (
+                        <span className="text-[10px] text-primary-400">
+                          {getPaymentMethodLabel(reg.payment_method)}
+                        </span>
+                      )}
+                    </div>
+                    {reg.status === 'pending_transfer' && (
+                      <ConfirmTransferButton registrationId={reg.id} />
+                    )}
+                    {reg.status === 'cancelled' && reg.payment_method === 'transfer' && !reg.refunded_amount && (reg.paid_amount ?? 0) > 0 && (
+                      <MarkRefundedButton registrationId={reg.id} paidAmount={reg.paid_amount!} />
+                    )}
+                    {getAmountSubtext(reg)}
+                  </div>
                 </td>
                 {!showQueueNumber && showAttendance && (
                   <td className="px-2 py-1 text-center">

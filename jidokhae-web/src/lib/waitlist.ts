@@ -31,11 +31,19 @@ export async function promoteNextWaitlisted(meetingId: string): Promise<PromoteR
 
   const promoted = result[0]
 
-  // 승격 알림톡 발송 (실패해도 승격은 유효)
-  try {
-    await sendWaitlistPromotedNotification(meetingId, promoted.promoted_user_id, promoted.promoted_id)
-  } catch (error) {
-    console.error('[waitlist] 승격 알림톡 발송 실패:', error)
+  // 승격 알림톡 발송 (실패해도 승격은 유효, 계좌이체는 Phase 1에서 알림톡 미발송)
+  const { data: promotedReg } = await supabase
+    .from('registrations')
+    .select('payment_method')
+    .eq('id', promoted.promoted_id)
+    .single()
+
+  if (promotedReg?.payment_method !== 'transfer') {
+    try {
+      await sendWaitlistPromotedNotification(meetingId, promoted.promoted_user_id, promoted.promoted_id)
+    } catch (error) {
+      console.error('[waitlist] 승격 알림톡 발송 실패:', error)
+    }
   }
 
   return { promotedId: promoted.promoted_id, promotedUserId: promoted.promoted_user_id }
@@ -55,7 +63,7 @@ export async function processWaitlistCancel(
   // 1. 대기 신청 조회 + 소유권 확인
   const { data: reg, error: fetchError } = await supabase
     .from('registrations')
-    .select('id, status, payment_id, paid_amount')
+    .select('id, status, payment_id, paid_amount, payment_method')
     .eq('id', registrationId)
     .eq('user_id', userId)
     .single()
@@ -74,8 +82,8 @@ export async function processWaitlistCancel(
 
   const paidAmount = reg.paid_amount ?? 0
 
-  // 2. TossPayments 전액 환불
-  if (paidAmount > 0 && reg.payment_id) {
+  // 2. TossPayments 전액 환불 (계좌이체는 TossPayments 결제 아니므로 skip)
+  if (reg.payment_method !== 'transfer' && paidAmount > 0 && reg.payment_id) {
     try {
       await cancelPayment(reg.payment_id, '대기 취소 전액 환불')
     } catch {

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { getKSTToday, getKSTMonth, getPrevMonth, getMonthRange, getWeekLater, formatFee } from '@/lib/kst'
-import { getMonthlyRevenue, getUpcomingMeetings, getMemberStats, getAlerts, getVenueSettlementData } from '@/lib/dashboard'
+import { getMonthlyRevenue, getUpcomingMeetings, getMemberStats, getAlerts, getVenueSettlementData, getTransferAlerts } from '@/lib/dashboard'
 import AdminMeetingCard from '@/components/admin/AdminMeetingCard'
 import VenueSettlementTable from '@/components/admin/VenueSettlementTable'
 import type { Meeting } from '@/types/meeting'
@@ -41,6 +41,7 @@ export default async function AdminDashboardContent({ filter }: { filter: string
     memberStats,
     alerts,
     venueSettlements,
+    transferAlerts,
   ] = await Promise.all([
     meetingsQuery,
     getMonthlyRevenue(supabase, currentMonth, prevMonth),
@@ -48,6 +49,7 @@ export default async function AdminDashboardContent({ filter }: { filter: string
     getMemberStats(supabase, monthRange.start),
     isAdmin ? getAlerts(supabase, currentMonth) : Promise.resolve({ deletingCount: 0, deletingMeetings: [], unsettledVenues: [] }),
     isAdmin ? getVenueSettlementData(supabase, currentMonth) : Promise.resolve([]),
+    isAdmin ? getTransferAlerts(supabase) : Promise.resolve({ pendingTransferCount: 0, pendingRefundCount: 0 }),
   ])
 
   if (meetingsResult.error) {
@@ -77,8 +79,26 @@ export default async function AdminDashboardContent({ filter }: { filter: string
   return (
     <>
       {/* ── 주의 필요 ── */}
-      {(alerts.deletingCount > 0 || alerts.unsettledVenues.length > 0) && (
+      {(alerts.deletingCount > 0 || alerts.unsettledVenues.length > 0 || transferAlerts.pendingTransferCount > 0 || transferAlerts.pendingRefundCount > 0) && (
         <div className="mb-4 space-y-2">
+          {transferAlerts.pendingTransferCount > 0 && (
+            <div
+              className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-accent-700"
+              style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-200)' }}
+            >
+              <span>🟠</span>
+              <span>입금 대기 {transferAlerts.pendingTransferCount}건</span>
+            </div>
+          )}
+          {transferAlerts.pendingRefundCount > 0 && (
+            <div
+              className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-error"
+              style={{ backgroundColor: 'rgba(181, 64, 58, 0.06)', border: '1px solid rgba(181, 64, 58, 0.15)' }}
+            >
+              <span>🔴</span>
+              <span>환불 처리 필요 {transferAlerts.pendingRefundCount}건</span>
+            </div>
+          )}
           {alerts.deletingMeetings.map((m) => (
             <Link
               key={m.id}

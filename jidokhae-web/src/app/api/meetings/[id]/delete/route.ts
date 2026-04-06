@@ -72,9 +72,9 @@ export async function POST(request: NextRequest, { params }: Params) {
   // 4. Fetch all confirmed + waitlisted registrations
   const { data: registrations } = await adminSupabase
     .from('registrations')
-    .select('id, payment_id, paid_amount, status')
+    .select('id, payment_id, paid_amount, status, payment_method')
     .eq('meeting_id', meetingId)
-    .in('status', ['confirmed', 'waitlisted'])
+    .in('status', ['confirmed', 'waitlisted', 'pending_transfer'])
 
   const confirmedRegs = registrations ?? []
 
@@ -95,6 +95,22 @@ export async function POST(request: NextRequest, { params }: Params) {
   // 6. Parallel refund via Promise.allSettled (Vercel 10s timeout constraint)
   const refundResults = await Promise.allSettled(
     confirmedRegs.map(async (reg) => {
+      // 계좌이체: TossPayments 환불 스킵
+      if (reg.payment_method === 'transfer') {
+        const isPending = reg.status === 'pending_transfer'
+        const isWaitlisted = reg.status === 'waitlisted'
+        await adminSupabase.from('registrations')
+          .update({
+            status: isPending ? 'cancelled' : isWaitlisted ? 'waitlist_refunded' : 'cancelled',
+            cancel_type: isPending ? 'meeting_deleted' : isWaitlisted ? 'waitlist_auto_refunded' : 'meeting_deleted',
+            refunded_amount: isPending ? 0 : null,
+            cancelled_at: new Date().toISOString(),
+          })
+          .eq('id', reg.id)
+          .eq('status', reg.status)
+        return // Skip TossPayments
+      }
+
       if (reg.payment_id) {
         try {
           // 100% refund = omit amount
