@@ -34,8 +34,7 @@ export default async function TransferPage({ params }: Props) {
   const bankName = settings.bank_name ?? ''
   const bankAccount = settings.bank_account ?? ''
   const bankHolder = settings.bank_holder ?? ''
-  const realName = profile.real_name ?? profile.nickname
-  const depositorName = `${meeting.title} ${realName}`
+  const depositorName = `${meeting.title} ${profile.nickname}`
 
   return (
     <div className="mx-auto max-w-screen-sm px-5 py-8">
