@@ -24,7 +24,7 @@ export default function ConfirmTransferButton({ registrationId }: Props) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        alert(data.error ?? '입금 확인 처리에 실패했습니다')
+        alert(data.message ?? '입금 확인 처리에 실패했습니다')
         return
       }
 

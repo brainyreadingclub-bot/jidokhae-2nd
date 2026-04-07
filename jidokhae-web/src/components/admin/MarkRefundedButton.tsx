@@ -25,7 +25,7 @@ export default function MarkRefundedButton({ registrationId, paidAmount }: Props
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        alert(data.error ?? '환불 완료 처리에 실패했습니다')
+        alert(data.message ?? '환불 완료 처리에 실패했습니다')
         return
       }
 
