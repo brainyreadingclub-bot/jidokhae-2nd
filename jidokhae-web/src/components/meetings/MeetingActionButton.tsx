@@ -20,9 +20,13 @@ type Props = {
   paidAmount?: number | null
   waitlistRegistrationId?: string
   waitlistPaidAmount?: number | null
+  pendingTransferRegistrationId?: string
+  paymentMode?: string
+  registrationPaymentMethod?: 'card' | 'transfer'
 }
 
 type CancelPhase = 'idle' | 'info' | 'confirm' | 'processing' | 'complete'
+type PendingTransferCancelPhase = 'idle' | 'confirm' | 'processing'
 type WaitlistCancelPhase = 'idle' | 'confirm' | 'processing' | 'complete'
 
 export default function MeetingActionButton({
@@ -36,6 +40,9 @@ export default function MeetingActionButton({
   paidAmount,
   waitlistRegistrationId,
   waitlistPaidAmount,
+  pendingTransferRegistrationId,
+  paymentMode,
+  registrationPaymentMethod,
 }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -46,17 +53,33 @@ export default function MeetingActionButton({
     refundRate: number
   } | null>(null)
   const [waitlistCancelPhase, setWaitlistCancelPhase] = useState<WaitlistCancelPhase>('idle')
+  const [pendingTransferCancelPhase, setPendingTransferCancelPhase] = useState<PendingTransferCancelPhase>('idle')
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
   }
 
-  // --- Register (기존 M4 코드 그대로) ---
+  // --- Register ---
   async function handleRegister() {
     if (loading) return
     setLoading(true)
 
+    // 계좌이체 모드: 이체 안내 페이지로 이동
+    if (paymentMode === 'transfer_only') {
+      trackEvent('begin_checkout', {
+        item_id: meetingId,
+        item_name: meetingTitle,
+        value: meetingFee,
+        currency: 'KRW',
+        registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
+        payment_method: 'transfer',
+      })
+      router.push(`/meetings/${meetingId}/transfer`)
+      return
+    }
+
+    // 카드결제 모드: TossPayments SDK
     trackEvent('begin_checkout', {
       item_id: meetingId,
       item_name: meetingTitle,
@@ -86,6 +109,30 @@ export default function MeetingActionButton({
     } catch {
       showToast('결제 요청에 실패했습니다')
       setLoading(false)
+    }
+  }
+
+  // --- Pending transfer cancel (2단계: confirm → processing) ---
+  async function handlePendingTransferCancelConfirm() {
+    if (!pendingTransferRegistrationId) return
+    setPendingTransferCancelPhase('processing')
+    try {
+      const res = await fetch('/api/registrations/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId: pendingTransferRegistrationId }),
+      })
+      const data = await res.json()
+      if (data.status === 'success' || data.status === 'already_cancelled') {
+        setPendingTransferCancelPhase('idle')
+        router.refresh()
+      } else {
+        setPendingTransferCancelPhase('idle')
+        showToast(data.message || '취소에 실패했습니다')
+      }
+    } catch {
+      setPendingTransferCancelPhase('idle')
+      showToast('네트워크 오류가 발생했습니다')
     }
   }
 
@@ -174,7 +221,8 @@ export default function MeetingActionButton({
     (buttonState.type === 'full') ||
     (buttonState.type === 'cancel' && cancelPhase === 'idle') ||
     (buttonState.type === 'join_waitlist') ||
-    (buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle')
+    (buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle') ||
+    (buttonState.type === 'pending_transfer' && pendingTransferCancelPhase === 'idle')
 
   return (
     <>
@@ -264,6 +312,20 @@ export default function MeetingActionButton({
               대기 취소하기
             </button>
           )}
+
+          {buttonState.type === 'pending_transfer' && pendingTransferCancelPhase === 'idle' && (
+            <button
+              onClick={() => setPendingTransferCancelPhase('confirm')}
+              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
+            >
+              신청 취소
+            </button>
+          )}
         </StickyBottom>
       )}
 
@@ -301,11 +363,15 @@ export default function MeetingActionButton({
                 </span>
                 <br />
                 <span className="text-xs text-primary-400">
-                  영업일 기준 3~5일 내 환불됩니다
+                  {registrationPaymentMethod === 'transfer'
+                    ? '환불은 운영자 확인 후 입금됩니다'
+                    : '영업일 기준 3~5일 내 환불됩니다'}
                 </span>
               </>
             ) : (
-              '환불 불가 기간으로 환불 금액이 없습니다'
+              registrationPaymentMethod === 'transfer'
+                ? '취소가 접수되었습니다'
+                : '환불 불가 기간으로 환불 금액이 없습니다'
             )}
           </p>
           <button
@@ -550,6 +616,47 @@ export default function MeetingActionButton({
           <div className="flex flex-col items-center py-4">
             <Spinner />
             <p className="mt-3 text-sm text-primary-500">대기 취소 처리 중...</p>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* === Pending Transfer Cancel Confirm Modal === */}
+      {pendingTransferCancelPhase === 'confirm' && (
+        <ModalOverlay onClose={() => setPendingTransferCancelPhase('idle')}>
+          <h3 className="text-base font-bold text-primary-900 text-center">
+            신청을 취소하시겠습니까?
+          </h3>
+          <p className="mt-3 text-sm text-primary-600/70 text-center">
+            취소 후에는 다시 신청해야 합니다.
+          </p>
+          <div className="mt-5 flex gap-2">
+            <button
+              onClick={() => setPendingTransferCancelPhase('idle')}
+              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
+              style={{
+                backgroundColor: 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-300)',
+                color: 'var(--color-primary-600)',
+              }}
+            >
+              돌아가기
+            </button>
+            <button
+              onClick={handlePendingTransferCancelConfirm}
+              className="flex-1 rounded-[var(--radius-md)] bg-error py-2.5 text-sm font-bold text-white transition-colors hover:bg-error/90"
+            >
+              취소하기
+            </button>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* === Pending Transfer Cancel Processing Modal === */}
+      {pendingTransferCancelPhase === 'processing' && (
+        <ModalOverlay>
+          <div className="flex flex-col items-center py-4">
+            <Spinner />
+            <p className="mt-3 text-sm text-primary-500">취소 처리 중...</p>
           </div>
         </ModalOverlay>
       )}

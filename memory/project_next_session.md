@@ -1,28 +1,27 @@
 # 다음 세션 핸드오프
 
-**마지막 갱신:** 2026-03-27
+**마지막 갱신:** 2026-04-07
 
 ## 현재 진행 상태
 
-- Phase 2-3 백오피스: **완료**
-- UI 디테일 개선 4건: **완료 + 푸시됨** (전 세션)
-- **CalendarStrip 주간뷰 버그 수정 완료 + 사용자 확인 ✅:**
-  - 가로 스크롤 구조 제거 → 단일 주간 표시로 단순화
-  - `<` `>` 버튼으로만 주 이동, 월 경계 시 "3-4월" 형식 레이블
-  - `kst.ts`: getDaysUntil KST 타임존 명시 (+09:00) + 테스트 5건 추가
+- **계좌이체 브릿지:** 구현 완료 + 검증 완료 (feature/bank-transfer 브랜치)
+  - 5개 검증 에이전트 풀 스캔 → P0 3건 + P1 4건 수정 완료
+  - 종합 보고서: `verification-squad/reports/2026-04-06/08-final-report.md`
+  - 설계서: `docs/superpowers/specs/2026-04-04-bank-transfer-bridge-design.md`
 
 ## 다음 할 일 (우선순위 순)
 
-1. **PG 심사 통과 대기** — TossPayments 승인 후 실결제 테스트
-2. 사용자가 새 지시서를 전달하면 실행
+1. **main 병합 + push** — DB 마이그레이션 실행 후 push
+2. **Supabase SQL 마이그레이션 3개 실행** (migration-bank-transfer.sql → functions.sql → settings.sql)
+3. **프로덕션 수동 테스트** — 계좌이체 신청/취소/운영자 확인 흐름
+4. **PG 심사 통과 후** — site_settings.payment_mode → 'card_only' 전환
 
 ## 블로커
 
-- PG 심사 승인 대기 중
+- 토스페이먼츠 라이브 키 심사 대기 중 (계좌이체 브릿지로 우회)
 
 ## 주의사항
 
-- **(main) 라우트 그룹 페이지는 카카오 로그인 필수** → 로컬 프리뷰 불가, Vercel에서만 확인
-- 가로 스크롤 UI 사용 시: 스크롤바 숨김 + 상태 동기화 사전 검증 (feedback_2026-03-27_scroll-ui-pitfall.md)
-- Windows 환경: preview_start는 `cmd /c` 래퍼 필요 (feedback_2026-03-26_preview-windows.md)
-- 같은 파일 다중 작업 시: 편집-커밋 순차 실행 (feedback_2026-03-26_commit-ordering.md)
+- DB 마이그레이션은 코드 배포 전에 실행해야 함 (register_transfer RPC 필요)
+- migration-bank-transfer-settings.sql의 계좌 정보를 실제 값으로 교체
+- (main) 라우트 그룹 페이지는 카카오 로그인 필수 → 로컬 프리뷰 불가, Vercel에서만 확인

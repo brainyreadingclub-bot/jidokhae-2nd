@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { getSiteSettings } from '@/lib/site-settings'
+import BankInfoCard from '@/components/meetings/BankInfoCard'
 import type { Meeting } from '@/types/meeting'
 
 type Props = {
@@ -12,6 +14,7 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
   const { id } = await params
   const { paymentKey: paymentId, type } = await searchParams
   const isWaitlisted = type === 'waitlisted'
+  const isPendingTransfer = type === 'pending_transfer'
   const supabase = await createClient()
 
   // Fetch meeting info
@@ -22,6 +25,9 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
     .single()
 
   const typedMeeting = meeting as Meeting | null
+
+  // Fetch bank info for pending_transfer
+  const settings = isPendingTransfer ? await getSiteSettings() : null
 
   // Fetch registration info if paymentId provided
   let paidAmount: number | null = null
@@ -62,12 +68,16 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
         </div>
 
         <h1 className="text-xl font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-          {isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
+          {isPendingTransfer
+            ? '신청이 접수되었습니다'
+            : isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
         </h1>
         <p className="mt-2 text-sm text-primary-500/70">
-          {isWaitlisted
-            ? '취소자 발생 시 자동으로 참여가 확정됩니다'
-            : '모임에 참여해 주셔서 감사합니다'}
+          {isPendingTransfer
+            ? '입금 확인 후 참여가 확정됩니다'
+            : isWaitlisted
+              ? '취소자 발생 시 자동으로 참여가 확정됩니다'
+              : '모임에 참여해 주셔서 감사합니다'}
         </p>
         {isWaitlisted && (
           <p className="mt-1 text-xs text-primary-400">
@@ -111,6 +121,17 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
               </span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Bank info for pending transfer */}
+      {isPendingTransfer && settings && (
+        <div className="mt-4 px-1">
+          <BankInfoCard
+            bankName={settings.bank_name ?? ''}
+            bankAccount={settings.bank_account ?? ''}
+            bankHolder={settings.bank_holder ?? ''}
+          />
         </div>
       )}
 

@@ -23,7 +23,7 @@ export async function processUserCancel(
   // 1. Fetch registration + meeting date (ownership check via user_id)
   const { data: reg, error: fetchError } = await supabase
     .from('registrations')
-    .select('id, status, payment_id, paid_amount, meeting_id, meetings(date)')
+    .select('id, status, payment_id, paid_amount, meeting_id, payment_method, meetings(date)')
     .eq('id', registrationId)
     .eq('user_id', userId)
     .single()
@@ -37,8 +37,8 @@ export async function processUserCancel(
     return { status: 'already_cancelled' }
   }
 
-  // 3. Must be confirmed to cancel
-  if (reg.status !== 'confirmed') {
+  // 3. Must be confirmed or pending_transfer to cancel
+  if (reg.status !== 'confirmed' && reg.status !== 'pending_transfer') {
     return { status: 'error', message: '취소할 수 없는 상태입니다' }
   }
 
@@ -48,7 +48,34 @@ export async function processUserCancel(
   const kstToday = getKSTToday()
   const { refundAmount, refundRate } = calculateRefund(meetingDate, paidAmount, kstToday)
 
-  // 5. TossPayments cancel (skip if 0 refund or no payment_id)
+  // 5a. 계좌이체 분기: TossPayments API 호출 없이 DB만 업데이트
+  if (reg.payment_method === 'transfer') {
+    const isPending = reg.status === 'pending_transfer'
+    const { data: updated } = await supabase
+      .from('registrations')
+      .update({
+        status: 'cancelled',
+        cancel_type: 'user_cancelled',
+        refunded_amount: isPending ? 0 : null, // pending: 미입금(0), confirmed: 운영자 수동 환불 대기(null)
+        cancelled_at: new Date().toISOString(),
+      })
+      .eq('id', registrationId)
+      .eq('status', reg.status)
+      .select('id')
+
+    if (!updated || updated.length === 0) {
+      return { status: 'already_cancelled' }
+    }
+
+    return {
+      status: 'success',
+      refundedAmount: isPending ? 0 : refundAmount,
+      refundRate: isPending ? 0 : refundRate,
+      meetingId: reg.meeting_id,
+    }
+  }
+
+  // 5b. TossPayments cancel (skip if 0 refund or no payment_id)
   if (refundAmount > 0 && reg.payment_id) {
     try {
       await cancelPayment(

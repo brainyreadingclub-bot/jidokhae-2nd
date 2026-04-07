@@ -226,6 +226,24 @@ describe('getButtonState', () => {
     })
   })
 
+  describe('입금 대기 상태 (계좌이체)', () => {
+    it('입금 대기 → pending_transfer', () => {
+      expect(getButtonState(FUTURE, TODAY, false, false, false, true)).toEqual({ type: 'pending_transfer' })
+    })
+
+    it('입금 대기 + 정원 초과 → pending_transfer (이미 신청)', () => {
+      expect(getButtonState(FUTURE, TODAY, false, true, false, true)).toEqual({ type: 'pending_transfer' })
+    })
+
+    it('confirmed 우선 → cancel (confirmed > pending_transfer)', () => {
+      expect(getButtonState(FUTURE, TODAY, true, false, false, true)).toEqual({ type: 'cancel' })
+    })
+
+    it('모임 후 + 입금 대기 → none (과거 모임)', () => {
+      expect(getButtonState(PAST, TODAY, false, false, false, true)).toEqual({ type: 'none' })
+    })
+  })
+
   describe('모임 후', () => {
     it('신청완료 → attended', () => {
       expect(getButtonState(PAST, TODAY, true, false)).toEqual({ type: 'attended' })

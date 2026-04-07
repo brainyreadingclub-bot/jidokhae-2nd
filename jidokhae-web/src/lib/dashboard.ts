@@ -237,3 +237,25 @@ export async function getVenueSettlementData(
       }
     })
 }
+
+/** 계좌이체 관련 알림 집계 */
+export async function getTransferAlerts(supabase: SupabaseClient) {
+  const [pendingResult, refundResult] = await Promise.all([
+    supabase
+      .from('registrations')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending_transfer'),
+    supabase
+      .from('registrations')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'cancelled')
+      .eq('payment_method', 'transfer')
+      .is('refunded_amount', null)
+      .gt('paid_amount', 0),
+  ])
+
+  return {
+    pendingTransferCount: pendingResult.count ?? 0,
+    pendingRefundCount: refundResult.count ?? 0,
+  }
+}
