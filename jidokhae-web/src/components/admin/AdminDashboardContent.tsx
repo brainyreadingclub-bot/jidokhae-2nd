@@ -82,13 +82,19 @@ export default async function AdminDashboardContent({ filter }: { filter: string
       {(alerts.deletingCount > 0 || alerts.unsettledVenues.length > 0 || transferAlerts.pendingTransferCount > 0 || transferAlerts.pendingRefundCount > 0) && (
         <div className="mb-4 space-y-2">
           {transferAlerts.pendingTransferCount > 0 && (
-            <div
-              className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-accent-700"
+            <Link
+              href="#pending-transfers"
+              className="flex items-center justify-between rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-accent-700 transition-colors hover:bg-accent-100"
               style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-200)' }}
             >
-              <span>🟠</span>
-              <span>입금 대기 {transferAlerts.pendingTransferCount}건</span>
-            </div>
+              <span className="flex items-center gap-2">
+                <span>🟠</span>
+                <span>입금 대기 {transferAlerts.pendingTransferCount}건</span>
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </Link>
           )}
           {transferAlerts.pendingRefundCount > 0 && (
             <div
@@ -229,7 +235,7 @@ export default async function AdminDashboardContent({ filter }: { filter: string
       </div>
 
       {/* ── 모임 목록 ── */}
-      <div className="flex items-center justify-between mb-4">
+      <div id="pending-transfers" className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>모임 목록</h1>
         <Link
           href="/admin/meetings/new"
