@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 
 type Props = {
   meetingId: string
-  meetingFee: number
 }
 
 export default function TransferForm({ meetingId }: Props) {

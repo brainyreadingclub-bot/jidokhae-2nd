@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { getUser } from '@/lib/auth'
 import { getMeeting } from '@/lib/meeting'
 import { getProfile } from '@/lib/profile'
-import { getSiteSettings } from '@/lib/site-settings'
+import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
 import { formatFee } from '@/lib/kst'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import TransferForm from '@/components/meetings/TransferForm'
@@ -27,7 +27,8 @@ export default async function TransferPage({ params }: Props) {
     getSiteSettings(),
   ])
 
-  if (settings.payment_mode !== 'transfer_only') {
+  const paymentMode = settings.payment_mode ?? DEFAULT_PAYMENT_MODE
+  if (paymentMode !== 'transfer_only') {
     redirect(`/meetings/${id}`)
   }
 
@@ -85,7 +86,7 @@ export default async function TransferPage({ params }: Props) {
 
       {/* Transfer form (submit button) */}
       <div className="mt-8">
-        <TransferForm meetingId={id} meetingFee={meeting.fee} />
+        <TransferForm meetingId={id} />
       </div>
     </div>
   )

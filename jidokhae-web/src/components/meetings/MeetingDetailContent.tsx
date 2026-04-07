@@ -4,7 +4,7 @@ import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { getMeeting } from '@/lib/meeting'
 import { getKSTToday, getButtonState } from '@/lib/kst'
-import { getSiteSettings } from '@/lib/site-settings'
+import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
@@ -72,7 +72,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   const hasConfirmed = myReg !== null
   const hasWaitlisted = myWaitlistReg !== null
   const hasPendingTransfer = myPendingTransfer !== null
-  const paymentMode = settings.payment_mode ?? 'card_only'
+  const paymentMode = settings.payment_mode ?? DEFAULT_PAYMENT_MODE
   const isFull = confirmedCount >= typedMeeting.capacity
   const role = profile.role ?? 'member'
   const isAdmin = role === 'admin'
