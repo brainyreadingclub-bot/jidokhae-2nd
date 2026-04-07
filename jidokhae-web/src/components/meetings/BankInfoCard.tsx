@@ -23,7 +23,7 @@ export default function BankInfoCard({ bankName, bankAccount, bankHolder }: Prop
 
   return (
     <div
-      className="rounded-2xl p-5"
+      className="rounded-[var(--radius-lg)] p-5"
       style={{
         backgroundColor: 'var(--color-surface-100)',
         border: '1px solid var(--color-surface-300)',

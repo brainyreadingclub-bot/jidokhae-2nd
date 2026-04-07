@@ -7,6 +7,8 @@ import type { ButtonState } from '@/lib/kst'
 import { formatFee } from '@/lib/kst'
 import { calculateRefund, getRefundRuleText } from '@/lib/refund'
 import ModalOverlay from '@/components/ui/ModalOverlay'
+import BankInfoCard from '@/components/meetings/BankInfoCard'
+import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 import { trackEvent } from '@/lib/analytics'
 
 type Props = {
@@ -23,10 +25,15 @@ type Props = {
   pendingTransferRegistrationId?: string
   paymentMode?: string
   registrationPaymentMethod?: 'card' | 'transfer'
+  bankName?: string
+  bankAccount?: string
+  bankHolder?: string
+  depositorName?: string
 }
 
 type CancelPhase = 'idle' | 'info' | 'confirm' | 'processing' | 'complete'
 type PendingTransferCancelPhase = 'idle' | 'confirm' | 'processing'
+type RegisterPhase = 'idle' | 'method' | 'transfer' | 'processing'
 type WaitlistCancelPhase = 'idle' | 'confirm' | 'processing' | 'complete'
 
 export default function MeetingActionButton({
@@ -43,6 +50,10 @@ export default function MeetingActionButton({
   pendingTransferRegistrationId,
   paymentMode,
   registrationPaymentMethod,
+  bankName,
+  bankAccount,
+  bankHolder,
+  depositorName,
 }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -54,6 +65,7 @@ export default function MeetingActionButton({
   } | null>(null)
   const [waitlistCancelPhase, setWaitlistCancelPhase] = useState<WaitlistCancelPhase>('idle')
   const [pendingTransferCancelPhase, setPendingTransferCancelPhase] = useState<PendingTransferCancelPhase>('idle')
+  const [registerPhase, setRegisterPhase] = useState<RegisterPhase>('idle')
 
   function showToast(msg: string) {
     setToast(msg)
@@ -65,7 +77,7 @@ export default function MeetingActionButton({
     if (loading) return
     setLoading(true)
 
-    // 계좌이체 모드: 이체 안내 페이지로 이동
+    // 계좌이체 모드: 결제 방법 선택 모달
     if (paymentMode === 'transfer_only') {
       trackEvent('begin_checkout', {
         item_id: meetingId,
@@ -75,7 +87,8 @@ export default function MeetingActionButton({
         registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
         payment_method: 'transfer',
       })
-      router.push(`/meetings/${meetingId}/transfer`)
+      setRegisterPhase('method')
+      setLoading(false)
       return
     }
 
@@ -616,6 +629,141 @@ export default function MeetingActionButton({
           <div className="flex flex-col items-center py-4">
             <Spinner />
             <p className="mt-3 text-sm text-primary-500">대기 취소 처리 중...</p>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* === Register Method / Transfer Modal === */}
+      {(registerPhase === 'method' || registerPhase === 'transfer' || registerPhase === 'processing') && (
+        <ModalOverlay onClose={() => setRegisterPhase('idle')}>
+          <div className="max-h-[85vh] overflow-y-auto">
+            {/* Method Selection */}
+            {registerPhase === 'method' && (
+              <>
+                <h3 className="text-base font-bold text-primary-900 text-center">
+                  결제 방법을 선택해주세요
+                </h3>
+                <div className="mt-5 space-y-3">
+                  {/* 카드결제 — disabled */}
+                  <div
+                    className="rounded-[var(--radius-lg)] p-4 opacity-50 cursor-not-allowed"
+                    style={{
+                      backgroundColor: 'var(--color-surface-100)',
+                      border: '1px solid var(--color-surface-300)',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-400">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-semibold text-primary-700">카드결제</p>
+                        <p className="text-xs text-primary-400 mt-0.5">준비 중입니다</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 계좌이체 — active */}
+                  <button
+                    onClick={() => setRegisterPhase('transfer')}
+                    className="w-full rounded-[var(--radius-lg)] p-4 text-left transition-all hover:bg-primary-100 active:scale-[0.98]"
+                    style={{
+                      backgroundColor: 'var(--color-primary-50)',
+                      border: '1px solid var(--color-primary-200)',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-600">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-semibold text-primary-800">계좌이체</p>
+                        <p className="text-xs text-primary-500 mt-0.5">계좌번호로 직접 입금</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Transfer Details */}
+            {registerPhase === 'transfer' && (
+              <>
+                <button
+                  onClick={() => setRegisterPhase('method')}
+                  className="inline-flex items-center gap-1 text-sm text-primary-500 hover:text-primary-700 transition-colors mb-4"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                  뒤로
+                </button>
+
+                <div className="text-center mb-4">
+                  <p className="text-sm font-bold text-primary-900">{meetingTitle}</p>
+                  <p className="text-lg font-bold text-accent-600 mt-1">
+                    {formatFee(meetingFee)}원
+                  </p>
+                </div>
+
+                {bankName && bankAccount && bankHolder && (
+                  <BankInfoCard
+                    bankName={bankName}
+                    bankAccount={bankAccount}
+                    bankHolder={bankHolder}
+                  />
+                )}
+
+                {depositorName && (
+                  <CopyableDepositorName depositorName={depositorName} />
+                )}
+
+                <button
+                  onClick={async () => {
+                    setRegisterPhase('processing')
+                    try {
+                      const res = await fetch('/api/registrations/transfer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ meetingId }),
+                      })
+                      const data = await res.json()
+                      if (data.status === 'pending_transfer') {
+                        router.replace(`/meetings/${meetingId}/confirm?type=pending_transfer`)
+                      } else if (data.status === 'waitlisted') {
+                        router.replace(`/meetings/${meetingId}/confirm?type=waitlisted`)
+                      } else if (data.status === 'already_registered') {
+                        setRegisterPhase('transfer')
+                        showToast('이미 신청한 모임입니다')
+                      } else {
+                        setRegisterPhase('transfer')
+                        showToast(data.message || '신청 처리에 실패했습니다')
+                      }
+                    } catch {
+                      setRegisterPhase('transfer')
+                      showToast('네트워크 오류가 발생했습니다')
+                    }
+                  }}
+                  className="mt-5 w-full rounded-[var(--radius-lg)] bg-primary-600 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98]"
+                  style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
+                >
+                  입금 완료
+                </button>
+                <p className="mt-2 text-center text-xs text-primary-400">
+                  입금 후 운영자 확인까지 대기합니다
+                </p>
+              </>
+            )}
+
+            {/* Processing */}
+            {registerPhase === 'processing' && (
+              <div className="flex flex-col items-center py-4">
+                <Spinner />
+                <p className="mt-3 text-sm text-primary-500">신청 처리 중...</p>
+              </div>
+            )}
           </div>
         </ModalOverlay>
       )}

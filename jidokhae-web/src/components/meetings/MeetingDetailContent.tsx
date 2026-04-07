@@ -152,6 +152,10 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         pendingTransferRegistrationId={myPendingTransfer?.id}
         paymentMode={paymentMode}
         registrationPaymentMethod={myReg?.payment_method}
+        bankName={settings.bank_name ?? ''}
+        bankAccount={settings.bank_account ?? ''}
+        bankHolder={settings.bank_holder ?? ''}
+        depositorName={`${typedMeeting.title} ${profile.nickname}`}
       />
 
       {isEditorOrAdmin && (
