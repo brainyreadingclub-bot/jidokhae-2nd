@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { registrationIds?: string[] }
+  let body: { registrationIds?: string[]; action?: string }
   try {
     body = await request.json()
   } catch {
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { registrationIds } = body
+  const action = body.action ?? 'confirm'
   if (!registrationIds || !Array.isArray(registrationIds) || registrationIds.length === 0) {
     return NextResponse.json(
       { status: 'error', message: 'registrationIds가 필요합니다' },
@@ -71,17 +72,30 @@ export async function POST(request: NextRequest) {
   let failed = 0
 
   for (const registrationId of registrationIds) {
-    const { data, error } = await admin
-      .from('registrations')
-      .update({ status: 'confirmed' })
-      .eq('id', registrationId)
-      .eq('status', 'pending_transfer')
-      .select('id')
+    if (action === 'unconfirm') {
+      const { data } = await admin
+        .from('registrations')
+        .update({ status: 'pending_transfer' })
+        .eq('id', registrationId)
+        .eq('status', 'confirmed')
+        .eq('payment_method', 'transfer')
+        .select('id')
 
-    if (error || !data || data.length === 0) {
-      failed++
+      if (data && data.length > 0) confirmed++
+      else failed++
     } else {
-      confirmed++
+      const { data, error } = await admin
+        .from('registrations')
+        .update({ status: 'confirmed' })
+        .eq('id', registrationId)
+        .eq('status', 'pending_transfer')
+        .select('id')
+
+      if (error || !data || data.length === 0) {
+        failed++
+      } else {
+        confirmed++
+      }
     }
   }
 

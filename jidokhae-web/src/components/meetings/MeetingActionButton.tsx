@@ -25,6 +25,8 @@ type Props = {
   pendingTransferRegistrationId?: string
   paymentMode?: string
   registrationPaymentMethod?: 'card' | 'transfer'
+  supportContact?: string
+  waitlistPaymentMethod?: 'card' | 'transfer'
   bankName?: string
   bankAccount?: string
   bankHolder?: string
@@ -50,6 +52,8 @@ export default function MeetingActionButton({
   pendingTransferRegistrationId,
   paymentMode,
   registrationPaymentMethod,
+  supportContact,
+  waitlistPaymentMethod,
   bankName,
   bankAccount,
   bankHolder,
@@ -377,7 +381,7 @@ export default function MeetingActionButton({
                 <br />
                 <span className="text-xs text-primary-400">
                   {registrationPaymentMethod === 'transfer'
-                    ? '환불은 운영자 확인 후 입금됩니다'
+                    ? supportContact || '환불은 운영자에게 문의해주세요'
                     : '영업일 기준 3~5일 내 환불됩니다'}
                 </span>
               </>
@@ -449,11 +453,17 @@ export default function MeetingActionButton({
           </div>
           <h3 className="text-base font-bold text-primary-900">대기 취소 완료</h3>
           <p className="mt-2 text-sm text-primary-600/70">
-            결제 금액이 전액 환불됩니다.
-            <br />
-            <span className="text-xs text-primary-400">
-              영업일 기준 3~5일 내 환불됩니다
-            </span>
+            {waitlistPaymentMethod === 'transfer' ? (
+              '대기가 취소되었습니다'
+            ) : (
+              <>
+                결제 금액이 전액 환불됩니다.
+                <br />
+                <span className="text-xs text-primary-400">
+                  영업일 기준 3~5일 내 환불됩니다
+                </span>
+              </>
+            )}
           </p>
           <button
             onClick={() => router.push('/')}
@@ -515,6 +525,19 @@ export default function MeetingActionButton({
           <div className="mt-4 text-xs text-primary-400 text-center">
             {getRefundRuleText()}
           </div>
+          {registrationPaymentMethod === 'transfer' && refundInfo.refundAmount > 0 && supportContact && (
+            <div
+              className="mt-3 rounded-[var(--radius-md)] p-3 text-center"
+              style={{
+                backgroundColor: 'var(--color-accent-50)',
+                border: '1px solid var(--color-accent-200)',
+              }}
+            >
+              <p className="text-xs text-accent-700 leading-relaxed">
+                {supportContact}
+              </p>
+            </div>
+          )}
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setCancelPhase('idle')}

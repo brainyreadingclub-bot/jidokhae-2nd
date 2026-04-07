@@ -35,7 +35,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
       .limit(1),
     supabase
       .from('registrations')
-      .select('id, paid_amount')
+      .select('id, paid_amount, payment_method')
       .eq('user_id', user.id)
       .eq('meeting_id', id)
       .eq('status', 'waitlisted')
@@ -152,6 +152,8 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         pendingTransferRegistrationId={myPendingTransfer?.id}
         paymentMode={paymentMode}
         registrationPaymentMethod={myReg?.payment_method}
+        supportContact={settings.support_contact ?? ''}
+        waitlistPaymentMethod={myWaitlistReg?.payment_method}
         bankName={settings.bank_name ?? ''}
         bankAccount={settings.bank_account ?? ''}
         bankHolder={settings.bank_holder ?? ''}

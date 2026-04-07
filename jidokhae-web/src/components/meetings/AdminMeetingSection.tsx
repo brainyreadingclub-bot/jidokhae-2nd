@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
 import AttendanceToggle from './AttendanceToggle'
-import ConfirmTransferButton from '@/components/admin/ConfirmTransferButton'
-import MarkRefundedButton from '@/components/admin/MarkRefundedButton'
+import DepositToggle from '@/components/admin/DepositToggle'
 import { getKSTToday, formatFee } from '@/lib/kst'
 import type { RegistrationWithProfile } from '@/types/registration'
 
@@ -227,10 +226,10 @@ export default function AdminMeetingSection({
                       )}
                     </div>
                     {reg.status === 'pending_transfer' && (
-                      <ConfirmTransferButton registrationId={reg.id} />
+                      <DepositToggle registrationId={reg.id} isDeposited={false} />
                     )}
-                    {reg.status === 'cancelled' && reg.payment_method === 'transfer' && reg.refunded_amount === null && (reg.paid_amount ?? 0) > 0 && (
-                      <MarkRefundedButton registrationId={reg.id} paidAmount={reg.paid_amount!} />
+                    {reg.status === 'confirmed' && reg.payment_method === 'transfer' && (
+                      <DepositToggle registrationId={reg.id} isDeposited={true} />
                     )}
                     {getAmountSubtext(reg)}
                   </div>
