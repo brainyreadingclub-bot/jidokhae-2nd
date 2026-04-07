@@ -6,7 +6,7 @@ type: project
 
 # 다음 세션 핸드오프
 
-**마지막 갱신:** 2026-04-07
+**마지막 갱신:** 2026-04-08
 
 ## 현재 진행 상태
 
@@ -19,10 +19,12 @@ type: project
 - **검증:** 5개 에이전트 풀 스캔 → P0 3건 + P1 4건 수정 완료
   - 종합 보고서: `verification-squad/reports/2026-04-06/08-final-report.md`
 
-- **추가 버그 수정 3건:**
+- **추가 수정:**
   - `data.error` → `data.message` (admin 버튼 에러 필드)
   - `!refunded_amount` → `=== null` (환불완료 버튼 표시 조건)
   - 입금자명 본명 → 닉네임
+  - DepositToggle: `router.refresh()` → 낙관적 상태 업데이트 (깜박임 제거)
+  - 대시보드 "입금 대기 N건": 클릭 시 모임 목록으로 스크롤
 
 ## 다음 할 일 (우선순위 순)
 
