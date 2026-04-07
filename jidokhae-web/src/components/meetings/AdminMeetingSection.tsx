@@ -229,7 +229,7 @@ export default function AdminMeetingSection({
                     {reg.status === 'pending_transfer' && (
                       <ConfirmTransferButton registrationId={reg.id} />
                     )}
-                    {reg.status === 'cancelled' && reg.payment_method === 'transfer' && !reg.refunded_amount && (reg.paid_amount ?? 0) > 0 && (
+                    {reg.status === 'cancelled' && reg.payment_method === 'transfer' && reg.refunded_amount === null && (reg.paid_amount ?? 0) > 0 && (
                       <MarkRefundedButton registrationId={reg.id} paidAmount={reg.paid_amount!} />
                     )}
                     {getAmountSubtext(reg)}
