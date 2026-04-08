@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+    return NextResponse.json({ status: 'error', message: 'Invalid body' }, { status: 400 })
   }
 
   // Only process payment status changes
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   try {
     payment = await getPayment(paymentKey)
   } catch {
-    return NextResponse.json({ error: 'Failed to verify' }, { status: 500 })
+    return NextResponse.json({ status: 'error', message: 'Failed to verify' }, { status: 500 })
   }
 
   if (payment.status !== 'DONE') {
