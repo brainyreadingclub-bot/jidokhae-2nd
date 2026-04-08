@@ -35,6 +35,7 @@ export async function confirmPayment(
     method: 'POST',
     headers: defaultHeaders(),
     body: JSON.stringify({ paymentKey, orderId, amount }),
+    signal: AbortSignal.timeout(8000),
   })
 
   if (!res.ok) {
@@ -47,8 +48,9 @@ export async function confirmPayment(
 
 /** Retrieve payment info */
 export async function getPayment(paymentKey: string): Promise<TossPayment> {
-  const res = await fetch(`${BASE_URL}/v1/payments/${paymentKey}`, {
+  const res = await fetch(`${BASE_URL}/v1/payments/${encodeURIComponent(paymentKey)}`, {
     headers: { Authorization: getAuthHeader() },
+    signal: AbortSignal.timeout(8000),
   })
 
   if (!res.ok) {
@@ -65,13 +67,14 @@ export async function cancelPayment(
   reason: string,
   amount?: number,
 ): Promise<TossPayment> {
-  const res = await fetch(`${BASE_URL}/v1/payments/${paymentKey}/cancel`, {
+  const res = await fetch(`${BASE_URL}/v1/payments/${encodeURIComponent(paymentKey)}/cancel`, {
     method: 'POST',
     headers: defaultHeaders(),
     body: JSON.stringify({
       cancelReason: reason,
       ...(amount !== undefined && { cancelAmount: amount }),
     }),
+    signal: AbortSignal.timeout(8000),
   })
 
   if (!res.ok) {

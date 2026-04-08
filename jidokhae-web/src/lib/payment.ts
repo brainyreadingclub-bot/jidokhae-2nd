@@ -65,6 +65,12 @@ export async function processPaymentConfirmation(
     return { status: 'error', message: '결제가 완료되지 않았습니다' }
   }
 
+  // orderId 교차 검증
+  if (payment.orderId !== orderId) {
+    await safeCancel(paymentKey, 'orderId 불일치')
+    return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
+  }
+
   // Layer 2: Atomic registration via DB Function
   const { data: result, error: rpcError } = await supabase.rpc(
     'confirm_registration',

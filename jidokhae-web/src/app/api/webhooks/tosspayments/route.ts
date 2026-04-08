@@ -38,6 +38,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }
 
+  // orderId 교차 검증 — 위조 방지
+  if (payment.orderId !== orderId) {
+    console.error(`[webhook] orderId 불일치: expected=${payment.orderId}, got=${orderId}`)
+    return NextResponse.json({ status: 'ignored' }, { status: 200 })
+  }
+
   const supabase = createServiceClient()
 
   // Idempotency: already registered or waitlisted?
