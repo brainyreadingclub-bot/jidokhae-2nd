@@ -161,10 +161,97 @@ export default function AdminMeetingSection({
     return null
   }
 
-  function renderTable(regs: RegistrationWithProfile[], showQueueNumber: boolean) {
+  function getDisplayName(reg: RegistrationWithProfile) {
+    return reg.profiles?.real_name
+      ? `${reg.profiles.real_name} (${reg.profiles.nickname})`
+      : reg.profiles?.nickname || '(알 수 없음)'
+  }
+
+  function getQueueNumber(regs: RegistrationWithProfile[], reg: RegistrationWithProfile, idx: number) {
+    if (reg.status !== 'waitlisted') return null
+    return regs.filter((r, i) => i <= idx && r.status === 'waitlisted').length
+  }
+
+  function renderToggle(reg: RegistrationWithProfile, showQueueNumber: boolean) {
+    if (reg.status === 'pending_transfer') {
+      return <DepositToggle registrationId={reg.id} isDeposited={false} />
+    }
+    if (reg.status === 'confirmed' && reg.payment_method === 'transfer') {
+      return <DepositToggle registrationId={reg.id} isDeposited={true} />
+    }
+    if (!showQueueNumber && showAttendance && reg.status === 'confirmed') {
+      return <AttendanceToggle registrationId={reg.id} attended={reg.attended} />
+    }
+    return null
+  }
+
+  function getMobileAmountLine(reg: RegistrationWithProfile) {
+    if (reg.status === 'cancelled') {
+      const parts: string[] = []
+      if (reg.refunded_amount) parts.push(`환불 ${formatFee(reg.refunded_amount)}원`)
+      if (reg.cancel_type) parts.push(`(${CANCEL_TYPE_LABELS[reg.cancel_type] ?? reg.cancel_type})`)
+      return parts.length > 0 ? parts.join('  ') : null
+    }
+    return null
+  }
+
+  function renderMobileCards(regs: RegistrationWithProfile[], showQueueNumber: boolean) {
+    return (
+      <div className="md:hidden space-y-2">
+        {regs.map((reg, idx) => {
+          const queueNum = showQueueNumber ? getQueueNumber(regs, reg, idx) : null
+          const toggle = renderToggle(reg, showQueueNumber)
+          const cancelDetail = getMobileAmountLine(reg)
+
+          return (
+            <div
+              key={reg.id}
+              className="rounded-[var(--radius-md)] p-3"
+              style={{ backgroundColor: 'var(--color-surface-50)', border: '1px solid var(--color-surface-200)' }}
+            >
+              {/* Row 1: name + badges */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm font-medium text-primary-800 truncate min-w-0">
+                  {queueNum !== null && (
+                    <span className="text-xs font-bold text-accent-500 mr-1.5">#{queueNum}</span>
+                  )}
+                  {getDisplayName(reg)}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {getStatusBadge(reg.status)}
+                  {getPaymentMethodLabel(reg.payment_method) && (
+                    <span className="text-[10px] text-primary-400">
+                      {getPaymentMethodLabel(reg.payment_method)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Row 2: date + amount + toggle */}
+              <div className="flex items-center justify-between mt-1.5">
+                <div className="text-xs text-primary-500">
+                  {formatDate(reg.created_at)}
+                  {reg.paid_amount ? (
+                    <span className="text-primary-500/70"> · {formatFee(reg.paid_amount)}원</span>
+                  ) : null}
+                  {cancelDetail && (
+                    <span className="text-primary-400 ml-1.5">{cancelDetail}</span>
+                  )}
+                </div>
+                {toggle && (
+                  <div className="shrink-0 ml-2">{toggle}</div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  function renderDesktopTable(regs: RegistrationWithProfile[], showQueueNumber: boolean) {
     return (
       <div
-        className="rounded-[var(--radius-md)] overflow-hidden"
+        className="hidden md:block rounded-[var(--radius-md)] overflow-hidden"
         style={{
           border: '1px solid var(--color-surface-300)',
         }}
@@ -208,9 +295,7 @@ export default function AdminMeetingSection({
                   </td>
                 )}
                 <td className="px-4 py-3 text-sm font-medium text-primary-800">
-                  {reg.profiles?.real_name
-                    ? `${reg.profiles.real_name} (${reg.profiles.nickname})`
-                    : reg.profiles?.nickname || '(알 수 없음)'}
+                  {getDisplayName(reg)}
                 </td>
                 <td className="px-4 py-3 text-sm text-primary-500/70">
                   {formatDate(reg.created_at)}
@@ -320,7 +405,10 @@ export default function AdminMeetingSection({
             아직 신청자가 없습니다
           </p>
         ) : (
-          renderTable(confirmedRegs, false)
+          <>
+            {renderMobileCards(confirmedRegs, false)}
+            {renderDesktopTable(confirmedRegs, false)}
+          </>
         )}
       </div>
 
@@ -330,7 +418,8 @@ export default function AdminMeetingSection({
           <h3 className="text-xs font-bold text-accent-500 mb-3 tracking-tight">
             대기자 목록 ({waitlistedRegs.filter((r) => r.status === 'waitlisted').length}명)
           </h3>
-          {renderTable(waitlistedRegs, true)}
+          {renderMobileCards(waitlistedRegs, true)}
+          {renderDesktopTable(waitlistedRegs, true)}
         </div>
       )}
     </div>
