@@ -91,12 +91,23 @@ export async function POST(request: NextRequest) {
   const userId = profiles[0].id
 
   // Register via DB function (payment already confirmed by TossPayments)
-  const { data: result } = await supabase.rpc('confirm_registration', {
+  const { data: result, error: rpcError } = await supabase.rpc('confirm_registration', {
     p_user_id: userId,
     p_meeting_id: meetingId,
     p_payment_id: paymentKey,
     p_paid_amount: payment.totalAmount,
   })
+
+  // RPC 실패 시 환불 처리 (고아 결제 방지)
+  if (rpcError) {
+    console.error('[webhook] RPC 실패:', rpcError)
+    try {
+      await cancelPayment(paymentKey, 'webhook RPC 실패 — 자동 환불')
+    } catch (cancelError) {
+      console.error('[webhook] 환불도 실패 — 수동 확인 필요:', cancelError)
+    }
+    return NextResponse.json({ status: 'error', message: 'RPC 실패' }, { status: 500 })
+  }
 
   const rpcResult = result as string
 
