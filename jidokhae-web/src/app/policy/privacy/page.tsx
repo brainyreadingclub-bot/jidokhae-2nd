@@ -121,7 +121,62 @@ export default async function PrivacyPolicyPage() {
           className="text-lg font-bold text-neutral-800"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          6. 이용자의 권리
+          6. 개인정보의 국외 이전
+        </h2>
+        <div className="mt-4 text-sm text-neutral-600 leading-relaxed">
+          <p>회사는 서비스 제공을 위해 아래와 같이 개인정보를 국외로 이전하고 있습니다.</p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full border-collapse text-xs">
+              <thead>
+                <tr className="bg-neutral-100">
+                  <th className="border border-neutral-200 px-2 py-1.5 text-left font-semibold text-neutral-700">이전받는 자</th>
+                  <th className="border border-neutral-200 px-2 py-1.5 text-left font-semibold text-neutral-700">이전 국가</th>
+                  <th className="border border-neutral-200 px-2 py-1.5 text-left font-semibold text-neutral-700">이전 항목</th>
+                  <th className="border border-neutral-200 px-2 py-1.5 text-left font-semibold text-neutral-700">이전 목적</th>
+                  <th className="border border-neutral-200 px-2 py-1.5 text-left font-semibold text-neutral-700">보유 기간</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-neutral-200 px-2 py-1.5">Supabase Inc. (AWS)</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">미국</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">회원 정보, 모임 신청/결제 내역</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">클라우드 데이터베이스 호스팅</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">회원 탈퇴 시까지</td>
+                </tr>
+                <tr>
+                  <td className="border border-neutral-200 px-2 py-1.5">Vercel Inc.</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">미국</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">서비스 접속 로그, 쿠키</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">웹 호스팅 및 서버리스 함수 실행</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">서비스 이용 기간</td>
+                </tr>
+                <tr>
+                  <td className="border border-neutral-200 px-2 py-1.5">Google LLC (GA4)</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">미국</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">익명 처리된 서비스 이용 기록</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">서비스 이용 통계 분석</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">26개월</td>
+                </tr>
+                <tr>
+                  <td className="border border-neutral-200 px-2 py-1.5">주식회사 솔라피</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">대한민국</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">휴대전화 번호, 모임 정보</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">카카오톡 알림톡 발송</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">발송 완료 후 즉시</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2
+          className="text-lg font-bold text-neutral-800"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          7. 이용자의 권리
         </h2>
         <div className="mt-4 text-sm text-neutral-600 leading-relaxed">
           <p>이용자는 언제든지 다음 권리를 행사할 수 있습니다.</p>
@@ -131,6 +186,7 @@ export default async function PrivacyPolicyPage() {
             <li>- 회원 탈퇴 요청</li>
           </ul>
           <p className="mt-2">위 요청은 아래 연락처를 통해 할 수 있으며, 회사는 지체 없이 조치합니다.</p>
+          <p className="mt-2">회원 탈퇴를 원하시는 경우, 카카오톡 &lsquo;단무지&rsquo;에게 1:1 채팅으로 연락해 주세요. 탈퇴 요청 시 관련 법령에 따라 보존이 필요한 정보를 제외하고 지체 없이 파기합니다.</p>
         </div>
       </section>
 
@@ -139,7 +195,7 @@ export default async function PrivacyPolicyPage() {
           className="text-lg font-bold text-neutral-800"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          7. 개인정보 보호 조치
+          8. 개인정보 보호 조치
         </h2>
         <div className="mt-4 text-sm text-neutral-600 leading-relaxed">
           <p>회사는 이용자의 개인정보를 안전하게 관리하기 위해 다음과 같은 조치를 취하고 있습니다.</p>
@@ -157,7 +213,7 @@ export default async function PrivacyPolicyPage() {
           className="text-lg font-bold text-neutral-800"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          8. 개인정보 파기
+          9. 개인정보 파기
         </h2>
         <div className="mt-4 text-sm text-neutral-600 leading-relaxed">
           <p>이용자의 개인정보는 수집 및 이용 목적이 달성된 후 지체 없이 파기합니다.</p>
@@ -173,7 +229,7 @@ export default async function PrivacyPolicyPage() {
           className="text-lg font-bold text-neutral-800"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          9. 개인정보보호 책임자
+          10. 개인정보보호 책임자
         </h2>
         <ul className="mt-4 space-y-2 text-sm text-neutral-600 leading-relaxed">
           <li>- 책임자: {representative}(대표)</li>
@@ -186,7 +242,7 @@ export default async function PrivacyPolicyPage() {
           className="text-lg font-bold text-neutral-800"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          10. 개인정보 처리방침 변경
+          11. 개인정보 처리방침 변경
         </h2>
         <div className="mt-4 text-sm text-neutral-600 leading-relaxed">
           <p>이 개인정보처리방침은 2026년 3월 21일부터 적용됩니다.</p>

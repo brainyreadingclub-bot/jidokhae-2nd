@@ -11,6 +11,7 @@ type Props = {
 export default function LoginClient({ settings }: Props) {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [termsAgreed, setTermsAgreed] = useState(false)
 
   const memberCount = settings['member_count'] ?? '250'
   const regionsLabel = settings['active_regions_label'] ?? '경주 · 포항'
@@ -122,11 +123,25 @@ export default function LoginClient({ settings }: Props) {
           지금 {memberCount}명이 함께 읽고 있어요
         </p>
 
+        {/* Terms Agreement */}
+        <label className="flex w-full max-w-[320px] items-start gap-2.5 mb-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={termsAgreed}
+            onChange={(e) => setTermsAgreed(e.target.checked)}
+            className="mt-1 w-4 h-4 accent-primary-600 rounded"
+          />
+          <span className="text-xs text-neutral-400 leading-relaxed">
+            <a href="/policy/terms" target="_blank" className="underline">이용약관</a> 및{' '}
+            <a href="/policy/privacy" target="_blank" className="underline">개인정보처리방침</a>에 동의합니다
+          </span>
+        </label>
+
         {/* Kakao Login Button */}
         <button
           onClick={handleKakaoLogin}
-          disabled={isLoading}
-          className="flex w-full max-w-[320px] items-center justify-center gap-2.5 rounded-[var(--radius-md)] px-6 py-4 text-sm font-bold shadow-sm transition-shadow hover:shadow-md disabled:opacity-50 active:scale-[0.98]"
+          disabled={isLoading || !termsAgreed}
+          className={`flex w-full max-w-[320px] items-center justify-center gap-2.5 rounded-[var(--radius-md)] px-6 py-4 text-sm font-bold shadow-sm transition-shadow hover:shadow-md active:scale-[0.98] ${!termsAgreed ? 'opacity-40 cursor-not-allowed' : isLoading ? 'opacity-50' : ''}`}
           style={{
             backgroundColor: '#FEE500',
             color: 'rgba(0,0,0,0.85)',
