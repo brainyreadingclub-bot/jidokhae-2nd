@@ -164,6 +164,38 @@ export default async function AdminDashboardContent({ filter }: { filter: string
         </details>
       )}
 
+      {/* ── 지난 달 정산 ── */}
+      {isAdmin && revenue.prevNetRevenue > 0 && (
+        <details className="mb-3">
+          <summary
+            className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3"
+            style={{ backgroundColor: 'var(--color-surface-50)', border: '1px solid var(--color-surface-200)' }}
+          >
+            <div>
+              <span className="text-xs font-bold text-primary-400">지난 달 정산</span>
+              <span className="ml-2 text-sm font-bold text-primary-600">순수입 {formatFee(revenue.prevNetRevenue)}원</span>
+            </div>
+            <svg className="h-4 w-4 text-primary-400 transition-transform [details[open]>&]:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+          </summary>
+          <div className="mt-2 rounded-[var(--radius-md)] px-4 py-3" style={{ backgroundColor: 'var(--color-surface-50)', border: '1px solid var(--color-surface-200)' }}>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <div className="text-xs text-primary-400 mb-1">총 결제</div>
+                <div className="text-sm font-bold text-primary-600">{formatFee(revenue.prevTotalPaid)}원</div>
+              </div>
+              <div>
+                <div className="text-xs text-primary-400 mb-1">환불</div>
+                <div className="text-sm font-bold text-primary-600">{formatFee(revenue.prevTotalRefunded)}원</div>
+              </div>
+              <div>
+                <div className="text-xs text-primary-400 mb-1">순수입</div>
+                <div className="text-sm font-bold text-primary-600">{formatFee(revenue.prevNetRevenue)}원</div>
+              </div>
+            </div>
+          </div>
+        </details>
+      )}
+
       {/* ── 다가오는 모임 ── */}
       {upcoming.count > 0 && (
         <div

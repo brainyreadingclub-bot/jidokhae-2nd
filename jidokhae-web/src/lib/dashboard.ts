@@ -5,6 +5,8 @@ export type MonthlyRevenue = {
   totalPaid: number
   totalRefunded: number
   netRevenue: number
+  prevTotalPaid: number
+  prevTotalRefunded: number
   prevNetRevenue: number
 }
 
@@ -33,8 +35,10 @@ export async function getMonthlyRevenue(
     let totalPaid = 0
     let totalRefunded = 0
     for (const r of data) {
-      if (r.paid_amount) totalPaid += r.paid_amount
-      if (r.refunded_amount && r.refunded_amount > 0) totalRefunded += r.refunded_amount
+      // confirmed 건만 매출로 집계 (입금 확인된 건만)
+      if (r.status === 'confirmed' && r.paid_amount) totalPaid += r.paid_amount
+      // 취소된 건의 환불 금액
+      if (r.status === 'cancelled' && r.refunded_amount && r.refunded_amount > 0) totalRefunded += r.refunded_amount
     }
     return { totalPaid, totalRefunded, netRevenue: totalPaid - totalRefunded }
   }
@@ -44,6 +48,8 @@ export async function getMonthlyRevenue(
 
   return {
     ...curAgg,
+    prevTotalPaid: prevAgg.totalPaid,
+    prevTotalRefunded: prevAgg.totalRefunded,
     prevNetRevenue: prevAgg.netRevenue,
   }
 }
