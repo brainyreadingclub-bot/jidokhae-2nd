@@ -79,7 +79,7 @@ export default async function AdminDashboardContent({ filter }: { filter: string
   return (
     <>
       {/* ── 주의 필요 ── */}
-      {(alerts.deletingCount > 0 || alerts.unsettledVenues.length > 0 || transferAlerts.pendingTransferCount > 0 || transferAlerts.pendingRefundCount > 0) && (
+      {(alerts.deletingCount > 0 || alerts.unsettledVenues.length > 0 || transferAlerts.pendingTransferCount > 0) && (
         <div className="mb-4 space-y-2">
           {transferAlerts.pendingTransferCount > 0 && (
             <Link
@@ -95,15 +95,6 @@ export default async function AdminDashboardContent({ filter }: { filter: string
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </Link>
-          )}
-          {transferAlerts.pendingRefundCount > 0 && (
-            <div
-              className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium text-error"
-              style={{ backgroundColor: 'rgba(181, 64, 58, 0.06)', border: '1px solid rgba(181, 64, 58, 0.15)' }}
-            >
-              <span>🔴</span>
-              <span>환불 처리 필요 {transferAlerts.pendingRefundCount}건</span>
-            </div>
           )}
           {alerts.deletingMeetings.map((m) => (
             <Link
