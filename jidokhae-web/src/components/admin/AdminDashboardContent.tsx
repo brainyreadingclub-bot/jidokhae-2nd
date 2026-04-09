@@ -165,7 +165,7 @@ export default async function AdminDashboardContent({ filter }: { filter: string
       )}
 
       {/* ── 지난 달 정산 ── */}
-      {isAdmin && revenue.prevNetRevenue > 0 && (
+      {isAdmin && (
         <details className="mb-3">
           <summary
             className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3"
