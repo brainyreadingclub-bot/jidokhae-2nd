@@ -237,7 +237,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
             min="1"
             value={values.capacity}
             onChange={(e) => handleChange('capacity', e.target.value)}
-            placeholder="14"
+            placeholder="12"
             className={inputClassName}
             style={inputStyle}
           />
@@ -248,7 +248,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
             inputMode="numeric"
             value={values.fee ? formatNumberInput(values.fee) : ''}
             onChange={(e) => handleChange('fee', parseNumberInput(e.target.value))}
-            placeholder="10,000"
+            placeholder="12,000"
             className={inputClassName}
             style={inputStyle}
           />
