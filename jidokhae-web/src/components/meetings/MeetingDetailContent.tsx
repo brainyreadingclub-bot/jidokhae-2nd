@@ -86,7 +86,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   if (isEditorOrAdmin) {
     const { data: regs } = await supabase
       .from('registrations')
-      .select('*, profiles(nickname, real_name)')
+      .select('*, profiles(nickname, real_name, phone)')
       .eq('meeting_id', id)
       .order('created_at', { ascending: false })
 

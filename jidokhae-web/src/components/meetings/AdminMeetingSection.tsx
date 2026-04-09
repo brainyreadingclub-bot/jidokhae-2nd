@@ -2,7 +2,8 @@ import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
 import AttendanceToggle from './AttendanceToggle'
 import DepositToggle from '@/components/admin/DepositToggle'
-import { getKSTToday, formatFee } from '@/lib/kst'
+import { getKSTToday, formatFee, toKSTDate } from '@/lib/kst'
+import { calculateRefund } from '@/lib/refund'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
@@ -119,6 +120,39 @@ export default function AdminMeetingSection({
     return null
   }
 
+  function getTransferCancelInfo(reg: RegistrationWithProfile): {
+    label: string
+    refundText: string | null
+    phone: string | null
+  } | null {
+    if (reg.status !== 'cancelled' || reg.payment_method !== 'transfer') return null
+
+    // 미입금 취소: pending_transfer → cancelled (refunded_amount = 0)
+    if (reg.refunded_amount === 0) {
+      return { label: '미입금 취소', refundText: null, phone: null }
+    }
+
+    // 입금 확인 후 취소: confirmed → cancelled (refunded_amount = null)
+    if (reg.refunded_amount === null) {
+      const cancelDate = reg.cancelled_at
+        ? toKSTDate(new Date(reg.cancelled_at))
+        : getKSTToday()
+      const { refundAmount } = calculateRefund(
+        meetingDate,
+        reg.paid_amount ?? 0,
+        cancelDate,
+      )
+      return {
+        label: '환불 필요',
+        refundText: `${formatFee(refundAmount)}원`,
+        phone: reg.profiles?.phone ?? null,
+      }
+    }
+
+    // refunded_amount > 0: 이미 환불 완료 → 기존 로직 사용
+    return null
+  }
+
   function getAmountSubtext(reg: RegistrationWithProfile) {
     if (reg.status === 'pending_transfer' && reg.paid_amount) {
       return (
@@ -135,6 +169,23 @@ export default function AdminMeetingSection({
       )
     }
     if (reg.status === 'cancelled') {
+      const transferInfo = getTransferCancelInfo(reg)
+      if (transferInfo) {
+        return (
+          <div className="mt-0.5">
+            <div className="text-xs text-accent-600 font-medium">{transferInfo.label}</div>
+            {transferInfo.refundText && (
+              <div className="text-xs text-primary-400">환불 {transferInfo.refundText}</div>
+            )}
+            {transferInfo.phone && (
+              <div className="text-xs text-primary-400">{transferInfo.phone}</div>
+            )}
+            {reg.cancelled_at && (
+              <div className="text-xs text-primary-400">{formatDate(reg.cancelled_at)}</div>
+            )}
+          </div>
+        )
+      }
       return (
         <div className="mt-0.5">
           {reg.refunded_amount ? (
@@ -144,6 +195,9 @@ export default function AdminMeetingSection({
             <div className="text-xs text-primary-400">
               ({CANCEL_TYPE_LABELS[reg.cancel_type] ?? reg.cancel_type})
             </div>
+          )}
+          {reg.cancelled_at && (
+            <div className="text-xs text-primary-400">{formatDate(reg.cancelled_at)}</div>
           )}
         </div>
       )
@@ -187,9 +241,18 @@ export default function AdminMeetingSection({
 
   function getMobileAmountLine(reg: RegistrationWithProfile) {
     if (reg.status === 'cancelled') {
+      const transferInfo = getTransferCancelInfo(reg)
+      if (transferInfo) {
+        const parts: string[] = [transferInfo.label]
+        if (transferInfo.refundText) parts.push(`환불 ${transferInfo.refundText}`)
+        if (transferInfo.phone) parts.push(transferInfo.phone)
+        if (reg.cancelled_at) parts.push(formatDate(reg.cancelled_at))
+        return parts.join('  ')
+      }
       const parts: string[] = []
       if (reg.refunded_amount) parts.push(`환불 ${formatFee(reg.refunded_amount)}원`)
       if (reg.cancel_type) parts.push(`(${CANCEL_TYPE_LABELS[reg.cancel_type] ?? reg.cancel_type})`)
+      if (reg.cancelled_at) parts.push(formatDate(reg.cancelled_at))
       return parts.length > 0 ? parts.join('  ') : null
     }
     return null
