@@ -68,13 +68,11 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
         </div>
 
         <h1 className="text-xl font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-          {isPendingTransfer
-            ? '신청이 접수되었습니다'
-            : isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
+          {isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
         </h1>
         <p className="mt-2 text-sm text-primary-500/70">
           {isPendingTransfer
-            ? '입금 확인 후 참여가 확정됩니다'
+            ? '아래 계좌로 입금해주세요'
             : isWaitlisted
               ? '취소자 발생 시 자동으로 참여가 확정됩니다'
               : '모임에 참여해 주셔서 감사합니다'}
