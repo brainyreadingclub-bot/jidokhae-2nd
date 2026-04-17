@@ -15,19 +15,13 @@
 
 
 -- ============================================================
--- SECTION 1. Storage — banners bucket + 정책
--- (내 SQL에만 있음 — 사용자 SQL에는 없어서 DROP이 no-op 가능)
+-- SECTION 1. Storage — SKIP
 -- ============================================================
-
-DROP POLICY IF EXISTS "banner_storage_admin_delete" ON storage.objects;
-DROP POLICY IF EXISTS "banner_storage_admin_update" ON storage.objects;
-DROP POLICY IF EXISTS "banner_storage_admin_insert" ON storage.objects;
-DROP POLICY IF EXISTS "banner_storage_public_read" ON storage.objects;
-
--- bucket 내부 파일 제거 (있다면) — 정책 없이는 파일 남아도 문제 X
--- bucket 자체 삭제
-DELETE FROM storage.objects WHERE bucket_id = 'banners';
-DELETE FROM storage.buckets WHERE id = 'banners';
+-- 이전 세션 SQL에는 Storage bucket 'banners' 생성이 없음 → 롤백할 대상 없음.
+-- Supabase는 storage.objects/buckets 직접 DELETE를 차단하므로 (42501 protect_delete),
+-- bucket 생성된 게 있다면 Supabase 대시보드 → Storage에서 수동 삭제 필요.
+--
+-- 현재는 해당 없음 → 이 섹션 전체 skip.
 
 
 -- ============================================================
@@ -91,12 +85,8 @@ ALTER TABLE public.meetings DROP COLUMN IF EXISTS region;
 -- SELECT table_name FROM information_schema.tables
 -- WHERE table_schema = 'public' AND table_name IN ('banners', 'book_quotes');
 --
--- -- 3. Storage bucket 제거 확인 (0 row)
--- SELECT id FROM storage.buckets WHERE id = 'banners';
---
--- -- 4. 관련 정책 제거 확인 (0 row)
+-- -- 3. 관련 정책 제거 확인 (0 row)
 -- SELECT schemaname, tablename, policyname FROM pg_policies
--- WHERE tablename IN ('banners', 'book_quotes')
---    OR policyname LIKE 'banner_storage_%';
+-- WHERE tablename IN ('banners', 'book_quotes');
 --
 -- ============================================================
