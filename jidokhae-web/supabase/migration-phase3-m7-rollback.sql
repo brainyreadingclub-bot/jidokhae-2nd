@@ -25,36 +25,17 @@
 
 
 -- ============================================================
--- SECTION 2. book_quotes — 정책 + 테이블
+-- SECTION 2. book_quotes — 테이블 (CASCADE로 정책/트리거/인덱스 자동 정리)
 -- ============================================================
-
-DROP POLICY IF EXISTS "book_quotes_delete_editor_or_admin" ON public.book_quotes;
-DROP POLICY IF EXISTS "book_quotes_update_editor_or_admin" ON public.book_quotes;
-DROP POLICY IF EXISTS "book_quotes_insert_own" ON public.book_quotes;
-DROP POLICY IF EXISTS "book_quotes_insert" ON public.book_quotes;
-DROP POLICY IF EXISTS "book_quotes_select_editor_or_admin" ON public.book_quotes;
-DROP POLICY IF EXISTS "book_quotes_select_own" ON public.book_quotes;
-DROP POLICY IF EXISTS "book_quotes_select_approved" ON public.book_quotes;
-
--- 인덱스는 테이블 DROP 시 자동 제거되지만 명시적으로
-DROP INDEX IF EXISTS public.idx_book_quotes_status_approved;
-DROP INDEX IF EXISTS public.idx_book_quotes_approved_recent;
-DROP INDEX IF EXISTS public.idx_book_quotes_pending;
-DROP INDEX IF EXISTS public.idx_book_quotes_submitter;
+-- 주의: DROP POLICY IF EXISTS ... ON table 은 table이 없으면 42P01 에러.
+-- DROP TABLE IF EXISTS ... CASCADE 만으로 충분 (정책/트리거/외래키/인덱스 자동 제거).
 
 DROP TABLE IF EXISTS public.book_quotes CASCADE;
 
 
 -- ============================================================
--- SECTION 3. banners — 트리거 + 정책 + 테이블
+-- SECTION 3. banners — 테이블 (CASCADE)
 -- ============================================================
-
-DROP TRIGGER IF EXISTS banners_updated_at ON public.banners;
-
-DROP POLICY IF EXISTS "banners_admin_all" ON public.banners;
-DROP POLICY IF EXISTS "banners_select_active" ON public.banners;
-
-DROP INDEX IF EXISTS public.idx_banners_active_order;
 
 DROP TABLE IF EXISTS public.banners CASCADE;
 
