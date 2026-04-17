@@ -44,12 +44,15 @@ export default async function EditMeetingPage({ params }: Props) {
         venues={venuesResult.data ?? []}
         initialValues={{
           title: typed.title,
+          description: typed.description ?? '',
           date: typed.date,
           time: typed.time,
           venue_id: typed.venue_id ?? '',
           location: typed.location,
           capacity: String(typed.capacity),
           fee: String(typed.fee),
+          region: typed.region,
+          is_featured: typed.is_featured,
         }}
       />
     </div>

@@ -13,7 +13,7 @@ export default function AdminMeetingCard({ meeting, confirmedCount, kstToday }: 
 
   return (
     <Link
-      href={`/meetings/${meeting.id}`}
+      href={`/admin/meetings/${meeting.id}`}
       className={`block rounded-[var(--radius-md)] px-4 py-3.5 transition-all hover:-translate-y-0.5 ${
         isPast ? 'opacity-55' : ''
       }`}

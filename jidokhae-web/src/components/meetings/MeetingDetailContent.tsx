@@ -5,12 +5,11 @@ import { getProfile } from '@/lib/profile'
 import { getMeeting } from '@/lib/meeting'
 import { getKSTToday, getButtonState } from '@/lib/kst'
 import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
+import Link from 'next/link'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
-import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
-import type { RegistrationWithProfile } from '@/types/registration'
 
 export default async function MeetingDetailContent({ id }: { id: string }) {
   const supabase = await createClient()
@@ -82,17 +81,6 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     notFound()
   }
 
-  let adminRegistrations: RegistrationWithProfile[] = []
-  if (isEditorOrAdmin) {
-    const { data: regs } = await supabase
-      .from('registrations')
-      .select('*, profiles(nickname, real_name, phone)')
-      .eq('meeting_id', id)
-      .order('created_at', { ascending: false })
-
-    adminRegistrations = (regs ?? []) as RegistrationWithProfile[]
-  }
-
   const kstToday = getKSTToday()
   const buttonState = getButtonState(
     typedMeeting.date,
@@ -161,14 +149,30 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
       />
 
       {isEditorOrAdmin && (
-        <AdminMeetingSection
-          meetingId={typedMeeting.id}
-          meetingStatus={typedMeeting.status}
-          confirmedCount={confirmedCount}
-          registrations={adminRegistrations}
-          role={role}
-          meetingDate={typedMeeting.date}
-        />
+        <div
+          className="mx-5 mt-8 rounded-[var(--radius-md)] p-4"
+          style={{ backgroundColor: 'var(--color-surface-100)', border: '1px solid var(--color-surface-300)' }}
+        >
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-500">
+            운영자 전용
+          </div>
+          <Link
+            href={`/admin/meetings/${typedMeeting.id}`}
+            className="flex items-center justify-between gap-3"
+          >
+            <div>
+              <div className="text-sm font-bold text-primary-800">
+                관리자 페이지에서 보기
+              </div>
+              <div className="mt-0.5 text-xs text-primary-500">
+                신청자 목록 · 입금 확인 · 재정 요약
+              </div>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-400">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </Link>
+        </div>
       )}
     </div>
   )

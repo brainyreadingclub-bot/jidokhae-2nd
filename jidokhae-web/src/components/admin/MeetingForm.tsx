@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { VALID_REGIONS } from '@/lib/regions'
 
 type MeetingValues = {
   title: string
@@ -13,6 +14,8 @@ type MeetingValues = {
   location: string
   capacity: string
   fee: string
+  region: string
+  is_featured: boolean
 }
 
 type VenueOption = {
@@ -47,6 +50,8 @@ const defaultValues: MeetingValues = {
   location: '',
   capacity: '',
   fee: '',
+  region: '경주',
+  is_featured: false,
 }
 
 export default function MeetingForm({ mode, meetingId, initialValues, confirmedCount = 0, venues = [] }: Props) {
@@ -58,7 +63,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function handleChange(field: keyof MeetingValues, value: string) {
+  function handleChange<K extends keyof MeetingValues>(field: K, value: MeetingValues[K]) {
     setValues((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -85,6 +90,9 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
     if (!values.date) return setError('날짜를 선택해주세요')
     if (!values.time) return setError('시간을 선택해주세요')
     if (!values.location.trim()) return setError('장소를 입력해주세요')
+    if (!VALID_REGIONS.includes(values.region as (typeof VALID_REGIONS)[number])) {
+      return setError('지역을 선택해주세요')
+    }
 
     const capacity = parseInt(values.capacity, 10)
     if (!capacity || capacity < 1) return setError('정원은 1명 이상이어야 합니다')
@@ -107,6 +115,8 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
       venue_id: values.venue_id || null,
       capacity,
       fee,
+      region: values.region,
+      is_featured: values.is_featured,
     }
 
     if (mode === 'create') {
@@ -120,7 +130,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
         return
       }
 
-      router.push('/admin')
+      router.push('/admin/meetings')
       router.refresh()
     } else {
       const { error: updateError } = await supabase
@@ -134,7 +144,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
         return
       }
 
-      router.push(`/meetings/${meetingId}`)
+      router.push(`/admin/meetings/${meetingId}`)
       router.refresh()
     }
   }
@@ -229,6 +239,36 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
           style={inputStyle}
         />
       </Field>
+
+      <Field label="지역" required>
+        <select
+          value={values.region}
+          onChange={(e) => handleChange('region', e.target.value)}
+          className={inputClassName}
+          style={inputStyle}
+        >
+          {VALID_REGIONS.map((r) => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
+      </Field>
+
+      <div>
+        <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={values.is_featured}
+            onChange={(e) => handleChange('is_featured', e.target.checked)}
+            className="h-4 w-4 rounded border-surface-300 text-accent-500 focus:ring-accent-400/40"
+          />
+          <span className="text-sm font-medium text-primary-800">
+            인라인 PICK 배너로 노출
+          </span>
+        </label>
+        <p className="mt-1 ml-[26px] text-xs text-primary-500/80">
+          체크 시 모임 일정 탭에서 눈에 띄게 표시됩니다
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="정원" required>
