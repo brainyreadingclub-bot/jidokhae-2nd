@@ -64,11 +64,12 @@ CREATE INDEX IF NOT EXISTS idx_banners_active_order
   WHERE is_active = true;
 
 -- updated_at 자동 갱신 트리거 (meetings_updated_at과 동일 함수 재사용)
+-- migration.sql에서 정의된 public.update_updated_at() 사용
 DROP TRIGGER IF EXISTS banners_updated_at ON banners;
 CREATE TRIGGER banners_updated_at
   BEFORE UPDATE ON banners
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+  EXECUTE FUNCTION public.update_updated_at();
 
 
 -- ============================================================
