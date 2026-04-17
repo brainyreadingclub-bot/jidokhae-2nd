@@ -9,6 +9,12 @@ export type Meeting = {
   capacity: number
   fee: number
   status: 'active' | 'deleting' | 'deleted'
+  // Phase 3 (WP7-2)
+  region: string // VALID_REGIONS 중 1, default '경주'
+  is_featured: boolean // 인라인 PICK 배너 노출 대상
+  chat_link: string | null
+  reading_link: string | null
+  detail_address: string | null
   created_at: string
   updated_at: string
 }
