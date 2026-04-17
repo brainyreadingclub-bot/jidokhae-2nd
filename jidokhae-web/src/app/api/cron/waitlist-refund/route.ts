@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
 
   if (queryError) {
     console.error('[waitlist-refund] 쿼리 실패:', queryError)
-    return NextResponse.json({ error: 'Query failed' }, { status: 500 })
+    return NextResponse.json(
+      { status: 'error', message: 'Query failed' },
+      { status: 500 },
+    )
   }
 
   // Supabase JOIN 필터는 null 결과를 포함할 수 있으므로 필터링
@@ -37,14 +40,16 @@ export async function GET(request: NextRequest) {
   )
 
   if (regsToRefund.length === 0) {
-    return NextResponse.json({ message: 'No waitlisted to refund', refunded: 0 })
+    return NextResponse.json({
+      status: 'success',
+      message: 'No waitlisted to refund',
+      data: { refunded: 0, failed: 0, total: 0 },
+    })
   }
 
-  let refunded = 0
-  let failed = 0
-
-  for (const reg of regsToRefund) {
-    try {
+  // 병렬 환불 (Vercel 10s 타임아웃 대응 — Promise.allSettled로 부분 실패 허용)
+  const results = await Promise.allSettled(
+    regsToRefund.map(async (reg) => {
       // 계좌이체: TossPayments 환불 스킵, DB만 업데이트
       if (reg.payment_method === 'transfer') {
         await supabase.from('registrations')
@@ -56,8 +61,7 @@ export async function GET(request: NextRequest) {
           })
           .eq('id', reg.id)
           .eq('status', 'waitlisted')
-        refunded++
-        continue
+        return
       }
 
       // TossPayments 전액 환불 (재시도 안전: 이미 환불된 건 허용)
@@ -84,7 +88,7 @@ export async function GET(request: NextRequest) {
         .eq('id', reg.id)
         .eq('status', 'waitlisted')
 
-      // 미승격 알림톡
+      // 미승격 알림톡 (실패해도 환불은 완료)
       const meetingData = reg.meetings as unknown as { title: string; date: string }
       try {
         await sendWaitlistRefundedNotification(
@@ -94,15 +98,22 @@ export async function GET(request: NextRequest) {
           reg.paid_amount ?? 0,
         )
       } catch {
-        // 알림 실패해도 환불은 완료
+        // ignore
       }
+    }),
+  )
 
-      refunded++
-    } catch (error) {
-      console.error(`[waitlist-refund] 환불 실패: ${reg.id}`, error)
-      failed++
+  const refunded = results.filter((r) => r.status === 'fulfilled').length
+  const failed = results.filter((r) => r.status === 'rejected').length
+
+  results.forEach((r, idx) => {
+    if (r.status === 'rejected') {
+      console.error(`[waitlist-refund] 환불 실패: ${regsToRefund[idx].id}`, r.reason)
     }
-  }
+  })
 
-  return NextResponse.json({ refunded, failed, total: regsToRefund.length })
+  return NextResponse.json({
+    status: failed === 0 ? 'success' : 'partial',
+    data: { refunded, failed, total: regsToRefund.length },
+  })
 }
