@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>지독해 — Phase 3 Before / After</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Noto+Serif+KR:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+  /* ========== TOKENS ========== */
+  :root{
+    /* color — 3톤 + 1 액센트 + status */
+    --bg:#F7F4EC;
+    --paper:#FDFBF4;
+    --paper-2:#F0EBDC;
+    --ink:#16140F;
+    --ink-2:#3A352B;
+    --ink-3:#6F6757;
+    --ink-4:#A39C8C;
+    --line:#D9D3C2;
+    --line-2:#E8E2D1;
+    --persimmon:#E45A2B;
+    --persimmon-2:#FFE7DA;
+    --status-open:#3D8A52;
+    --status-warn:#D68A3C;
+    --status-full:#B14A2A;
+    /* type — 8 steps */
+    --fs-xs:11px;
+    --fs-sm:12px;
+    --fs-base:13px;
+    --fs-md:14px;
+    --fs-lg:17px;
+    --fs-xl:24px;
+    --fs-2xl:32px;
+    --fs-display:72px;
+    /* radius — 3 steps */
+    --r-sm:6px;
+    --r-md:10px;
+    --r-lg:14px;
+    /* spacing — 8 base */
+    --s-1:8px; --s-2:16px; --s-3:24px; --s-4:32px;
+    --s-6:48px; --s-8:64px; --s-12:96px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{
+    background:var(--bg);color:var(--ink);
+    font-family:"Pretendard",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.55;
+  }
+  ::selection{background:var(--persimmon);color:var(--paper)}
+
+  .ko-display{font-family:"Noto Serif KR",serif;font-weight:800;letter-spacing:-0.025em}
+  .ko-head{font-family:"Noto Serif KR",serif;font-weight:700;letter-spacing:-0.018em}
+  .ko-body{font-family:"Noto Serif KR",serif;font-weight:500;letter-spacing:-0.008em}
+  .it{font-family:"Instrument Serif",serif;font-style:italic;font-weight:400}
+  .mono{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:.02em}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:var(--s-6) var(--s-4) var(--s-12)}
+
+  /* ========== TOP NAV ========== */
+  .topnav{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0 0 var(--s-2);margin-bottom:var(--s-4);
+    border-bottom:1px solid var(--ink);
+    font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .topnav b{color:var(--ink);font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-md);letter-spacing:-0.01em;text-transform:none;margin-right:var(--s-1)}
+  .topnav .right{display:flex;gap:var(--s-2)}
+
+  /* ========== HERO ========== */
+  .hero{margin-bottom:var(--s-8)}
+  .hero .eyebrow{font-size:var(--fs-xs);letter-spacing:.2em;text-transform:uppercase;color:var(--persimmon);font-weight:600;margin-bottom:var(--s-2)}
+  .hero h1{font-family:"Noto Serif KR";font-weight:800;font-size:var(--fs-display);line-height:1;letter-spacing:-0.025em;color:var(--ink);margin-bottom:var(--s-3)}
+  .hero h1 em{font-family:"Instrument Serif";font-style:italic;font-weight:400;color:var(--persimmon);letter-spacing:-0.01em;display:inline-block;transform:translateY(.04em)}
+  .hero .lede{font-size:var(--fs-md);color:var(--ink-2);max-width:54ch;line-height:1.65}
+  .hero .lede p+p{margin-top:var(--s-1)}
+
+  /* decision numbers card row */
+  .decision{
+    margin-top:var(--s-4);
+    display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s-2);
+    border:1px solid var(--ink);border-radius:var(--r-md);overflow:hidden;background:var(--paper);
+  }
+  .decision .cell{padding:var(--s-2) var(--s-3);border-right:1px solid var(--line)}
+  .decision .cell:last-child{border-right:0}
+  .decision .lab{font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+  .decision .val{font-family:"Noto Serif KR";font-weight:800;font-size:var(--fs-xl);color:var(--ink);line-height:1.1;letter-spacing:-0.02em}
+  .decision .val small{font-size:var(--fs-sm);color:var(--ink-3);font-weight:600;font-family:"Pretendard";margin-left:4px}
+  .decision .note{font-size:var(--fs-xs);color:var(--persimmon);font-weight:600;margin-top:6px;letter-spacing:.02em}
+
+  /* ========== SECTION HEAD ========== */
+  .sec{margin-top:var(--s-12)}
+  .sec-head{
+    display:grid;grid-template-columns:auto 1fr auto;gap:var(--s-2) var(--s-3);
+    align-items:end;margin-bottom:var(--s-4);
+    padding-bottom:var(--s-2);border-bottom:1px solid var(--ink);
+  }
+  .sec-head .num{font-family:"Instrument Serif";font-style:italic;font-size:var(--fs-2xl);line-height:1;color:var(--persimmon)}
+  .sec-head h2{font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-2xl);letter-spacing:-0.02em;color:var(--ink)}
+  .sec-head .h-sub{display:block;font-family:"Pretendard";font-weight:500;font-size:var(--fs-sm);color:var(--ink-3);margin-top:6px}
+  .sec-head .pill{
+    font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink);background:var(--paper-2);padding:6px 12px;border-radius:var(--r-sm);font-weight:600;
+  }
+
+  /* ========== INSIGHT STRIP (asymmetric) ========== */
+  .insight{display:grid;grid-template-columns:1fr 1.4fr;gap:var(--s-3);margin-bottom:var(--s-4)}
+  .insight .box{padding:var(--s-2) var(--s-3);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);position:relative}
+  .insight .box::before{content:"";position:absolute;left:0;top:var(--s-2);bottom:var(--s-2);width:3px;background:var(--ink-4)}
+  .insight .box.next{background:#FFF8F2;border-color:var(--persimmon)}
+  .insight .box.next::before{background:var(--persimmon)}
+  .insight .box .lab{
+    font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;
+    padding-left:var(--s-2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .insight .box.next .lab{color:var(--persimmon)}
+  .insight .box .lab .badge{
+    font-size:var(--fs-xs);letter-spacing:0;text-transform:none;
+    background:var(--persimmon);color:var(--paper);padding:3px 8px;border-radius:var(--r-sm);font-weight:700;
+  }
+  .insight .box p{padding-left:var(--s-2);color:var(--ink);font-size:var(--fs-md);line-height:1.6}
+  .insight .box p strong{font-weight:700;color:var(--ink)}
+  .insight .box.next p strong{color:var(--persimmon)}
+
+  /* ========== COMPARE ========== */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-4);align-items:start}
+  .compare.three{grid-template-columns:1fr 1fr 1fr;gap:var(--s-3)}
+  .pane{display:flex;flex-direction:column;gap:var(--s-1)}
+  .pane .label{display:flex;align-items:center;gap:var(--s-1);font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .pane .label b{color:var(--ink)}
+  .pane.after .label b{color:var(--paper);background:var(--persimmon);padding:3px 8px;border-radius:var(--r-sm);letter-spacing:.06em}
+  .pane .caption{font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-md);line-height:1.4;color:var(--ink);letter-spacing:-0.012em;min-height:2.8em}
+  .pane .meta-line{font-size:var(--fs-xs);color:var(--ink-3);font-family:"JetBrains Mono"}
+
+  /* After-group header band over the 2 After panes */
+  .after-band{
+    grid-column:2 / span 2;
+    padding:var(--s-1) var(--s-2);background:var(--ink);color:var(--paper);
+    border-radius:var(--r-sm);font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+    text-align:center;margin-bottom:var(--s-1);
+  }
+
+  /* ========== MOBILE FRAME ========== */
+  .device-mobile{
+    width:300px;height:620px;margin:var(--s-1) auto 0;
+    border:11px solid #18160F;border-radius:42px;
+    background:var(--paper);box-shadow:0 16px 32px -16px rgba(22,20,15,.3);
+    position:relative;overflow:hidden;
+  }
+  .device-mobile::before{
+    content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    width:88px;height:22px;background:#18160F;border-radius:14px;z-index:5;
+  }
+  .pane.before .device-mobile{filter:saturate(.8)}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--paper)}
+  .topbar{padding:42px var(--s-2) var(--s-1);display:flex;justify-content:space-between;align-items:center}
+  .topbar .brand{font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-md);color:var(--ink);letter-spacing:-0.01em}
+  .topbar .who{font-size:var(--fs-xs);color:var(--ink-3)}
+  .scroll{flex:1;overflow:auto;padding:var(--s-1) var(--s-2) 70px}
+  .scroll::-webkit-scrollbar{width:0;height:0}
+  .scroll{scrollbar-width:none}
+  .nav{
+    position:absolute;left:0;right:0;bottom:0;height:60px;
+    background:var(--paper);border-top:1px solid var(--line-2);
+    display:grid;align-items:center;justify-items:center;padding-bottom:6px;
+  }
+  .nav.two{grid-template-columns:1fr 1fr}
+  .nav.three{grid-template-columns:1fr 1fr 1fr}
+  .nav .item{font-size:var(--fs-xs);color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:500}
+  .nav .item .ic{width:20px;height:20px;border:1.5px solid currentColor;border-radius:var(--r-sm);opacity:.55}
+  .nav .item.active{color:var(--ink);font-weight:700}
+  .nav .item.active .ic{background:var(--persimmon);border-color:var(--persimmon);opacity:1}
+
+  /* meeting card mini */
+  .mcard{
+    background:var(--paper);border:1px solid var(--line-2);
+    border-radius:var(--r-md);padding:var(--s-1) 12px;margin-bottom:var(--s-1);
+    position:relative;
+  }
+  .mcard::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;background:var(--status-open);border-radius:0 3px 3px 0}
+  .mcard.warn::before{background:var(--status-warn)}
+  .mcard.full::before{background:var(--status-full)}
+  .mcard h4{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-base);color:var(--ink);line-height:1.35;margin-bottom:5px;padding-left:var(--s-1)}
+  .mcard .row{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-xs);color:var(--ink-3);padding-left:var(--s-1)}
+  .mcard .cap{color:var(--status-open);font-weight:700;font-family:"Pretendard"}
+  .mcard.warn .cap{color:var(--status-warn)}
+  .mcard.full .cap{color:var(--status-full)}
+
+  .date-head{
+    font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-sm);color:var(--ink);
+    margin:var(--s-1) 0 6px;display:flex;align-items:center;gap:var(--s-1);letter-spacing:-0.005em;
+  }
+  .date-head::after{content:"";flex:1;height:1px;background:var(--line-2)}
+
+  /* phase 3 — banner (carousel) */
+  .banner{
+    position:relative;border-radius:var(--r-lg);overflow:hidden;height:100px;margin-bottom:var(--s-2);
+    background:linear-gradient(120deg, #1F1A11 0%, #16140F 50%, #2D2820 100%);
+    color:var(--paper);padding:var(--s-2);display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .banner::after{
+    content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;
+    background:radial-gradient(circle, rgba(228,90,43,.55), transparent 65%);
+  }
+  .banner .tag{font-size:var(--fs-xs);letter-spacing:.16em;text-transform:uppercase;font-weight:600;opacity:.85;position:relative;z-index:1}
+  .banner h4{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-md);line-height:1.3;position:relative;z-index:1;letter-spacing:-0.01em}
+  .banner .dots{position:absolute;bottom:10px;right:14px;display:flex;gap:5px;z-index:2}
+  .banner .dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4)}
+  .banner .dots span.on{background:var(--paper);width:14px;border-radius:3px}
+
+  /* d-day ticket */
+  .ticket{
+    position:relative;background:var(--paper);
+    border:1.5px solid var(--ink);border-radius:var(--r-lg);padding:var(--s-2);margin-bottom:var(--s-2);
+  }
+  .ticket .hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--s-1)}
+  .ticket .dday{
+    background:var(--persimmon);color:var(--paper);
+    font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-sm);
+    padding:3px 9px;border-radius:var(--r-sm);letter-spacing:.04em;
+  }
+  .ticket .when{font-size:var(--fs-xs);color:var(--ink-3);text-align:right}
+  .ticket .when b{color:var(--ink);font-weight:600;font-size:var(--fs-sm);display:block}
+  .ticket h4{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-base);line-height:1.4;color:var(--ink);margin-bottom:var(--s-1);letter-spacing:-0.005em}
+  .ticket .place{font-size:var(--fs-xs);color:var(--ink-2);display:flex;align-items:center;gap:6px}
+  .ticket .place a{color:var(--persimmon);text-decoration:none;font-weight:600;border-bottom:1px solid var(--persimmon);padding-bottom:1px}
+
+  /* quote */
+  .quotes{margin-bottom:var(--s-2)}
+  .quotes .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--s-1);padding-bottom:6px;border-bottom:1px solid var(--ink)}
+  .quotes .h .t{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-sm);color:var(--ink);letter-spacing:-0.005em}
+  .quotes .h .sub{font-size:var(--fs-xs);color:var(--ink-3);font-weight:500}
+  .qitem{padding:var(--s-1) 0 var(--s-1) 12px;border-left:2px solid var(--persimmon);margin-bottom:var(--s-1)}
+  .qitem p{font-family:"Noto Serif KR";font-weight:500;font-size:var(--fs-sm);color:var(--ink);line-height:1.55;margin-bottom:5px;letter-spacing:-0.005em}
+  .qitem .who{font-size:var(--fs-xs);color:var(--ink-3);font-weight:500}
+  .qbtn{
+    width:100%;text-align:center;font-family:"Pretendard";font-weight:600;font-size:var(--fs-sm);
+    border:none;color:var(--paper);background:var(--ink);
+    padding:11px;border-radius:var(--r-md);margin-top:6px;cursor:pointer;letter-spacing:-0.01em;
+  }
+
+  /* social proof */
+  .sproof{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+  .sp{background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r-md);padding:9px 10px}
+  .sp .lab{font-size:var(--fs-xs);color:var(--ink-3);font-weight:500;letter-spacing:-0.005em}
+  .sp .val{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-sm);color:var(--ink);margin-top:2px;letter-spacing:-0.005em}
+  .sp .val em{color:var(--persimmon);font-style:normal;font-weight:800}
+
+  /* inline banner */
+  .ibanner{
+    background:var(--ink);color:var(--paper);border-radius:var(--r-md);padding:var(--s-1) 12px;margin:6px 0 var(--s-1);
+    position:relative;overflow:hidden;
+  }
+  .ibanner::before{
+    content:"이번 주 픽";position:absolute;top:10px;right:12px;font-size:var(--fs-xs);
+    background:var(--persimmon);color:var(--paper);padding:3px 7px;border-radius:var(--r-sm);font-weight:700;letter-spacing:0;
+  }
+  .ibanner .ttl{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-sm);line-height:1.35;margin-bottom:4px;padding-right:60px;letter-spacing:-0.005em}
+  .ibanner .sub{font-size:var(--fs-xs);opacity:.7}
+
+  /* ========== DESKTOP FRAME ========== */
+  .device-desktop{
+    width:100%;border:1.5px solid var(--ink);border-radius:var(--r-lg);overflow:hidden;background:var(--paper);
+    box-shadow:0 16px 32px -16px rgba(22,20,15,.3);
+  }
+  .pane.before .device-desktop{filter:saturate(.85)}
+  .desk-bar{background:#14120D;height:32px;display:flex;align-items:center;gap:6px;padding:0 14px}
+  .desk-bar i{width:10px;height:10px;border-radius:50%}
+  .desk-bar i:nth-child(1){background:#E45A2B}
+  .desk-bar i:nth-child(2){background:#D6B864}
+  .desk-bar i:nth-child(3){background:#7C9A6F}
+  .desk-bar .url{margin-left:18px;color:#a39c8c;font-size:var(--fs-xs);font-family:"JetBrains Mono"}
+  .desk-body{display:grid;min-height:520px}
+
+  /* current admin (single col) */
+  .desk-old .desk-body{grid-template-columns:1fr;padding:var(--s-4) 0}
+  .admin-mobile{
+    max-width:380px;margin:0 auto;border:1px solid var(--line-2);background:var(--paper);
+    border-radius:var(--r-md);padding:var(--s-2);
+  }
+  .admin-mobile h3{font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-md);margin-bottom:var(--s-1);padding-bottom:6px;border-bottom:1px solid var(--ink);letter-spacing:-0.01em}
+  .admin-mobile h3+ul{margin-bottom:var(--s-2)}
+  .admin-mobile ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+  .admin-mobile li{font-size:var(--fs-sm);color:var(--ink-2);display:flex;justify-content:space-between;border-bottom:1px solid var(--line-2);padding:5px 0}
+  .admin-mobile li b{color:var(--ink);font-weight:600}
+  .crammed-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+  .crammed-row .b{background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:9px;font-size:var(--fs-xs);color:var(--ink-2);text-align:center;font-weight:500}
+
+  /* phase 3 admin */
+  .desk-new .desk-body{grid-template-columns:204px 1fr}
+  .sidebar{background:var(--ink);color:var(--paper);padding:var(--s-2) 0}
+  .sidebar .brand{padding:0 18px var(--s-2);border-bottom:1px solid rgba(255,255,255,.08);font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-md);letter-spacing:-0.01em;color:var(--paper)}
+  .sidebar .brand span{display:block;font-size:var(--fs-xs);font-weight:500;color:var(--ink-4);margin-top:2px;letter-spacing:.16em;text-transform:uppercase}
+  .sidebar nav{padding:var(--s-2) 0;display:flex;flex-direction:column}
+  .sidebar a{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:var(--fs-base);color:rgba(255,255,255,.65);text-decoration:none;border-left:2px solid transparent;letter-spacing:-0.01em;font-weight:500}
+  .sidebar a .ic{width:14px;height:14px;border:1.4px solid currentColor;border-radius:3px;opacity:.7}
+  .sidebar a:hover{background:rgba(255,255,255,.04);color:var(--paper)}
+  .sidebar a.active{background:rgba(228,90,43,.12);color:var(--paper);border-left-color:var(--persimmon);font-weight:600}
+  .sidebar a.active .ic{background:var(--persimmon);border-color:var(--persimmon);opacity:1}
+  .sidebar .grp{font-size:var(--fs-xs);color:var(--ink-4);padding:var(--s-2) 18px 4px;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+
+  .desk-main{padding:var(--s-3);background:var(--paper)}
+  .crumb{font-size:var(--fs-xs);color:var(--ink-3);margin-bottom:6px;letter-spacing:-0.005em}
+  .desk-main h1{font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-xl);color:var(--ink);margin-bottom:var(--s-2);letter-spacing:-0.02em}
+  .alert-row{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--persimmon-2);border:1px solid var(--persimmon);border-radius:var(--r-md);
+    padding:11px 14px;margin-bottom:var(--s-2);font-size:var(--fs-sm);color:var(--ink);font-weight:500;
+  }
+  .alert-row strong{color:var(--persimmon);font-weight:700;margin-right:6px;font-size:var(--fs-base)}
+  .alert-row a{color:var(--ink);font-size:var(--fs-xs);font-weight:700;text-decoration:none;border-bottom:1.5px solid var(--ink);padding-bottom:1px}
+
+  .kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--s-1);margin-bottom:var(--s-2)}
+  .kpi{background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r-md);padding:var(--s-2)}
+  .kpi .lab{font-size:var(--fs-xs);color:var(--ink-3);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  .kpi .val{font-family:"Noto Serif KR";font-weight:800;font-size:28px;color:var(--ink);margin-top:4px;line-height:1;letter-spacing:-0.025em}
+  .kpi .val small{font-size:var(--fs-sm);color:var(--ink-3);font-weight:600;font-family:"Pretendard";margin-left:2px}
+  .kpi .delta{font-family:"JetBrains Mono";font-size:var(--fs-xs);color:var(--status-open);margin-top:6px;font-weight:500}
+  .kpi .delta.down{color:var(--persimmon)}
+
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:var(--s-1)}
+  .panel{background:var(--bg);border:1px solid var(--line-2);border-radius:var(--r-md);padding:var(--s-2)}
+  .panel h4{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-sm);margin-bottom:var(--s-1);color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;letter-spacing:-0.005em}
+  .panel h4 .more{font-size:var(--fs-xs);color:var(--persimmon);font-weight:600;font-family:"Pretendard"}
+  .panel ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:var(--fs-sm);color:var(--ink-2)}
+  .panel li{display:flex;justify-content:space-between;border-bottom:1px solid var(--line-2);padding-bottom:5px;font-weight:500}
+  .panel li b{font-weight:600;color:var(--ink)}
+  .quick{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .quick a{font-size:var(--fs-xs);background:var(--paper);border:1px solid var(--line-2);padding:5px 9px;border-radius:999px;color:var(--ink-2);text-decoration:none;font-weight:500}
+  .quick a:first-child{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+  /* ========== DIFF GROUPED ========== */
+  .diff-group{margin-bottom:var(--s-3)}
+  .diff-group h3{
+    font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-lg);color:var(--ink);
+    margin-bottom:var(--s-1);letter-spacing:-0.018em;
+    display:flex;align-items:baseline;gap:var(--s-1);
+  }
+  .diff-group h3 .count{font-size:var(--fs-xs);color:var(--ink-3);letter-spacing:.16em;text-transform:uppercase;font-weight:600;font-family:"Pretendard"}
+  .diff-table{background:var(--paper);border:1px solid var(--ink);border-radius:var(--r-md);overflow:hidden}
+  table.diff{width:100%;border-collapse:collapse;font-size:var(--fs-base)}
+  table.diff th, table.diff td{padding:var(--s-1) var(--s-2);text-align:left;vertical-align:top;border-bottom:1px solid var(--line-2)}
+  table.diff thead th{background:var(--ink);color:var(--paper);font-family:"Pretendard";font-weight:600;letter-spacing:.04em;font-size:var(--fs-xs);text-transform:uppercase}
+  table.diff tbody tr:last-child td{border-bottom:0}
+  table.diff td.cat{font-family:"Noto Serif KR";font-weight:700;color:var(--ink);width:170px;font-size:var(--fs-base);letter-spacing:-0.01em}
+  table.diff td.cat .ms-tag{
+    display:inline-block;font-family:"Pretendard";font-weight:700;font-size:var(--fs-xs);
+    color:var(--persimmon);background:var(--persimmon-2);padding:2px 6px;border-radius:var(--r-sm);
+    margin-top:4px;letter-spacing:.04em;
+  }
+  table.diff td.was{color:var(--ink-3);font-weight:500}
+  table.diff td.now{color:var(--ink);font-weight:500}
+  table.diff td.now strong{color:var(--persimmon);font-weight:700}
+
+  /* ========== ROADMAP TIMELINE + GANTT ========== */
+  .gantt{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);
+    padding:var(--s-2);margin-bottom:var(--s-3);
+  }
+  .gantt .gantt-head{
+    display:grid;grid-template-columns:60px repeat(8,1fr);gap:6px;
+    margin-bottom:6px;font-size:var(--fs-xs);color:var(--ink-3);font-weight:600;letter-spacing:.04em;
+  }
+  .gantt .gantt-head span{text-align:center}
+  .gantt .gantt-head span:first-child{text-align:left}
+  .gantt .gantt-row{
+    display:grid;grid-template-columns:60px repeat(8,1fr);gap:6px;align-items:center;
+    height:18px;margin-bottom:5px;position:relative;
+  }
+  .gantt .gantt-row .ms-id{
+    font-family:"Pretendard";font-weight:700;font-size:var(--fs-sm);color:var(--ink);
+  }
+  .gantt .bar{
+    grid-column-start:var(--c-start);grid-column-end:var(--c-end);
+    background:var(--ink);border-radius:var(--r-sm);height:14px;
+    display:flex;align-items:center;padding:0 8px;color:var(--paper);font-size:var(--fs-xs);font-weight:600;letter-spacing:-0.005em;
+  }
+  .gantt .bar.warm{background:var(--persimmon)}
+  .gantt .bar.parallel{background:repeating-linear-gradient(45deg, var(--ink) 0 5px, #2a2620 5px 10px);outline:1.5px dashed var(--persimmon);outline-offset:1px}
+  .gantt-note{
+    margin-top:var(--s-1);font-size:var(--fs-xs);color:var(--ink-3);text-align:right;letter-spacing:-0.005em;
+  }
+  .gantt-note span{color:var(--persimmon);font-weight:700}
+
+  .timeline{position:relative;padding:var(--s-2) 0}
+  .timeline-axis{position:absolute;left:24px;right:24px;top:38px;height:2px;background:var(--ink);z-index:0}
+  .ms-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;position:relative;z-index:1}
+  .ms{display:flex;flex-direction:column;align-items:center;text-align:center;position:relative}
+  .ms .dot{width:18px;height:18px;border-radius:50%;background:var(--paper);border:2.5px solid var(--ink);margin-bottom:14px;position:relative;z-index:2}
+  .ms.now .dot{background:var(--persimmon);border-color:var(--persimmon);box-shadow:0 0 0 5px rgba(228,90,43,.18)}
+  .ms .id{font-family:"Noto Serif KR";font-weight:700;font-size:var(--fs-md);color:var(--ink);margin-bottom:2px;letter-spacing:-0.01em}
+  .ms.now .id{color:var(--persimmon)}
+  .ms .ttl{font-family:"Noto Serif KR";font-weight:600;font-size:var(--fs-sm);color:var(--ink);margin-bottom:6px;letter-spacing:-0.005em;line-height:1.3}
+  .ms .body{background:var(--paper);border:1px solid var(--line-2);border-radius:var(--r-md);padding:11px 12px;width:100%;text-align:left;font-size:var(--fs-xs);color:var(--ink-2);line-height:1.55}
+  .ms .body ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+  .ms .body li{display:flex;gap:6px}
+  .ms .body li::before{content:"·";color:var(--persimmon);font-weight:900;line-height:1}
+  .ms.now .body{border-color:var(--persimmon);background:#FFF8F2}
+  .ms .badge{font-size:var(--fs-xs);color:var(--ink-3);margin-bottom:8px;letter-spacing:.04em;font-weight:600}
+  .ms.now .badge{color:var(--persimmon)}
+
+  /* ========== FOOTER ========== */
+  footer{
+    margin-top:var(--s-12);padding-top:var(--s-3);border-top:1px solid var(--ink);
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:var(--fs-xs);color:var(--ink-3);
+  }
+  footer .l{font-family:"Noto Serif KR";font-weight:700;color:var(--ink);font-size:var(--fs-md);letter-spacing:-0.01em}
+  footer .c{font-size:var(--fs-xs)}
+
+  @media (max-width: 1100px){
+    .compare, .compare.three{grid-template-columns:1fr;gap:var(--s-3)}
+    .after-band{grid-column:1/-1}
+    .decision{grid-template-columns:1fr}
+    .decision .cell{border-right:0;border-bottom:1px solid var(--line)}
+    .decision .cell:last-child{border-bottom:0}
+    .ms-row{grid-template-columns:repeat(2,1fr);row-gap:var(--s-3)}
+    .timeline-axis{display:none}
+    .insight{grid-template-columns:1fr}
+    .kpi-row{grid-template-columns:1fr 1fr}
+    .grid2{grid-template-columns:1fr}
+    .hero h1{font-size:48px}
+    .gantt{overflow-x:auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- top nav -->
+  <div class="topnav">
+    <div><b>지독해</b><span>· Phase 3 · 비교 문서</span></div>
+    <div class="right">
+      <span>2026.04.17</span>
+      <span class="mono">v1.2</span>
+    </div>
+  </div>
+
+  <!-- ========== HERO ========== -->
+  <header class="hero">
+    <div class="eyebrow">Phase 3 · Before / After</div>
+    <h1>신청만 하던 곳에서<br/><em>머무는 곳</em>으로.</h1>
+    <div class="lede">
+      <p>회원은 신청만 하면 떠난다. 운영자는 한 화면에서 모든 걸 한다.</p>
+      <p>Phase 3는 이 둘을 같이 푼다 — 회원에겐 머물 이유를, 운영자에겐 숨 쉴 자리를.</p>
+    </div>
+
+    <div class="decision">
+      <div class="cell">
+        <div class="lab">Work Packages</div>
+        <div class="val">19<small>개</small></div>
+      </div>
+      <div class="cell">
+        <div class="lab">Milestones</div>
+        <div class="val">M7 — M12<small>· 6단계</small></div>
+      </div>
+      <div class="cell">
+        <div class="lab">기간 단축 여지</div>
+        <div class="val">M9 ‖ M10<small>· 병렬 가능</small></div>
+        <div class="note">→ Phase 3 일정 약 2–3주 단축 여지</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== SECTION A — MEMBER ========== -->
+  <section class="sec">
+    <div class="sec-head">
+      <div class="num">A.</div>
+      <div>
+        <h2>회원 모바일 — 머무는 흐름 만들기</h2>
+        <span class="h-sub">2탭(모임만) → 3탭(홈 / 모임 / 내 신청) · 홈 = 픽 · 입장권 · 한 줄 · 합류</span>
+      </div>
+      <span class="pill">회원</span>
+    </div>
+
+    <div class="insight">
+      <div class="box now">
+        <div class="lab">현재 — 문제</div>
+        <p>홈이 곧 모임 리스트. 신청·확인이 끝나면 떠난다. <strong>재방문 동기가 결제 알림 외에 없다.</strong></p>
+      </div>
+      <div class="box next">
+        <div class="lab">Phase 3 — 해법<span class="badge">+1탭 · +4섹션</span></div>
+        <p>홈 탭이 분리되며 <strong>한 줄이 쌓이고, D-Day 입장권이 등장하고, 누가 들어왔는지 보인다.</strong> "또 들어와 볼 이유"를 만든다.</p>
+      </div>
+    </div>
+
+    <div class="compare three">
+      <div class="pane before" style="grid-column:1/2">
+        <!-- placeholder for grid alignment -->
+      </div>
+      <div class="after-band">After · 두 화면 — 홈 탭 + 모임 일정 탭</div>
+    </div>
+
+    <div class="compare three" style="margin-top:0">
+
+      <!-- before -->
+      <div class="pane before">
+        <div class="label"><b>Before</b><span>· 현재</span></div>
+        <div class="caption">한 화면에서 신청만 하고 빠진다</div>
+        <div class="meta-line">/ · 2탭 · 모임 일정이 곧 홈</div>
+        <div class="device-mobile">
+          <div class="screen">
+            <div class="topbar"><div class="brand">지독해</div><div class="who">윤○님 · 경주</div></div>
+            <div class="scroll">
+              <div class="date-head">4월 19일 토요일</div>
+              <div class="mcard"><h4>박완서, 그 많던 싱아는 누가 다 먹었을까</h4><div class="row"><span>오후 7시 · 황리단길 책방</span><span class="cap">8/12</span></div></div>
+              <div class="mcard warn"><h4>김애란 단편선 같이 읽기</h4><div class="row"><span>오후 8시 · 포항 림보</span><span class="cap">10/12</span></div></div>
+              <div class="date-head">4월 22일 화요일</div>
+              <div class="mcard"><h4>가즈오 이시구로, 남아 있는 나날</h4><div class="row"><span>오후 7시 · 동궁원 라운지</span><span class="cap">5/10</span></div></div>
+              <div class="mcard full"><h4>봄밤 시집 한 권 — 황인찬</h4><div class="row"><span>오후 7시 30분 · 첨성대</span><span class="cap">12/12</span></div></div>
+            </div>
+            <div class="nav two">
+              <div class="item active"><div class="ic"></div>모임 일정</div>
+              <div class="item"><div class="ic"></div>내 신청</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- after · home -->
+      <div class="pane after">
+        <div class="label"><b>After · 홈</b><span>· 새 탭, 능동적</span></div>
+        <div class="caption">머물 이유 4개 — 픽 · 입장권 · 한 줄 · 합류</div>
+        <div class="meta-line">/home · 능동적 탭 (배지 가능)</div>
+        <div class="device-mobile">
+          <div class="screen">
+            <div class="topbar"><div class="brand">지독해</div><div class="who">윤○님 · 경주</div></div>
+            <div class="scroll">
+              <div class="banner">
+                <div class="tag">이번 달 도착</div>
+                <h4>4월의 한 권, 함께 읽고 머무는 밤</h4>
+                <div class="dots"><span class="on"></span><span></span></div>
+              </div>
+              <div class="ticket">
+                <div class="hd">
+                  <div class="dday">D-1</div>
+                  <div class="when"><b>4/18 (금)</b><span>오후 7시</span></div>
+                </div>
+                <h4>박완서, 그 많던 싱아는 누가 다 먹었을까</h4>
+                <div class="place">황리단길 책방 2층 · <a>지도 보기</a></div>
+              </div>
+              <div class="quotes">
+                <div class="h"><div class="t">이번 주 한 줄</div><div class="sub">최근 3건</div></div>
+                <div class="qitem">
+                  <p>"이 책은 두 번째 읽는데, 첫 번째 읽었을 때 내가 뭘 봤던 건지 모르겠어요."</p>
+                  <div class="who">— 김○님 · 남아 있는 나날</div>
+                </div>
+                <div class="qitem">
+                  <p>"끝까지 못 읽고 왔는데, 다른 분들 얘기 듣고 다시 폈어요."</p>
+                  <div class="who">— 박○님 · 김애란 단편선</div>
+                </div>
+                <button class="qbtn">한 줄 남기기</button>
+              </div>
+              <div class="sproof">
+                <div class="sp"><div class="lab">오늘 합류</div><div class="val"><em>+3</em>명</div></div>
+                <div class="sp"><div class="lab">최근 가입</div><div class="val">이○님 외 <em>5</em></div></div>
+                <div class="sp"><div class="lab">인기</div><div class="val">박완서 8/12</div></div>
+                <div class="sp"><div class="lab">개근</div><div class="val">김○님 <em>7</em>회</div></div>
+              </div>
+            </div>
+            <div class="nav three">
+              <div class="item active"><div class="ic"></div>홈</div>
+              <div class="item"><div class="ic"></div>모임 일정</div>
+              <div class="item"><div class="ic"></div>내 신청</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- after · meeting -->
+      <div class="pane after">
+        <div class="label"><b>After · 모임</b><span>· 기본 랜딩 유지</span></div>
+        <div class="caption">중간에 픽 배너 1개로 흐름 환기</div>
+        <div class="meta-line">/ · 3탭 · 3번째 카드 뒤 1회만</div>
+        <div class="device-mobile">
+          <div class="screen">
+            <div class="topbar"><div class="brand">지독해</div><div class="who">윤○님 · 경주</div></div>
+            <div class="scroll">
+              <div class="date-head">4월 19일 토요일</div>
+              <div class="mcard"><h4>박완서, 그 많던 싱아는 누가 다 먹었을까</h4><div class="row"><span>오후 7시 · 황리단길 책방</span><span class="cap">8/12</span></div></div>
+              <div class="mcard warn"><h4>김애란 단편선 같이 읽기</h4><div class="row"><span>오후 8시 · 포항 림보</span><span class="cap">10/12</span></div></div>
+              <div class="date-head">4월 22일 화요일</div>
+              <div class="mcard"><h4>가즈오 이시구로, 남아 있는 나날</h4><div class="row"><span>오후 7시 · 동궁원</span><span class="cap">5/10</span></div></div>
+              <div class="ibanner">
+                <div class="ttl">봄밤 시집 한 권 — 황인찬</div>
+                <div class="sub">4/22 · 첨성대</div>
+              </div>
+              <div class="mcard full"><h4>봄밤 시집 한 권 — 황인찬</h4><div class="row"><span>오후 7시 30분 · 첨성대</span><span class="cap">12/12</span></div></div>
+              <div class="mcard"><h4>한강, 작별하지 않는다 — 모집</h4><div class="row"><span>오후 7시 · 포항 시립도서관</span><span class="cap">3/10</span></div></div>
+            </div>
+            <div class="nav three">
+              <div class="item"><div class="ic"></div>홈</div>
+              <div class="item active"><div class="ic"></div>모임 일정</div>
+              <div class="item"><div class="ic"></div>내 신청</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========== SECTION B — ADMIN ========== -->
+  <section class="sec">
+    <div class="sec-head">
+      <div class="num">B.</div>
+      <div>
+        <h2>관리자 데스크톱 — 오늘 할 일을 30초 안에</h2>
+        <span class="h-sub">단일 컬럼(모바일 우선) → 사이드바 7메뉴 + 대시보드 허브</span>
+      </div>
+      <span class="pill">운영자</span>
+    </div>
+
+    <div class="insight">
+      <div class="box now">
+        <div class="lab">현재 — 문제</div>
+        <p>/admin 한 페이지에 목록·액션·설정이 다 몰린다. <strong>운영자가 데스크톱을 써도 화면 가운데 좁은 컬럼</strong>으로 표시된다.</p>
+      </div>
+      <div class="box next">
+        <div class="lab">Phase 3 — 해법<span class="badge">+5메뉴 · +대시보드</span></div>
+        <p>좌측 사이드바 7메뉴 + 대시보드는 <strong>긴급 알림 · 핵심 KPI 3 · 바로가기</strong>의 허브로 단순화. 모임 목록은 별도 페이지.</p>
+      </div>
+    </div>
+
+    <div class="compare">
+
+      <div class="pane before">
+        <div class="label"><b>Before</b><span>· 현재</span></div>
+        <div class="caption">한 화면에 모든 기능이 몰려 있다</div>
+        <div class="meta-line">/admin · max-w-screen-sm · 데스크톱에서도 좁은 가운데</div>
+        <div class="device-desktop desk-old">
+          <div class="desk-bar"><i></i><i></i><i></i><div class="url">jidokhae.com/admin</div></div>
+          <div class="desk-body">
+            <div class="admin-mobile">
+              <h3>운영자 대시보드</h3>
+              <ul>
+                <li><span>오늘 신청</span><b>+4</b></li>
+                <li><span>이번 주 모임</span><b>3건</b></li>
+                <li><span>대기자</span><b>2명</b></li>
+              </ul>
+              <h3>진행 중인 모임</h3>
+              <ul>
+                <li><span>박완서 · 4/19</span><b>8/12</b></li>
+                <li><span>김애란 · 4/19</span><b>10/12</b></li>
+                <li><span>이시구로 · 4/22</span><b>5/10</b></li>
+                <li><span>황인찬 · 4/22</span><b>12/12</b></li>
+              </ul>
+              <h3 style="margin-top:16px">바로가기</h3>
+              <div class="crammed-row"><div class="b">＋ 새 모임</div><div class="b">회원 관리</div></div>
+              <div class="crammed-row"><div class="b">사이트 설정</div><div class="b">공간 관리</div></div>
+              <div class="crammed-row"><div class="b">정산</div><div class="b">알림 발송 이력</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pane after">
+        <div class="label"><b>After</b><span>· Phase 3</span></div>
+        <div class="caption">사이드바 7메뉴 + 대시보드 허브</div>
+        <div class="meta-line">/admin · 데스크톱 사이드바 · 모바일 햄버거</div>
+        <div class="device-desktop desk-new">
+          <div class="desk-bar"><i></i><i></i><i></i><div class="url">jidokhae.com/admin</div></div>
+          <div class="desk-body">
+            <aside class="sidebar">
+              <div class="brand">지독해<span>관리자</span></div>
+              <nav>
+                <a class="active"><span class="ic"></span>대시보드</a>
+                <a><span class="ic"></span>모임 관리</a>
+                <a><span class="ic"></span>정산</a>
+                <a><span class="ic"></span>회원 관리</a>
+                <div class="grp">콘텐츠</div>
+                <a><span class="ic"></span>배너 관리</a>
+                <a><span class="ic"></span>한 줄 관리</a>
+                <div class="grp">시스템</div>
+                <a><span class="ic"></span>설정</a>
+              </nav>
+            </aside>
+            <div class="desk-main">
+              <div class="crumb">대시보드 · 2026.04.17 (금)</div>
+              <h1>오늘의 운영 현황</h1>
+              <div class="alert-row">
+                <div><strong>긴급</strong>입금 미확인 2건 · 한 줄 승인 대기 5건</div>
+                <a>처리하기 →</a>
+              </div>
+              <div class="kpi-row">
+                <div class="kpi"><div class="lab">이번 주 모임</div><div class="val">3<small>건</small></div><div class="delta">+1 vs 지난주</div></div>
+                <div class="kpi"><div class="lab">확정 신청</div><div class="val">38<small>명</small></div><div class="delta">+12</div></div>
+                <div class="kpi"><div class="lab">이번 주 매출</div><div class="val">420<small>k</small></div><div class="delta down">-3%</div></div>
+              </div>
+              <div class="grid2">
+                <div class="panel">
+                  <h4>이번 주 모임<span class="more">모임 관리 →</span></h4>
+                  <ul>
+                    <li><span>박완서 · 4/19 (토)</span><b>8/12</b></li>
+                    <li><span>김애란 · 4/19 (토)</span><b>10/12</b></li>
+                    <li><span>이시구로 · 4/22 (화)</span><b>5/10</b></li>
+                    <li><span>황인찬 · 4/22 (화)</span><b>12/12</b></li>
+                  </ul>
+                </div>
+                <div class="panel">
+                  <h4>바로가기</h4>
+                  <div class="quick">
+                    <a>＋ 새 모임</a><a>＋ 새 배너</a><a>한 줄 승인 (5)</a><a>입금 확인 (2)</a><a>회원 검색</a>
+                  </div>
+                  <h4 style="margin:14px 0 8px">최근 가입</h4>
+                  <ul>
+                    <li><span>이○○ · 경주</span><b>2시간</b></li>
+                    <li><span>박○○ · 포항</span><b>1일</b></li>
+                    <li><span>김○○ · 경주</span><b>2일</b></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SECTION C — DIFF ========== -->
+  <section class="sec">
+    <div class="sec-head">
+      <div class="num">C.</div>
+      <div>
+        <h2>한 페이지로 보는 변화</h2>
+        <span class="h-sub">회원 / 운영자 / 품질 · 인프라 — 영역별 Before vs After + 도착 마일스톤</span>
+      </div>
+      <span class="pill">비교</span>
+    </div>
+
+    <div class="diff-group">
+      <h3>회원 <span class="count">5건</span></h3>
+      <div class="diff-table">
+        <table class="diff">
+          <thead><tr><th style="width:170px">영역</th><th>Before</th><th>After · Phase 3</th></tr></thead>
+          <tbody>
+            <tr><td class="cat">탭 구조<div><span class="ms-tag">M7</span></div></td><td class="was">2탭 — 모임 일정 / 내 신청</td><td class="now"><strong>3탭</strong> — 홈 / 모임 일정 / 내 신청 · 기본 랜딩은 모임 일정 유지</td></tr>
+            <tr><td class="cat">홈 화면<div><span class="ms-tag">M9</span></div></td><td class="was">없음 (모임 리스트가 곧 홈)</td><td class="now"><strong>4섹션</strong> — 홍보 배너 · D-Day 입장권 · 이번 주 한 줄 · 합류 티커</td></tr>
+            <tr><td class="cat">재방문 동기<div><span class="ms-tag">M9</span></div></td><td class="was">신청·확인 후 이탈, 체류 짧음</td><td class="now">한 줄 누적 · D-Day 알림 · 합류 티커로 <strong>머물 이유 형성</strong></td></tr>
+            <tr><td class="cat">모임 리스트<div><span class="ms-tag">M9</span></div></td><td class="was">날짜별 단순 나열</td><td class="now">동일 + <strong>인라인 픽 배너</strong> 1개 (3번째 카드 뒤)</td></tr>
+            <tr><td class="cat">기여 행위<div><span class="ms-tag">M8 + M9</span></div></td><td class="was">결제만 가능</td><td class="now"><strong>한 줄 제출 → 운영자 승인 → 홈 노출</strong> end-to-end</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="diff-group">
+      <h3>운영자 <span class="count">6건</span></h3>
+      <div class="diff-table">
+        <table class="diff">
+          <thead><tr><th style="width:170px">영역</th><th>Before</th><th>After · Phase 3</th></tr></thead>
+          <tbody>
+            <tr><td class="cat">레이아웃<div><span class="ms-tag">M7</span></div></td><td class="was">모바일 단일 컬럼 — 데스크톱에서도 좁은 가운데</td><td class="now"><strong>데스크톱 사이드바</strong> + 모바일 햄버거 · 7메뉴로 분리</td></tr>
+            <tr><td class="cat">대시보드<div><span class="ms-tag">M7</span></div></td><td class="was">/admin 한 페이지에 목록 + 액션 혼재</td><td class="now"><strong>"30초 허브"</strong> — 긴급 알림 + KPI 3 + 바로가기 · 목록은 /admin/meetings</td></tr>
+            <tr><td class="cat">콘텐츠 CMS<div><span class="ms-tag">M8</span></div></td><td class="was">없음</td><td class="now"><strong>배너 관리 + 한 줄 관리</strong> · Storage 업로드 · 승인 워크플로우</td></tr>
+            <tr><td class="cat">정산<div><span class="ms-tag">M10</span></div></td><td class="was">기본 화면 (editor 접근 가능)</td><td class="now"><strong>admin 전용</strong> + 월/연 추이 + 공간별 정산 · 환불 정확 반영</td></tr>
+            <tr><td class="cat">회원 관리<div><span class="ms-tag">M10</span></div></td><td class="was">목록 + 검색 + 역할 변경</td><td class="now">동일 + <strong>생애주기 5단계</strong> + 전환율 + 이탈 추이</td></tr>
+            <tr><td class="cat">모임 폼<div><span class="ms-tag">M7 + M10</span></div></td><td class="was">제목·일정·정원·금액·장소·설명</td><td class="now">동일 + <strong>region · is_featured · detail_address · chat_link · reading_link</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="diff-group">
+      <h3>품질 · 인프라 <span class="count">3건</span></h3>
+      <div class="diff-table">
+        <table class="diff">
+          <thead><tr><th style="width:170px">영역</th><th>Before</th><th>After · Phase 3</th></tr></thead>
+          <tbody>
+            <tr><td class="cat">결제 안정성<div><span class="ms-tag">M7</span></div></td><td class="was">웹훅 orderId 검증 · RPC 환불 등 Critical 4건 잔존</td><td class="now"><strong>풀스캔 Critical 0</strong> · paymentKey URL 인코딩 · 웹훅 RPC 실패 시 환불</td></tr>
+            <tr><td class="cat">인프라<div><span class="ms-tag">M7</span></div></td><td class="was">보안 헤더 미설정 · TossPayments fetch 무한 대기 가능</td><td class="now"><strong>보안 헤더</strong> · fetch 타임아웃 8s · 정원 체크 강화 · cron 병렬화</td></tr>
+            <tr><td class="cat">UI 품질<div><span class="ms-tag">M11</span></div></td><td class="was">하드코딩 색상 · 일부 WCAG 미달</td><td class="now"><strong>토큰 100% 적용</strong> + WCAG AA 통과</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SECTION D — ROADMAP ========== -->
+  <section class="sec">
+    <div class="sec-head">
+      <div class="num">D.</div>
+      <div>
+        <h2>도착 순서 — M7에서 M12까지</h2>
+        <span class="h-sub">M9·M10 병렬 가능 → 일정 압축 여지 확보</span>
+      </div>
+      <span class="pill">로드맵</span>
+    </div>
+
+    <!-- mini gantt -->
+    <div class="gantt">
+      <div class="gantt-head">
+        <span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+      </div>
+      <div class="gantt-row"><span class="ms-id">M7</span><span class="bar" style="--c-start:2;--c-end:4">기반</span></div>
+      <div class="gantt-row"><span class="ms-id">M8</span><span class="bar" style="--c-start:4;--c-end:6">CMS</span></div>
+      <div class="gantt-row"><span class="ms-id">M9</span><span class="bar parallel" style="--c-start:6;--c-end:8">홈 오픈</span></div>
+      <div class="gantt-row"><span class="ms-id">M10</span><span class="bar parallel" style="--c-start:6;--c-end:8">관리자 심화</span></div>
+      <div class="gantt-row"><span class="ms-id">M11</span><span class="bar warm" style="--c-start:8;--c-end:9">토큰</span></div>
+      <div class="gantt-row"><span class="ms-id">M12</span><span class="bar warm" style="--c-start:9;--c-end:10">배포</span></div>
+      <div class="gantt-note"><span>M9 ‖ M10</span> 점선 박스 = 병렬 진행 가능 구간</div>
+    </div>
+
+    <!-- detail timeline -->
+    <div class="timeline">
+      <div class="timeline-axis"></div>
+      <div class="ms-row">
+        <div class="ms now">
+          <div class="dot"></div>
+          <div class="badge">NEXT</div>
+          <div class="id">M7</div>
+          <div class="ttl">기반 + 레이아웃</div>
+          <div class="body"><ul>
+            <li>풀스캔 Critical 4 + 인프라 5 + 문구 2</li>
+            <li>DB: meetings 5컬럼 + banners + book_quotes</li>
+            <li>관리자 사이드바 + 대시보드 뼈대</li>
+            <li>회원 3탭 네비 (홈은 placeholder)</li>
+          </ul></div>
+        </div>
+        <div class="ms">
+          <div class="dot"></div>
+          <div class="badge">M7 의존</div>
+          <div class="id">M8</div>
+          <div class="ttl">관리자 CMS</div>
+          <div class="body"><ul>
+            <li>배너 CRUD + Storage 업로드</li>
+            <li>활성/비활성 토글 + 순서</li>
+            <li>한 줄 승인 워크플로우</li>
+            <li>승인 취소 + 닉네임 마스킹</li>
+          </ul></div>
+        </div>
+        <div class="ms">
+          <div class="dot"></div>
+          <div class="badge">M7·M8 의존</div>
+          <div class="id">M9</div>
+          <div class="ttl">회원 홈 오픈</div>
+          <div class="body"><ul>
+            <li>홍보 배너 스와이프 (fallback)</li>
+            <li>D-Day 입장권 + 네이버 지도</li>
+            <li>"이번 주 한 줄" 제출 폼</li>
+            <li>합류 티커 + 인라인 배너</li>
+          </ul></div>
+        </div>
+        <div class="ms">
+          <div class="dot"></div>
+          <div class="badge">M7 의존 · M9 병렬</div>
+          <div class="id">M10</div>
+          <div class="ttl">관리자 심화</div>
+          <div class="body"><ul>
+            <li>정산 admin 전용 + 월/연 추이</li>
+            <li>회원 생애주기 5단계 + 목록</li>
+            <li>가입→첫 참여 · 재참석 전환율</li>
+            <li>모임 폼 추가 옵션</li>
+          </ul></div>
+        </div>
+        <div class="ms">
+          <div class="dot"></div>
+          <div class="badge">M9·M10 의존</div>
+          <div class="id">M11</div>
+          <div class="ttl">토큰 · 접근성</div>
+          <div class="body"><ul>
+            <li>하드코딩 색상 grep = 0</li>
+            <li>WCAG AA 대비 통과</li>
+            <li>독립서점 미학 일관성</li>
+            <li>실제 화면 확인 (latest/)</li>
+          </ul></div>
+        </div>
+        <div class="ms">
+          <div class="dot"></div>
+          <div class="badge">M11 의존</div>
+          <div class="id">M12</div>
+          <div class="ttl">통합 검증 · 배포</div>
+          <div class="body"><ul>
+            <li>풀스캔 재실행 (Critical 0)</li>
+            <li>사용자 테스트 14건 회귀</li>
+            <li>Vercel Preview 검증</li>
+            <li>프로덕션 배포 + 사후</li>
+          </ul></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="l">지독해</div>
+    <div class="c">roadmap/phase3-* · 4 docs · v1.2 · 전문가 패널 반영</div>
+    <div>2026.04.17</div>
+  </footer>
+
+</div>
+</body>
+</html>
