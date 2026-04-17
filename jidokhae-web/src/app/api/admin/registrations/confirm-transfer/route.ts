@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
 
   let confirmed = 0
   let failed = 0
+  const failedReasons: { id: string; reason: string }[] = []
 
   for (const registrationId of registrationIds) {
     if (action === 'unconfirm') {
@@ -82,8 +83,48 @@ export async function POST(request: NextRequest) {
         .select('id')
 
       if (data && data.length > 0) confirmed++
-      else failed++
+      else {
+        failed++
+        failedReasons.push({ id: registrationId, reason: 'not_confirmed_transfer' })
+      }
     } else {
+      // 정원 재검증 — capacity 변경 등으로 pending_transfer + confirmed > capacity 가능
+      const { data: reg } = await admin
+        .from('registrations')
+        .select('meeting_id, status')
+        .eq('id', registrationId)
+        .single()
+
+      if (!reg || reg.status !== 'pending_transfer') {
+        failed++
+        failedReasons.push({ id: registrationId, reason: 'not_pending_transfer' })
+        continue
+      }
+
+      const { data: meeting } = await admin
+        .from('meetings')
+        .select('capacity')
+        .eq('id', reg.meeting_id)
+        .single()
+
+      if (!meeting) {
+        failed++
+        failedReasons.push({ id: registrationId, reason: 'meeting_not_found' })
+        continue
+      }
+
+      const { count: confirmedCount } = await admin
+        .from('registrations')
+        .select('id', { count: 'exact', head: true })
+        .eq('meeting_id', reg.meeting_id)
+        .eq('status', 'confirmed')
+
+      if ((confirmedCount ?? 0) >= meeting.capacity) {
+        failed++
+        failedReasons.push({ id: registrationId, reason: 'capacity_full' })
+        continue
+      }
+
       const { data, error } = await admin
         .from('registrations')
         .update({ status: 'confirmed' })
@@ -93,11 +134,15 @@ export async function POST(request: NextRequest) {
 
       if (error || !data || data.length === 0) {
         failed++
+        failedReasons.push({ id: registrationId, reason: error?.message ?? 'update_failed' })
       } else {
         confirmed++
       }
     }
   }
 
-  return NextResponse.json({ confirmed, failed })
+  return NextResponse.json({
+    status: failed === 0 ? 'success' : 'partial',
+    data: { confirmed, failed, failedReasons },
+  })
 }

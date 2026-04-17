@@ -58,5 +58,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message: `정산 확정 실패: ${error.message}` }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ status: 'success' })
 }
