@@ -1,19 +1,11 @@
 import { Suspense } from 'react'
-import AdminDashboardContent from '@/components/admin/AdminDashboardContent'
+import AdminDashboardHub from '@/components/admin/AdminDashboardHub'
 import DashboardSkeleton from '@/components/skeletons/DashboardSkeleton'
 
-type Props = {
-  searchParams: Promise<{ filter?: string }>
-}
-
-export default async function AdminPage({ searchParams }: Props) {
-  const { filter = 'active' } = await searchParams
-
+export default function AdminPage() {
   return (
-    <div className="px-5 pt-4 pb-6">
-      <Suspense fallback={<DashboardSkeleton />}>
-        <AdminDashboardContent filter={filter} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <AdminDashboardHub />
+    </Suspense>
   )
 }
