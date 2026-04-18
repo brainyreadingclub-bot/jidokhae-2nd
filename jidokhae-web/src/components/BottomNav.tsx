@@ -5,6 +5,11 @@ import { usePathname } from 'next/navigation'
 
 const tabs = [
   {
+    label: '홈',
+    href: '/home',
+    icon: HomeIcon,
+  },
+  {
     label: '모임 일정',
     href: '/',
     icon: CalendarIcon,
@@ -34,6 +39,7 @@ export default function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              aria-current={isActive ? 'page' : undefined}
               className={`relative flex flex-1 flex-col items-center justify-center gap-1.5 min-h-[48px] py-2 transition-colors duration-150 ${
                 isActive
                   ? 'text-primary-600'
@@ -54,6 +60,24 @@ export default function BottomNav() {
       {/* iOS safe area */}
       <div className="h-[env(safe-area-inset-bottom)]" />
     </nav>
+  )
+}
+
+function HomeIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={active ? 2.2 : 1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 11l9-8 9 8" />
+      <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
+    </svg>
   )
 }
 
