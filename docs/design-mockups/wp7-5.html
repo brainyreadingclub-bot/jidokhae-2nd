@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WP7-5 Mockup v2 — 회원 3탭 + /home (실콘텐츠)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+  :root{
+    --primary-50:#F0F7F4;--primary-100:#D9EDE3;--primary-300:#7CC0A0;--primary-400:#4A9E76;
+    --primary-500:#2D7D5F;--primary-600:#1B6347;--primary-700:#1B4332;--primary-800:#163528;--primary-900:#0F2318;
+    --accent-300:#F5A889;--accent-500:#C75B3A;--accent-700:#863B25;
+    --neutral-200:#F0EBE1;--neutral-300:#E4DDD1;--neutral-400:#C4BAA8;--neutral-500:#9E9484;--neutral-700:#5C544A;
+    --surface-50:#FEFCF9;--surface-100:#FDF8F1;--surface-200:#FAF3E8;--surface-300:#F5EBD9;
+    --bg:#FDFBF7;
+    --status-open:#2D7D5F;--status-closing:#D9802A;--status-full:#C4BAA8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);font-family:"Pretendard","Pretendard Variable",system-ui,sans-serif;color:var(--primary-900);-webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:1280px;margin:0 auto;padding:48px 32px 96px}
+
+  .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--primary-900);padding-bottom:14px;margin-bottom:36px}
+  .top .lead{display:flex;align-items:baseline;gap:14px}
+  .top .lead b{font-family:"Noto Serif KR";font-weight:700;font-size:22px;color:var(--primary-900);letter-spacing:-0.018em}
+  .top .lead span{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--neutral-500);font-weight:600}
+  .top .right{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--neutral-500);font-weight:600}
+
+  h1.page{font-family:"Noto Serif KR";font-weight:800;font-size:34px;letter-spacing:-0.022em;color:var(--primary-900);margin-bottom:8px}
+  p.page-sub{color:var(--primary-700);max-width:64ch;margin-bottom:36px}
+
+  /* 3 frames + spec */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;align-items:start;margin-bottom:48px}
+  .col h3.case{font-family:"Noto Serif KR";font-weight:700;font-size:15px;color:var(--primary-900);margin-bottom:6px;display:flex;align-items:center;gap:8px;letter-spacing:-0.005em}
+  .col h3.case .badge{font-family:Pretendard;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+  .badge.warm{background:rgba(199,91,58,.1);color:var(--accent-700)}
+  .badge.cool{background:var(--primary-50);color:var(--primary-700)}
+  .badge.neutral{background:var(--surface-200);color:var(--neutral-700)}
+  .col p.case-sub{font-size:12.5px;color:var(--neutral-700);margin-bottom:14px;line-height:1.55}
+
+  /* Mobile frame */
+  .device{width:300px;height:620px;margin:0 auto;border:11px solid #18160F;border-radius:42px;background:var(--surface-50);box-shadow:0 18px 40px -22px rgba(15,35,24,.32);position:relative;overflow:hidden}
+  .device::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:88px;height:22px;background:#18160F;border-radius:14px;z-index:5}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--surface-100)}
+  .topbar{padding:42px 16px 12px;border-bottom:1px solid var(--surface-300);background:var(--surface-50)}
+  .topbar .greet{font-family:"Noto Serif KR";font-weight:700;font-size:14px;color:var(--primary-900);letter-spacing:-0.01em}
+  .topbar .who{margin-top:2px;font-size:11px;color:var(--primary-500)}
+  .scroll{flex:1;overflow:auto;padding:14px 14px 80px}
+  .scroll::-webkit-scrollbar{width:0}.scroll{scrollbar-width:none}
+
+  /* Hero (always) */
+  .hero{margin-bottom:18px}
+  .hero h2{font-family:"Noto Serif KR";font-weight:700;font-size:18px;color:var(--primary-900);line-height:1.4;letter-spacing:-0.015em;margin-bottom:6px}
+  .hero p{font-size:12px;color:var(--primary-600);line-height:1.55}
+
+  /* Section header */
+  .section-h{font-family:"Noto Serif KR";font-weight:700;font-size:13px;color:var(--primary-900);margin:14px 0 8px;display:flex;justify-content:space-between;align-items:baseline;letter-spacing:-0.005em}
+  .section-h a{font-size:11px;color:var(--accent-500);font-weight:700;letter-spacing:.02em}
+
+  /* D-Day ticket (회원 신청 case에만) */
+  .ticket{position:relative;background:var(--surface-50);border:1.5px solid var(--primary-900);border-radius:14px;padding:13px 14px;margin-bottom:8px}
+  .ticket .hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+  .ticket .dday{background:var(--accent-500);color:#fff;font-family:"Noto Serif KR";font-weight:700;font-size:12px;padding:3px 9px;border-radius:6px;letter-spacing:.04em}
+  .ticket .when{font-size:10.5px;color:var(--primary-500);text-align:right}
+  .ticket .when b{display:block;color:var(--primary-900);font-weight:600;font-size:11.5px}
+  .ticket h4{font-family:"Noto Serif KR";font-weight:600;font-size:13px;line-height:1.4;color:var(--primary-900);margin-bottom:6px;letter-spacing:-0.005em}
+  .ticket .place{font-size:11px;color:var(--primary-700);display:flex;align-items:center;gap:5px}
+
+  /* Meeting card mini */
+  .mcard{background:var(--surface-50);border:1px solid var(--surface-300);border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative}
+  .mcard::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;background:var(--status-open);border-radius:0 3px 3px 0}
+  .mcard.warn::before{background:var(--status-closing)}
+  .mcard.full::before{background:var(--status-full)}
+  .mcard h4{font-family:"Noto Serif KR";font-weight:600;font-size:12.5px;color:var(--primary-900);line-height:1.4;margin-bottom:4px;padding-left:6px;letter-spacing:-0.005em}
+  .mcard .row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--primary-500);padding-left:6px}
+  .mcard .cap{color:var(--status-open);font-weight:700}
+  .mcard.warn .cap{color:var(--status-closing)}
+  .mcard.full .cap{color:var(--neutral-500)}
+
+  /* Empty state */
+  .empty{text-align:center;padding:24px 16px;background:var(--surface-50);border:1px dashed var(--neutral-300);border-radius:12px;margin-bottom:14px}
+  .empty p{font-family:"Noto Serif KR";font-size:13px;color:var(--primary-700);font-weight:500;margin-bottom:4px;letter-spacing:-0.005em}
+  .empty span{font-size:11px;color:var(--primary-500)}
+
+  /* CTA bottom (always) */
+  .cta{margin-top:14px;background:var(--primary-50);border:1px solid var(--primary-100);border-radius:12px;padding:14px 14px;text-align:center}
+  .cta p{font-size:12px;color:var(--primary-700);margin-bottom:6px}
+  .cta a{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--primary-700);font-weight:700}
+
+  /* BottomNav 3탭 */
+  .nav{position:absolute;left:0;right:0;bottom:0;height:64px;background:#fff;border-top:1px solid var(--neutral-200);display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;justify-items:center;padding-bottom:6px}
+  .item{position:relative;font-size:10.5px;color:var(--neutral-400);display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:500;flex:1;padding:6px 0}
+  .item .ic{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .item.active{color:var(--primary-600);font-weight:700}
+  .item.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:2px;border-radius:999px;background:var(--primary-600)}
+  svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+  /* Spec section */
+  .spec-row{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+  .spec section h2{font-family:"Noto Serif KR";font-weight:700;font-size:20px;letter-spacing:-0.018em;color:var(--primary-900);border-bottom:1px solid var(--primary-900);padding-bottom:6px;margin-bottom:14px;display:flex;align-items:baseline;gap:10px}
+  .spec section h2 small{font-family:Pretendard;font-weight:500;font-size:12px;color:var(--neutral-500);letter-spacing:.04em}
+  .spec p{font-size:14px;color:var(--primary-700);line-height:1.65}
+  .spec ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--primary-800);margin-top:6px}
+  .spec ul li{display:flex;gap:8px;padding-left:14px;position:relative}
+  .spec ul li::before{content:"·";position:absolute;left:0;color:var(--accent-500);font-weight:800;font-size:14px;line-height:1.4}
+  .spec ul li b{color:var(--primary-900);font-weight:700}
+  .spec code{font-family:ui-monospace,monospace;background:var(--surface-200);padding:1px 5px;border-radius:4px;font-size:12.5px}
+
+  @media (max-width:980px){
+    .grid{grid-template-columns:1fr}
+    .spec-row{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="lead">
+      <b>지독해</b>
+      <span>WP7-5 v2 · /home 실콘텐츠 · BottomNav 3탭</span>
+    </div>
+    <div class="right">2026.04.18 · v2</div>
+  </div>
+
+  <h1 class="page">홈 탭 — <span style="color:var(--accent-500)">있는 것만</span> 자동으로</h1>
+  <p class="page-sub">silhouette/teaser 거부. 빈 섹션은 안 그린다. M7에서 자동으로 보여줄 수 있는 것 (환영 / D-Day 입장권 / 다가오는 모임)만 노출. 배너·한 줄·소셜 프루프는 데이터 들어오면 (M8/M9) 자동으로 자리에 채워짐.</p>
+
+  <!-- 3 cases -->
+  <div class="grid">
+
+    <!-- Case A: D-Day 있음 + 모임 있음 -->
+    <div class="col">
+      <h3 class="case">Case A — 풍성 <span class="badge warm">회원 신청+모임 있음</span></h3>
+      <p class="case-sub">오늘/내일 confirmed 모임 + 다가오는 active 모임. 가장 풍성한 화면.</p>
+      <div class="device">
+        <div class="screen">
+          <div class="topbar">
+            <div class="greet">윤가람님, 안녕하세요</div>
+            <div class="who">경주 · 4월 18일 (금)</div>
+          </div>
+          <div class="scroll">
+            <div class="hero">
+              <h2>오늘 저녁, 황리단길에서</h2>
+              <p>D-Day 입장권이 도착했어요.</p>
+            </div>
+
+            <div class="section-h">오늘 / 내일 모임</div>
+            <div class="ticket">
+              <div class="hd">
+                <div class="dday">D-DAY</div>
+                <div class="when"><b>4/18 (금)</b>오후 7시</div>
+              </div>
+              <h4>박완서, 그 많던 싱아는 누가 다 먹었을까</h4>
+              <div class="place">📍 황리단길 책방 2층</div>
+            </div>
+
+            <div class="section-h">다가오는 모임 <a>전체 보기 →</a></div>
+            <div class="mcard">
+              <h4>김애란 단편선 같이 읽기</h4>
+              <div class="row"><span>4/19 (토) 오후 8시 · 림보</span><span class="cap">10/12</span></div>
+            </div>
+            <div class="mcard">
+              <h4>가즈오 이시구로, 남아 있는 나날</h4>
+              <div class="row"><span>4/22 (화) 오후 7시 · 동궁원</span><span class="cap">5/10</span></div>
+            </div>
+
+            <div class="cta">
+              <p>전체 일정도 한 번에</p>
+              <a>모임 일정 보러가기 →</a>
+            </div>
+          </div>
+          <div class="nav">
+            <div class="item active">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="2.2"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+              <span>홈</span>
+            </div>
+            <div class="item">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <span>모임 일정</span>
+            </div>
+            <div class="item">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+              <span>내 신청</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case B: D-Day 없음 + 모임 있음 -->
+    <div class="col">
+      <h3 class="case">Case B — 평소 <span class="badge cool">신청 없음 / 모임 있음</span></h3>
+      <p class="case-sub">D-Day 입장권 섹션 자체가 사라짐. 다가오는 모임만 노출. M7에서 가장 흔한 화면.</p>
+      <div class="device">
+        <div class="screen">
+          <div class="topbar">
+            <div class="greet">윤가람님, 안녕하세요</div>
+            <div class="who">경주 · 4월 18일 (금)</div>
+          </div>
+          <div class="scroll">
+            <div class="hero">
+              <h2>이번 주, 경주에 모임이 있어요</h2>
+              <p>마음에 드는 책으로 시작해 보세요.</p>
+            </div>
+
+            <div class="section-h">다가오는 모임 <a>전체 보기 →</a></div>
+            <div class="mcard">
+              <h4>박완서, 그 많던 싱아는 누가 다 먹었을까</h4>
+              <div class="row"><span>4/19 (토) 오후 7시 · 황리단길</span><span class="cap">8/12</span></div>
+            </div>
+            <div class="mcard warn">
+              <h4>김애란 단편선 같이 읽기</h4>
+              <div class="row"><span>4/19 (토) 오후 8시 · 림보</span><span class="cap">10/12</span></div>
+            </div>
+            <div class="mcard">
+              <h4>가즈오 이시구로, 남아 있는 나날</h4>
+              <div class="row"><span>4/22 (화) 오후 7시 · 동궁원</span><span class="cap">5/10</span></div>
+            </div>
+
+            <div class="cta">
+              <p>전체 일정도 한 번에</p>
+              <a>모임 일정 보러가기 →</a>
+            </div>
+          </div>
+          <div class="nav">
+            <div class="item active">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="2.2"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+              <span>홈</span>
+            </div>
+            <div class="item">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <span>모임 일정</span>
+            </div>
+            <div class="item">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+              <span>내 신청</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case C: 진짜 빈 상태 -->
+    <div class="col">
+      <h3 class="case">Case C — 비수기 <span class="badge neutral">모임 0건</span></h3>
+      <p class="case-sub">다가오는 모임 0건. 이마저도 비면 단순 안내 + CTA만.</p>
+      <div class="device">
+        <div class="screen">
+          <div class="topbar">
+            <div class="greet">윤가람님, 안녕하세요</div>
+            <div class="who">경주 · 4월 18일 (금)</div>
+          </div>
+          <div class="scroll">
+            <div class="hero">
+              <h2>잠깐 쉬어가는 한 주</h2>
+              <p>이번 주는 새로 열린 모임이 없어요. 곧 다음 일정이 올라와요.</p>
+            </div>
+
+            <div class="empty">
+              <p>다가오는 모임이 없어요</p>
+              <span>새 일정이 등록되면 여기서 가장 먼저 안내해 드려요</span>
+            </div>
+
+            <div class="cta">
+              <p>지난 모임이 궁금하면</p>
+              <a>전체 일정 보기 →</a>
+            </div>
+          </div>
+          <div class="nav">
+            <div class="item active">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="2.2"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div>
+              <span>홈</span>
+            </div>
+            <div class="item">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <span>모임 일정</span>
+            </div>
+            <div class="item">
+              <div class="ic"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+              <span>내 신청</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Spec -->
+  <div class="spec spec-row">
+    <section>
+      <h2>섹션 노출 규칙 <small>없으면 안 그린다</small></h2>
+      <ul>
+        <li><b>인사 (always)</b> — 닉네임 + 지역(있으면) + 오늘 날짜</li>
+        <li><b>Hero 한 줄</b> — 데이터 상태에 따라 카피 변경 (D-Day 있음/모임 있음/비수기)</li>
+        <li><b>오늘/내일 모임 (조건부)</b> — 현재 user의 confirmed 중 <code>date IN (오늘, 내일)</code> 있을 때만 표시. <strong>없으면 섹션 자체 미렌더</strong></li>
+        <li><b>다가오는 모임 (조건부)</b> — <code>active</code> 모임 중 <code>date &gt;= 오늘</code> 가까운 순 최대 3개. 0건이면 빈 상태 카드 1개 (마음에 드는 한 마디)</li>
+        <li><b>CTA (always)</b> — "모임 일정 보러가기" — 회원이 막다른 길 안 느끼게</li>
+      </ul>
+      <p style="margin-top:12px"><b>M8 / M9 도착 시 자동 추가</b>: 배너 (banners.is_active=true 데이터 있으면 최상단), 이번 주 한 줄 (book_quotes.status=approved 있으면), 합류 티커 (M9 소셜프루프). 데이터 fetch 코드만 추가하고 빈 처리는 동일 패턴.</p>
+    </section>
+
+    <section>
+      <h2>구현 메모 <small>files / data / behavior</small></h2>
+      <ul>
+        <li><b>BottomNav</b> — 기존 <code>BottomNav.tsx</code>에 홈 탭 추가 (HomeIcon inline SVG). 3탭 grid 자동 분배</li>
+        <li><b>홈 페이지</b> — <code>src/app/(main)/home/page.tsx</code> Server Component. <code>HomeContent</code> Suspense fallback</li>
+        <li><b>데이터 fetch</b> — Promise.all 병렬: ① 오늘/내일 confirmed registrations (현재 user) ② active 모임 가까운 3개</li>
+        <li><b>fallback 모임 카드</b> — 기존 <code>MeetingCard</code> 재사용 (간소화 판일 수도 — Mini용 별도 컴포넌트는 만들지 않고 일단 재사용)</li>
+        <li><b>D-Day 입장권</b> — M9 정식 카드 component <code>DDayTicket</code>는 M9에서. M7는 인라인 jsx로 충분 (재사용 적음)</li>
+        <li><b>기본 랜딩</b> — 로그인 후 <code>/</code> (모임 일정) 유지. <code>/home</code>은 능동적 진입만</li>
+        <li><b>토큰</b> — 기존 globals.css 토큰만</li>
+        <li><b>검증</b> — prelaunch · 3탭 active state · D-Day 있는 회원 / 없는 회원 / 모임 0건 케이스 분기</li>
+      </ul>
+    </section>
+  </div>
+
+</div>
+</body>
+</html>
