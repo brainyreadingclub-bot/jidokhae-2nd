@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
     .eq('status', 'active')
 
   if (!meetings || meetings.length === 0) {
-    return NextResponse.json({ message: 'No meetings tomorrow', date: tomorrow, sent: 0 })
+    return NextResponse.json({
+      status: 'success',
+      message: 'No meetings tomorrow',
+      data: { date: tomorrow, sent: 0 },
+    })
   }
 
   let totalSent = 0
@@ -84,10 +88,13 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({
-    date: tomorrow,
-    meetings: meetings.length,
-    sent: totalSent,
-    skipped: totalSkipped,
-    failed: totalFailed,
+    status: totalFailed === 0 ? 'success' : 'partial',
+    data: {
+      date: tomorrow,
+      meetings: meetings.length,
+      sent: totalSent,
+      skipped: totalSkipped,
+      failed: totalFailed,
+    },
   })
 }

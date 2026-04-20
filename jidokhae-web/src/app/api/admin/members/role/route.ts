@@ -111,5 +111,5 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ status: 'success' })
 }

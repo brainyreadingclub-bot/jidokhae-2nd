@@ -35,5 +35,5 @@ export async function POST(request: NextRequest) {
     .update({ welcomed_at: new Date().toISOString() })
     .eq('id', user.id)
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ status: 'success' })
 }

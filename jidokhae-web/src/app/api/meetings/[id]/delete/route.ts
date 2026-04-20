@@ -87,8 +87,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     return NextResponse.json({
       status: 'success',
-      refundedCount: 0,
-      failedCount: 0,
+      data: { refundedCount: 0, failedCount: 0 },
     })
   }
 
@@ -160,7 +159,6 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   return NextResponse.json({
     status: failedCount === 0 ? 'success' : 'partial',
-    refundedCount,
-    failedCount,
+    data: { refundedCount, failedCount },
   })
 }

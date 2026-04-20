@@ -774,9 +774,6 @@ export default function MeetingActionButton({
                 >
                   입금 완료
                 </button>
-                <p className="mt-2 text-center text-xs text-primary-400">
-                  입금 후 운영자 확인까지 대기합니다
-                </p>
               </>
             )}
 
