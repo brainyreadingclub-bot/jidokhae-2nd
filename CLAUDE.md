@@ -158,6 +158,49 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 ---
 
+## Branching & Deployment Strategy
+
+**원칙 (2026-04-21 확정, Phase 3 M7부터 적용):**
+마일스톤은 하나로 구현하고, 배포는 WP 묶음 단위로 split한다.
+
+### 구현 단계
+- 마일스톤(M7, M8, …)의 모든 WP를 `feat/phaseN-mX` 브랜치 하나에 순차 commit으로 누적
+- 각 WP는 prelaunch 통과 후 commit. 마일스톤 전체 완료까지 한 브랜치에서 진행
+- 마일스톤 완료 시 `backup/phaseN-mX-full` 백업 브랜치 생성 + origin push (cherry-pick 소스 보존)
+
+### 배포 단계 (split)
+- 배포 = 영향 대상 기준 묶음별 별도 브랜치 + 별도 PR
+- **묶음 기준 3가지**:
+  1. **안정성/백엔드/DB** — 사용자 화면 영향 0 (풀스캔, schema, 타입, cron, API 응답 형식 등)
+  2. **운영자 개편** — admin UI 변경 (본인이 직접 검증 가능)
+  3. **회원 변화** — 회원 화면 변경 (250명 노출, 가장 신중)
+- **기본 배포 순서**: 안정성 → 운영자 → 회원 (사용자가 admin 먼저 검증한 뒤 회원 공개)
+- 각 묶음: `main`에서 `feat/phaseN-stepK-<slug>` 브랜치 생성 + `git cherry-pick <commits>` + push + PR
+- 순차 머지 원칙: 한 묶음 머지 + 1~2일 모니터링 후 다음 묶음 착수
+- 예시 (M7): `step1-stable` (WP7-1+7-2) → `step2-admin-overhaul` (WP7-3+7-4) → `step3-member-home` (WP7-5)
+
+### Cherry-pick 주의
+- 각 step의 cherry-pick 소스는 `backup/phaseN-mX-full` 브랜치의 해당 commit SHA
+- conflict 최소화를 위해 마일스톤 내 WP는 가능한 한 별도 파일에 작성 (교훈: feedback_phase_structure)
+- prod DB schema 마이그레이션은 안정성 step에 포함 (사용자 화면 영향 없으므로 먼저 배포 가능)
+
+### 검증 전략
+- **Option A — Preview**: Vercel preview에서 검증. Supabase + Kakao OAuth redirect URL에 preview 도메인 추가 필요 (1회 설정 후 재활용)
+- **Option B — Prod 직접**: 사용자 영향 0인 안정성 step만 prod 직접 검증 + 이상 시 `git revert`
+- UI 변경이 있는 step은 반드시 Option A (preview)로 검증
+
+### Preview 환경 주의 (중요)
+- Vercel Preview는 **prod Supabase에 그대로 연결** (별도 staging 아님). 검증 시 prod 데이터 실제 변경됨
+- 테스트 모임은 즉시 삭제. 카드 결제 테스트 금지 (계좌이체로만)
+- Preview env vars가 prod와 동일한지 Vercel Dashboard에서 확인
+
+### 롤백
+- 머지 직후 이상 시 `git revert -m 1 <merge-commit-sha>` + push → 2-3분 내 prod 복구
+- DB schema는 revert하지 않음 (코드만 revert, schema는 forward-compatible하게 설계)
+- 이후 step이 이미 머지된 상태에서 이전 step revert는 의존성 충돌 가능 — 각 step 머지 후 충분히 모니터링 후 다음 step 진행
+
+---
+
 ## Implementation Codebase (`jidokhae-web/`)
 
 ### Development Commands
