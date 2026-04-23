@@ -35,10 +35,19 @@ export async function getMonthlyRevenue(
     let totalPaid = 0
     let totalRefunded = 0
     for (const r of data) {
-      // confirmed 건만 매출로 집계 (입금 확인된 건만)
-      if (r.status === 'confirmed' && r.paid_amount) totalPaid += r.paid_amount
-      // 취소된 건의 환불 금액
-      if (r.status === 'cancelled' && r.refunded_amount && r.refunded_amount > 0) totalRefunded += r.refunded_amount
+      // 총매출: confirmed + cancelled 모두 포함 (Phase 3 M7 Step 2.5 수정)
+      // 이번 달 모임에 대해 실제로 결제가 발생한 건은 나중에 취소돼도
+      // 총매출 집계에 포함되어야 정확한 순매출(총매출 − 환불)이 산출된다.
+      // 기존(confirmed만 집계)은 취소된 건의 환불액만 따로 빠져나가 순매출이
+      // 음수로 표시되는 문제가 있었다.
+      // pending_transfer에서 입금 전 취소된 건은 paid_amount가 0/null이라 자동 제외.
+      if ((r.status === 'confirmed' || r.status === 'cancelled') && r.paid_amount) {
+        totalPaid += r.paid_amount
+      }
+      // 환불: cancelled 상태의 refunded_amount만
+      if (r.status === 'cancelled' && r.refunded_amount && r.refunded_amount > 0) {
+        totalRefunded += r.refunded_amount
+      }
     }
     return { totalPaid, totalRefunded, netRevenue: totalPaid - totalRefunded }
   }

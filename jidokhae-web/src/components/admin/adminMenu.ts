@@ -29,7 +29,8 @@ export const ADMIN_MENU_GROUPS: AdminMenuGroup[] = [
   {
     label: '콘텐츠',
     items: [
-      { label: '배너 관리', href: '/admin/banners', adminOnly: true },
+      // 배너/한줄 모두 editor도 관리 (2026-04-23 확정, 검토문서 §3.1)
+      { label: '배너 관리', href: '/admin/banners' },
       { label: '한 줄 관리', href: '/admin/quotes' },
     ],
   },

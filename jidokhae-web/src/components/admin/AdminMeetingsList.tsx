@@ -34,8 +34,10 @@ export default async function AdminMeetingsList({
 
   let query = supabase.from('meetings').select('*')
   if (filter === 'last-month') {
+    // Phase 3 M7 Step 2.5: last-month 필터에도 deleted 제외
+    // 다른 필터(active/all)와 정책 일관성 확보
     const prev = getMonthRange(prevMonth)
-    query = query.gte('date', prev.start).lt('date', prev.end)
+    query = query.gte('date', prev.start).lt('date', prev.end).neq('status', 'deleted')
   } else if (filter === 'all') {
     query = query.neq('status', 'deleted')
   } else {
