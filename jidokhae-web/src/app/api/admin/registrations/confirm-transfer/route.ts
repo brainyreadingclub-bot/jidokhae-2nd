@@ -88,55 +88,32 @@ export async function POST(request: NextRequest) {
         failedReasons.push({ id: registrationId, reason: 'not_confirmed_transfer' })
       }
     } else {
-      // 정원 재검증 — capacity 변경 등으로 pending_transfer + confirmed > capacity 가능
-      const { data: reg } = await admin
-        .from('registrations')
-        .select('meeting_id, status')
-        .eq('id', registrationId)
-        .single()
+      // Phase 3 M7 Step 2.5: admin_confirm_transfer DB Function으로 원자화.
+      // 기존 COUNT + UPDATE 패턴은 editor 다수 동시 확인 시 정원 초과 위험.
+      // DB Function 내부에서 registration + meeting 행에 FOR UPDATE 락을 걸어
+      // 정원 재검증과 status 전환을 한 트랜잭션으로 처리.
+      //
+      // ⚠️ 금지: RPC 성공 후 sendRegistrationConfirmNotification 호출 추가 금지.
+      // 운영자가 월말 정산일에 하루 몰아서 입금 확인 처리하기 때문에
+      // 동시다발 알림이 회원 혼란을 유발. (CLAUDE.md 규칙 / 검토문서 §2.6)
+      const { data: rpcResult, error: rpcError } = await admin.rpc(
+        'admin_confirm_transfer',
+        { p_registration_id: registrationId },
+      )
 
-      if (!reg || reg.status !== 'pending_transfer') {
+      if (rpcError) {
         failed++
-        failedReasons.push({ id: registrationId, reason: 'not_pending_transfer' })
+        failedReasons.push({ id: registrationId, reason: rpcError.message })
         continue
       }
 
-      const { data: meeting } = await admin
-        .from('meetings')
-        .select('capacity')
-        .eq('id', reg.meeting_id)
-        .single()
+      const result = rpcResult as string
 
-      if (!meeting) {
-        failed++
-        failedReasons.push({ id: registrationId, reason: 'meeting_not_found' })
-        continue
-      }
-
-      const { count: confirmedCount } = await admin
-        .from('registrations')
-        .select('id', { count: 'exact', head: true })
-        .eq('meeting_id', reg.meeting_id)
-        .eq('status', 'confirmed')
-
-      if ((confirmedCount ?? 0) >= meeting.capacity) {
-        failed++
-        failedReasons.push({ id: registrationId, reason: 'capacity_full' })
-        continue
-      }
-
-      const { data, error } = await admin
-        .from('registrations')
-        .update({ status: 'confirmed' })
-        .eq('id', registrationId)
-        .eq('status', 'pending_transfer')
-        .select('id')
-
-      if (error || !data || data.length === 0) {
-        failed++
-        failedReasons.push({ id: registrationId, reason: error?.message ?? 'update_failed' })
-      } else {
+      if (result === 'success') {
         confirmed++
+      } else {
+        failed++
+        failedReasons.push({ id: registrationId, reason: result })
       }
     }
   }
