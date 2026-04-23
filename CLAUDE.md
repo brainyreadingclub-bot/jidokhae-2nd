@@ -73,7 +73,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
        └─ Scenario (검증)  → "어떻게 확인할 것인가" (1 Scenario = 1 행동 = 1 검증)
 ```
 
-**Current status:** M1–M6 MVP **completed**. Phase 2 확장 완료 — 알림톡(Phase 2-1) ✅, 대기 신청(Phase 2-2) ✅, 백오피스(Phase 2-3) ✅.
+**Current status:** M1–M6 MVP **completed**. Phase 2 확장 완료 — 알림톡(Phase 2-1) ✅, 대기 신청(Phase 2-2) ✅, 백오피스(Phase 2-3) ✅. **Phase 3 (진행 중)** — M7 Step 1 (안정 기반) ✅, M7 Step 2 (운영자 개편) ✅. M7 Step 3 (회원 홈) 예정.
 
 ---
 
@@ -87,6 +87,14 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - Phase 2-3: 백오피스 — 기본 기능(회원관리, 출석 토글, 프로필 설정, 웰컴 스크린) ✅ / 고급 기능: 상수 통합 ✅, site_settings ✅, venues ✅, 대시보드 ✅, 회원 강화 ✅, 기간 필터 ✅
 - Phase 2-4: 사용자 흐름 추적 (Vercel Analytics + GA4) ✅
 
+**Phase 3 (진행 중):** 상세는 `roadmap/milestones-phase3.md`, `roadmap/work-packages-phase3.md`, `roadmap/scenarios-phase3.md`, `roadmap/phase3-requirements.md` 참조.
+- M7 기반 정리 + 레이아웃 전환 — Step 1 (안정 기반: 풀스캔 + Phase 3 DB schema + 배포 정책) ✅, Step 2 (운영자 개편: 사이드바 + 대시보드 허브 + 모임 관리 분리 + 모임 폼 확장) ✅, Step 3 (회원 홈) 예정
+- M8 관리자 CMS — 배너 + 한 줄 (book_quote). 라우트 placeholder는 M7 Step 2에서 이미 배치
+- M9 회원 홈 콘텐츠 전면 오픈
+- M10 관리자 심화 — 정산 + 회원 생애주기
+- M11 디자인 토큰 통합 + 접근성 정리
+- M12 통합 검증 + 배포
+
 **Out of scope (future):** Badges/praise, bean (콩) points, landing page, admin analytics dashboard, AI chatbot, book tracking
 
 ## Milestone Overview
@@ -99,6 +107,14 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | M4 결제 + 신청 | 3 | TossPayments payment pipeline + Registration UX |
 | M5 취소 + 환불 | 2 | Self-cancel + Batch refund on deletion |
 | M6 통합 검증 + 출시 | 2 | E2E verification + Production deploy |
+| M7 기반 정리 + 레이아웃 전환 | 5 | Admin 사이드바/허브 + 모임 관리 분리 + 회원 홈 개선 (Phase 3) |
+| M8 관리자 CMS | — | 배너 + 한 줄 (book_quote) 운영 (Phase 3) |
+| M9 회원 홈 콘텐츠 전면 오픈 | — | 회원 홈 리뉴얼 (Phase 3) |
+| M10 관리자 심화 | — | 정산 + 회원 생애주기 (Phase 3) |
+| M11 디자인 토큰 통합 + 접근성 | — | 디자인 시스템 정리 (Phase 3) |
+| M12 통합 검증 + 배포 | — | Phase 3 E2E + 배포 (Phase 3) |
+
+> M7~M12 WP/시나리오 상세는 `roadmap/milestones-phase3.md`, `roadmap/work-packages-phase3.md`, `roadmap/scenarios-phase3.md` 참조.
 
 ---
 
@@ -142,6 +158,13 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **대기 취소:** 항상 100% 전액 환불 (환불 규칙 미적용)
 - **돈 안전성:** `waitlisted` 상태에서 safeCancel/부분환불 절대 금지. 대기 취소/크론 환불/모임 삭제에서만 환불
 - **계좌이체 브릿지:** `pending_transfer` = 정원 포함 but 미입금. 운영자 수동 확인 → `confirmed`. 이체 건 환불은 운영자 수동 이체
+- **계좌이체 입금 확인 알림 금지:** `admin_confirm_transfer` 성공 시 회원에게 알림톡 발송하지 **않음**. 운영자가 월말 정산일에 하루 몰아서 입금 확인을 처리하므로 동시다발 알림이 회원 혼란을 유발. 카드결제 플로우만 즉시 알림 유지. (2026-04-23 확정)
+- **역할 권한 매트릭스** (2026-04-23 확정):
+  - `admin`(총괄운영자): 전체 권한. 정산, 회원 개인정보(phone/email) 열람, 사이트 설정, 배너·한줄 관리 포함
+  - `editor`(운영진): 모임 CRUD, 회원 조회(이름/닉네임/지역만 — phone/email 미노출), 출석 체크, **배너·한줄 관리 포함**
+  - `member`(회원): 일반 회원 기능
+  - adminOnly 메뉴: 정산, 회원 개인정보, 사이트 설정 (배너·한줄은 editor도 가능)
+- **법적 확인 완료** (2026-04-23): 간이과세자이므로 전자상거래법 시행령 §12 제1항 제2호에 따라 **통신판매업 신고 면제**. GA4 동의 배너는 현 규모(250명, 한국 국내)에서 법적 의무 아님 — privacy 페이지에 쿠키 안내 문구로 갈음. 상세 근거: `검토문서/2026-04-23-풀스캔-후속-의사결정.md`
 
 ---
 
@@ -155,6 +178,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **Cross-repo workflow:** The implementation repo lives at `jidokhae-web/`. The `prompts` file contains a template for starting WP implementation — substitute `--단계` with the target WP (e.g., `WP1-1`) when using it.
 - **지시서의 enum/선택지 목록은 구현 전에 확인:** 지시서에 고정 목록(예: 지역 3개)이 있어도 실제 서비스 맥락에서 충분한지 사용자에게 먼저 물어볼 것. 구현 후 목록이 바뀌면 DB CHECK 제약까지 연쇄 수정 필요.
 - **DB 마이그레이션 SQL은 코드 확정 후 안내:** CHECK 제약, 컬럼 타입 등 코드와 동기화가 필요한 마이그레이션은 스펙이 확정된 후에 사용자에게 전달. 코드보다 먼저 실행되면 불일치가 발생한다.
+- **Phase 3 설계 검토 자료:** `docs/expert-panel/2026-04-17-phase3-preview-html-review.md` (전문가 패널 리뷰), `phase3-preview.html` (Before/After 목업). M7 이후 UI/UX 결정의 배경 맥락.
 
 ---
 
@@ -236,7 +260,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Architecture
 
-- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, terms, privacy, refund, meetings — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations). Admin routes: `admin/page` (dashboard), `admin/meetings/new` (create), `admin/meetings/[id]/edit` (edit), `admin/members` (회원 관리), `admin/settings` (사이트 설정 + 공간 관리). Public routes: `policy/meetings` (공개 모임 목록), `policy/meetings/[id]` (공개 모임 상세)
+- **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, terms, privacy, refund, meetings — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations). Admin routes (Phase 3 M7 Step 2에서 재구성 — 데스크톱 사이드바 + 모바일 드로어): `admin/page` (허브 — WP7-3), `admin/meetings` (목록 + 지역 필터), `admin/meetings/[id]` (상세), `admin/meetings/new` (생성), `admin/meetings/[id]/edit` (수정), `admin/members` (회원 관리), `admin/settings` (사이트 설정 + 공간 관리), `admin/banners` (M8 placeholder, admin 전용), `admin/quotes` (M8 placeholder), `admin/settlements` (M10 placeholder, admin 전용). 사이드바 메뉴는 `src/components/admin/adminMenu.ts`가 단일 소스 (운영/콘텐츠/시스템 3그룹). Public routes: `policy/meetings` (공개 모임 목록), `policy/meetings/[id]` (공개 모임 상세)
 - **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth)
 - **Layouts:** Root (`src/app/layout.tsx` — fonts, viewport), `(main)/layout.tsx` (header + BottomNav + Footer, auth required), `(admin)/layout.tsx` (admin header + Footer, admin/editor role check), `policy/layout.tsx` (Footer only, public), `auth/layout.tsx` (Footer only, public — PG 심사 대응)
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
@@ -250,9 +274,9 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Database Schema
 
-**Tables:** `profiles` (user info, role, phone, region, real_name, welcomed_at), `meetings` (schedule, capacity, fee, description, venue_id, status), `registrations` (user+meeting, payment, refund tracking, `attended` boolean, status: confirmed/cancelled/waitlisted/waitlist_cancelled/waitlist_refunded), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped), `site_settings` (key-value 운영 설정), `venues` (공간 + 정산 설정), `venue_settlements` (월별 공간 정산 이력)
+**Tables:** `profiles` (user info, role, phone, region, real_name, welcomed_at), `meetings` (schedule, capacity, fee, description, venue_id, status; Phase 3 M7 Step 1에서 `region`, `is_featured`, `chat_link`, `reading_link`, `detail_address` 5개 컬럼 추가), `registrations` (user+meeting, payment, refund tracking, `attended` boolean, status: confirmed/cancelled/waitlisted/waitlist_cancelled/waitlist_refunded), `notifications` (알림톡 발송 이력, status: pending→sent/failed/skipped), `site_settings` (key-value 운영 설정), `venues` (공간 + 정산 설정), `venue_settlements` (월별 공간 정산 이력), `banners` (CMS 배너 — M8 예정, schema는 M7 Step 1에서 선반영), `book_quotes` (한 줄 quote — 제출/검수/발행 워크플로우, M8 예정)
 
-**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_registrations_waitlist` (partial — 대기자 순번), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지), `idx_profiles_nickname_unique` (partial — WHERE nickname <> '')
+**Key indexes:** `idx_registrations_meeting_status`, `idx_registrations_user_meeting`, `idx_registrations_payment_id` (idempotency), `idx_registrations_waitlist` (partial — 대기자 순번), `idx_meetings_date_status` (home page query), `idx_notifications_remind_unique` (partial UNIQUE — 리마인드 중복 방지), `idx_notifications_confirm_unique` (partial UNIQUE — 신청 확인 중복 방지), `idx_profiles_nickname_unique` (partial — WHERE nickname <> ''), `idx_meetings_featured` (partial — is_featured = true), `idx_banners_active` (partial — active = true), `idx_book_quotes_pending` (partial — status = 'pending')
 
 **Key DB Functions (SECURITY DEFINER):**
 - `is_admin()` — Returns true if current user has admin role. Used in RLS policies
@@ -275,6 +299,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanDateFull()`, `formatKoreanTime()`, `formatFee()`, `getDaysUntil()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
 - **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `admin/members/role` (역할 변경), `admin/settings` (site_settings UPSERT), `admin/venues` (공간 CRUD), `admin/venues/[id]` (공간 수정), `admin/venues/settle` (정산 확정), `registrations/transfer` (계좌이체 신청), `admin/registrations/confirm-transfer` (운영자 입금 확인), `admin/registrations/mark-refunded` (운영자 환불 완료). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
+- **API response 표준 포맷:** `{ status: 'success' | 'error', message?, data? }` (Phase 3 M7 Step 1에서 12개 라우트 통일). 신규 API 라우트는 이 포맷을 따를 것. 기존 `{ success: true }` 패턴은 점진적 마이그레이션 중
 - **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수), `tosspayments.ts` (TossPayments API wrapper), `auth.ts` (cached `getUser()` via React `cache()` — safe only after middleware session refresh), `profile.ts` (cached `getProfile()` via React `cache()`), `meeting.ts` (cached `getMeeting(id)` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true` (no need to import `describe`/`it`/`expect`). Tests in `src/lib/__tests__/` (kst, refund). Run `npm test` or `npx vitest run`
