@@ -63,7 +63,7 @@ export default function RegistrationCard({ registration, badge }: Props) {
           <div className="mt-3 pt-2.5 border-t border-neutral-200 text-caption text-neutral-600">
             결제금액{' '}
             <span className={`font-bold font-mono ${isMuted ? 'line-through' : ''}`}>
-              {formatFee(registration.paid_amount)}
+              {formatFee(registration.paid_amount)}원
             </span>
             {registration.status === 'cancelled' &&
               registration.refunded_amount != null &&
@@ -71,7 +71,7 @@ export default function RegistrationCard({ registration, badge }: Props) {
                 <span className="ml-2">
                   · 환불{' '}
                   <span className="font-semibold font-mono text-primary-600">
-                    {formatFee(registration.refunded_amount)}
+                    {formatFee(registration.refunded_amount)}원
                   </span>
                 </span>
               )}

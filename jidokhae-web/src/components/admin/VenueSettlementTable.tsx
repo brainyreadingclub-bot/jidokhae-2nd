@@ -69,10 +69,10 @@ export default function VenueSettlementTable({ rows, month }: Props) {
                 {row.meetingCount}회
               </td>
               <td className="px-3 py-2.5 text-right text-sm text-primary-800">
-                {formatFee(row.totalPaid)}
+                {formatFee(row.totalPaid)}원
               </td>
               <td className="px-3 py-2.5 text-right text-sm font-medium text-primary-800">
-                {formatFee(row.settlementAmount)}
+                {formatFee(row.settlementAmount)}원
                 <span className="text-xs text-primary-400 ml-0.5">
                   {row.settlementType === 'percentage' ? `(${row.settlementRate}%)` : row.settlementType === 'fixed' ? '(고정)' : ''}
                 </span>

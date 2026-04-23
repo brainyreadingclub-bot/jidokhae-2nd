@@ -19,9 +19,13 @@ export default async function PublicMeetingsPage() {
   const regionsLabel = settings['active_regions_label'] ?? '경주 · 포항'
   const kstToday = getKSTToday()
 
+  // 비로그인 공개 페이지 — 민감 컬럼(chat_link/detail_address/reading_link)은
+  // 제외하고 공개 안전 컬럼만 명시 (Phase 3 M7 Step 2.5, 검토문서 §4 커밋 4)
+  // 신청자에게만 노출되어야 할 카카오톡 오픈채팅 URL이나 상세 주소가
+  // API 응답으로 비로그인자에게 전달되는 것을 차단.
   const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
-    .select('*')
+    .select('id, title, description, date, time, location, venue_id, capacity, fee, status, region, is_featured, created_at, updated_at')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })

@@ -44,6 +44,7 @@ export default async function PrivacyPolicyPage() {
           <p className="mt-4 font-semibold text-neutral-700">다. 서비스 이용 과정에서 자동 생성</p>
           <ul className="mt-2 ml-4 space-y-1">
             <li>- 모임 신청 이력, 결제 이력, 참석 기록, 서비스 이용 일시</li>
+            <li>- 서비스 이용 통계 분석을 위한 쿠키 및 익명화된 이용 기록(Google Analytics, Vercel Analytics)</li>
           </ul>
         </div>
       </section>

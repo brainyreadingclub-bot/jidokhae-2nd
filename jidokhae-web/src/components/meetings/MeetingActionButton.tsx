@@ -376,7 +376,7 @@ export default function MeetingActionButton({
               <>
                 환불 예정 금액:{' '}
                 <span className="font-bold text-primary-800">
-                  {formatFee(cancelResult.refundedAmount)}
+                  {formatFee(cancelResult.refundedAmount)}원
                 </span>
                 <br />
                 <span className="text-xs text-primary-400">
@@ -498,7 +498,7 @@ export default function MeetingActionButton({
             <div className="flex justify-between text-sm">
               <span className="text-primary-500">결제 금액</span>
               <span className="font-semibold text-primary-800">
-                {formatFee(paidAmount ?? 0)}
+                {formatFee(paidAmount ?? 0)}원
               </span>
             </div>
             <div className="mt-2 flex justify-between text-sm">
@@ -513,7 +513,7 @@ export default function MeetingActionButton({
             >
               <span className="font-semibold text-primary-700">환불 예정 금액</span>
               <span className="font-bold text-accent-600">
-                {formatFee(refundInfo.refundAmount)}
+                {formatFee(refundInfo.refundAmount)}원
               </span>
             </div>
           </div>
@@ -569,7 +569,7 @@ export default function MeetingActionButton({
           <p className="mt-3 text-sm text-primary-600/70 text-center">
             환불 금액:{' '}
             <span className="font-bold text-primary-800">
-              {formatFee(refundInfo.refundAmount)}
+              {formatFee(refundInfo.refundAmount)}원
             </span>
             {refundInfo.refundRate < 100 && (
               <span className="text-primary-400">
