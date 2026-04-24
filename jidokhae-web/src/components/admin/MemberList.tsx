@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ModalOverlay from '@/components/ui/ModalOverlay'
 
+// Phase 3 M7 Step 2.5: phone/email은 admin 전용 필드로 서버에서 차단.
+// editor의 Props에는 phone/email이 undefined로 전달됨.
 type Profile = {
   id: string
   nickname: string
@@ -11,8 +13,8 @@ type Profile = {
   role: string
   region: string[] | null
   profile_completed_at: string | null
-  phone: string | null
-  email: string | null
+  phone?: string | null
+  email?: string | null
   created_at: string
 }
 
@@ -137,21 +139,15 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
             <span>{p.region && p.region.length > 0 ? p.region.join(', ') : '-'}</span>
             <span>·</span>
             <span>{formatJoinDate(p.created_at)}</span>
-            {/* 전화번호: admin은 전체, editor는 아이콘만 */}
+            {/* 전화번호: admin 전용 (editor에게는 서버에서 데이터 미전송, 표시 자체 생략) */}
             {viewerRole === 'admin' && p.phone && (
               <>
                 <span>·</span>
                 <span>{p.phone}</span>
               </>
             )}
-            {viewerRole === 'editor' && (
-              <>
-                <span>·</span>
-                <span>{p.phone ? '📱' : '—'}</span>
-              </>
-            )}
           </div>
-          {/* 이메일: admin only */}
+          {/* 이메일: admin 전용 */}
           {viewerRole === 'admin' && p.email && (
             <div className="text-xs text-primary-400 mt-0.5 truncate">{p.email}</div>
           )}
@@ -207,15 +203,18 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
         >
           프로필 미완성
         </button>
-        <button
-          onClick={() => setFilterNoPhone(!filterNoPhone)}
-          className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
-            filterNoPhone ? 'bg-primary-600 text-white' : 'text-primary-600 hover:bg-primary-50'
-          }`}
-          style={!filterNoPhone ? { border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' } : undefined}
-        >
-          전화번호 미등록
-        </button>
+        {/* 전화번호 미등록 필터: admin만 (editor는 phone 데이터를 받지 않음) */}
+        {viewerRole === 'admin' && (
+          <button
+            onClick={() => setFilterNoPhone(!filterNoPhone)}
+            className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+              filterNoPhone ? 'bg-primary-600 text-white' : 'text-primary-600 hover:bg-primary-50'
+            }`}
+            style={!filterNoPhone ? { border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' } : undefined}
+          >
+            전화번호 미등록
+          </button>
+        )}
       </div>
 
       {/* 회원 수 */}

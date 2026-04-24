@@ -50,9 +50,11 @@ export default async function PublicMeetingDetailPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
 
+  // 비로그인 공개 페이지 — 민감 컬럼(chat_link/detail_address/reading_link)은
+  // 제외 (Phase 3 M7 Step 2.5, 검토문서 §4 커밋 4)
   const { data: meeting, error: meetingError } = await supabase
     .from('meetings')
-    .select('*')
+    .select('id, title, description, date, time, location, venue_id, capacity, fee, status, region, is_featured, created_at, updated_at')
     .eq('id', id)
     .single()
 

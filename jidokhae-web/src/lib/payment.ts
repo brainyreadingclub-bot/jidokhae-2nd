@@ -65,9 +65,23 @@ export async function processPaymentConfirmation(
     return { status: 'error', message: '결제가 완료되지 않았습니다' }
   }
 
-  // orderId 교차 검증
+  // orderId 교차 검증 (1차: TossPayments 응답의 orderId와 요청 orderId 일치)
   if (payment.orderId !== orderId) {
     await safeCancel(paymentKey, 'orderId 불일치')
+    return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
+  }
+
+  // orderId prefix ↔ meetingId 교차 검증 (2차, Phase 3 M7 Step 2.5)
+  // orderId 형식: jdkh-{meetingId8}-{userId8}-{timestamp}
+  // 공격자가 다른 모임의 orderId를 이 요청의 meetingId와 섞어 제출한 경우 차단.
+  const meetingId8 = meetingId.replace(/-/g, '').slice(0, 8)
+  const orderParts = orderId.split('-')
+  if (
+    orderParts.length < 4 ||
+    orderParts[0] !== 'jdkh' ||
+    orderParts[1] !== meetingId8
+  ) {
+    await safeCancel(paymentKey, 'orderId meetingId prefix 불일치')
     return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
   }
 
