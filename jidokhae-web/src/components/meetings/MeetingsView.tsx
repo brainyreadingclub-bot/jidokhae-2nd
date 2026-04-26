@@ -13,6 +13,7 @@ type Props = {
   registeredSet: string[]
   waitlistedSet: string[]
   kstToday: string
+  isPrivileged: boolean
 }
 
 export default function MeetingsView({
@@ -21,6 +22,7 @@ export default function MeetingsView({
   registeredSet,
   waitlistedSet,
   kstToday,
+  isPrivileged,
 }: Props) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const dateRefs = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -172,6 +174,7 @@ export default function MeetingsView({
                   confirmedCount={countMap[meeting.id] ?? 0}
                   isRegistered={registeredSetObj.has(meeting.id)}
                   isWaitlisted={waitlistedSetObj.has(meeting.id)}
+                  isPrivileged={isPrivileged}
                 />
               ))}
             </div>
