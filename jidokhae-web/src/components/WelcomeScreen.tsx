@@ -78,7 +78,7 @@ export default function WelcomeScreen({ nickname, settings }: Props) {
           >
             <span className="text-neutral-400">넷플릭스 말고,</span>
             <br />
-            할 게 생깁니다.
+            독서습관이 생깁니다.
           </h1>
         </div>
       </section>
