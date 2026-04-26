@@ -2,6 +2,7 @@ import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
 import AttendanceToggle from './AttendanceToggle'
 import DepositToggle from '@/components/admin/DepositToggle'
+import RefundToggle from '@/components/admin/RefundToggle'
 import { getKSTToday, formatFee, toKSTDate } from '@/lib/kst'
 import { calculateRefund } from '@/lib/refund'
 import type { RegistrationWithProfile } from '@/types/registration'
@@ -232,6 +233,20 @@ export default function AdminMeetingSection({
     }
     if (reg.status === 'confirmed' && reg.payment_method === 'transfer') {
       return <DepositToggle registrationId={reg.id} isDeposited={true} />
+    }
+    // Phase 3 M7 Step 2.6: 계좌이체 취소 건의 환불 완료 토글
+    // 미입금 취소(refunded_amount=0)는 환불 대상 아니므로 토글 안 보임
+    if (
+      reg.status === 'cancelled' &&
+      reg.payment_method === 'transfer' &&
+      reg.refunded_amount !== 0
+    ) {
+      return (
+        <RefundToggle
+          registrationId={reg.id}
+          isRefunded={reg.refunded_amount !== null && reg.refunded_amount > 0}
+        />
+      )
     }
     if (!showQueueNumber && showAttendance && reg.status === 'confirmed') {
       return <AttendanceToggle registrationId={reg.id} attended={reg.attended} />
