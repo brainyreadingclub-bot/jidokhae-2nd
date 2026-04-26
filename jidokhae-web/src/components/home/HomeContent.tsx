@@ -33,6 +33,9 @@ export default async function HomeContent() {
     }
   }
 
+  const role = user ? (await getProfile(user.id)).role : null
+  const isPrivileged = role === 'admin' || role === 'editor'
+
   const kstToday = getKSTToday()
 
   const { data: meetings, error: meetingsError } = await supabase
@@ -104,6 +107,7 @@ export default async function HomeContent() {
         registeredSet={registeredArr}
         waitlistedSet={waitlistedArr}
         kstToday={kstToday}
+        isPrivileged={isPrivileged}
       />
     </div>
   )

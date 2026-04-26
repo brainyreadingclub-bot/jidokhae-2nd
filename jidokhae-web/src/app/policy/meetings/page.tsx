@@ -132,6 +132,7 @@ export default async function PublicMeetingsPage() {
                         confirmedCount={countMap.get(meeting.id) ?? 0}
                         isRegistered={false}
                         isWaitlisted={false}
+                        isPrivileged={false}
                         basePath="/policy/meetings"
                       />
                     ))}

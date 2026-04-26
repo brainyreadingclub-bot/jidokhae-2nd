@@ -115,6 +115,7 @@ export default async function PublicMeetingDetailPage({ params }: Props) {
         meeting={typedMeeting}
         confirmedCount={confirmedCount}
         capacity={typedMeeting.capacity}
+        isPrivileged={false}
       />
 
       {/* Login CTA */}
