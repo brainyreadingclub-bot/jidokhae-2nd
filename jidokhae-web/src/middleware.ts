@@ -37,6 +37,11 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // SNS crawler metadata routes: must be publicly accessible
+  if (pathname.startsWith('/opengraph-image') || pathname.startsWith('/twitter-image')) {
+    return supabaseResponse
+  }
+
   // Session refresh — must call getUser() to refresh expired tokens
   const {
     data: { user },
