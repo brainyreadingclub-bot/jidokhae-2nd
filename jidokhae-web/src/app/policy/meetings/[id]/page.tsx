@@ -122,6 +122,7 @@ export default async function PublicMeetingDetailPage({ params }: Props) {
       <div className="mt-8">
         <Link
           href="/auth/login"
+          prefetch={false}
           className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] px-6 py-4 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
           style={{ backgroundColor: 'var(--color-primary-600)' }}
         >

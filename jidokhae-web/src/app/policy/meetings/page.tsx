@@ -158,6 +158,7 @@ export default async function PublicMeetingsPage() {
           </p>
           <Link
             href="/auth/login"
+            prefetch={false}
             className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700"
           >
             로그인하고 신청하기
