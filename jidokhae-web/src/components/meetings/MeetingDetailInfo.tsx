@@ -1,15 +1,18 @@
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import type { Meeting } from '@/types/meeting'
 
 type Props = {
   meeting: Meeting
   confirmedCount: number
   capacity: number
+  isPrivileged?: boolean
 }
 
-export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }: Props) {
+export default function MeetingDetailInfo({ meeting, confirmedCount, capacity, isPrivileged = false }: Props) {
   const isFull = confirmedCount >= capacity
-  const isAlmostFull = !isFull && confirmedCount >= capacity * 0.8
+  const isMasked = shouldMaskConfirmedCount(confirmedCount, capacity, isPrivileged)
+  const isAlmostFull = !isFull && !isMasked && confirmedCount >= capacity * 0.8
   const capacityClass = isFull
     ? 'text-neutral-400'
     : isAlmostFull
@@ -80,8 +83,8 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity }:
             </svg>
           }
           label="참여"
-          value={confirmedCount === 0 ? `${capacity}명 모집 중` : `${confirmedCount}/${capacity}명`}
-          valueClassName={confirmedCount === 0 ? capacityClass : `${capacityClass} font-mono tabular-nums`}
+          value={isMasked ? `${capacity}명 모집 중` : `${confirmedCount}/${capacity}명`}
+          valueClassName={isMasked ? capacityClass : `${capacityClass} font-mono tabular-nums`}
         />
         <InfoRow
           icon={
