@@ -110,6 +110,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         meeting={typedMeeting}
         confirmedCount={confirmedCount}
         capacity={typedMeeting.capacity}
+        isPrivileged={isEditorOrAdmin}
       />
 
       {hasPendingTransfer && (
