@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import type { Meeting } from '@/types/meeting'
 
 type MeetingCardProps = {
@@ -9,6 +10,7 @@ type MeetingCardProps = {
   confirmedCount: number
   isRegistered: boolean
   isWaitlisted?: boolean
+  isPrivileged?: boolean
   basePath?: string
 }
 
@@ -17,10 +19,12 @@ export default function MeetingCard({
   confirmedCount,
   isRegistered,
   isWaitlisted,
+  isPrivileged = false,
   basePath = '/meetings',
 }: MeetingCardProps) {
   const isFull = confirmedCount >= meeting.capacity
-  const isAlmostFull = !isFull && confirmedCount >= meeting.capacity * 0.8
+  const isMasked = shouldMaskConfirmedCount(confirmedCount, meeting.capacity, isPrivileged)
+  const isAlmostFull = !isFull && !isMasked && confirmedCount >= meeting.capacity * 0.8
 
   // Status-based left border color
   const borderColor = isRegistered
@@ -101,7 +105,7 @@ export default function MeetingCard({
               <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
-            {confirmedCount === 0
+            {isMasked
               ? <span>{meeting.capacity}명 모집 중</span>
               : <><span className="font-mono tabular-nums">{confirmedCount}/{meeting.capacity}</span>명</>
             }
