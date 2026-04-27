@@ -8,3 +8,12 @@
 # .claude/commands/      → custom commands (portable)
 # .claude/launch.json    → dev server configs (portable)
 # .claude/settings.json  → plugin config (portable)
+
+# MCP - machine-specific config (hardcoded user paths)
+.mcp.json
+
+# Playwright MCP runtime artifacts (console logs, page snapshots)
+.playwright-mcp/
+
+# Stray root-level node_modules (project deps live in jidokhae-web/)
+/node_modules/
