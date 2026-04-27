@@ -53,14 +53,15 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - `notification.ts` — 알림톡 발송 + notifications 이력 기록 (INSERT pending → 발송 → UPDATE sent/failed)
 - `solapi.ts` — Solapi SDK 래퍼 (KakaoTalk 알림톡)
 - `site-settings.ts` — Cached `getSiteSettings()` for site configuration
-- `dashboard.ts` — Dashboard aggregations (revenue, meetings, members, alerts, venue settlements)
+- `dashboard.ts` — Dashboard aggregations (revenue, meetings, members, alerts, venue settlements). Phase 3 M7 Step 2.5: 매출 집계 공식 수정 — 총매출에 confirmed + cancelled 모두 포함 (취소 발생 시 순매출 음수 표시 문제 해소)
 - `regions.ts` — Valid regions constant (`VALID_REGIONS`)
+- `visibility.ts` — 모임 신청자 수 마스킹 헬퍼 (Phase 3, PR #19). admin/editor에게는 정확한 카운트, 회원에겐 50% 미만 마스킹. `lib/__tests__/visibility.test.ts`에 단위 테스트
 
 Logic is shared between API routes — keep it in `src/lib/`, not in route handlers.
 
 ## Key Conventions
 
-- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, MeetingsView, CalendarStrip, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, LoginClient, SiteSettingsForm, VenueManager, VenueSettlementTable, AdminDashboardContent, HomeContent, MeetingDetailContent, MyRegistrationContent, payment-redirect/page, payment-fail/page, route group error.tsx files. Phase 3 M7 Step 2 추가: AdminSidebar, AdminMobileNav, AdminDashboardHub, AdminMeetingsList, RegionFilter, PlaceholderPage (준비 중 라우트용). Server Components include DateSectionHeader, MeetingDetailInfo, Footer (사업자정보 푸터). Note: auth/login/page is a Server Component that renders `<LoginClient />`
+- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, MeetingsView, CalendarStrip, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, LoginClient, SiteSettingsForm, VenueManager, VenueSettlementTable, AdminDashboardContent, HomeContent, MeetingDetailContent, MyRegistrationContent, payment-redirect/page, payment-fail/page, route group error.tsx files. Phase 3 M7 Step 2 추가: AdminSidebar, AdminMobileNav, AdminDashboardHub, AdminMeetingsList, RegionFilter, PlaceholderPage (준비 중 라우트용). Phase 3 M7 Step 2.6 추가: RefundToggle (계좌이체 환불 완료 양방향 체크박스, DepositToggle 패턴). Server Components include DateSectionHeader, MeetingDetailInfo, Footer (사업자정보 푸터). Note: auth/login/page is a Server Component that renders `<LoginClient />`
 - **Component directories:** `src/components/` organized by domain — `admin/`, `meetings/`, `registrations/`, `home/`, `my/`, `skeletons/`, `ui/`
 - **Shared UI:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key, focus management. Used by DeleteMeetingButton, MeetingActionButton
 - **No semicolons**, single quotes, function components only
@@ -79,4 +80,6 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 - **Analytics**: `src/lib/analytics.ts` (`trackEvent()` 래퍼), `src/components/analytics/` (RouteChangeTracker, TrackMeetingView). GA4 이벤트 추가 시 `trackEvent()` 사용, 새 추적 컴포넌트는 `analytics/` 디렉토리에 배치
 - **Admin 메뉴 단일 소스** (Phase 3 M7 Step 2): `src/components/admin/adminMenu.ts`가 7개 메뉴를 3개 그룹(운영/콘텐츠/시스템)으로 정의. `adminOnly: true`는 editor 역할에서 숨김(정산/배너/설정). `PlaceholderPage` 컴포넌트가 M8/M10 준비 중 라우트를 렌더. 새 admin 메뉴 추가 시 `adminMenu.ts`에만 항목 추가하면 AdminSidebar/AdminMobileNav 양쪽에 자동 반영
 - **API response 포맷** (Phase 3 M7 Step 1): `{ status: 'success' | 'error', message?, data? }`로 12개 라우트 통일. 신규 API 라우트는 이 포맷을 따를 것. 기존 `{ success: true }` 패턴은 점진적 마이그레이션 중
-- **Phase 3 DB schema**: `supabase/migration-phase3-m7.sql` (롤백: `migration-phase3-m7-rollback.sql`) — meetings 5개 컬럼 + banners + book_quotes + 파셜 인덱스 5개
+- **Phase 3 DB schema**: `supabase/migration-phase3-m7.sql` (롤백: `migration-phase3-m7-rollback.sql`) — meetings 5개 컬럼 + banners + book_quotes + 파셜 인덱스 5개. M7 Step 2.5: `migration-phase3-m7-step2-5.sql` — `admin_confirm_transfer` DB Function 추가 (운영자 입금 확인 원자성)
+- **계좌이체 환불 처리** (Phase 3 M7 Step 2.6): `/api/admin/registrations/mark-refunded`가 `action: 'mark' | 'unmark'` 양방향 지원. 'mark'는 서버에서 `calculateRefund(meeting.date, paid_amount, cancelled_at)` 자동 계산해 `refunded_amount` 기록. 'unmark'는 NULL 복구. admin role 전용. RefundToggle 컴포넌트가 호출. ⚠️ **금지**: 호출 성공 후 `sendRegistrationConfirmNotification` 호출 (운영자 월말 일괄 처리 맥락)
+- **계좌이체 환불 처리 한계** (Phase 3 M7 Step 2.6 발견): 모임 삭제 후 `payment_method='transfer' AND status='confirmed'`였던 회원의 환불 대기는 `refunded_amount=NULL`로 잔존하는데, deleted 모임은 `/admin/meetings/[id]` 페이지가 `notFound()`라 RefundToggle 사용 불가. 빈도 낮으면 SQL로 처리 (`UPDATE registrations SET refunded_amount = paid_amount WHERE status='cancelled' AND payment_method='transfer' AND refunded_amount IS NULL AND paid_amount > 0;`). 빈도 높아지면 deleted 모임도 admin 상세 접근 가능하게 분기 수정 필요

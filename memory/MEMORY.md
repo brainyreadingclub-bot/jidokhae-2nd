@@ -8,6 +8,7 @@
 - `feedback_2026-03-27_scroll-ui-pitfall.md` — 가로 스크롤 UI는 스크롤바 숨김 + 상태 동기화 사전 검증
 - `feedback_2026-04-07_operator-workflow-first.md` — 기술 설계 전 운영자 워크플로우 먼저 파악
 - `feedback_2026-04-07_subagent-api-crosscheck.md` — 서브에이전트 API 연동 필드 크로스체크
+- `feedback_2026-04-27_post-state-leftovers.md` — 운영자 UI 변경 시 사후 잔재 케이스(모임 삭제 후/회원 잠수/토글 누락/회원 후속) 사전 점검
 
 ## project (프로젝트 상태)
 - `project_next_session.md` — 다음 세션 핸드오프 (매 회고마다 갱신)
