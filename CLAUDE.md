@@ -21,27 +21,37 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 └── JIDOKHAE-2nd - 기술 스택 & 시스템 구조.md      # Tech stack, system architecture, data flows, DB schema
 
 /roadmap                                       # Execution roadmap (maintained by Claude)
-├── milestones.md                              # 6 Milestones (M1-M6) — what to achieve
-├── work-packages.md                           # 15 Work Packages — how to execute each milestone
-└── scenarios.md                               # 146 BDD Scenarios — how to verify each WP
+├── milestones.md                              # MVP 마일스톤 M1–M6
+├── work-packages.md                           # MVP WP (15개)
+├── scenarios.md                               # MVP BDD 시나리오 (146개)
+├── milestones-phase3.md                       # Phase 3 마일스톤 M7–M12
+├── work-packages-phase3.md                    # Phase 3 WP
+├── scenarios-phase3.md                        # Phase 3 BDD 시나리오
+└── phase3-requirements.md                     # Phase 3 요구사항 정의
 
-/검토문서                                        # Review notes & manual test checklists
-├── M6-통합테스트-체크리스트.md                     # M6 integration test checklist (STEP 1~11 통과)
-├── M6-프로덕션-배포-가이드.md                     # M6 production deployment guide
-├── 사이트 아키텍처 — 현재 + 확장 구조.md           # Site architecture: current + future extension structure
-├── # Phase 2-2 대기 신청 + 자동 승격 설계서.md    # Waitlist design spec
-├── Phase-2-3-검토의견.md                        # Phase 2-3 review feedback
-├── Phase-2-3-백오피스-지시서.md                  # Phase 2-3 backoffice instructions
-├── 2026-03-18-작업회고.md                       # Work retrospective
-├── 2026-03-19-작업회고.md                       # Work retrospective
-└── ui-review/                                  # UI screenshots organized by user flow (Playwright-captured)
+/검토문서                                        # Review notes, manual checklists, retrospectives, expert analyses
+                                                # — 신규 검토/회고/지시서가 계속 추가되는 디렉토리.
+                                                # 주요 종류: M6 체크리스트 + 배포 가이드, Phase 2-2/2-3 설계·지시·검토,
+                                                # 풀스캔 검토 + 후속 의사결정, UX·브랜드 전문가 분석, 일자별 작업 회고
 
-prompts                                          # Implementation prompt template (used when starting WP implementation)
+/memory                                        # Session continuity (maintained by Claude)
+├── MEMORY.md                                  # 인덱스 — 항상 자동 로드
+├── project_next_session.md                    # 다음 세션 핸드오프 (회고마다 갱신)
+├── project_*.md                               # 진행 중 작업/외부 의존 상태 (e.g., tosspayments_review)
+└── feedback_*.md                              # 세션 교훈 (lesson 1건 = 파일 1개)
 
-/memory                                          # Session continuity (maintained by Claude)
-├── MEMORY.md                                    # Index of all memory entries
-├── project_next_session.md                      # Handoff doc — current status, next tasks, blockers (overwritten each session)
-└── feedback_*.md                                # Lessons learned from past sessions (one file per lesson)
+/docs
+├── expert-panel/                              # 전문가 패널 토론 결과 (의사결정 배경)
+├── learning/                                  # 파트너용 기술 학습서 (Part 1 완료, Part 2~6 예정)
+└── superpowers/                               # superpowers 스킬 관련 문서
+
+/verification-squad/reports/                   # 풀스캔 검증 리포트 (날짜별 디렉토리)
+
+/jidokhae-web                                  # 구현 코드베이스 (별도 CLAUDE.md 보유)
+
+prompts                                        # WP 구현 시작용 프롬프트 템플릿 (`--단계` 치환)
+phase3-preview.html                            # Phase 3 Before/After UI 목업 (전문가 리뷰 대상)
+토스 제출문서/                                  # PG 심사 제출 자료 (이미지)
 ```
 
 ## Document Hierarchy (when conflicts arise)
