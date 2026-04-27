@@ -73,7 +73,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
        └─ Scenario (검증)  → "어떻게 확인할 것인가" (1 Scenario = 1 행동 = 1 검증)
 ```
 
-**Current status:** M1–M6 MVP **completed**. Phase 2 확장 완료 — 알림톡(Phase 2-1) ✅, 대기 신청(Phase 2-2) ✅, 백오피스(Phase 2-3) ✅. **Phase 3 (진행 중)** — M7 Step 1 (안정 기반) ✅, M7 Step 2 (운영자 개편) ✅. M7 Step 3 (회원 홈) 예정.
+**Current status:** M1–M6 MVP **completed**. Phase 2 확장 완료 — 알림톡(Phase 2-1) ✅, 대기 신청(Phase 2-2) ✅, 백오피스(Phase 2-3) ✅. **Phase 3 (진행 중)** — M7 Step 1 (안정 기반) ✅, M7 Step 2 (운영자 개편) ✅, M7 Step 2.5 (풀스캔 후속 보정) ✅, M7 Step 2.6 (계좌이체 환불 토글) ✅. M7 Step 3 (회원 홈) 예정.
 
 ---
 
@@ -88,7 +88,12 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - Phase 2-4: 사용자 흐름 추적 (Vercel Analytics + GA4) ✅
 
 **Phase 3 (진행 중):** 상세는 `roadmap/milestones-phase3.md`, `roadmap/work-packages-phase3.md`, `roadmap/scenarios-phase3.md`, `roadmap/phase3-requirements.md` 참조.
-- M7 기반 정리 + 레이아웃 전환 — Step 1 (안정 기반: 풀스캔 + Phase 3 DB schema + 배포 정책) ✅, Step 2 (운영자 개편: 사이드바 + 대시보드 허브 + 모임 관리 분리 + 모임 폼 확장) ✅, Step 3 (회원 홈) 예정
+- M7 기반 정리 + 레이아웃 전환 —
+  - Step 1 (안정 기반: 풀스캔 + Phase 3 DB schema + 배포 정책) ✅
+  - Step 2 (운영자 개편: 사이드바 + 대시보드 허브 + 모임 관리 분리 + 모임 폼 확장) ✅
+  - Step 2.5 (풀스캔 후속 보정: meeting-remind 병렬화 + `admin_confirm_transfer` RPC + editor 개인정보 차단 + 대시보드 매출 집계 + "원" 단위 통일 + 비로그인 meetings 컬럼 제한 + 쿠키 안내 + 배너 editor 권한) ✅
+  - Step 2.6 (계좌이체 환불 토글: `RefundToggle` 컴포넌트 + `mark-refunded` API 양방향 변환) ✅
+  - Step 3 (회원 홈) 예정
 - M8 관리자 CMS — 배너 + 한 줄 (book_quote). 라우트 placeholder는 M7 Step 2에서 이미 배치
 - M9 회원 홈 콘텐츠 전면 오픈
 - M10 관리자 심화 — 정산 + 회원 생애주기
@@ -179,6 +184,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **지시서의 enum/선택지 목록은 구현 전에 확인:** 지시서에 고정 목록(예: 지역 3개)이 있어도 실제 서비스 맥락에서 충분한지 사용자에게 먼저 물어볼 것. 구현 후 목록이 바뀌면 DB CHECK 제약까지 연쇄 수정 필요.
 - **DB 마이그레이션 SQL은 코드 확정 후 안내:** CHECK 제약, 컬럼 타입 등 코드와 동기화가 필요한 마이그레이션은 스펙이 확정된 후에 사용자에게 전달. 코드보다 먼저 실행되면 불일치가 발생한다.
 - **Phase 3 설계 검토 자료:** `docs/expert-panel/2026-04-17-phase3-preview-html-review.md` (전문가 패널 리뷰), `phase3-preview.html` (Before/After 목업). M7 이후 UI/UX 결정의 배경 맥락.
+- **운영자 UI 변경 시 사후 잔재 4시나리오 사전 점검** (2026-04-27 교훈, `memory/feedback_2026-04-27_post-state-leftovers.md`): 카운트·라벨·토글 신설/수정 전에 (1) 며칠 잠수 누적 자동 만료 여부, (2) 상위 엔티티(모임) 삭제 후 잔재 처리 경로(deleted 모임 admin 상세 접근 가능 여부), (3) 토글 누락 정정 경로(unmark/OFF), (4) 회원 측 후속 행동 시 운영자 식별 정보(전화번호·계좌 등) 표시 여부를 plan에 명시 점검할 것.
 
 ---
 
@@ -285,6 +291,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - `promote_next_waitlisted(p_meeting_id)` — Atomic waitlist promotion with `FOR UPDATE` lock. Returns promoted (id, user_id) or empty
 - `get_confirmed_counts(meeting_ids UUID[])` — Batch count of confirmed registrations per meeting (avoids N+1 queries)
 - `register_transfer(p_user_id, p_meeting_id, p_paid_amount)` — 계좌이체 전용 원자적 정원 체크 + INSERT. FOR UPDATE 락. Returns: 'pending_transfer' | 'waitlisted' | 'already_registered' | 'not_found' | 'not_active'
+- `admin_confirm_transfer(p_registration_id)` — 운영자의 입금 확인을 원자적으로 처리. registration + meeting FOR UPDATE 락 + 정원 재검증 + status 'pending_transfer' → 'confirmed' 전환. Phase 3 M7 Step 2.5에서 추가. editor 다수 동시 확인 시 정원 초과 방지 목적. Returns: 'success' | 'not_found' | 'not_pending' | 'not_active' | 'capacity_full'
 
 **Triggers:** `on_auth_user_created` auto-creates profile from Kakao metadata on signup. `meetings_updated_at` auto-updates `updated_at` on meeting changes.
 
