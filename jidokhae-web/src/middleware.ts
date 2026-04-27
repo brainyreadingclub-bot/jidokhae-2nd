@@ -37,8 +37,14 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // SNS crawler metadata routes: must be publicly accessible
-  if (pathname.startsWith('/opengraph-image') || pathname.startsWith('/twitter-image')) {
+  // SNS crawler metadata routes + PWA icons/manifest: must be publicly accessible
+  if (
+    pathname.startsWith('/opengraph-image') ||
+    pathname.startsWith('/twitter-image') ||
+    pathname.startsWith('/apple-icon') ||
+    pathname.startsWith('/icon') ||
+    pathname.startsWith('/manifest')
+  ) {
     return supabaseResponse
   }
 
