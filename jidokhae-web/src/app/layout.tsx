@@ -5,6 +5,7 @@ import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import RouteChangeTracker from '@/components/analytics/RouteChangeTracker'
+import { SerwistProvider } from './serwist'
 import './globals.css'
 
 const RAW_GA_ID = process.env.NEXT_PUBLIC_GA_ID
@@ -56,11 +57,18 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        <div className="mx-auto max-w-screen-sm min-h-screen bg-surface-50">
-          <main>
-            {children}
-          </main>
-        </div>
+        <SerwistProvider
+          swUrl="/sw.js"
+          disable={process.env.NODE_ENV === 'development'}
+          cacheOnNavigation={false}
+          reloadOnOnline={false}
+        >
+          <div className="mx-auto max-w-screen-sm min-h-screen bg-surface-50">
+            <main>
+              {children}
+            </main>
+          </div>
+        </SerwistProvider>
         <Suspense fallback={null}>
           <RouteChangeTracker />
         </Suspense>
