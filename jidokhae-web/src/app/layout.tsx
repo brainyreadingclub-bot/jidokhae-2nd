@@ -60,6 +60,8 @@ export default function RootLayout({
         <SerwistProvider
           swUrl="/sw.js"
           disable={process.env.NODE_ENV === 'development'}
+          cacheOnNavigation={false}
+          reloadOnOnline={false}
         >
           <div className="mx-auto max-w-screen-sm min-h-screen bg-surface-50">
             <main>
