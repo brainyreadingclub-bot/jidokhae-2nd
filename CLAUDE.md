@@ -29,10 +29,14 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 ├── scenarios-phase3.md                        # Phase 3 BDD 시나리오
 └── phase3-requirements.md                     # Phase 3 요구사항 정의
 
-/검토문서                                        # Review notes, manual checklists, retrospectives, expert analyses
-                                                # — 신규 검토/회고/지시서가 계속 추가되는 디렉토리.
-                                                # 주요 종류: M6 체크리스트 + 배포 가이드, Phase 2-2/2-3 설계·지시·검토,
-                                                # 풀스캔 검토 + 후속 의사결정, UX·브랜드 전문가 분석, 일자별 작업 회고
+/검토문서                                        # Specs / Templates / Decisions / Operations 4종 — README.md 인덱스 참조
+├── README.md                                  # 카테고리 인덱스
+├── Phase-2-2-대기신청-설계서.md                  # Spec (대기 신청 B안)
+├── Phase-2-3-백오피스-지시서.md                  # Spec (백오피스 8개 작업, v1.3에 검토의견 흡수)
+├── M6-통합테스트-체크리스트.md                    # Template (M12 재사용)
+├── M6-프로덕션-배포-가이드.md                    # Template (M12 재사용)
+├── 2026-04-23-풀스캔-후속-의사결정.md             # Decision (역할 매트릭스, 법적 면제, 입금 알림 금지)
+└── 2026-04-28-pwa-sw-운영-가이드.md             # Operations (SW 인시던트 대응)
 
 /memory                                        # Session continuity (maintained by Claude)
 ├── MEMORY.md                                  # 인덱스 — 항상 자동 로드
@@ -42,8 +46,12 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 
 /docs
 ├── expert-panel/                              # 전문가 패널 토론 결과 (의사결정 배경)
+│   ├── 2026-03-24-brand-color.md             # 디자인 토큰 의사결정 root (M11 토큰 통합 시 참조)
+│   ├── 2026-03-24-ux-calendar-view.md        # CalendarStrip 위클리 스트립 채택 근거
+│   ├── 2026-04-17-phase3-preview-html-review.md
+│   └── 2026-04-27-mobile-homescreen-icon-quality.md
 ├── learning/                                  # 파트너용 기술 학습서 (Part 1 완료, Part 2~6 예정)
-└── superpowers/                               # superpowers 스킬 관련 문서
+└── superpowers/                               # superpowers 스킬 관련 문서 (plans/는 머지된 plan에 Status 헤더)
 
 /verification-squad/reports/                   # 풀스캔 검증 리포트 (날짜별 디렉토리)
 

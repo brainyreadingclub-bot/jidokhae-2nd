@@ -1,5 +1,7 @@
 # 모임 신청자 수 소셜 프루프 마스킹 구현 계획
 
+> **Status:** ✅ Merged in PR #19 — `src/lib/visibility.ts` 구현 + 단위 테스트(`lib/__tests__/visibility.test.ts`). admin/editor는 정확한 카운트, 회원에게는 50% 미만 마스킹.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 모임 신청자 수가 정원의 50% 미만일 때 일반 사용자에게는 숫자를 가리고 "N명 모집 중"으로만 표시하여 적은 신청자 수가 "인기 없는 모임"처럼 보이는 social proof 역효과를 방지한다. admin/editor는 항상 정확한 숫자를 본다.

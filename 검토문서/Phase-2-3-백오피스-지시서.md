@@ -639,6 +639,30 @@ const [monthlyRevenue, upcomingMeetings, memberStats, alerts, venueSettlements] 
 
 ---
 
+## 부록: 시니어 검토 반영 이력 (2026-03-20)
+
+지시서 v1.0 → v1.2 사이의 시니어 검토에서 도출된 9개 의견과 처리 결과. 코드 대조 검증 결과 지시서의 모든 사실 주장(파일/라인 번호, 코드 패턴 11건)은 정확.
+
+| # | 의견 | 영역 | 처리 |
+|:-:|------|------|------|
+| A | Venue CRUD 데이터 접근 방식이 site_settings(API)와 venues(RLS)로 혼재 | 작업 5 | ✅ v1.2 — POST API route로 통일 (`/api/admin/venues`, `/api/admin/venues/[id]`, `/api/admin/venues/settle`) |
+| B | 대시보드에서 editor가 venue_settlements `is_admin()` RLS로 차단됨 | 작업 6 | ✅ v1.2 — 정산 섹션은 admin에게만 표시. 대시보드 anon client 명시 |
+| C | `kst.ts`에 월 단위 유틸 부재 (`getKSTMonth`, `getMonthRange`) | 작업 6 | — 구현 시 자연 추가 |
+| D | login/page.tsx 리팩토링 시 카카오 OAuth 플로우 회귀 위험 | 작업 4 | — 구현 시 수동 테스트 필수 (`window.location.origin`은 LoginClient에서만) |
+| E | settlement_rate CHECK가 `none` 타입에도 적용됨 (의미 없는 80) | 작업 5 | — 운영 영향 없음. UI에서 `none` 시 정산율 필드 숨김 권장 |
+| F | "전체" 필터에 모임 누적 시 페이징 필요 (1년 후 50~100건) | 작업 8 | — 현재 250명 규모에서 불필요. 추후 트리거 |
+| G | editor profiles RLS는 email 필드까지 읽힘 (프론트엔드 마스킹만) | 작업 7 | — 1~2명 editor 규모 충분. "개인정보 마스킹" 트리거 등록 |
+| H | `getRefundRuleText()` 짧은 형식 vs 정책 페이지 풍부한 텍스트 매핑 누락 | 작업 1 | ✅ v1.2 — `REFUND_RULES`에 `label`/`rateLabel` 필드 + `REFUND_DEFAULT` 추가 |
+| I | "클라이언트에서 계산"은 부정확 — Server Component에서 props 기반 계산 | 작업 3 | ✅ v1.2 — 표현 정정 |
+| J | "이번 달 정산" 집계 기준 미명시 (등록일 vs 모임일) | 작업 6 | ✅ v1.2 — 모임일(meetings.date) 기준 JOIN으로 확정 |
+| K | 정산 확정 후 환불 차액 처리 메커니즘 없음 | 작업 5 | — 현재 규모(250명)에서는 무시. 발생 시 다음 달 정산에서 구두 조정 |
+| L | admin/page.tsx 정보 과밀 (대시보드 + 모임 목록 모바일 한 페이지) | 작업 6 | ✅ v1.2 — 접기/펼치기 구조 (주의필요=항상펼침, 정산/회원=접힘+한줄요약) |
+| M | "지난 달"(deleted 포함) vs "전체"(deleted 제외) status 범위 불일치 | 작업 8 | — 의도된 설계 (월별 정산은 삭제 모임 포함, 전체는 가독성 위해 제외) |
+
+원본 검토 의견 13건(A~M) 중 9건이 v1.2에 직접 반영, 4건은 트리거 조건과 함께 백로그(E·F·G·K). 검토의견 별도 파일은 흡수 후 폐기.
+
+---
+
 ## 변경 이력
 
 | 버전 | 날짜 | 변경 내용 |
@@ -646,3 +670,4 @@ const [monthlyRevenue, upcomingMeetings, memberStats, alerts, venueSettlements] 
 | v1.0 | 2026-03-20 | 최초 작성. 하드코딩 분석 + DB 미표시 데이터 + 공간 정산 + 대시보드 설계 통합 |
 | v1.1 | 2026-03-20 | 검토 반영: site_settings RLS 수정(SELECT 전체 공개 + INSERT 추가), Client Component settings 접근 방식 명시(login 리팩토링 방법 포함), venue_settlements RLS 추가, venues 관리 UI 추가(설정 페이지 내), 정산 완료 워크플로우 명시(freeze 정책), 신청 테이블 모바일 레이아웃 전략(서브라인 방식), layout.tsx 대상 제외, "나중에" 목록 4건 추가(회원 상태 분류/재참여율/노쇼/layout 동적화), Claude Code 구현 컨텍스트 섹션 추가 |
 | v1.2 | 2026-03-20 | 시니어 검토 후 확정 반영: (1) REFUND_RULES에 label/rateLabel 필드 + REFUND_DEFAULT 추가, (2) 정산 집계 기준을 모임일(meetings.date) JOIN으로 확정, (3) Venue CRUD를 POST API route로 통일 + venue ID 동적 라우트, (4) 대시보드 접기/펼치기 구조 확정 (주의필요=항상펼침, 정산/회원=접힘+한줄요약), (5) AdminMeetingSection 데이터 흐름 정정, (6) 대시보드 anon client 사용 + editor 정산 가시성 명시 |
+| v1.3 | 2026-04-28 | 검토의견(Phase-2-3-검토의견.md) 흡수 후 별도 파일 폐기. 시니어 검토 반영 이력을 본 문서 부록으로 통합 |

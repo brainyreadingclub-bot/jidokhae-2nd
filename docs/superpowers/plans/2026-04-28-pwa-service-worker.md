@@ -1,5 +1,7 @@
 # PWA Service Worker 도입 (콜드스타트 FCP 개선) 구현 계획
 
+> **Status:** ✅ Merged in PR #26 — `jidokhae-web/src/sw.ts` + `serwist.config.js` + SerwistProvider 마운트. 운영 가이드는 `검토문서/2026-04-28-pwa-sw-운영-가이드.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 모바일 PWA 콜드스타트에서 표시되는 manifest splash(`#0d2920` + "지" 로고) 시간을 두 번째 방문부터 단축한다. asset(JS/CSS/font)을 SW 캐시에 저장해 네트워크 왕복 없이 첫 paint를 그리는 것이 핵심.

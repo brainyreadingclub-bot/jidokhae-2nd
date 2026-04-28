@@ -1,6 +1,7 @@
 # Memory Index
 
 ## feedback (교훈)
+- `feedback_2026-03-18_kakaotalk-inapp-hydration.md` — 카카오톡 인앱 OAuth/결제는 정상이라 건드리지 말 것 + "외부 브라우저로 유도" 금지 + Client Component navigator 하이드레이션 주의
 - `feedback_2026-03-26_aggregate-logic.md` — 집계 계산에서 행 범위 일치 검증 규칙
 - `feedback_2026-03-26_preview-windows.md` — Windows preview_start cmd 래퍼 필요
 - `feedback_2026-03-26_commit-ordering.md` — 같은 파일 수정 작업은 편집-커밋 순차 실행

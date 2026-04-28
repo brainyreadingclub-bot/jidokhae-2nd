@@ -3,7 +3,7 @@
 > **작성일:** 2026-03-24
 > **분석 범위:** 홈 화면 캘린더 뷰 도입 검토 + 전체 UX/프로덕트 피드백
 > **참여 전문가:** UX/서비스 디자이너, 프로덕트 전략가, UI 엔지니어
-> **목업 파일:** `검토문서/mockups/calendar-view-comparison.html`
+> **결론 반영:** CalendarStrip 위클리 스트립 + 리스트 하이브리드로 구현됨 (`src/components/meetings/CalendarStrip.tsx`)
 
 ---
 
@@ -240,9 +240,3 @@
 
 ---
 
-## 부록: 목업 파일
-
-- **위치:** `검토문서/mockups/calendar-view-comparison.html`
-- **내용:** 현재 상태 + 시안 A/B/C 4개를 폰 프레임으로 나란히 비교
-- **열기:** 브라우저에서 직접 열어 확인 가능
-- **디자인 토큰:** 실제 프로젝트의 globals.css 토큰(Primary/Accent/Surface/Neutral) 반영
