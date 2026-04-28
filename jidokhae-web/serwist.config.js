@@ -1,15 +1,10 @@
 // @ts-check
-import { spawnSync } from 'node:child_process'
 import { serwist } from '@serwist/next/config'
-
-// git revision으로 precache versioning. CI에서 git 없으면 random UUID fallback.
-const revision =
-  spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf-8' }).stdout?.trim() ||
-  crypto.randomUUID()
 
 export default serwist({
   swSrc: 'src/sw.ts',
   swDest: 'public/sw.js',
-  // 추가 precache 엔트리 (Next.js 자동 감지에 누락된 경로 보강)
-  additionalPrecacheEntries: [{ url: '/', revision }],
+  // ⚠️ additionalPrecacheEntries 비워둠 — '/'는 인증 사용자별 동적 페이지라 절대 precache 금지
+  // (다른 사용자의 stale HTML 노출 위험).
+  // Serwist가 자동 감지하는 prerendered 정적 페이지(/policy/*, /auth/login)만 precache되며 안전.
 })
