@@ -95,7 +95,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
     }
 
     const capacity = parseInt(values.capacity, 10)
-    if (!capacity || capacity < 1) return setError('정원은 1명 이상이어야 합니다')
+    if (!capacity || capacity < 3) return setError('정원은 3명 이상이어야 합니다')
     if (mode === 'edit' && capacity < confirmedCount) {
       return setError(`현재 신청자(${confirmedCount}명)보다 적은 정원은 설정할 수 없습니다`)
     }
@@ -274,7 +274,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
         <Field label="정원" required>
           <input
             type="number"
-            min="1"
+            min="3"
             value={values.capacity}
             onChange={(e) => handleChange('capacity', e.target.value)}
             placeholder="12"
