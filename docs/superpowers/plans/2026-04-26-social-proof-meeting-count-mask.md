@@ -1,6 +1,8 @@
 # 모임 신청자 수 소셜 프루프 마스킹 구현 계획
 
 > **Status:** ✅ Merged in PR #19 — `src/lib/visibility.ts` 구현 + 단위 테스트(`lib/__tests__/visibility.test.ts`). admin/editor는 정확한 카운트, 회원에게는 50% 미만 마스킹.
+>
+> **Update (2026-05-03):** 후속 PR #27에서 정책을 "정원 50% 미만" 비율 임계 → "3명 미만" 절대값 임계로 변경. 본 plan은 1차 도입 시점 기록이며, 현재 정책은 [CLAUDE.md](../../../CLAUDE.md) "Capacity display" 항목 참조.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
