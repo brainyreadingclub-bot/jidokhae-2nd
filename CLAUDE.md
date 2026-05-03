@@ -174,7 +174,8 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **결제 완료 = 신청 확정** — No payment-less registrations exist
 - **Refund policy:** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
-- **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 0명일 때는 "N명 모집 중" 형식으로 표시 (social proof 역효과 방지)
+- **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 회원/비로그인에게는 신청자 3명 미만(0·1·2명)일 때 "N명 모집 중" 형식으로 마스킹(`shouldMaskConfirmedCount` 절대 임계 3명, social proof 역효과 방지). 운영자는 0명만 마스킹, 1명+ 정확 노출. 마감 시 항상 정확 노출
+- **Meeting capacity minimum:** 정원 최소 3명 (Form 단에서 강제, DB CHECK는 두지 않음). 노출 임계(3명)와 정합성을 위해 정원 1·2명 모임 생성 차단. 운영자가 SQL 콘솔로 직접 INSERT하는 우회 경로는 운영 정책상 발생하지 않는다고 가정
 - **Button logic:** Determined by `confirmed`/`waitlisted` registration existence + meeting timing (see PRD §6-2)
 - **Deletion refund:** Always 100% regardless of refund policy dates (confirmed + waitlisted 모두)
 - **Duplicate prevention:** DB Function detects existing confirmed registration and rejects
