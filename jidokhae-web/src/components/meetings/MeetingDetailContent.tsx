@@ -95,6 +95,10 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   // (명단 헤더가 인원수를 노출하므로 카운트와 정합)
   const showAccurateCount = isEditorOrAdmin || hasConfirmed
 
+  // 입금자명: "M/D 닉네임" — 은행 입금자명 글자수(한글 12자) 한도 + 운영자 식별 편의
+  const [, mm, dd] = typedMeeting.date.split('-')
+  const depositorName = `${Number(mm)}/${Number(dd)} ${profile.nickname}`
+
   if (typedMeeting.status === 'deleting' && !isAdmin) {
     notFound()
   }
@@ -177,7 +181,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         bankName={settings.bank_name ?? ''}
         bankAccount={settings.bank_account ?? ''}
         bankHolder={settings.bank_holder ?? ''}
-        depositorName={`${typedMeeting.title} ${profile.nickname}`}
+        depositorName={depositorName}
       />
 
       {isEditorOrAdmin && (

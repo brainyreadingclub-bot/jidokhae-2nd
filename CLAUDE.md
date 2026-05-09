@@ -178,6 +178,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **Meeting capacity minimum:** 정원 최소 3명 (Form 단에서 강제, DB CHECK는 두지 않음). 노출 임계(3명)와 정합성을 위해 정원 1·2명 모임 생성 차단. 운영자가 SQL 콘솔로 직접 INSERT하는 우회 경로는 운영 정책상 발생하지 않는다고 가정
 - **참여자 명단 노출 정책:** 모임 상세 페이지에서 본인이 `confirmed`로 신청한 모임에 한해 다른 신청자 **닉네임만** 명단 노출(`confirmed` + `pending_transfer` 포함, `waitlisted` 제외). RPC `get_meeting_participant_nicknames`로 단일 진입점 검증. 운영자(admin/editor)는 본인 신청 여부 무관 명단 노출. 비로그인 / 미신청 / `pending_transfer` 본인 / `waitlisted` 본인은 명단 미노출 (의도된 비대칭 — 정식 참여자 아님). 본인 강조 표시 없음, real_name·region·아바타 미노출. 회원 피드백 반영
 - **신청 모임 시각 강화 (Phase 2):** 회원이 자기가 신청한 모임을 즉시 인지하도록 두 곳에 강한 신호 노출. (1) 모임 상세에서 `confirmed`면 `RegistrationHero` 그린 hero 배너(✓ + 인사 + D-Day) 렌더, `pending_transfer`/`waitlisted`는 작은 `RegistrationStatusBadge` 유지. (2) 홈(/)에서 본인 신청 모임(confirmed+pending_transfer+waitlisted) 1건+ 시 CalendarStrip 아래에 `MyMeetingsSection` 단독 그룹 표시. 임박순 정렬, D-Day 뱃지(D-3 이하 accent-500 진한 배경 강조, 당일은 `오늘 H:MM`), `waitlisted`는 "대기 중" / `pending_transfer`는 "입금대기" 뱃지. 4건 초과 시 더보기 토글. 캘린더 필터 적용 시 섹션 숨김. 전체 일정 그룹에서는 신청 모임 제외(중복 방지). 운영자도 동일 적용
+- **입금자명 형식:** 계좌이체 입금자명은 `M/D 닉네임` 형식 (예: `5/17 초록고래`). 모임명 포함 시 너무 길어 은행 입금자명 12자 한도 초과 위험 + 운영자 식별 편의. `MeetingDetailContent`에서 단일 진입점
 - **Button logic:** Determined by `confirmed`/`waitlisted` registration existence + meeting timing (see PRD §6-2)
 - **Deletion refund:** Always 100% regardless of refund policy dates (confirmed + waitlisted 모두)
 - **Duplicate prevention:** DB Function detects existing confirmed registration and rejects
