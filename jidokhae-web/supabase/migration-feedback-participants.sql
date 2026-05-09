@@ -9,7 +9,8 @@
 -- 함수 동작
 --   1) 비로그인(auth.uid() IS NULL) → 빈 결과
 --   2) 운영자(admin/editor) → 본인 신청 여부 무관 명단 반환 (admin 페이지와 정합)
---   3) 호출자가 해당 모임에 confirmed 상태면 → 명단 반환
+--   3) 호출자가 해당 모임에 confirmed 또는 pending_transfer 상태면 → 명단 반환
+--      (운영자 입금 확인 지연 시 회원 입장에서 사실상 신청 완료 상태이므로 동등 취급)
 --   4) 그 외 → 빈 결과 (오류 던지지 않음)
 --
 -- 반환 컬럼
@@ -42,7 +43,7 @@ AS $$
 DECLARE
   v_caller UUID := auth.uid();
   v_is_privileged BOOLEAN;
-  v_is_confirmed_self BOOLEAN;
+  v_is_booked_self BOOLEAN;
 BEGIN
   -- 1. 비로그인은 빈 결과
   IF v_caller IS NULL THEN
@@ -53,15 +54,16 @@ BEGIN
   SELECT public.is_editor_or_admin() INTO v_is_privileged;
 
   IF NOT v_is_privileged THEN
-    -- 3. 본인이 해당 모임에 confirmed 상태인지 확인
+    -- 3. 본인이 해당 모임에 confirmed 또는 pending_transfer 상태인지 확인
+    --    (정원에 차지한 신청자는 모두 명단을 볼 수 있음)
     SELECT EXISTS(
       SELECT 1 FROM public.registrations
       WHERE meeting_id = p_meeting_id
         AND user_id = v_caller
-        AND status = 'confirmed'
-    ) INTO v_is_confirmed_self;
+        AND status IN ('confirmed', 'pending_transfer')
+    ) INTO v_is_booked_self;
 
-    IF NOT v_is_confirmed_self THEN
+    IF NOT v_is_booked_self THEN
       RETURN;  -- 권한 없음 = 빈 결과
     END IF;
   END IF;

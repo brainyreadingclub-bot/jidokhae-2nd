@@ -20,7 +20,7 @@ export default function RegistrationHero({ nickname, meetingDate, meetingTime, k
 
   return (
     <div
-      className="mx-5 mt-4 flex items-center gap-3.5 rounded-[var(--radius-lg)] px-5 py-4 text-white"
+      className="mt-4 flex items-center gap-3.5 rounded-[var(--radius-lg)] px-5 py-4 text-white"
       style={{
         background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))',
         boxShadow: '0 8px 20px rgba(45, 125, 95, 0.25)',

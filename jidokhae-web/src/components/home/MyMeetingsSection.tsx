@@ -24,15 +24,12 @@ type Props = {
 }
 
 function pickBadge(item: MyMeetingItem, kstToday: string): { label: string; classes: string } {
-  // waitlisted: D-Day 대신 "대기 중"
+  // waitlisted: D-Day 대신 "대기 중" (정원 미차지)
   if (item.kind === 'waitlisted') {
     return { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
   }
-  // pending_transfer: 보조 라벨 — 정식 참여자 아니라 D-Day 대신 "입금대기"
-  if (item.kind === 'pending_transfer') {
-    return { label: '입금대기', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
-  }
-  // confirmed: D-Day 뱃지 (D-3 이하 강조)
+  // confirmed + pending_transfer: D-Day 뱃지로 통일
+  // (운영자 입금 확인 지연 시 회원 입장에서 사실상 신청 완료 상태이므로 동등 취급)
   const dDay = formatDDay(item.meeting.date, item.meeting.time, kstToday)
   if (!dDay) {
     return { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }

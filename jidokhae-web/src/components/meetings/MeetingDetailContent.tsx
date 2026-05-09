@@ -86,14 +86,15 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     ?.map((row) => row.nickname)
     .filter((n): n is string => typeof n === 'string' && n.length > 0) ?? []
 
-  // 작은 상단 뱃지: pending_transfer / waitlisted 만 (confirmed는 hero가 흡수)
-  const registrationStatus: 'pending_transfer' | 'waitlisted' | null =
-    hasPendingTransfer ? 'pending_transfer' :
-    hasWaitlisted ? 'waitlisted' : null
+  // confirmed/pending_transfer 모두 hero가 흡수 (운영자 입금 확인 지연을 회원이 체감하지 않게)
+  // 작은 상단 뱃지는 waitlisted만
+  const registrationStatus: 'waitlisted' | null = hasWaitlisted ? 'waitlisted' : null
 
-  // 카운트 마스킹 해제 조건: 운영자 또는 본인이 confirmed로 신청한 경우
-  // (명단 헤더가 인원수를 노출하므로 카운트와 정합)
-  const showAccurateCount = isEditorOrAdmin || hasConfirmed
+  // 회원 입장에서 입금 후 운영자 확인 전이라도 "신청 완료"처럼 보이게 — 명단/카운트 모두 confirmed와 동등 취급
+  const isBookedSelf = hasConfirmed || hasPendingTransfer
+
+  // 카운트 마스킹 해제 조건: 운영자 또는 본인이 정원에 차지한 경우 (confirmed/pending_transfer)
+  const showAccurateCount = isEditorOrAdmin || isBookedSelf
 
   // 입금자명: "M/D 닉네임" — 은행 입금자명 글자수(한글 12자) 한도 + 운영자 식별 편의
   const [, mm, dd] = typedMeeting.date.split('-')
@@ -128,7 +129,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         title={typedMeeting.title}
         fee={typedMeeting.fee}
       />
-      {hasConfirmed && (
+      {isBookedSelf && (
         <RegistrationHero
           nickname={profile.nickname || ''}
           meetingDate={typedMeeting.date}
@@ -145,7 +146,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
       />
 
       {hasPendingTransfer && (
-        <div className="mx-5 mt-4 space-y-3">
+        <div className="mt-4 space-y-3">
           <div className="bg-accent-50 border border-accent-200 rounded-xl p-4 text-center">
             <p className="text-sm font-medium text-accent-700">입금 확인 대기 중입니다</p>
             <p className="text-xs text-accent-600 mt-1">아직 입금 전이라면 아래 계좌로 입금해주세요</p>
@@ -158,7 +159,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         </div>
       )}
 
-      {(hasConfirmed || isEditorOrAdmin) && (
+      {(isBookedSelf || isEditorOrAdmin) && (
         <ParticipantsList nicknames={participantNicknames} />
       )}
 
@@ -186,7 +187,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
 
       {isEditorOrAdmin && (
         <div
-          className="mx-5 mt-8 rounded-[var(--radius-md)] p-4"
+          className="mt-8 rounded-[var(--radius-md)] p-4"
           style={{ backgroundColor: 'var(--color-surface-100)', border: '1px solid var(--color-surface-300)' }}
         >
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-500">

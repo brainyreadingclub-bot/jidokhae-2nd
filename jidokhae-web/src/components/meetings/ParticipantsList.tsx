@@ -7,7 +7,7 @@ export default function ParticipantsList({ nicknames }: ParticipantsListProps) {
 
   return (
     <section
-      className="mx-5 mt-6 rounded-[var(--radius-md)] p-4"
+      className="mt-6 rounded-[var(--radius-md)] p-4"
       style={{
         backgroundColor: 'var(--color-surface-100)',
         border: '1px solid var(--color-surface-300)',

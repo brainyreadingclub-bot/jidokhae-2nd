@@ -23,7 +23,7 @@ export default function RegistrationStatusBadge({ status }: RegistrationStatusBa
   const badge = STATUS_BADGE[status]
 
   return (
-    <div className="mx-5 mt-4">
+    <div className="mt-4">
       <span
         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${badge.classes}`}
       >
