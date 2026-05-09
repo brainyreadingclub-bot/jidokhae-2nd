@@ -33,7 +33,9 @@ export default async function HomeContent() {
     }
   }
 
-  const role = user ? (await getProfile(user.id)).role : null
+  const profile = user ? await getProfile(user.id) : null
+  const role = profile?.role ?? null
+  const nickname = profile?.nickname ?? ''
   const isPrivileged = role === 'admin' || role === 'editor'
 
   const kstToday = getKSTToday()
@@ -58,7 +60,7 @@ export default async function HomeContent() {
 
   const meetingIds = typedMeetings.map((m) => m.id)
 
-  const [countsResult, myRegsResult, myWaitlistResult] = await Promise.all([
+  const [countsResult, myRegsResult, myWaitlistResult, myPendingResult] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: meetingIds }),
     user
       ? supabase
@@ -76,6 +78,14 @@ export default async function HomeContent() {
           .eq('status', 'waitlisted')
           .in('meeting_id', meetingIds)
       : Promise.resolve({ data: [] as { meeting_id: string }[], error: null }),
+    user
+      ? supabase
+          .from('registrations')
+          .select('meeting_id')
+          .eq('user_id', user.id)
+          .eq('status', 'pending_transfer')
+          .in('meeting_id', meetingIds)
+      : Promise.resolve({ data: [] as { meeting_id: string }[], error: null }),
   ])
 
   if (countsResult.error) {
@@ -86,6 +96,9 @@ export default async function HomeContent() {
   }
   if ('error' in myWaitlistResult && myWaitlistResult.error) {
     throw new Error(`대기 신청 조회 실패: ${myWaitlistResult.error.message}`)
+  }
+  if ('error' in myPendingResult && myPendingResult.error) {
+    throw new Error(`입금대기 조회 실패: ${myPendingResult.error.message}`)
   }
 
   const countMap: Record<string, number> = {}
@@ -98,6 +111,9 @@ export default async function HomeContent() {
   const waitlistedArr = (myWaitlistResult.data ?? []).map(
     (r: { meeting_id: string }) => r.meeting_id,
   )
+  const pendingArr = (myPendingResult.data ?? []).map(
+    (r: { meeting_id: string }) => r.meeting_id,
+  )
 
   return (
     <div className="mt-4">
@@ -106,6 +122,8 @@ export default async function HomeContent() {
         countMap={countMap}
         registeredSet={registeredArr}
         waitlistedSet={waitlistedArr}
+        pendingTransferSet={pendingArr}
+        nickname={nickname}
         kstToday={kstToday}
         isPrivileged={isPrivileged}
       />

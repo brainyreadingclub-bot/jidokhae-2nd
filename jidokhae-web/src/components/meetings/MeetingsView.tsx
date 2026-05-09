@@ -5,6 +5,7 @@ import { trackEvent } from '@/lib/analytics'
 import CalendarStrip from './CalendarStrip'
 import DateSectionHeader from './DateSectionHeader'
 import MeetingCard from './MeetingCard'
+import MyMeetingsSection, { type MyMeetingItem } from '@/components/home/MyMeetingsSection'
 import type { Meeting } from '@/types/meeting'
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
   countMap: Record<string, number>
   registeredSet: string[]
   waitlistedSet: string[]
+  pendingTransferSet?: string[]
+  nickname?: string
   kstToday: string
   isPrivileged: boolean
 }
@@ -21,6 +24,8 @@ export default function MeetingsView({
   countMap,
   registeredSet,
   waitlistedSet,
+  pendingTransferSet = [],
+  nickname = '',
   kstToday,
   isPrivileged,
 }: Props) {
@@ -29,6 +34,7 @@ export default function MeetingsView({
 
   const registeredSetObj = useMemo(() => new Set(registeredSet), [registeredSet])
   const waitlistedSetObj = useMemo(() => new Set(waitlistedSet), [waitlistedSet])
+  const pendingSetObj = useMemo(() => new Set(pendingTransferSet), [pendingTransferSet])
 
   // Unique meeting dates
   const meetingDates = useMemo(
@@ -40,20 +46,45 @@ export default function MeetingsView({
   const registeredDates = useMemo(() => {
     const dates = new Set<string>()
     for (const m of meetings) {
-      if (registeredSetObj.has(m.id) || waitlistedSetObj.has(m.id)) {
+      if (registeredSetObj.has(m.id) || waitlistedSetObj.has(m.id) || pendingSetObj.has(m.id)) {
         dates.add(m.date)
       }
     }
     return dates
-  }, [meetings, registeredSetObj, waitlistedSetObj])
+  }, [meetings, registeredSetObj, waitlistedSetObj, pendingSetObj])
 
-  // Group meetings by date
+  // 내가 신청한 모임 (confirmed > pending_transfer > waitlisted, 임박순 정렬)
+  const myMeetingItems = useMemo<MyMeetingItem[]>(() => {
+    const items: MyMeetingItem[] = []
+    for (const m of meetings) {
+      if (registeredSetObj.has(m.id)) {
+        items.push({ meeting: m, kind: 'confirmed' })
+      } else if (pendingSetObj.has(m.id)) {
+        items.push({ meeting: m, kind: 'pending_transfer' })
+      } else if (waitlistedSetObj.has(m.id)) {
+        items.push({ meeting: m, kind: 'waitlisted' })
+      }
+    }
+    // meetings는 이미 (date asc, time asc)로 정렬되어 있어 임박순과 일치
+    return items
+  }, [meetings, registeredSetObj, pendingSetObj, waitlistedSetObj])
+
+  const myMeetingIdsSet = useMemo(
+    () => new Set(myMeetingItems.map((it) => it.meeting.id)),
+    [myMeetingItems],
+  )
+
+  // Group meetings by date — 필터 미적용 시 본인 신청 모임은 상단 섹션으로 이동시키고 그룹에서 제외
   const groupedMeetings = useMemo(() => {
     const groups: { date: string; meetings: Meeting[] }[] = []
     let currentDate = ''
     let currentGroup: Meeting[] = []
 
-    for (const m of meetings) {
+    const filtered = selectedDate
+      ? meetings // 캘린더 필터 적용 시: 모든 모임 그대로 (섹션 숨겨짐)
+      : meetings.filter((m) => !myMeetingIdsSet.has(m.id))
+
+    for (const m of filtered) {
       if (m.date !== currentDate) {
         if (currentGroup.length > 0) {
           groups.push({ date: currentDate, meetings: currentGroup })
@@ -69,7 +100,7 @@ export default function MeetingsView({
     }
 
     return groups
-  }, [meetings])
+  }, [meetings, myMeetingIdsSet, selectedDate])
 
   // Filter groups by selected date
   const visibleGroups = useMemo(
@@ -86,10 +117,7 @@ export default function MeetingsView({
     return meetings.filter((m) => m.date.startsWith(month)).length
   }, [meetings, kstToday])
 
-  const myRegistrationCount = useMemo(
-    () => registeredSet.length + waitlistedSet.length,
-    [registeredSet, waitlistedSet],
-  )
+  const myRegistrationCount = myMeetingItems.length
 
   useEffect(() => {
     trackEvent('view_item_list', {
@@ -142,6 +170,17 @@ export default function MeetingsView({
         kstToday={kstToday}
       />
 
+      {/* My meetings — 캘린더 필터 미적용일 때만 상단 섹션 */}
+      {!selectedDate && myMeetingItems.length > 0 && (
+        <MyMeetingsSection
+          nickname={nickname}
+          items={myMeetingItems}
+          countMap={countMap}
+          kstToday={kstToday}
+          isPrivileged={isPrivileged}
+        />
+      )}
+
       {/* Reset filter button */}
       {selectedDate && (
         <button
@@ -156,8 +195,15 @@ export default function MeetingsView({
         </button>
       )}
 
+      {/* "전체 일정" 디바이더 — 신청 섹션이 있을 때만 */}
+      {!selectedDate && myMeetingItems.length > 0 && groupedMeetings.length > 0 && (
+        <div className="mt-5 mb-2 text-xs font-bold uppercase tracking-wider text-neutral-500">
+          전체 일정
+        </div>
+      )}
+
       {/* Date-grouped meeting list */}
-      <div className={`${selectedDate ? 'mt-3' : 'mt-5'} flex flex-col gap-5`}>
+      <div className={`${selectedDate ? 'mt-3' : myMeetingItems.length > 0 ? 'mt-1' : 'mt-5'} flex flex-col gap-5`}>
         {visibleGroups.length === 0 && selectedDate && (
           <div className="py-8 text-center text-sm text-neutral-400">
             선택한 날짜에 모임이 없습니다

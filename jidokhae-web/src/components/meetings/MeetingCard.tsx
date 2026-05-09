@@ -12,6 +12,8 @@ type MeetingCardProps = {
   isWaitlisted?: boolean
   isPrivileged?: boolean
   basePath?: string
+  /** 우상단 뱃지를 강제 교체 (예: 홈 "내가 신청한 모임" 섹션의 D-Day 뱃지) */
+  customBadge?: { label: string; classes: string } | null
 }
 
 export default function MeetingCard({
@@ -21,6 +23,7 @@ export default function MeetingCard({
   isWaitlisted,
   isPrivileged = false,
   basePath = '/meetings',
+  customBadge = null,
 }: MeetingCardProps) {
   const isFull = confirmedCount >= meeting.capacity
   const isMasked = shouldMaskConfirmedCount(confirmedCount, meeting.capacity, isPrivileged)
@@ -35,14 +38,16 @@ export default function MeetingCard({
         ? 'var(--color-status-full)'
         : 'var(--color-status-open)'
 
-  // Status badge config (priority: registered > waitlisted > full > default)
-  const badge = isRegistered
-    ? { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }
-    : isWaitlisted
-      ? { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
-      : isFull
-        ? { label: '마감', classes: 'bg-neutral-100 text-neutral-500 border-neutral-200' }
-        : { label: '모집 중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
+  // Status badge config (priority: customBadge > registered > waitlisted > full > default)
+  const badge = customBadge ?? (
+    isRegistered
+      ? { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }
+      : isWaitlisted
+        ? { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
+        : isFull
+          ? { label: '마감', classes: 'bg-neutral-100 text-neutral-500 border-neutral-200' }
+          : { label: '모집 중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
+  )
 
   // Capacity color
   const capacityClass = isFull

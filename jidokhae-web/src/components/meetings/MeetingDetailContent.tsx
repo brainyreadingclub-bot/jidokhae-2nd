@@ -10,6 +10,7 @@ import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import RegistrationStatusBadge from '@/components/meetings/RegistrationStatusBadge'
+import RegistrationHero from '@/components/meetings/RegistrationHero'
 import ParticipantsList from '@/components/meetings/ParticipantsList'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 
@@ -85,9 +86,8 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     ?.map((row) => row.nickname)
     .filter((n): n is string => typeof n === 'string' && n.length > 0) ?? []
 
-  // 신청 상태 뱃지: confirmed > pending_transfer > waitlisted > null
-  const registrationStatus: 'confirmed' | 'pending_transfer' | 'waitlisted' | null =
-    hasConfirmed ? 'confirmed' :
+  // 작은 상단 뱃지: pending_transfer / waitlisted 만 (confirmed는 hero가 흡수)
+  const registrationStatus: 'pending_transfer' | 'waitlisted' | null =
     hasPendingTransfer ? 'pending_transfer' :
     hasWaitlisted ? 'waitlisted' : null
 
@@ -124,6 +124,14 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         title={typedMeeting.title}
         fee={typedMeeting.fee}
       />
+      {hasConfirmed && (
+        <RegistrationHero
+          nickname={profile.nickname || ''}
+          meetingDate={typedMeeting.date}
+          meetingTime={typedMeeting.time}
+          kstToday={kstToday}
+        />
+      )}
       <RegistrationStatusBadge status={registrationStatus} />
       <MeetingDetailInfo
         meeting={typedMeeting}

@@ -111,6 +111,27 @@ export function getDaysUntil(targetDate: string, fromDate: string): number {
   return Math.round((target.getTime() - from.getTime()) / (24 * 60 * 60 * 1000))
 }
 
+/**
+ * D-Day 라벨 생성. null이면 과거 모임이거나 표시 부적합.
+ * - 오늘: "오늘 14:00"
+ * - 내일: "내일"
+ * - 그 외 미래: "D-N"
+ * - 과거: null
+ */
+export function formatDDay(meetingDate: string, meetingTime: string, kstToday: string): string | null {
+  const days = getDaysUntil(meetingDate, kstToday)
+  if (days < 0) return null
+  if (days === 0) {
+    if (!meetingTime) return '오늘'
+    const parts = meetingTime.split(':')
+    const hourStr = parts[0] ?? '0'
+    const minuteStr = (parts[1] ?? '00').padStart(2, '0')
+    return `오늘 ${parseInt(hourStr, 10)}:${minuteStr}`
+  }
+  if (days === 1) return '내일'
+  return `D-${days}`
+}
+
 export type MeetingTiming = 'before_or_today' | 'after'
 
 /** Determines if a meeting is upcoming or past based on KST dates */
