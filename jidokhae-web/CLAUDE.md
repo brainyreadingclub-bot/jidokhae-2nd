@@ -55,13 +55,13 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - `site-settings.ts` — Cached `getSiteSettings()` for site configuration
 - `dashboard.ts` — Dashboard aggregations (revenue, meetings, members, alerts, venue settlements). Phase 3 M7 Step 2.5: 매출 집계 공식 수정 — 총매출에 confirmed + cancelled 모두 포함 (취소 발생 시 순매출 음수 표시 문제 해소)
 - `regions.ts` — Valid regions constant (`VALID_REGIONS`)
-- `visibility.ts` — 모임 신청자 수 마스킹 헬퍼 (Phase 3, PR #19). admin/editor에게는 정확한 카운트, 회원에겐 50% 미만 마스킹. `lib/__tests__/visibility.test.ts`에 단위 테스트
+- `visibility.ts` — 모임 신청자 수 마스킹 헬퍼 (Phase 3, PR #19). admin/editor에게는 정확한 카운트, 회원에겐 절대 임계 3명 미만 마스킹. `lib/__tests__/visibility.test.ts`에 단위 테스트. 모임 상세에서는 본인이 `confirmed`로 신청한 경우에도 마스킹 해제 (명단 헤더의 인원수와 카운트 정합)
 
 Logic is shared between API routes — keep it in `src/lib/`, not in route handlers.
 
 ## Key Conventions
 
-- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, MeetingsView, CalendarStrip, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, LoginClient, SiteSettingsForm, VenueManager, VenueSettlementTable, AdminDashboardContent, HomeContent, MeetingDetailContent, MyRegistrationContent, payment-redirect/page, payment-fail/page, route group error.tsx files. Phase 3 M7 Step 2 추가: AdminSidebar, AdminMobileNav, AdminDashboardHub, AdminMeetingsList, RegionFilter, PlaceholderPage (준비 중 라우트용). Phase 3 M7 Step 2.6 추가: RefundToggle (계좌이체 환불 완료 양방향 체크박스, DepositToggle 패턴). Server Components include DateSectionHeader, MeetingDetailInfo, Footer (사업자정보 푸터). Note: auth/login/page is a Server Component that renders `<LoginClient />`
+- **Server Components by default.** Client Components (`'use client'`): BottomNav, LogoutButton, MeetingActionButton, MeetingForm, DeleteMeetingButton, RegistrationCard, MeetingCard, MeetingsView, CalendarStrip, ModalOverlay, WelcomeScreen, ProfileSetup, AttendanceToggle, MemberList, LoginClient, SiteSettingsForm, VenueManager, VenueSettlementTable, AdminDashboardContent, HomeContent, MeetingDetailContent, MyRegistrationContent, payment-redirect/page, payment-fail/page, route group error.tsx files. Phase 3 M7 Step 2 추가: AdminSidebar, AdminMobileNav, AdminDashboardHub, AdminMeetingsList, RegionFilter, PlaceholderPage (준비 중 라우트용). Phase 3 M7 Step 2.6 추가: RefundToggle (계좌이체 환불 완료 양방향 체크박스, DepositToggle 패턴). Server Components include DateSectionHeader, MeetingDetailInfo, Footer (사업자정보 푸터), RegistrationStatusBadge (모임 상세 신청 상태 뱃지), ParticipantsList (모임 상세 참여자 닉네임 명단). Note: auth/login/page is a Server Component that renders `<LoginClient />`
 - **Component directories:** `src/components/` organized by domain — `admin/`, `meetings/`, `registrations/`, `home/`, `my/`, `skeletons/`, `ui/`
 - **Shared UI:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key, focus management. Used by DeleteMeetingButton, MeetingActionButton
 - **No semicolons**, single quotes, function components only

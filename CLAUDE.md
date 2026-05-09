@@ -174,8 +174,9 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **결제 완료 = 신청 확정** — No payment-less registrations exist
 - **Refund policy:** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
-- **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 회원/비로그인에게는 신청자 3명 미만(0·1·2명)일 때 "N명 모집 중" 형식으로 마스킹(`shouldMaskConfirmedCount` 절대 임계 3명, social proof 역효과 방지). 운영자는 0명만 마스킹, 1명+ 정확 노출. 마감 시 항상 정확 노출
+- **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 회원/비로그인에게는 신청자 3명 미만(0·1·2명)일 때 "N명 모집 중" 형식으로 마스킹(`shouldMaskConfirmedCount` 절대 임계 3명, social proof 역효과 방지). 운영자는 0명만 마스킹, 1명+ 정확 노출. 마감 시 항상 정확 노출. **모임 상세에서 본인이 confirmed로 신청한 회원에게는 마스킹 해제** — 명단 헤더("함께하는 멤버 N명")와 카운트 정합성 확보 (`MeetingDetailContent`가 `isPrivileged={isEditorOrAdmin || hasConfirmed}` 전달)
 - **Meeting capacity minimum:** 정원 최소 3명 (Form 단에서 강제, DB CHECK는 두지 않음). 노출 임계(3명)와 정합성을 위해 정원 1·2명 모임 생성 차단. 운영자가 SQL 콘솔로 직접 INSERT하는 우회 경로는 운영 정책상 발생하지 않는다고 가정
+- **참여자 명단 노출 정책:** 모임 상세 페이지에서 본인이 `confirmed`로 신청한 모임에 한해 다른 신청자 **닉네임만** 명단 노출(`confirmed` + `pending_transfer` 포함, `waitlisted` 제외). RPC `get_meeting_participant_nicknames`로 단일 진입점 검증. 운영자(admin/editor)는 본인 신청 여부 무관 명단 노출. 비로그인 / 미신청 / `pending_transfer` 본인 / `waitlisted` 본인은 명단 미노출 (의도된 비대칭 — 정식 참여자 아님). 본인 강조 표시 없음, real_name·region·아바타 미노출. 회원 피드백 반영
 - **Button logic:** Determined by `confirmed`/`waitlisted` registration existence + meeting timing (see PRD §6-2)
 - **Deletion refund:** Always 100% regardless of refund policy dates (confirmed + waitlisted 모두)
 - **Duplicate prevention:** DB Function detects existing confirmed registration and rejects
@@ -311,6 +312,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - `get_confirmed_counts(meeting_ids UUID[])` — Batch count of confirmed registrations per meeting (avoids N+1 queries)
 - `register_transfer(p_user_id, p_meeting_id, p_paid_amount)` — 계좌이체 전용 원자적 정원 체크 + INSERT. FOR UPDATE 락. Returns: 'pending_transfer' | 'waitlisted' | 'already_registered' | 'not_found' | 'not_active'
 - `admin_confirm_transfer(p_registration_id)` — 운영자의 입금 확인을 원자적으로 처리. registration + meeting FOR UPDATE 락 + 정원 재검증 + status 'pending_transfer' → 'confirmed' 전환. Phase 3 M7 Step 2.5에서 추가. editor 다수 동시 확인 시 정원 초과 방지 목적. Returns: 'success' | 'not_found' | 'not_pending' | 'not_active' | 'capacity_full'
+- `get_meeting_participant_nicknames(p_meeting_id)` — 모임 참여자 닉네임 명단 반환 RPC. SECURITY DEFINER + search_path=''. 호출자가 해당 모임에 confirmed면 명단(confirmed+pending_transfer 닉네임, created_at ASC) 반환, 운영자(admin/editor)는 본인 신청 여부 무관 반환, 그 외(비로그인/미신청/대기/입금대기)는 빈 배열. 회원 피드백 반영. 마이그레이션: `migration-feedback-participants.sql`
 
 **Triggers:** `on_auth_user_created` auto-creates profile from Kakao metadata on signup. `meetings_updated_at` auto-updates `updated_at` on meeting changes.
 

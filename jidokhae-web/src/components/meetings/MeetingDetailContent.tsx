@@ -9,6 +9,8 @@ import Link from 'next/link'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
+import RegistrationStatusBadge from '@/components/meetings/RegistrationStatusBadge'
+import ParticipantsList from '@/components/meetings/ParticipantsList'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 
 export default async function MeetingDetailContent({ id }: { id: string }) {
@@ -23,7 +25,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     notFound()
   }
 
-  const [countsResult, myRegResult, myWaitlistResult, pendingResult, settings] = await Promise.all([
+  const [countsResult, myRegResult, myWaitlistResult, pendingResult, participantsResult, settings] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
@@ -46,6 +48,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
       .eq('meeting_id', id)
       .eq('status', 'pending_transfer')
       .limit(1),
+    supabase.rpc('get_meeting_participant_nicknames', { p_meeting_id: id }),
     getSiteSettings(),
   ])
 
@@ -58,6 +61,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   if (myWaitlistResult.error) {
     throw new Error(`대기 신청 조회 실패: ${myWaitlistResult.error.message}`)
   }
+  // participantsResult.error는 명단이 부가 기능이라 throw 대신 무시 (빈 배열로 폴백)
 
   const profile = await getProfile(user.id)
 
@@ -76,6 +80,20 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   const role = profile.role ?? 'member'
   const isAdmin = role === 'admin'
   const isEditorOrAdmin = role === 'admin' || role === 'editor'
+
+  const participantNicknames = (participantsResult.data as { nickname: string }[] | null)
+    ?.map((row) => row.nickname)
+    .filter((n): n is string => typeof n === 'string' && n.length > 0) ?? []
+
+  // 신청 상태 뱃지: confirmed > pending_transfer > waitlisted > null
+  const registrationStatus: 'confirmed' | 'pending_transfer' | 'waitlisted' | null =
+    hasConfirmed ? 'confirmed' :
+    hasPendingTransfer ? 'pending_transfer' :
+    hasWaitlisted ? 'waitlisted' : null
+
+  // 카운트 마스킹 해제 조건: 운영자 또는 본인이 confirmed로 신청한 경우
+  // (명단 헤더가 인원수를 노출하므로 카운트와 정합)
+  const showAccurateCount = isEditorOrAdmin || hasConfirmed
 
   if (typedMeeting.status === 'deleting' && !isAdmin) {
     notFound()
@@ -106,11 +124,12 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         title={typedMeeting.title}
         fee={typedMeeting.fee}
       />
+      <RegistrationStatusBadge status={registrationStatus} />
       <MeetingDetailInfo
         meeting={typedMeeting}
         confirmedCount={confirmedCount}
         capacity={typedMeeting.capacity}
-        isPrivileged={isEditorOrAdmin}
+        isPrivileged={showAccurateCount}
       />
 
       {hasPendingTransfer && (
@@ -125,6 +144,10 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
             bankHolder={settings.bank_holder ?? ''}
           />
         </div>
+      )}
+
+      {(hasConfirmed || isEditorOrAdmin) && (
+        <ParticipantsList nicknames={participantNicknames} />
       )}
 
       <MeetingActionButton
