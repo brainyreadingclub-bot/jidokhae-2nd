@@ -7,7 +7,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
-import { cancelPayment, getPayment } from '@/lib/tosspayments'
+import { cancelPayment, getPayment } from '@/lib/portone'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -115,10 +115,10 @@ export async function POST(request: NextRequest, { params }: Params) {
           // 100% refund = omit amount
           await cancelPayment(reg.payment_id, '모임 삭제로 인한 환불')
         } catch {
-          // Retry safety: check if already cancelled at TossPayments
+          // Retry safety: check if already cancelled at PortOne
           // (handles case where previous refund succeeded but DB update failed)
           const payment = await getPayment(reg.payment_id)
-          if (payment.status !== 'CANCELED') {
+          if (payment.status !== 'CANCELLED') {
             throw new Error(`환불 실패: ${reg.id}`)
           }
           // Already cancelled → proceed to DB update

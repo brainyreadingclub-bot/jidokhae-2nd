@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { loadTossPayments } from '@tosspayments/payment-sdk'
+import * as PortOne from '@portone/browser-sdk/v2'
 import type { ButtonState } from '@/lib/kst'
 import { formatFee } from '@/lib/kst'
 import { calculateRefund, getRefundRuleText } from '@/lib/refund'
@@ -96,7 +96,7 @@ export default function MeetingActionButton({
       return
     }
 
-    // 카드결제 모드: TossPayments SDK
+    // 카드결제 모드: PortOne V2 SDK (카카오페이 단일 채널, 카드 + 카카오페이머니 동시 노출)
     trackEvent('begin_checkout', {
       item_id: meetingId,
       item_name: meetingTitle,
@@ -107,22 +107,35 @@ export default function MeetingActionButton({
 
     const meetingId8 = meetingId.replace(/-/g, '').slice(0, 8)
     const userId8 = userId.replace(/-/g, '').slice(0, 8)
-    const orderId = `jdkh-${meetingId8}-${userId8}-${Date.now()}`
+    // PortOne paymentId — 우리 시스템의 결제 식별자 (= 기존 orderId 역할)
+    const paymentId = `jdkh-${meetingId8}-${userId8}-${Date.now()}`
 
     try {
-      const tossPayments = await loadTossPayments(
-        process.env.NEXT_PUBLIC_TOSSPAYMENTS_CLIENT_KEY!,
-      )
-
       const origin = window.location.origin
 
-      await tossPayments.requestPayment('카드', {
-        amount: meetingFee,
-        orderId,
+      // PortOne SDK 타입 정의 버그(alipayPlus가 required로 잘못 선언됨) 우회용 단언.
+      // 실제 런타임은 카카오페이 단일 채널 + EASY_PAY로 정상 동작.
+      const response = await PortOne.requestPayment({
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!,
+        paymentId,
         orderName: meetingTitle,
-        successUrl: `${origin}/meetings/${meetingId}/payment-redirect`,
-        failUrl: `${origin}/meetings/${meetingId}/payment-fail`,
-      })
+        totalAmount: meetingFee,
+        currency: 'CURRENCY_KRW',
+        payMethod: 'EASY_PAY', // 카카오페이 결제창 (카드 + 카카오페이머니 모두 노출)
+        redirectUrl: `${origin}/meetings/${meetingId}/payment-redirect`,
+      } as Parameters<typeof PortOne.requestPayment>[0])
+
+      // 모바일 redirect 케이스는 redirectUrl로 이동 → 여기 도달하지 않음
+      // PC/팝업 inline 케이스만 도달 — 응답에 code가 있으면 실패
+      if (response?.code !== undefined) {
+        showToast(response.message || '결제 요청에 실패했습니다')
+        setLoading(false)
+        return
+      }
+
+      // PC 결제 성공 → redirect 핸들러로 직접 이동 (포트원이 자동 redirect 안 함)
+      router.push(`/meetings/${meetingId}/payment-redirect?paymentId=${paymentId}`)
     } catch {
       showToast('결제 요청에 실패했습니다')
       setLoading(false)

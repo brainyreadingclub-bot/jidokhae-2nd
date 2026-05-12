@@ -5,7 +5,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/admin'
-import { cancelPayment, getPayment } from '@/lib/tosspayments'
+import { cancelPayment, getPayment } from '@/lib/portone'
 import { calculateRefund } from '@/lib/refund'
 import { getKSTToday } from '@/lib/kst'
 
@@ -75,7 +75,7 @@ export async function processUserCancel(
     }
   }
 
-  // 5b. TossPayments cancel (skip if 0 refund or no payment_id)
+  // 5b. PortOne cancel (skip if 0 refund or no payment_id)
   if (refundAmount > 0 && reg.payment_id) {
     try {
       await cancelPayment(
@@ -85,11 +85,11 @@ export async function processUserCancel(
         refundRate === 100 ? undefined : refundAmount,
       )
     } catch {
-      // Race condition safety: check if already cancelled at TossPayments
+      // Race condition safety: check if already cancelled at PortOne
       // (handles concurrent cancel where another request already succeeded)
       try {
         const payment = await getPayment(reg.payment_id)
-        if (payment.status !== 'CANCELED') {
+        if (payment.status !== 'CANCELLED') {
           return {
             status: 'error',
             message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',

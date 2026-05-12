@@ -5,7 +5,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/admin'
-import { cancelPayment, getPayment } from '@/lib/tosspayments'
+import { cancelPayment, getPayment } from '@/lib/portone'
 import { sendWaitlistPromotedNotification } from '@/lib/notification'
 
 type PromoteResult = {
@@ -82,14 +82,14 @@ export async function processWaitlistCancel(
 
   const paidAmount = reg.paid_amount ?? 0
 
-  // 2. TossPayments 전액 환불 (계좌이체는 TossPayments 결제 아니므로 skip)
+  // 2. PortOne 전액 환불 (계좌이체는 카드 결제 아니므로 skip)
   if (reg.payment_method !== 'transfer' && paidAmount > 0 && reg.payment_id) {
     try {
       await cancelPayment(reg.payment_id, '대기 취소 전액 환불')
     } catch {
       try {
         const payment = await getPayment(reg.payment_id)
-        if (payment.status !== 'CANCELED') {
+        if (payment.status !== 'CANCELLED') {
           return { status: 'error', message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.' }
         }
       } catch {
