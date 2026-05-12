@@ -41,6 +41,11 @@ function pickBadge(item: MyMeetingItem, kstToday: string): { label: string; clas
     : { label: dDay, classes: 'bg-accent-50 text-accent-700 border-accent-200' }
 }
 
+/**
+ * 홈 "내 모임" 그룹.
+ * Refactoring UI · Linear/Notion 패턴 — 박스 외피 없이 그룹 헤더 + 카드 리스트.
+ * "전체 일정"과 동등 위계로 연속 흐름.
+ */
 export default function MyMeetingsSection({ nickname, items, countMap, kstToday, isPrivileged }: Props) {
   const [expanded, setExpanded] = useState(false)
 
@@ -55,35 +60,38 @@ export default function MyMeetingsSection({ nickname, items, countMap, kstToday,
   const headerLabel = nickname ? `${nickname}님이 신청한 모임` : '내 모임'
 
   return (
-    <section
-      className="mt-5 rounded-[var(--radius-lg)] p-4"
-      style={{
-        background: 'linear-gradient(180deg, var(--color-accent-50), var(--color-surface-50))',
-        border: '1px solid var(--color-accent-200)',
-      }}
-    >
-      <div className="mb-3 flex items-center gap-2">
+    <section className="mt-5">
+      {/* 그룹 헤더 — 작은 ✓ + 라벨 + 카운트 + 전체 보기 */}
+      <div className="mb-2.5 flex items-center gap-1.5">
         <span
-          className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-white"
-          style={{ background: 'var(--color-accent-500)' }}
+          className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-white"
+          style={{ backgroundColor: 'var(--color-primary-500)' }}
+          aria-hidden="true"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </span>
-        <h2 className="flex-1 text-sm font-extrabold tracking-tight text-accent-700">
-          {headerLabel} <span className="ml-1 text-xs font-semibold text-accent-600">· {items.length}건</span>
+        <h2
+          className="text-[14px] font-extrabold tracking-tight text-primary-800"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          {headerLabel}
         </h2>
+        <span className="text-[11px] font-semibold text-primary-500">
+          · {items.length}건
+        </span>
         <Link
           href="/my"
-          className="flex items-center gap-0.5 text-xs font-medium text-accent-600 hover:text-accent-700 transition-colors"
+          className="ml-auto flex items-center gap-0.5 text-[11px] font-medium text-primary-600 hover:text-primary-700 transition-colors"
         >
           전체 보기
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </Link>
       </div>
+
       <div className="flex flex-col gap-2.5">
         {visibleItems.map((item) => (
           <MeetingCard
@@ -97,11 +105,12 @@ export default function MyMeetingsSection({ nickname, items, countMap, kstToday,
           />
         ))}
       </div>
+
       {hiddenCount > 0 && !expanded && (
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="mt-3 flex w-full items-center justify-center gap-1 rounded-md border border-accent-200 bg-white py-2 text-xs font-semibold text-accent-700 hover:bg-accent-50 transition-colors"
+          className="mt-2.5 flex w-full items-center justify-center gap-1 rounded-md border border-primary-200 bg-white py-2 text-xs font-semibold text-primary-700 hover:bg-primary-50 transition-colors"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />

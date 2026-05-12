@@ -195,10 +195,15 @@ export default function MeetingsView({
         </button>
       )}
 
-      {/* "전체 일정" 디바이더 — 신청 섹션이 있을 때만 */}
+      {/* "전체 일정" 그룹 헤더 — "내 모임"과 동등 위계, ✓ 아이콘 없음으로 차별 */}
       {!selectedDate && myMeetingItems.length > 0 && groupedMeetings.length > 0 && (
-        <div className="mt-5 mb-2 text-xs font-bold uppercase tracking-wider text-neutral-500">
-          전체 일정
+        <div className="mt-6 mb-2.5">
+          <h2
+            className="text-[14px] font-extrabold tracking-tight text-neutral-600"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            전체 일정
+          </h2>
         </div>
       )}
 
