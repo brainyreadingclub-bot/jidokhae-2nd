@@ -7,12 +7,12 @@ import type { Meeting } from '@/types/meeting'
 
 type Props = {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ paymentKey?: string; type?: string }>
+  searchParams: Promise<{ paymentId?: string; type?: string }>
 }
 
 export default async function ConfirmPage({ params, searchParams }: Props) {
   const { id } = await params
-  const { paymentKey: paymentId, type } = await searchParams
+  const { paymentId, type } = await searchParams
   const isWaitlisted = type === 'waitlisted'
   const isPendingTransfer = type === 'pending_transfer'
   const supabase = await createClient()

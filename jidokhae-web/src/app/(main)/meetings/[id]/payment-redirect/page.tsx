@@ -21,13 +21,26 @@ export default function PaymentRedirectPage({ params }: Props) {
     async function processRedirect() {
       const { id: meetingId } = await params
 
-      // TossPayments success redirect params
-      const paymentKey = searchParams.get('paymentKey')
-      const orderId = searchParams.get('orderId')
-      const amount = searchParams.get('amount')
+      // PortOne V2 redirect params
+      // 성공: ?paymentId=...&transactionType=PAYMENT&txId=...
+      // 실패/사용자 취소: ?paymentId=...&code=...&message=...
+      const paymentId = searchParams.get('paymentId')
+      const code = searchParams.get('code')
+      const message = searchParams.get('message')
 
-      if (!paymentKey || !orderId || !amount) {
+      if (!paymentId) {
         setError('결제 정보가 없습니다')
+        setTimeout(() => router.replace(`/meetings/${meetingId}`), 2000)
+        return
+      }
+
+      // 결제 실패 / 사용자 취소
+      if (code) {
+        trackEvent('purchase_failed', {
+          meeting_id: meetingId,
+          reason: code,
+        })
+        setError(message || '결제가 취소되었습니다')
         setTimeout(() => router.replace(`/meetings/${meetingId}`), 2000)
         return
       }
@@ -37,9 +50,7 @@ export default function PaymentRedirectPage({ params }: Props) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            paymentKey,
-            orderId,
-            amount: Number(amount),
+            paymentId,
             meetingId,
           }),
         })
@@ -48,22 +59,20 @@ export default function PaymentRedirectPage({ params }: Props) {
 
         if (data.status === 'success') {
           trackEvent('purchase', {
-            transaction_id: orderId,
-            value: Number(amount),
+            transaction_id: paymentId,
             currency: 'KRW',
             meeting_id: meetingId,
             registration_type: 'confirmed',
           })
           router.replace(
-            `/meetings/${meetingId}/confirm?paymentKey=${paymentKey}`,
+            `/meetings/${meetingId}/confirm?paymentId=${paymentId}`,
           )
           return
         }
 
         if (data.status === 'waitlisted') {
           trackEvent('purchase', {
-            transaction_id: orderId,
-            value: Number(amount),
+            transaction_id: paymentId,
             currency: 'KRW',
             meeting_id: meetingId,
             registration_type: 'waitlisted',

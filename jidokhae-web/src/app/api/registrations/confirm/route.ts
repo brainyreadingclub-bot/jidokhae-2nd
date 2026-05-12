@@ -32,9 +32,7 @@ export async function POST(request: NextRequest) {
   }
 
   let body: {
-    paymentKey?: string
-    orderId?: string
-    amount?: number
+    paymentId?: string
     meetingId?: string
   }
   try {
@@ -46,18 +44,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { paymentKey, orderId, amount, meetingId } = body
-  if (!paymentKey || !orderId || amount === undefined || !meetingId) {
+  const { paymentId, meetingId } = body
+  if (!paymentId || !meetingId) {
     return NextResponse.json(
-      { status: 'error', message: 'paymentKey, orderId, amount, meetingId가 필요합니다' },
+      { status: 'error', message: 'paymentId, meetingId가 필요합니다' },
       { status: 400 },
     )
   }
 
   const result = await processPaymentConfirmation(
-    paymentKey,
-    orderId,
-    amount,
+    paymentId,
     meetingId,
     user.id,
   )

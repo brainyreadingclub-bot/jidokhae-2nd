@@ -1,10 +1,13 @@
 /**
  * Shared payment confirmation logic.
- * Used by both POST /api/registrations/confirm and POST /api/webhooks/tosspayments.
+ * Used by both POST /api/registrations/confirm and POST /api/webhooks/portone.
+ *
+ * 포트원 V2 기준 — 결제창에서 완료 시 이미 승인된 상태로 redirect됨.
+ * 따라서 confirm 단계는 getPayment로 status === 'PAID' 검증만 수행.
  */
 
 import { createServiceClient } from '@/lib/supabase/admin'
-import { confirmPayment, cancelPayment } from '@/lib/tosspayments'
+import { getPayment, cancelPayment } from '@/lib/portone'
 
 export type ConfirmResult =
   | { status: 'success'; registrationId: string }
@@ -13,20 +16,28 @@ export type ConfirmResult =
   | { status: 'already_registered'; message: string }
   | { status: 'error'; message: string }
 
+/**
+ * 결제 확정 처리.
+ *
+ * @param paymentId 포트원 결제 ID (= 우리가 채번한 orderId, 형식: jdkh-{meetingId8}-{userId8}-{ts})
+ * @param meetingId 모임 UUID
+ * @param userId 사용자 UUID
+ *
+ * 결제 금액 검증은 서버에서 포트원 응답(totalAmount)을 meeting.fee와 직접 대조.
+ * 클라이언트 입력 의존 제거 (포트원 redirect에 amount 미포함).
+ */
 export async function processPaymentConfirmation(
-  paymentKey: string,
-  orderId: string,
-  amount: number,
+  paymentId: string,
   meetingId: string,
   userId: string,
 ): Promise<ConfirmResult> {
   const supabase = createServiceClient()
 
-  // Layer 1: Idempotency — already confirmed or waitlisted with this paymentKey?
+  // Layer 1: Idempotency — already confirmed or waitlisted with this paymentId?
   const { data: existing } = await supabase
     .from('registrations')
     .select('id, status')
-    .eq('payment_id', paymentKey)
+    .eq('payment_id', paymentId)
     .in('status', ['confirmed', 'waitlisted'])
     .limit(1)
 
@@ -44,44 +55,38 @@ export async function processPaymentConfirmation(
     .single()
 
   if (!meeting || meeting.status !== 'active') {
-    // Don't confirm — TossPayments auto-cancels unconfirmed payments
     return { status: 'error', message: '신청할 수 없는 모임입니다' }
   }
 
-  // Verify amount matches meeting fee
-  if (amount !== meeting.fee) {
-    return { status: 'error', message: '결제 금액이 일치하지 않습니다' }
-  }
-
-  // Confirm payment with TossPayments (money moves here)
+  // 포트원에서 결제 검증 (이미 결제 완료 상태여야 함)
   let payment
   try {
-    payment = await confirmPayment(paymentKey, orderId, amount)
+    payment = await getPayment(paymentId)
   } catch {
-    return { status: 'error', message: '결제 승인에 실패했습니다' }
+    return { status: 'error', message: '결제 검증에 실패했습니다' }
   }
 
-  if (payment.status !== 'DONE') {
+  if (payment.status !== 'PAID') {
     return { status: 'error', message: '결제가 완료되지 않았습니다' }
   }
 
-  // orderId 교차 검증 (1차: TossPayments 응답의 orderId와 요청 orderId 일치)
-  if (payment.orderId !== orderId) {
-    await safeCancel(paymentKey, 'orderId 불일치')
+  // 결제 금액 검증 — 포트원에서 확인된 실결제액과 모임 회비가 일치해야 함
+  if (payment.totalAmount !== meeting.fee) {
+    await safeCancel(paymentId, '결제 금액 불일치')
     return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
   }
 
-  // orderId prefix ↔ meetingId 교차 검증 (2차, Phase 3 M7 Step 2.5)
-  // orderId 형식: jdkh-{meetingId8}-{userId8}-{timestamp}
-  // 공격자가 다른 모임의 orderId를 이 요청의 meetingId와 섞어 제출한 경우 차단.
+  // paymentId prefix ↔ meetingId 교차 검증
+  // paymentId 형식: jdkh-{meetingId8}-{userId8}-{timestamp}
+  // 공격자가 다른 모임의 paymentId를 이 요청의 meetingId와 섞어 제출한 경우 차단.
   const meetingId8 = meetingId.replace(/-/g, '').slice(0, 8)
-  const orderParts = orderId.split('-')
+  const paymentParts = paymentId.split('-')
   if (
-    orderParts.length < 4 ||
-    orderParts[0] !== 'jdkh' ||
-    orderParts[1] !== meetingId8
+    paymentParts.length < 4 ||
+    paymentParts[0] !== 'jdkh' ||
+    paymentParts[1] !== meetingId8
   ) {
-    await safeCancel(paymentKey, 'orderId meetingId prefix 불일치')
+    await safeCancel(paymentId, 'paymentId meetingId prefix 불일치')
     return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
   }
 
@@ -91,13 +96,13 @@ export async function processPaymentConfirmation(
     {
       p_user_id: userId,
       p_meeting_id: meetingId,
-      p_payment_id: paymentKey,
+      p_payment_id: paymentId,
       p_paid_amount: payment.totalAmount,
     },
   )
 
   if (rpcError) {
-    await safeCancel(paymentKey, '신청 처리 오류')
+    await safeCancel(paymentId, '신청 처리 오류')
     return { status: 'error', message: '신청 처리 중 오류가 발생했습니다' }
   }
 
@@ -107,7 +112,7 @@ export async function processPaymentConfirmation(
     const { data: reg } = await supabase
       .from('registrations')
       .select('id')
-      .eq('payment_id', paymentKey)
+      .eq('payment_id', paymentId)
       .eq('status', 'confirmed')
       .limit(1)
 
@@ -119,7 +124,7 @@ export async function processPaymentConfirmation(
     const { data: reg } = await supabase
       .from('registrations')
       .select('id')
-      .eq('payment_id', paymentKey)
+      .eq('payment_id', paymentId)
       .eq('status', 'waitlisted')
       .limit(1)
 
@@ -128,17 +133,17 @@ export async function processPaymentConfirmation(
 
   if (rpcResult === 'full') {
     // 방어 코드 — confirm_registration()이 더 이상 'full' 반환하지 않지만 안전을 위해 유지
-    await safeCancel(paymentKey, '정원 마감으로 인한 환불')
+    await safeCancel(paymentId, '정원 마감으로 인한 환불')
     return { status: 'full', message: '마감되었습니다' }
   }
 
   if (rpcResult === 'already_registered') {
-    await safeCancel(paymentKey, '중복 신청으로 인한 환불')
+    await safeCancel(paymentId, '중복 신청으로 인한 환불')
     return { status: 'already_registered', message: '이미 신청한 모임입니다' }
   }
 
   // not_found, not_active, etc.
-  await safeCancel(paymentKey, '모임 상태 오류')
+  await safeCancel(paymentId, '모임 상태 오류')
   return { status: 'error', message: '신청할 수 없는 모임입니다' }
 }
 
@@ -146,10 +151,10 @@ export async function processPaymentConfirmation(
  * Safe cancel — never throws.
  * On refund failure, keep confirmed status (better than no money AND no registration).
  */
-async function safeCancel(paymentKey: string, reason: string): Promise<void> {
+async function safeCancel(paymentId: string, reason: string): Promise<void> {
   try {
-    await cancelPayment(paymentKey, reason)
+    await cancelPayment(paymentId, reason)
   } catch (e) {
-    console.error(`[payment] Refund failed for ${paymentKey}:`, e)
+    console.error(`[payment] Refund failed for ${paymentId}:`, e)
   }
 }

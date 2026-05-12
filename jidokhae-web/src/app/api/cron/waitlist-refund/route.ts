@@ -7,7 +7,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getTomorrowKST } from '@/lib/kst'
-import { cancelPayment, getPayment } from '@/lib/tosspayments'
+import { cancelPayment, getPayment } from '@/lib/portone'
 import { sendWaitlistRefundedNotification } from '@/lib/notification'
 
 export async function GET(request: NextRequest) {
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
   // 병렬 환불 (Vercel 10s 타임아웃 대응 — Promise.allSettled로 부분 실패 허용)
   const results = await Promise.allSettled(
     regsToRefund.map(async (reg) => {
-      // 계좌이체: TossPayments 환불 스킵, DB만 업데이트
+      // 계좌이체: PortOne 환불 스킵, DB만 업데이트
       if (reg.payment_method === 'transfer') {
         await supabase.from('registrations')
           .update({
@@ -64,13 +64,13 @@ export async function GET(request: NextRequest) {
         return
       }
 
-      // TossPayments 전액 환불 (재시도 안전: 이미 환불된 건 허용)
+      // PortOne 전액 환불 (재시도 안전: 이미 환불된 건 허용)
       if (reg.payment_id) {
         try {
           await cancelPayment(reg.payment_id, '대기 미승격 자동 환불')
         } catch {
           const payment = await getPayment(reg.payment_id)
-          if (payment.status !== 'CANCELED') {
+          if (payment.status !== 'CANCELLED') {
             throw new Error(`환불 실패: ${reg.id}`)
           }
         }
