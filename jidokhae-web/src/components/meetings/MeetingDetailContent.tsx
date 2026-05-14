@@ -9,6 +9,9 @@ import Link from 'next/link'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
+import RegistrationStatusBadge from '@/components/meetings/RegistrationStatusBadge'
+import RegistrationHero from '@/components/meetings/RegistrationHero'
+import ParticipantsList from '@/components/meetings/ParticipantsList'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 
 export default async function MeetingDetailContent({ id }: { id: string }) {
@@ -23,7 +26,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     notFound()
   }
 
-  const [countsResult, myRegResult, myWaitlistResult, pendingResult, settings] = await Promise.all([
+  const [countsResult, myRegResult, myWaitlistResult, pendingResult, participantsResult, settings] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
@@ -46,6 +49,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
       .eq('meeting_id', id)
       .eq('status', 'pending_transfer')
       .limit(1),
+    supabase.rpc('get_meeting_participant_nicknames', { p_meeting_id: id }),
     getSiteSettings(),
   ])
 
@@ -58,6 +62,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   if (myWaitlistResult.error) {
     throw new Error(`대기 신청 조회 실패: ${myWaitlistResult.error.message}`)
   }
+  // participantsResult.error는 명단이 부가 기능이라 throw 대신 무시 (빈 배열로 폴백)
 
   const profile = await getProfile(user.id)
 
@@ -76,6 +81,24 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   const role = profile.role ?? 'member'
   const isAdmin = role === 'admin'
   const isEditorOrAdmin = role === 'admin' || role === 'editor'
+
+  const participantNicknames = (participantsResult.data as { nickname: string }[] | null)
+    ?.map((row) => row.nickname)
+    .filter((n): n is string => typeof n === 'string' && n.length > 0) ?? []
+
+  // confirmed/pending_transfer 모두 hero가 흡수 (운영자 입금 확인 지연을 회원이 체감하지 않게)
+  // 작은 상단 뱃지는 waitlisted만
+  const registrationStatus: 'waitlisted' | null = hasWaitlisted ? 'waitlisted' : null
+
+  // 회원 입장에서 입금 후 운영자 확인 전이라도 "신청 완료"처럼 보이게 — 명단/카운트 모두 confirmed와 동등 취급
+  const isBookedSelf = hasConfirmed || hasPendingTransfer
+
+  // 카운트 마스킹 해제 조건: 운영자 또는 본인이 정원에 차지한 경우 (confirmed/pending_transfer)
+  const showAccurateCount = isEditorOrAdmin || isBookedSelf
+
+  // 입금자명: "M/D 닉네임" — 은행 입금자명 글자수(한글 12자) 한도 + 운영자 식별 편의
+  const [, mm, dd] = typedMeeting.date.split('-')
+  const depositorName = `${Number(mm)}/${Number(dd)} ${profile.nickname}`
 
   if (typedMeeting.status === 'deleting' && !isAdmin) {
     notFound()
@@ -106,15 +129,24 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         title={typedMeeting.title}
         fee={typedMeeting.fee}
       />
+      {isBookedSelf && (
+        <RegistrationHero
+          nickname={profile.nickname || ''}
+          meetingDate={typedMeeting.date}
+          meetingTime={typedMeeting.time}
+          kstToday={kstToday}
+        />
+      )}
+      <RegistrationStatusBadge status={registrationStatus} />
       <MeetingDetailInfo
         meeting={typedMeeting}
         confirmedCount={confirmedCount}
         capacity={typedMeeting.capacity}
-        isPrivileged={isEditorOrAdmin}
+        isPrivileged={showAccurateCount}
       />
 
       {hasPendingTransfer && (
-        <div className="mx-5 mt-4 space-y-3">
+        <div className="mt-4 space-y-3">
           <div className="bg-accent-50 border border-accent-200 rounded-xl p-4 text-center">
             <p className="text-sm font-medium text-accent-700">입금 확인 대기 중입니다</p>
             <p className="text-xs text-accent-600 mt-1">아직 입금 전이라면 아래 계좌로 입금해주세요</p>
@@ -125,6 +157,10 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
             bankHolder={settings.bank_holder ?? ''}
           />
         </div>
+      )}
+
+      {(isBookedSelf || isEditorOrAdmin) && (
+        <ParticipantsList nicknames={participantNicknames} />
       )}
 
       <MeetingActionButton
@@ -146,12 +182,12 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         bankName={settings.bank_name ?? ''}
         bankAccount={settings.bank_account ?? ''}
         bankHolder={settings.bank_holder ?? ''}
-        depositorName={`${typedMeeting.title} ${profile.nickname}`}
+        depositorName={depositorName}
       />
 
       {isEditorOrAdmin && (
         <div
-          className="mx-5 mt-8 rounded-[var(--radius-md)] p-4"
+          className="mt-8 rounded-[var(--radius-md)] p-4"
           style={{ backgroundColor: 'var(--color-surface-100)', border: '1px solid var(--color-surface-300)' }}
         >
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-500">
