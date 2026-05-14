@@ -81,28 +81,38 @@ export default function MeetingActionButton({
     if (loading) return
     setLoading(true)
 
-    // 계좌이체 모드: 결제 방법 선택 모달
-    if (paymentMode === 'transfer_only') {
+    // both / transfer_only: 결제 방법 선택 모달 표시
+    // 'both'면 카드+계좌이체 둘 다 활성, 'transfer_only'면 카드는 "준비 중"으로 비활성
+    if (paymentMode === 'transfer_only' || paymentMode === 'both') {
       trackEvent('begin_checkout', {
         item_id: meetingId,
         item_name: meetingTitle,
         value: meetingFee,
         currency: 'KRW',
         registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
-        payment_method: 'transfer',
       })
       setRegisterPhase('method')
       setLoading(false)
       return
     }
 
-    // 카드결제 모드: PortOne V2 SDK (카카오페이 단일 채널, 카드 + 카카오페이머니 동시 노출)
+    // card_only 또는 미지정: 카드결제 직행 (모달 생략)
+    await handleCardPayment()
+  }
+
+  // --- Card Payment (PortOne V2) ---
+  // both 모드에서 모달의 "카드결제" 옵션 클릭 시, 또는 card_only 모드에서 신청하기 클릭 시 호출됨.
+  async function handleCardPayment() {
+    setRegisterPhase('idle') // 모달 닫기 (열려있던 경우)
+    setLoading(true)
+
     trackEvent('begin_checkout', {
       item_id: meetingId,
       item_name: meetingTitle,
       value: meetingFee,
       currency: 'KRW',
       registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
+      payment_method: 'card',
     })
 
     const meetingId8 = meetingId.replace(/-/g, '').slice(0, 8)
@@ -680,25 +690,47 @@ export default function MeetingActionButton({
                   결제 방법을 선택해주세요
                 </h3>
                 <div className="mt-5 space-y-3">
-                  {/* 카드결제 — disabled */}
-                  <div
-                    className="rounded-[var(--radius-lg)] p-4 opacity-50 cursor-not-allowed"
-                    style={{
-                      backgroundColor: 'var(--color-surface-100)',
-                      border: '1px solid var(--color-surface-300)',
-                    }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-400">
-                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                        <line x1="1" y1="10" x2="23" y2="10" />
-                      </svg>
-                      <div>
-                        <p className="text-sm font-semibold text-primary-700">카드결제</p>
-                        <p className="text-xs text-primary-400 mt-0.5">준비 중입니다</p>
+                  {/* 카드결제 — 'both' 모드면 활성, 'transfer_only' 모드면 비활성 */}
+                  {paymentMode === 'both' ? (
+                    <button
+                      onClick={handleCardPayment}
+                      className="w-full rounded-[var(--radius-lg)] p-4 text-left transition-all hover:bg-primary-100 active:scale-[0.98]"
+                      style={{
+                        backgroundColor: 'var(--color-primary-50)',
+                        border: '1px solid var(--color-primary-200)',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-600">
+                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                          <line x1="1" y1="10" x2="23" y2="10" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-semibold text-primary-800">카드결제</p>
+                          <p className="text-xs text-primary-500 mt-0.5">카카오페이 (카드 + 카카오페이머니)</p>
+                        </div>
+                      </div>
+                    </button>
+                  ) : (
+                    <div
+                      className="rounded-[var(--radius-lg)] p-4 opacity-50 cursor-not-allowed"
+                      style={{
+                        backgroundColor: 'var(--color-surface-100)',
+                        border: '1px solid var(--color-surface-300)',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-400">
+                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                          <line x1="1" y1="10" x2="23" y2="10" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-semibold text-primary-700">카드결제</p>
+                          <p className="text-xs text-primary-400 mt-0.5">준비 중입니다</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 계좌이체 — active */}
                   <button
