@@ -4,8 +4,8 @@
     {
       "name": "dev",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev", "--dir", "jidokhae-web"],
-      "port": 3000
+      "runtimeArgs": ["jidokhae-web/node_modules/next/dist/bin/next", "dev", "jidokhae-web"],
+      "autoPort": true
     }
   ]
 }
