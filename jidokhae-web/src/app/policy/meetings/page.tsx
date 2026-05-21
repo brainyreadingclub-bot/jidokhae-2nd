@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { getKSTToday } from '@/lib/kst'
 import { getSiteSettings } from '@/lib/site-settings'
+import { startDiagnostic } from '@/lib/diagnostic-log'
 import MeetingCard from '@/components/meetings/MeetingCard'
 import DateSectionHeader from '@/components/meetings/DateSectionHeader'
 import EmptyMeetings from '@/components/meetings/EmptyMeetings'
@@ -14,8 +15,17 @@ export const metadata: Metadata = {
 }
 
 export default async function PublicMeetingsPage() {
+  // 진단 로그 — 2026-05-19 인시던트 후 임시 추가, 안정화 후 제거 예정
+  const diag = startDiagnostic('policy/meetings')
+  diag.stage('start')
+
   const supabase = await createClient()
+
+  diag.stage('getSiteSettings start')
+  const tSettings = diag.elapsed()
   const settings = await getSiteSettings()
+  diag.stage('getSiteSettings done', ` in ${diag.elapsed() - tSettings}ms`)
+
   const regionsLabel = settings['active_regions_label'] ?? '경주 · 포항'
   const kstToday = getKSTToday()
 
@@ -23,6 +33,8 @@ export default async function PublicMeetingsPage() {
   // 제외하고 공개 안전 컬럼만 명시 (Phase 3 M7 Step 2.5, 검토문서 §4 커밋 4)
   // 신청자에게만 노출되어야 할 카카오톡 오픈채팅 URL이나 상세 주소가
   // API 응답으로 비로그인자에게 전달되는 것을 차단.
+  diag.stage('meetings.select start')
+  const tMeetings = diag.elapsed()
   const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
     .select('id, title, description, date, time, location, venue_id, capacity, fee, status, region, is_featured, created_at, updated_at')
@@ -30,6 +42,7 @@ export default async function PublicMeetingsPage() {
     .gte('date', kstToday)
     .order('date', { ascending: true })
     .order('time', { ascending: true })
+  diag.stage('meetings.select done', ` in ${diag.elapsed() - tMeetings}ms (rows: ${meetings?.length ?? 0})${meetingsError ? ` ERROR: ${meetingsError.message}` : ''}`)
 
   if (meetingsError) {
     throw new Error(`모임 목록 조회 실패: ${meetingsError.message}`)
@@ -40,10 +53,13 @@ export default async function PublicMeetingsPage() {
   let countMap = new Map<string, number>()
   if (typedMeetings.length > 0) {
     const meetingIds = typedMeetings.map((m) => m.id)
+    diag.stage('get_confirmed_counts start')
+    const tCounts = diag.elapsed()
     const { data: countsResult, error: countsError } = await supabase.rpc(
       'get_confirmed_counts',
       { meeting_ids: meetingIds }
     )
+    diag.stage('get_confirmed_counts done', ` in ${diag.elapsed() - tCounts}ms${countsError ? ` ERROR: ${countsError.message}` : ''}`)
     if (countsError) {
       throw new Error(`참가자 수 조회 실패: ${countsError.message}`)
     }
@@ -56,6 +72,8 @@ export default async function PublicMeetingsPage() {
       ),
     )
   }
+
+  diag.stage('complete')
 
   return (
     <div className="flex min-h-screen flex-col">
