@@ -30,7 +30,7 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 - `src/app/(admin)/` — Admin pages. Phase 3 M7 Step 2에서 데스크톱 사이드바 + 모바일 드로어 레이아웃으로 재구성. 라우트: `admin/` (허브), `admin/meetings` (지역 필터 포함 목록), `admin/meetings/[id]` (상세 + 신청자), `admin/meetings/new`, `admin/meetings/[id]/edit`, `admin/members`, `admin/settings`, `admin/banners` (M8 placeholder, admin 전용), `admin/quotes` (M8 placeholder), `admin/settlements` (M10 placeholder, admin 전용)
 - `src/app/auth/` — Login page + OAuth callback (auth layout includes Footer for PG 심사)
 - `src/app/policy/` — Public pages (about, terms, privacy, refund, meetings list/detail — no auth required)
-- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, meetings/[id]/delete, webhooks/tosspayments, cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members, admin/settings, admin/venues, admin/venues/[id], admin/venues/settle)
+- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, registrations/transfer, meetings/[id]/delete, webhooks/portone, webhooks/tosspayments (legacy), cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members, admin/settings, admin/venues, admin/venues/[id], admin/venues/settle, admin/registrations/confirm-transfer, admin/registrations/mark-refunded)
 
 ### Middleware (`src/middleware.ts`)
 Refreshes Supabase session on every request. Redirects unauthenticated → `/auth/login`, authenticated → away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth).
@@ -41,11 +41,12 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - **API Routes**: Use `src/lib/supabase/admin.ts` (service_role key, bypasses RLS)
 
 ### Business Logic (`src/lib/`)
-- `payment.ts` — Payment confirmation flow
-- `cancel.ts` — User cancellation flow (returns meetingId for promotion trigger)
+- `payment.ts` — Payment confirmation flow (PortOne V2 KakaoPay 채널)
+- `cancel.ts` — User cancellation flow (returns meetingId for promotion trigger). PortOne `cancelPayment` 사용
 - `waitlist.ts` — 대기 승격 래퍼 (promote RPC + 알림톡) + 대기 취소 (100% 환불)
 - `refund.ts` — Refund amount calculation
-- `tosspayments.ts` — TossPayments API wrapper
+- `portone.ts` — PortOne V2 server SDK wrapper (`getPayment`, `cancelPayment`). KakaoPay 채널 (EASY_PAY payMethod = 카드 + 카카오페이머니 동시 지원)
+- `tosspayments.ts` — (legacy) TossPayments API wrapper. PR #28에서 PortOne로 마이그레이션 완료. 미사용 상태로 잔존 — 롤백 안전망 목적
 - `kst.ts` — KST date utilities (getKSTToday, getTomorrowKST, formatKoreanDate, formatKoreanDateFull, formatKoreanTime, formatFee, getDaysUntil, getButtonState)
 - `auth.ts` — Cached `getUser()` for server-side user fetching (safe only after middleware session refresh)
 - `profile.ts` — Cached `getProfile(userId)` for server-side profile fetching
