@@ -144,6 +144,15 @@ export async function sendRegistrationConfirmNotification(
 
   if (!meeting) return
 
+  // registration 결제 금액 조회 (스텝 할인 시 paid_amount < fee)
+  const { data: registration } = await supabase
+    .from('registrations')
+    .select('paid_amount')
+    .eq('id', registrationId)
+    .single()
+
+  const paidAmount = registration?.paid_amount ?? (meeting as Meeting).fee
+
   const profile = await getProfileForNotification(userId)
   const displayName = profile.real_name || profile.nickname
 
@@ -159,7 +168,7 @@ export async function sendRegistrationConfirmNotification(
       '#{모임명}': (meeting as Meeting).title,
       '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
       '#{장소}': (meeting as Meeting).location,
-      '#{결제금액}': formatFee((meeting as Meeting).fee),
+      '#{결제금액}': formatFee(paidAmount),
     },
   })
 }
@@ -181,6 +190,14 @@ export async function sendWaitlistConfirmNotification(
 
   if (!meeting) return
 
+  const { data: registration } = await supabase
+    .from('registrations')
+    .select('paid_amount')
+    .eq('id', registrationId)
+    .single()
+
+  const paidAmount = registration?.paid_amount ?? (meeting as Meeting).fee
+
   const profile = await getProfileForNotification(userId)
   const displayName = profile.real_name || profile.nickname
 
@@ -196,7 +213,7 @@ export async function sendWaitlistConfirmNotification(
       '#{모임명}': (meeting as Meeting).title,
       '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
       '#{장소}': (meeting as Meeting).location,
-      '#{결제금액}': formatFee((meeting as Meeting).fee),
+      '#{결제금액}': formatFee(paidAmount),
     },
   })
 }
@@ -218,6 +235,14 @@ export async function sendWaitlistPromotedNotification(
 
   if (!meeting) return
 
+  const { data: registration } = await supabase
+    .from('registrations')
+    .select('paid_amount')
+    .eq('id', registrationId)
+    .single()
+
+  const paidAmount = registration?.paid_amount ?? (meeting as Meeting).fee
+
   const profile = await getProfileForNotification(userId)
   const displayName = profile.real_name || profile.nickname
 
@@ -233,7 +258,7 @@ export async function sendWaitlistPromotedNotification(
       '#{모임명}': (meeting as Meeting).title,
       '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
       '#{장소}': (meeting as Meeting).location,
-      '#{결제금액}': formatFee((meeting as Meeting).fee),
+      '#{결제금액}': formatFee(paidAmount),
       '#{모임ID}': (meeting as Meeting).id,
     },
   })

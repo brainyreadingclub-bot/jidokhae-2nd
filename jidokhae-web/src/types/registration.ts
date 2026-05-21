@@ -13,6 +13,7 @@ export type Registration = {
   cancelled_at: string | null
   attended: boolean | null
   payment_method: 'card' | 'transfer'
+  is_staff_discount: boolean
 }
 
 export type RegistrationWithMeeting = Registration & {
