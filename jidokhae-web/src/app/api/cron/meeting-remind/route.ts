@@ -18,6 +18,7 @@ type RemindTask = {
   meeting: Meeting
   registrationId: string
   userId: string
+  paidAmount: number | null
   profile: {
     phone: string | null
     real_name: string | null
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     const { data: registrations } = await supabase
       .from('registrations')
-      .select('id, user_id, profiles(phone, real_name, nickname)')
+      .select('id, user_id, paid_amount, profiles(phone, real_name, nickname)')
       .eq('meeting_id', meeting.id)
       .eq('status', 'confirmed')
 
@@ -78,6 +79,7 @@ export async function GET(request: NextRequest) {
         meeting,
         registrationId: reg.id,
         userId: reg.user_id,
+        paidAmount: reg.paid_amount,
         profile: profileData,
       })
     }
@@ -85,7 +87,7 @@ export async function GET(request: NextRequest) {
 
   // 병렬 발송 (Vercel 10s 타임아웃 대응 — Promise.allSettled로 부분 실패 허용)
   const results = await Promise.allSettled(
-    tasks.map(({ meeting, registrationId, userId, profile }) => {
+    tasks.map(({ meeting, registrationId, userId, paidAmount, profile }) => {
       const displayName = profile.real_name || profile.nickname
       return sendNotification({
         type: 'meeting_remind',
@@ -99,7 +101,7 @@ export async function GET(request: NextRequest) {
           '#{모임명}': meeting.title,
           '#{모임일시}': `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)}`,
           '#{장소}': meeting.location,
-          '#{참가비}': formatFee(meeting.fee),
+          '#{참가비}': formatFee(paidAmount ?? meeting.fee),
           '#{모임ID}': meeting.id,
         },
       })
