@@ -32,6 +32,7 @@ type ModalState = RoleModal | StaffModal | null
 const SECTIONS = [
   { key: 'admin', label: '운영자' },
   { key: 'editor', label: '운영진' },
+  { key: 'staff', label: '스텝' },
   { key: 'member', label: '회원' },
 ] as const
 
@@ -57,9 +58,15 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
   })
 
   // 역할별 그룹화 + 섹션 내 정렬
-  function getGroup(role: string) {
+  // 'staff' 그룹: role='member' AND is_staff=true (운영진/운영자는 자동 자격이라 별도 노출 안 함)
+  // 'member' 그룹: role='member' AND is_staff !== true (순수 일반 회원만)
+  function getGroup(key: string) {
     return filtered
-      .filter((p) => p.role === role)
+      .filter((p) => {
+        if (key === 'staff') return p.role === 'member' && p.is_staff === true
+        if (key === 'member') return p.role === 'member' && p.is_staff !== true
+        return p.role === key
+      })
       .sort((a, b) => {
         if (!a.profile_completed_at && b.profile_completed_at) return 1
         if (a.profile_completed_at && !b.profile_completed_at) return -1
