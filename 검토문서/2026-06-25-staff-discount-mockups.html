@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>스텝 할인 UI 시안 — 지독해</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+<style>
+  /* ═══════════════════════════════════════════════════════════
+     지독해 디자인 토큰 (globals.css에서 직접 복사)
+     ═══════════════════════════════════════════════════════════ */
+  :root {
+    --color-primary-50: #F0F7F4;
+    --color-primary-100: #D9EDE3;
+    --color-primary-200: #B3DBC7;
+    --color-primary-300: #7CC0A0;
+    --color-primary-400: #4A9E76;
+    --color-primary-500: #2D7D5F;
+    --color-primary-600: #1B6347;
+    --color-primary-700: #1B4332;
+    --color-primary-800: #163528;
+    --color-primary-900: #0F2318;
+
+    --color-accent-50: #FFF5F2;
+    --color-accent-100: #FFE8E0;
+    --color-accent-200: #FFCBB8;
+    --color-accent-300: #F5A889;
+    --color-accent-400: #E3825C;
+    --color-accent-500: #C75B3A;
+    --color-accent-600: #A84A2E;
+    --color-accent-700: #863B25;
+
+    --color-neutral-50: #FDFBF7;
+    --color-neutral-100: #FAF6EF;
+    --color-neutral-200: #F0EBE1;
+    --color-neutral-300: #E4DDD1;
+    --color-neutral-400: #C4BAA8;
+    --color-neutral-500: #9E9484;
+    --color-neutral-600: #7A7164;
+    --color-neutral-700: #5C544A;
+    --color-neutral-800: #3D3732;
+    --color-neutral-900: #1F1B17;
+
+    --color-surface-50: #FEFCF9;
+    --color-surface-100: #FDF8F1;
+    --color-surface-200: #FAF3E8;
+    --color-surface-300: #F5EBD9;
+
+    --color-success: #2D7D5F;
+    --color-warning: #D9802A;
+    --color-error: #B5403A;
+
+    --font-display: 'Noto Serif KR', Georgia, serif;
+    --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+
+    --shadow-sm: 0 1px 3px rgba(45, 90, 61, 0.06), 0 1px 2px rgba(45, 90, 61, 0.04);
+    --shadow-md: 0 8px 24px rgba(45, 90, 61, 0.08), 0 2px 6px rgba(45, 90, 61, 0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; }
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-surface-100);
+    color: var(--color-neutral-800);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+    padding: 40px 20px 80px;
+  }
+
+  /* Subtle noise */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 1;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     문서 레이아웃
+     ═══════════════════════════════════════════════════════════ */
+  .doc {
+    max-width: 1280px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .doc-header {
+    margin-bottom: 56px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--color-neutral-300);
+  }
+  .doc-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-primary-600);
+    margin-bottom: 12px;
+  }
+  .doc-title {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-primary-900);
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .doc-subtitle {
+    font-size: 15px;
+    color: var(--color-neutral-700);
+    max-width: 720px;
+  }
+  .doc-meta {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--color-neutral-500);
+    font-feature-settings: 'tnum';
+  }
+
+  /* 영역 섹션 */
+  .section {
+    margin-bottom: 72px;
+  }
+  .section-head {
+    margin-bottom: 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .section-number {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-accent-600);
+    letter-spacing: 0.05em;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-primary-900);
+    letter-spacing: -0.01em;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--color-neutral-700);
+    margin-bottom: 24px;
+    max-width: 720px;
+    line-height: 1.7;
+  }
+
+  /* 옵션 그리드 */
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .option {
+    background: var(--color-bg-elevated, #FFFFFF);
+    border: 1px solid var(--color-neutral-300);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 200ms ease;
+  }
+  .option.recommended {
+    border-color: var(--color-primary-400);
+    box-shadow: var(--shadow-md);
+  }
+  .option-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--color-neutral-200);
+    background: var(--color-neutral-50);
+  }
+  .option.recommended .option-label {
+    background: var(--color-primary-50);
+    border-bottom-color: var(--color-primary-200);
+  }
+  .option-name {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-neutral-700);
+  }
+  .option.recommended .option-name {
+    color: var(--color-primary-700);
+  }
+  .option-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-500);
+    color: white;
+  }
+
+  /* 시안 캔버스 (모바일 화면 흉내) */
+  .preview {
+    padding: 24px 16px;
+    background: var(--color-surface-100);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 140px;
+  }
+
+  .option-meta {
+    padding: 14px 18px 16px;
+    border-top: 1px solid var(--color-neutral-200);
+    background: white;
+  }
+  .meta-row {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.55;
+    margin-bottom: 6px;
+  }
+  .meta-row:last-child { margin-bottom: 0; }
+  .meta-icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: white;
+    margin-top: 3px;
+  }
+  .meta-icon.pro { background: var(--color-primary-500); }
+  .meta-icon.con { background: var(--color-neutral-400); }
+  .meta-text {
+    color: var(--color-neutral-700);
+  }
+
+  /* 시니어 추천 박스 */
+  .recommendation {
+    background: var(--color-primary-50);
+    border-left: 3px solid var(--color-primary-500);
+    padding: 16px 20px;
+    margin-top: 28px;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  }
+  .recommendation-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--color-primary-700);
+    margin-bottom: 6px;
+  }
+  .recommendation-text {
+    font-size: 14px;
+    color: var(--color-primary-900);
+    line-height: 1.7;
+  }
+  .recommendation-text strong {
+    font-weight: 700;
+    color: var(--color-primary-700);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     실제 컴포넌트 스타일 (지독해 패턴)
+     ═══════════════════════════════════════════════════════════ */
+
+  /* 가격 표시 */
+  .price-block {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-sans);
+  }
+  .price-main {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-primary-900);
+    letter-spacing: -0.01em;
+    font-feature-settings: 'tnum';
+  }
+  .price-strike {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-neutral-500);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    font-feature-settings: 'tnum';
+  }
+  .price-meta {
+    font-size: 12px;
+    color: var(--color-primary-600);
+    font-weight: 600;
+  }
+  .price-meta-muted {
+    font-size: 12px;
+    color: var(--color-neutral-500);
+  }
+
+  /* 가격 단독 레이아웃 (모임 상세 헤더처럼) */
+  .meeting-info-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--color-neutral-200);
+  }
+  .info-label {
+    font-size: 13px;
+    color: var(--color-neutral-600);
+    min-width: 60px;
+  }
+
+  /* inline strip (RegistrationHero 패턴) */
+  .inline-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin-top: 10px;
+  }
+  .inline-strip-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-primary-500);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .inline-strip-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary-800);
+    letter-spacing: -0.01em;
+  }
+  .inline-strip-sub {
+    font-size: 12px;
+    color: var(--color-primary-600);
+    letter-spacing: -0.01em;
+  }
+  .inline-strip-pill {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-feature-settings: 'tnum';
+  }
+
+  /* admin 회원 행 */
+  .member-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-neutral-200);
+    background: white;
+  }
+  .member-info { flex: 1; min-width: 0; }
+  .member-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-primary-800);
+    margin-bottom: 2px;
+  }
+  .member-meta {
+    font-size: 11px;
+    color: var(--color-neutral-500);
+  }
+  .role-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid;
+  }
+  .role-badge.member { color: var(--color-neutral-600); border-color: var(--color-neutral-300); background: white; }
+  .role-badge.editor { color: var(--color-primary-700); border-color: var(--color-primary-300); background: var(--color-primary-50); }
+  .role-badge.admin { color: var(--color-accent-700); border-color: var(--color-accent-300); background: var(--color-accent-50); }
+
+  /* staff 토글 (옵션별) */
+  .staff-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-primary-300);
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    cursor: pointer;
+  }
+  .staff-pill.off {
+    border-color: var(--color-neutral-300);
+    background: white;
+    color: var(--color-neutral-500);
+  }
+  .staff-pill svg { width: 10px; height: 10px; }
+
+  /* select 패턴 (옵션 B) */
+  .role-select {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 26px 5px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-neutral-300);
+    background: white url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%237A7164' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 8px center;
+    color: var(--color-primary-700);
+    appearance: none;
+    cursor: pointer;
+  }
+
+  /* toggle switch (옵션 C) */
+  .switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-500);
+    cursor: pointer;
+    transition: background 200ms;
+  }
+  .switch.off { background: var(--color-neutral-300); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 18px;
+    width: 16px; height: 16px;
+    background: white;
+    border-radius: 50%;
+    transition: left 200ms;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+  .switch.off::after { left: 2px; }
+  .switch-wrap { display: flex; align-items: center; gap: 8px; }
+  .switch-label { font-size: 11px; font-weight: 600; color: var(--color-neutral-600); }
+
+  /* 결제 확인 화면 영수증 */
+  .receipt {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 20px 18px;
+    border: 1px solid var(--color-neutral-200);
+  }
+  .receipt-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary-900);
+    margin-bottom: 14px;
+  }
+  .receipt-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    padding: 6px 0;
+  }
+  .receipt-line.muted .receipt-key,
+  .receipt-line.muted .receipt-val {
+    color: var(--color-neutral-500);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .receipt-line.total {
+    border-top: 1px dashed var(--color-neutral-300);
+    margin-top: 10px;
+    padding-top: 14px;
+  }
+  .receipt-line.total .receipt-key {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-primary-800);
+  }
+  .receipt-line.total .receipt-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--color-primary-900);
+    font-feature-settings: 'tnum';
+  }
+  .receipt-key { color: var(--color-neutral-700); }
+  .receipt-val { color: var(--color-neutral-800); font-feature-settings: 'tnum'; }
+  .receipt-savings {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--color-primary-600);
+    font-weight: 600;
+  }
+
+  /* 운영자 신청자 행 */
+  .applicant-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-neutral-200);
+    background: white;
+    gap: 12px;
+  }
+  .applicant-info { flex: 1; }
+  .applicant-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary-800);
+  }
+  .applicant-meta {
+    font-size: 11px;
+    color: var(--color-neutral-500);
+    margin-top: 2px;
+  }
+  .applicant-amount {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary-800);
+    text-align: right;
+    font-feature-settings: 'tnum';
+  }
+  .applicant-amount-meta {
+    font-size: 10px;
+    color: var(--color-primary-600);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .staff-mini-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+    margin-left: 6px;
+    letter-spacing: 0;
+    vertical-align: middle;
+  }
+  .row-side-bar {
+    width: 3px;
+    align-self: stretch;
+    background: var(--color-primary-400);
+    border-radius: var(--radius-full);
+    margin: 4px 0;
+  }
+
+  /* 슬롯 마감 영역 */
+  .slot-meta {
+    font-size: 11px;
+    color: var(--color-neutral-500);
+    margin-top: 4px;
+  }
+  .slot-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--color-neutral-500);
+    cursor: help;
+    margin-top: 4px;
+  }
+  .slot-tooltip-icon {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 1px solid var(--color-neutral-400);
+    color: var(--color-neutral-500);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+  }
+
+  /* 가장 추천 옵션 배경 강조 */
+  .preview.featured {
+    background: linear-gradient(180deg, var(--color-surface-100) 0%, var(--color-surface-200) 100%);
+  }
+
+  /* 모바일 viewport 시뮬레이션 (영역 1, 5) */
+  .mobile-frame {
+    max-width: 380px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* footer */
+  .doc-footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-neutral-300);
+    font-size: 12px;
+    color: var(--color-neutral-500);
+    text-align: center;
+  }
+
+  @media (max-width: 720px) {
+    .doc-title { font-size: 28px; }
+    body { padding: 24px 16px 60px; }
+    .options { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="doc">
+  <!-- 문서 헤더 -->
+  <header class="doc-header">
+    <div class="doc-eyebrow">JIDOKHAE · 디자인 검토 · 2026-06-25</div>
+    <h1 class="doc-title">스텝 할인 UI 시안</h1>
+    <p class="doc-subtitle">
+      PR-2 회원 화면 통합 — 자격자(admin / editor / staff)에게만 적용되는 50% 할인의 시각 표현 5개 영역.
+      Editorial Organic 톤 안에서 less-ornament-first 원칙 (Refactoring UI · Linear · Notion 패턴) 적용.
+    </p>
+    <div class="doc-meta">
+      Primary: Deep Forest Green · Accent: Warm Terracotta · Surface: Warm Ivory
+      &middot; 폰트: Noto Serif KR (제목) + Pretendard (본문)
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       영역 1 — 모임 상세 가격 표시
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-number">01</span>
+      <h2 class="section-title">모임 상세 — 자격자 가격 표시</h2>
+    </div>
+    <p class="section-desc">
+      모임 상세 페이지의 참가비 영역. 일반 회원은 정가 10,000원 단독. 자격자(admin/editor/staff)에게만 50% 할인 시각 표식 추가.
+      4개 옵션 비교.
+    </p>
+
+    <div class="options">
+
+      <!-- 옵션 A: 취소선 -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">A — 취소선 병치</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div class="meeting-info-row">
+              <span class="info-label">참가비</span>
+              <div class="price-block">
+                <span class="price-strike">10,000원</span>
+                <span class="price-main">5,000원</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">할인 폭이 직관적</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">취소선이 시각 노이즈. 이커머스 톤이라 정기모임 분위기와 어긋남</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 B: 옆 메타 -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">B — 옆 메타</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div class="meeting-info-row">
+              <span class="info-label">참가비</span>
+              <div class="price-block">
+                <span class="price-main">5,000원</span>
+                <span class="price-meta">· 스텝 50%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">정보 밀도 효율적, 정가 안 보여서 깔끔</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">자격자가 본인 가격이 정가에서 얼마 깎였는지 모름</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 C: inline strip -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">C — Inline Strip</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div class="meeting-info-row">
+              <span class="info-label">참가비</span>
+              <span class="price-main">5,000원</span>
+            </div>
+            <div class="inline-strip">
+              <span class="inline-strip-icon">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="inline-strip-title">스텝 50% 적용</span>
+              <span class="inline-strip-sub">정가 10,000원</span>
+              <span class="inline-strip-pill">−5,000원</span>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">RegistrationHero와 시각 일관. 자격자에게 명확한 메시지</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">한 화면에 inline strip이 두 개 (신청 완료 + 스텝 할인) 생길 수 있어 누적 위험</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 D: 단독 + 작은 메타 (추천) -->
+      <div class="option recommended">
+        <div class="option-label">
+          <span class="option-name">D — 단독 + 작은 메타</span>
+          <span class="option-badge">추천</span>
+        </div>
+        <div class="preview featured">
+          <div class="mobile-frame">
+            <div class="meeting-info-row">
+              <span class="info-label">참가비</span>
+              <div style="display: flex; flex-direction: column;">
+                <span class="price-main">5,000원</span>
+                <span class="price-meta">스텝 가격이 적용되었습니다</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">less-ornament-first. 외피 추가 없이 inline meta로 충분</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">결제할 금액만 명확. 자격자 인지에 필요한 한 줄만</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">RegistrationHero strip과 시각 누적 안 생김</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       영역 2 — 결제 확인 화면
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-number">02</span>
+      <h2 class="section-title">결제 확인 화면</h2>
+    </div>
+    <p class="section-desc">
+      <code>/meetings/[id]/confirm</code> — 결제 직전. 영수증 패턴으로 정가 → 할인 → 결제 금액 흐름을 보여준다.
+      영역 1의 추천 옵션과 시각 일관성을 유지한 2가지 옵션 비교.
+    </p>
+
+    <div class="options">
+
+      <!-- 옵션 A: 영수증 -->
+      <div class="option recommended">
+        <div class="option-label">
+          <span class="option-name">A — 영수증 (정가/할인 라인 분리)</span>
+          <span class="option-badge">추천</span>
+        </div>
+        <div class="preview featured">
+          <div class="mobile-frame">
+            <div class="receipt">
+              <div class="receipt-title">결제 정보</div>
+              <div class="receipt-line muted">
+                <span class="receipt-key">참가비</span>
+                <span class="receipt-val">10,000원</span>
+              </div>
+              <div class="receipt-line">
+                <span class="receipt-key">스텝 할인 50%</span>
+                <span class="receipt-val" style="color: var(--color-primary-600); font-weight: 600;">−5,000원</span>
+              </div>
+              <div class="receipt-line total">
+                <span class="receipt-key">결제 금액</span>
+                <span class="receipt-val">5,000원</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">결제 직전 화면이라 정확한 금액 산출 과정이 명시되어야 신뢰</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">취소선 사용 정당화 — 결제/영수증 컨텍스트 (모임 상세와 달리)</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 B: 단순 (정가 라인 없음) -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">B — 단순 (결제 금액만)</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div class="receipt">
+              <div class="receipt-title">결제 정보</div>
+              <div class="receipt-line total" style="border: none; padding-top: 4px; margin-top: 0;">
+                <span class="receipt-key">결제 금액</span>
+                <span class="receipt-val">5,000원</span>
+              </div>
+              <div class="receipt-savings">↳ 스텝 가격 적용 (정가 10,000원에서 5,000원 할인)</div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">정말 간결. 줄 하나로 끝</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">결제 직전이라 회원이 "어떻게 5,000원 산출됐는지" 한 번에 안 보임</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       영역 3 — 운영자 신청자 목록
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-number">03</span>
+      <h2 class="section-title">운영자 신청자 목록 — 스텝 할인 표식</h2>
+    </div>
+    <p class="section-desc">
+      <code>admin/meetings/[id]</code> — 운영자가 신청자 한 행씩 보는 화면. 스텝 50%로 결제한 신청자만 시각 구분.
+      paid_amount는 이미 표시 중 — 표식 위치만 결정.
+    </p>
+
+    <div class="options">
+
+      <!-- 옵션 A: 닉네임 옆 pill -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">A — 닉네임 옆 pill</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--color-neutral-300);">
+              <div class="applicant-row">
+                <div class="applicant-info">
+                  <div class="applicant-name">초록고래</div>
+                  <div class="applicant-meta">경주 · 카드결제</div>
+                </div>
+                <div class="applicant-amount">10,000원</div>
+              </div>
+              <div class="applicant-row">
+                <div class="applicant-info">
+                  <div class="applicant-name">바람나무 <span class="staff-mini-pill">스텝 50%</span></div>
+                  <div class="applicant-meta">포항 · 카드결제</div>
+                </div>
+                <div class="applicant-amount">5,000원</div>
+              </div>
+              <div class="applicant-row" style="border-bottom: none;">
+                <div class="applicant-info">
+                  <div class="applicant-name">달빛호수</div>
+                  <div class="applicant-meta">경주 · 계좌이체</div>
+                </div>
+                <div class="applicant-amount">10,000원</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">스캔할 때 닉네임 옆 표식이 가장 먼저 눈에 들어옴</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">닉네임 길이에 따라 줄바꿈 발생 가능</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 B: 금액 옆 메타 (추천) -->
+      <div class="option recommended">
+        <div class="option-label">
+          <span class="option-name">B — 금액 아래 메타</span>
+          <span class="option-badge">추천</span>
+        </div>
+        <div class="preview featured">
+          <div class="mobile-frame">
+            <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--color-neutral-300);">
+              <div class="applicant-row">
+                <div class="applicant-info">
+                  <div class="applicant-name">초록고래</div>
+                  <div class="applicant-meta">경주 · 카드결제</div>
+                </div>
+                <div>
+                  <div class="applicant-amount">10,000원</div>
+                </div>
+              </div>
+              <div class="applicant-row">
+                <div class="applicant-info">
+                  <div class="applicant-name">바람나무</div>
+                  <div class="applicant-meta">포항 · 카드결제</div>
+                </div>
+                <div>
+                  <div class="applicant-amount">5,000원</div>
+                  <div class="applicant-amount-meta">스텝 50%</div>
+                </div>
+              </div>
+              <div class="applicant-row" style="border-bottom: none;">
+                <div class="applicant-info">
+                  <div class="applicant-name">달빛호수</div>
+                  <div class="applicant-meta">경주 · 계좌이체</div>
+                </div>
+                <div>
+                  <div class="applicant-amount">10,000원</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">표식이 금액 옆에 있어 "왜 5,000원인지" 직관적</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">기존 row 레이아웃 변경 없음 — 정합성 보존</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">운영자 입금 확인 시 5,000원/스텝 동시 확인</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 C: 좌측 컬러 막대 -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">C — 좌측 컬러 막대</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--color-neutral-300);">
+              <div class="applicant-row">
+                <div class="applicant-info">
+                  <div class="applicant-name">초록고래</div>
+                  <div class="applicant-meta">경주 · 카드결제</div>
+                </div>
+                <div class="applicant-amount">10,000원</div>
+              </div>
+              <div class="applicant-row">
+                <div class="row-side-bar"></div>
+                <div class="applicant-info" style="padding-left: 6px;">
+                  <div class="applicant-name">바람나무</div>
+                  <div class="applicant-meta">포항 · 카드결제 · 스텝</div>
+                </div>
+                <div class="applicant-amount">5,000원</div>
+              </div>
+              <div class="applicant-row" style="border-bottom: none;">
+                <div class="applicant-info">
+                  <div class="applicant-name">달빛호수</div>
+                  <div class="applicant-meta">경주 · 계좌이체</div>
+                </div>
+                <div class="applicant-amount">10,000원</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">전체 행이 구분되어 인지 효율 높음</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">상태 색상(deleting/cancelled)과 충돌 위험. 신호 누적</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       영역 4 — admin 회원 관리 staff 토글
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-number">04</span>
+      <h2 class="section-title">admin 회원 관리 — staff 토글</h2>
+    </div>
+    <p class="section-desc">
+      <code>admin/members</code> — 기존 role 토글(member ↔ editor) 옆에 staff 토글 추가.
+      role='member'에게만 표시 (admin/editor는 자동 자격이라 무의미). admin 전용 기능.
+    </p>
+
+    <div class="options">
+
+      <!-- 옵션 A: role badge 옆 staff pill (추천) -->
+      <div class="option recommended">
+        <div class="option-label">
+          <span class="option-name">A — Role badge + Staff pill</span>
+          <span class="option-badge">추천</span>
+        </div>
+        <div class="preview featured">
+          <div class="mobile-frame">
+            <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--color-neutral-300);">
+              <div class="member-row">
+                <div class="member-info">
+                  <div class="member-name">초록고래</div>
+                  <div class="member-meta">경주 · 2025-09 가입</div>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <span class="role-badge member">회원</span>
+                  <span class="staff-pill off" title="스텝 부여">스텝</span>
+                </div>
+              </div>
+              <div class="member-row">
+                <div class="member-info">
+                  <div class="member-name">바람나무</div>
+                  <div class="member-meta">포항 · 2024-12 가입</div>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <span class="role-badge member">회원</span>
+                  <span class="staff-pill" title="스텝 해제">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    스텝
+                  </span>
+                </div>
+              </div>
+              <div class="member-row" style="border-bottom: none;">
+                <div class="member-info">
+                  <div class="member-name">강은별</div>
+                  <div class="member-meta">경주 · 2024-08 가입</div>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <span class="role-badge editor">운영진</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">기존 role 토글 UI 그대로 보존 (변경 영향 최소)</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">editor에게는 staff pill 자동 숨김 — role과 분리된 독립 axis</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">on/off가 한눈에. 클릭 한 번으로 토글</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 B: role 토글 메뉴에 통합 -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">B — Role 셀렉트에 통합</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--color-neutral-300);">
+              <div class="member-row">
+                <div class="member-info">
+                  <div class="member-name">초록고래</div>
+                  <div class="member-meta">경주 · 2025-09 가입</div>
+                </div>
+                <select class="role-select">
+                  <option>회원</option>
+                  <option>스텝</option>
+                  <option>운영진</option>
+                </select>
+              </div>
+              <div class="member-row" style="border-bottom: none;">
+                <div class="member-info">
+                  <div class="member-name">바람나무</div>
+                  <div class="member-meta">포항 · 2024-12 가입</div>
+                </div>
+                <select class="role-select">
+                  <option>회원</option>
+                  <option selected>스텝</option>
+                  <option>운영진</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">선택지 통합 — 한 컨트롤로 다 처리</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">role과 staff는 독립 axis (editor + staff 가능). 셀렉트로 묶으면 데이터 모델 왜곡</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">기존 modal confirm UX와 충돌</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 C: 우측 별도 토글 스위치 -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">C — 우측 별도 토글 스위치</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--color-neutral-300);">
+              <div class="member-row">
+                <div class="member-info">
+                  <div class="member-name">초록고래</div>
+                  <div class="member-meta">경주 · 2025-09 가입</div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <span class="role-badge member">회원</span>
+                  <div class="switch-wrap">
+                    <span class="switch-label">스텝</span>
+                    <div class="switch off"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="member-row" style="border-bottom: none;">
+                <div class="member-info">
+                  <div class="member-name">바람나무</div>
+                  <div class="member-meta">포항 · 2024-12 가입</div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                  <span class="role-badge member">회원</span>
+                  <div class="switch-wrap">
+                    <span class="switch-label">스텝</span>
+                    <div class="switch"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">on/off 가장 명확한 affordance</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">컨트롤이 2개 — 행 폭 부담. 모바일 좁음</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">기존 role 토글이 modal 패턴인데 토글 스위치는 즉시 변경 — UX 일관성 깨짐</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       영역 5 — 자격자가 슬롯 마감 모임 본 가격
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-number">05</span>
+      <h2 class="section-title">자격자가 슬롯 마감 모임을 본 가격 영역</h2>
+    </div>
+    <p class="section-desc">
+      자격자지만 이 모임은 이미 스텝 2명이 신청해서 정가만 가능. 안내 메시지 유무 결정.
+      자격자만 보이는 화면이라 일반 회원 노출 위험 없음.
+    </p>
+
+    <div class="options">
+
+      <!-- 옵션 A: 정가만 (추천) -->
+      <div class="option recommended">
+        <div class="option-label">
+          <span class="option-name">A — 정가만 (메시지 없음)</span>
+          <span class="option-badge">추천</span>
+        </div>
+        <div class="preview featured">
+          <div class="mobile-frame">
+            <div class="meeting-info-row">
+              <span class="info-label">참가비</span>
+              <span class="price-main">10,000원</span>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">v1 단순 — 자격자도 그냥 정가로 인지하고 결제</span></div>
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">슬롯 카운트 별도 조회 안 함 (성능)</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">"왜 나는 5,000원 아닌가" 의문 가능 — v2에서 보강</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 B: 작은 메타 -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">B — 작은 메타</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div class="meeting-info-row">
+              <span class="info-label">참가비</span>
+              <div style="display: flex; flex-direction: column;">
+                <span class="price-main">10,000원</span>
+                <span class="slot-meta">스텝 할인 슬롯 마감 (2/2)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">자격자 의문 해소</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">슬롯 카운트 조회 필요 (모임 상세에서 추가 쿼리)</span></div>
+        </div>
+      </div>
+
+      <!-- 옵션 C: tooltip -->
+      <div class="option">
+        <div class="option-label">
+          <span class="option-name">C — Tooltip 안내</span>
+        </div>
+        <div class="preview">
+          <div class="mobile-frame">
+            <div class="meeting-info-row">
+              <span class="info-label">참가비</span>
+              <div style="display: flex; flex-direction: column;">
+                <span class="price-main">10,000원</span>
+                <span class="slot-tooltip">
+                  <span class="slot-tooltip-icon">?</span>
+                  스텝 할인 마감
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="option-meta">
+          <div class="meta-row"><span class="meta-icon pro">+</span><span class="meta-text">설명 노출 옵션화 — 보고 싶은 사람만 봄</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">모바일에서 tooltip UX 약함 (hover 없음)</span></div>
+          <div class="meta-row"><span class="meta-icon con">−</span><span class="meta-text">슬롯 카운트 조회 + tooltip 컴포넌트 추가 — 복잡도 가성비 낮음</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       시니어 종합 추천
+       ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-number">✓</span>
+      <h2 class="section-title">시니어 종합 추천</h2>
+    </div>
+
+    <div class="recommendation">
+      <div class="recommendation-label">RECOMMENDATION · LESS-ORNAMENT-FIRST</div>
+      <div class="recommendation-text">
+        <strong>① 영역 1: 옵션 D</strong> — 5,000원 단독 + "스텝 가격이 적용되었습니다" 작은 메타.
+        외피 추가 없이 inline meta로 충분. RegistrationHero strip과 시각 누적 안 생김.
+        <br><br>
+        <strong>② 영역 2: 옵션 A</strong> — 영수증 패턴 (정가/할인/총액 3줄).
+        결제 직전 컨텍스트에서는 산출 과정이 명시되어야 신뢰. 취소선이 여기서는 정당화됨.
+        <br><br>
+        <strong>③ 영역 3: 옵션 B</strong> — 금액 아래 "스텝 50%" 작은 메타.
+        기존 row 레이아웃 변경 없이 표식만 추가. 운영자가 "왜 5,000원인지" 직관적으로 인지.
+        <br><br>
+        <strong>④ 영역 4: 옵션 A</strong> — Role badge + Staff pill (독립 axis).
+        기존 role 토글 UI 보존, editor에게는 자동 숨김. modal confirm 패턴 그대로 적용.
+        <br><br>
+        <strong>⑤ 영역 5: 옵션 A</strong> — 정가만 (메시지 없음).
+        v1은 슬롯 카운트 조회 회피하여 성능 보호. 자격자 의문은 v2에서 보강.
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    JIDOKHAE × Editorial Organic · 디자인 시안 v1 · 2026-06-25<br>
+    구현은 단무지님 확정 후 PR-2에서 진행
+  </footer>
+</div>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
+import { getDisplayFee } from '@/lib/staff-slot'
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,12 +70,25 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // 신청자 자격 + 슬롯 기반 자동 할인가 결정 (RPC가 마지막 방어선)
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('role, is_staff')
+    .eq('id', user.id)
+    .single()
+
+  const { fee: paidAmount } = await getDisplayFee(
+    meetingId,
+    profile as { role: string; is_staff: boolean | null } | null,
+    meeting.fee,
+  )
+
   // 계좌이체 신청 RPC 호출
   const { data: result, error: rpcError } = await admin
     .rpc('register_transfer', {
       p_user_id: user.id,
       p_meeting_id: meetingId,
-      p_paid_amount: meeting.fee,
+      p_paid_amount: paidAmount,
     })
 
   if (rpcError) {
@@ -95,6 +109,21 @@ export async function POST(request: NextRequest) {
   if (result === 'already_registered') {
     return NextResponse.json(
       { status: 'error', message: '이미 신청한 모임입니다' },
+      { status: 400 },
+    )
+  }
+
+  // 스텝 할인 race 거부 (사전 슬롯 카운트 후 다른 사용자가 차지)
+  if (result === 'discount_not_eligible') {
+    return NextResponse.json(
+      { status: 'error', message: '스텝 할인 자격이 없습니다' },
+      { status: 400 },
+    )
+  }
+
+  if (result === 'staff_slot_full') {
+    return NextResponse.json(
+      { status: 'error', message: '스텝 할인 슬롯이 마감되었습니다. 정가로 다시 신청해주세요.' },
       { status: 400 },
     )
   }

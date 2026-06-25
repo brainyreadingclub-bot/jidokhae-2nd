@@ -110,13 +110,20 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
               <span className="text-primary-700 font-medium">{typedMeeting.location}</span>
             </div>
             <div
-              className="flex items-center gap-2 pt-2"
+              className="flex items-start gap-2 pt-2"
               style={{ borderTop: '1px solid var(--color-surface-300)' }}
             >
-              <span className="text-primary-400 text-xs w-10">결제</span>
-              <span className="font-bold text-accent-600">
-                {formatFee(paidAmount ?? typedMeeting.fee)}
-              </span>
+              <span className="text-primary-400 text-xs w-10 mt-0.5">결제</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-accent-600">
+                  {formatFee(paidAmount ?? typedMeeting.fee)}
+                </span>
+                {paidAmount !== null && paidAmount < typedMeeting.fee && (
+                  <span className="text-[11px] font-medium text-primary-600 mt-0.5">
+                    스텝 가격이 적용되었습니다
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

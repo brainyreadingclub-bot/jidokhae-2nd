@@ -5,6 +5,7 @@ import { getProfile } from '@/lib/profile'
 import { getMeeting } from '@/lib/meeting'
 import { getKSTToday, getButtonState } from '@/lib/kst'
 import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
+import { getDisplayFee } from '@/lib/staff-slot'
 import Link from 'next/link'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
@@ -114,6 +115,13 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     hasPendingTransfer,
   )
 
+  // displayFee — 자격자(admin/editor/staff) + 슬롯 여석 시 할인가, 그 외 정가
+  const { fee: displayFee, isDiscounted } = await getDisplayFee(
+    typedMeeting.id,
+    { role: profile.role, is_staff: profile.is_staff },
+    typedMeeting.fee,
+  )
+
   const hasStickyButton =
     buttonState.type === 'register' ||
     buttonState.type === 'full' ||
@@ -143,6 +151,8 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         confirmedCount={confirmedCount}
         capacity={typedMeeting.capacity}
         isPrivileged={showAccurateCount}
+        displayFee={displayFee}
+        isStaffDiscount={isDiscounted}
       />
 
       {hasPendingTransfer && (
@@ -168,6 +178,8 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         meetingId={typedMeeting.id}
         meetingTitle={typedMeeting.title}
         meetingFee={typedMeeting.fee}
+        displayFee={displayFee}
+        isStaffDiscount={isDiscounted}
         meetingDate={typedMeeting.date}
         userId={user.id}
         registrationId={myReg?.id}

@@ -7,9 +7,13 @@ type Props = {
   confirmedCount: number
   capacity: number
   isPrivileged?: boolean
+  /** 자격자에게 표시할 결제 금액 (정가 또는 할인가). 미지정 시 meeting.fee 사용. */
+  displayFee?: number
+  /** 스텝 할인 적용 여부. true면 가격 아래 안내 메타 노출. */
+  isStaffDiscount?: boolean
 }
 
-export default function MeetingDetailInfo({ meeting, confirmedCount, capacity, isPrivileged = false }: Props) {
+export default function MeetingDetailInfo({ meeting, confirmedCount, capacity, isPrivileged = false, displayFee, isStaffDiscount = false }: Props) {
   const isFull = confirmedCount >= capacity
   const isMasked = shouldMaskConfirmedCount(confirmedCount, capacity, isPrivileged)
   const isAlmostFull = !isFull && !isMasked && confirmedCount >= capacity * 0.8
@@ -95,7 +99,8 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity, i
             </svg>
           }
           label="참가비"
-          value={formatFee(meeting.fee)}
+          value={formatFee(displayFee ?? meeting.fee)}
+          subText={isStaffDiscount ? '스텝 가격이 적용되었습니다' : undefined}
           highlight
           isLast
         />
@@ -111,6 +116,7 @@ function InfoRow({
   highlight,
   isLast,
   valueClassName,
+  subText,
 }: {
   icon: React.ReactNode
   label: string
@@ -118,6 +124,7 @@ function InfoRow({
   highlight?: boolean
   isLast?: boolean
   valueClassName?: string
+  subText?: string
 }) {
   return (
     <div
@@ -126,11 +133,16 @@ function InfoRow({
     >
       <span className="text-primary-400 flex-shrink-0">{icon}</span>
       <span className="text-xs font-medium text-primary-500/70 w-11 flex-shrink-0">{label}</span>
-      <span
-        className={`text-sm font-semibold ${valueClassName || (highlight ? 'text-accent-600' : 'text-primary-800')}`}
-      >
-        {value}
-      </span>
+      <div className="flex flex-col">
+        <span
+          className={`text-sm font-semibold ${valueClassName || (highlight ? 'text-accent-600' : 'text-primary-800')}`}
+        >
+          {value}
+        </span>
+        {subText && (
+          <span className="text-[11px] font-medium text-primary-600 mt-0.5">{subText}</span>
+        )}
+      </div>
     </div>
   )
 }

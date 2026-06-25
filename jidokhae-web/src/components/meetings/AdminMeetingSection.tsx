@@ -157,15 +157,25 @@ export default function AdminMeetingSection({
   function getAmountSubtext(reg: RegistrationWithProfile) {
     if (reg.status === 'pending_transfer' && reg.paid_amount) {
       return (
-        <div className="text-xs text-accent-500/70 mt-0.5">
-          {formatFee(reg.paid_amount)}원 (입금 대기)
+        <div className="mt-0.5">
+          <div className="text-xs text-accent-500/70">
+            {formatFee(reg.paid_amount)}원 (입금 대기)
+          </div>
+          {reg.is_staff_discount && (
+            <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
+          )}
         </div>
       )
     }
     if (reg.status === 'confirmed' && reg.paid_amount) {
       return (
-        <div className="text-xs text-primary-500/70 mt-0.5">
-          {formatFee(reg.paid_amount)}원
+        <div className="mt-0.5">
+          <div className="text-xs text-primary-500/70">
+            {formatFee(reg.paid_amount)}원
+          </div>
+          {reg.is_staff_discount && (
+            <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
+          )}
         </div>
       )
     }
@@ -207,6 +217,9 @@ export default function AdminMeetingSection({
       return (
         <div className="mt-0.5">
           <div className="text-xs text-primary-500/70">{formatFee(reg.paid_amount)}원</div>
+          {reg.is_staff_discount && (
+            <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
+          )}
           {reg.refunded_amount ? (
             <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}원</div>
           ) : null}
