@@ -15,5 +15,8 @@
 # Playwright MCP runtime artifacts (console logs, page snapshots)
 .playwright-mcp/
 
+# full-scan 스킬 검증 리포트 산출물 (날짜별 폴더, 참조용)
+verification-squad/reports/
+
 # Stray root-level node_modules (project deps live in jidokhae-web/)
 /node_modules/
