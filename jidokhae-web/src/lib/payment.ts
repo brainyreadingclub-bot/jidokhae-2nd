@@ -8,6 +8,7 @@
 
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getPayment, cancelPayment } from '@/lib/portone'
+import { calculateFee } from '@/lib/pricing'
 
 export type ConfirmResult =
   | { status: 'success'; registrationId: string }
@@ -70,8 +71,10 @@ export async function processPaymentConfirmation(
     return { status: 'error', message: '결제가 완료되지 않았습니다' }
   }
 
-  // 결제 금액 검증 — 포트원에서 확인된 실결제액과 모임 회비가 일치해야 함
-  if (payment.totalAmount !== meeting.fee) {
+  // 결제 금액 검증 — 정가 또는 스텝 할인가(50%)만 허용.
+  // 자격·슬롯 검증은 RPC가 FOR UPDATE 락 안에서 처리 (race 안전망).
+  const allowedAmounts = [meeting.fee, calculateFee(meeting.fee, true)]
+  if (!allowedAmounts.includes(payment.totalAmount)) {
     await safeCancel(paymentId, '결제 금액 불일치')
     return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
   }
@@ -140,6 +143,20 @@ export async function processPaymentConfirmation(
   if (rpcResult === 'already_registered') {
     await safeCancel(paymentId, '중복 신청으로 인한 환불')
     return { status: 'already_registered', message: '이미 신청한 모임입니다' }
+  }
+
+  // 스텝 할인 신규 결과 코드 — 'error'로 흡수, 메시지만 차별화
+  if (rpcResult === 'discount_not_eligible') {
+    await safeCancel(paymentId, '스텝 할인 자격 없음')
+    return { status: 'error', message: '스텝 할인 자격이 없습니다' }
+  }
+
+  if (rpcResult === 'staff_slot_full') {
+    await safeCancel(paymentId, '스텝 할인 슬롯 마감')
+    return {
+      status: 'error',
+      message: '스텝 할인 슬롯이 마감되어 결제가 취소되었습니다. 정가로 다시 신청해주세요.',
+    }
   }
 
   // not_found, not_active, etc.

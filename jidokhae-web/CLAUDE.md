@@ -30,7 +30,7 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 - `src/app/(admin)/` — Admin pages. Phase 3 M7 Step 2에서 데스크톱 사이드바 + 모바일 드로어 레이아웃으로 재구성. 라우트: `admin/` (허브), `admin/meetings` (지역 필터 포함 목록), `admin/meetings/[id]` (상세 + 신청자), `admin/meetings/new`, `admin/meetings/[id]/edit`, `admin/members`, `admin/settings`, `admin/banners` (M8 placeholder, admin 전용), `admin/quotes` (M8 placeholder), `admin/settlements` (M10 placeholder, admin 전용)
 - `src/app/auth/` — Login page + OAuth callback (auth layout includes Footer for PG 심사)
 - `src/app/policy/` — Public pages (about, terms, privacy, refund, meetings list/detail — no auth required)
-- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, registrations/transfer, meetings/[id]/delete, webhooks/portone, webhooks/tosspayments (legacy), cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members, admin/settings, admin/venues, admin/venues/[id], admin/venues/settle, admin/registrations/confirm-transfer, admin/registrations/mark-refunded)
+- `src/app/api/` — API routes (registrations/confirm, registrations/cancel, registrations/waitlist-cancel, registrations/attendance, registrations/transfer, meetings/[id]/delete, webhooks/portone, webhooks/tosspayments (legacy), cron/meeting-remind, cron/waitlist-refund, welcome, profile/setup, admin/members/role, admin/members/staff, admin/settings, admin/venues, admin/venues/[id], admin/venues/settle, admin/registrations/confirm-transfer, admin/registrations/mark-refunded)
 
 ### Middleware (`src/middleware.ts`)
 Refreshes Supabase session on every request. Redirects unauthenticated → `/auth/login`, authenticated → away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth).
@@ -41,12 +41,14 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - **API Routes**: Use `src/lib/supabase/admin.ts` (service_role key, bypasses RLS)
 
 ### Business Logic (`src/lib/`)
-- `payment.ts` — Payment confirmation flow (PortOne V2 KakaoPay 채널)
+- `payment.ts` — Payment confirmation flow (PortOne V2 KakaoPay 채널). 결제 금액 검증은 화이트리스트 `[meeting.fee, calculateFee(fee, true)]` — 자격·슬롯 재검증은 RPC FOR UPDATE 락에 위임 (PR-2)
 - `cancel.ts` — User cancellation flow (returns meetingId for promotion trigger). PortOne `cancelPayment` 사용
 - `waitlist.ts` — 대기 승격 래퍼 (promote RPC + 알림톡) + 대기 취소 (100% 환불)
-- `refund.ts` — Refund amount calculation
+- `refund.ts` — Refund amount calculation (paid_amount 기반 — 스텝 할인 결제도 paid_amount * 비율로 환불)
 - `portone.ts` — PortOne V2 server SDK wrapper (`getPayment`, `cancelPayment`). KakaoPay 채널 (EASY_PAY payMethod = 카드 + 카카오페이머니 동시 지원)
 - `tosspayments.ts` — (legacy) TossPayments API wrapper. PR #28에서 PortOne로 마이그레이션 완료. 미사용 상태로 잔존 — 롤백 안전망 목적
+- `pricing.ts` — 스텝 할인 가격 계산 단일 진입점. 상수 `STAFF_DISCOUNT_RATE = 0.5`, `STAFF_DISCOUNT_MAX_PER_MEETING = 2`. 함수 `isStaffEligible(profile)`, `calculateFee(baseFee, isStaffDiscount)`. SQL `staff_discount_max_per_meeting()` 함수와 동기 필수
+- `staff-slot.ts` — 스텝 할인 슬롯 카운트 + `getDisplayFee(meetingId, profile, fee)` 헬퍼. 자격(role/is_staff) + 슬롯 여석 시 할인가 반환. 사용처: 모임 상세 page, transfer route (RPC가 마지막 방어선)
 - `kst.ts` — KST date utilities (getKSTToday, getTomorrowKST, formatKoreanDate, formatKoreanDateFull, formatKoreanTime, formatFee, getDaysUntil, getButtonState)
 - `auth.ts` — Cached `getUser()` for server-side user fetching (safe only after middleware session refresh)
 - `profile.ts` — Cached `getProfile(userId)` for server-side profile fetching
@@ -84,4 +86,5 @@ Logic is shared between API routes — keep it in `src/lib/`, not in route handl
 - **Phase 3 DB schema**: `supabase/migration-phase3-m7.sql` (롤백: `migration-phase3-m7-rollback.sql`) — meetings 5개 컬럼 + banners + book_quotes + 파셜 인덱스 5개. M7 Step 2.5: `migration-phase3-m7-step2-5.sql` — `admin_confirm_transfer` DB Function 추가 (운영자 입금 확인 원자성)
 - **계좌이체 환불 처리** (Phase 3 M7 Step 2.6): `/api/admin/registrations/mark-refunded`가 `action: 'mark' | 'unmark'` 양방향 지원. 'mark'는 서버에서 `calculateRefund(meeting.date, paid_amount, cancelled_at)` 자동 계산해 `refunded_amount` 기록. 'unmark'는 NULL 복구. admin role 전용. RefundToggle 컴포넌트가 호출. ⚠️ **금지**: 호출 성공 후 `sendRegistrationConfirmNotification` 호출 (운영자 월말 일괄 처리 맥락)
 - **계좌이체 환불 처리 한계** (Phase 3 M7 Step 2.6 발견): 모임 삭제 후 `payment_method='transfer' AND status='confirmed'`였던 회원의 환불 대기는 `refunded_amount=NULL`로 잔존하는데, deleted 모임은 `/admin/meetings/[id]` 페이지가 `notFound()`라 RefundToggle 사용 불가. 빈도 낮으면 SQL로 처리 (`UPDATE registrations SET refunded_amount = paid_amount WHERE status='cancelled' AND payment_method='transfer' AND refunded_amount IS NULL AND paid_amount > 0;`). 빈도 높아지면 deleted 모임도 admin 상세 접근 가능하게 분기 수정 필요
+- **스텝 할인 시스템** (PR #33 + PR-2): admin/editor/`is_staff=true` 회원에게 정기모임 참가비 50% 할인 (모임당 슬롯 2명, 코드 `STAFF_DISCOUNT_MAX_PER_MEETING` ↔ SQL `staff_discount_max_per_meeting()` 동기 필수). 결제 화이트리스트: payment.ts에서 `[fee, fee/2]`만 허용 + RPC가 FOR UPDATE 락 안에서 자격/슬롯 재검증 (`discount_not_eligible` / `staff_slot_full` 반환 시 자동 환불). 회원 화면(모임 상세/confirm/MeetingActionButton)은 `getDisplayFee()`로 자격자에게 할인가 표시 — 일반 회원에게는 정가만. admin 회원 관리 페이지 `MemberList`의 staff pill로 `is_staff` 토글 (admin 전용). DB schema: `supabase/migration-staff-discount.sql` + `migration-staff-discount-rpcs.sql`
 - **PWA Service Worker** (2026-04-28 도입): `@serwist/next` configurator mode (Next.js 16 Turbopack 호환). `src/sw.ts`가 캐시 전략 단일 소스, `serwist.config.js`가 빌드 설정. **API/auth/_next/data는 NetworkOnly (절대 캐시 안 함)**. HTML(admin 포함)은 NetworkFirst, `_next/static`+font+icon은 CacheFirst. dev 모드는 SerwistProvider의 `disable` prop으로 비활성. SW 산출물(`public/sw.js`, `public/swe-worker-*.js`, `public/sw.js.map`)은 빌드 산출물이라 git ignore + ESLint 제외. 새 SW 감지 시 `skipWaiting + clientsClaim`으로 즉시 점령(사용자에게 prompt 없음). 빌드 명령은 `next build && serwist build` 2단계. 화면 이상 신고 시 SW 캐시를 1순위로 의심 → 사용자에게 PWA 강제 종료 후 재실행 또는 새로고침 안내. 운영 가이드: `/검토문서/2026-04-28-pwa-sw-운영-가이드.md`

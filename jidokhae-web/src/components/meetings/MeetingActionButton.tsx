@@ -16,6 +16,10 @@ type Props = {
   meetingId: string
   meetingTitle: string
   meetingFee: number
+  /** 신청자에게 실제 청구되는 금액 (정가 또는 스텝 50%). PortOne value + 모달 표시에 사용. */
+  displayFee?: number
+  /** 스텝 할인이 적용되는 신청인지 여부. 모달에서 영수증 패턴 노출에 사용. */
+  isStaffDiscount?: boolean
   meetingDate: string
   userId: string
   registrationId?: string
@@ -43,6 +47,8 @@ export default function MeetingActionButton({
   meetingId,
   meetingTitle,
   meetingFee,
+  displayFee,
+  isStaffDiscount = false,
   meetingDate,
   userId,
   registrationId,
@@ -59,6 +65,8 @@ export default function MeetingActionButton({
   bankHolder,
   depositorName,
 }: Props) {
+  // 결제 처리에 사용할 실제 금액 — 미지정 시 정가 fallback
+  const effectiveFee = displayFee ?? meetingFee
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -87,7 +95,7 @@ export default function MeetingActionButton({
       trackEvent('begin_checkout', {
         item_id: meetingId,
         item_name: meetingTitle,
-        value: meetingFee,
+        value: effectiveFee,
         currency: 'KRW',
         registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
       })
@@ -109,7 +117,7 @@ export default function MeetingActionButton({
     trackEvent('begin_checkout', {
       item_id: meetingId,
       item_name: meetingTitle,
-      value: meetingFee,
+      value: effectiveFee,
       currency: 'KRW',
       registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
       payment_method: 'card',
@@ -130,7 +138,7 @@ export default function MeetingActionButton({
         channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY!,
         paymentId,
         orderName: meetingTitle,
-        totalAmount: meetingFee,
+        totalAmount: effectiveFee, // 자격자 + 슬롯 여석이면 displayFee(할인가), 아니면 정가
         currency: 'CURRENCY_KRW',
         payMethod: 'EASY_PAY', // 카카오페이 결제창 (카드 + 카카오페이머니 모두 노출)
         redirectUrl: `${origin}/meetings/${meetingId}/payment-redirect`,
@@ -689,6 +697,23 @@ export default function MeetingActionButton({
                 <h3 className="text-base font-bold text-primary-900 text-center">
                   결제 방법을 선택해주세요
                 </h3>
+                {/* 자격자 — 결제 금액 사전 확인용 영수증 (정가 + 할인 + 총액) */}
+                {isStaffDiscount && (
+                  <div className="mt-4 mx-auto max-w-[280px] text-left rounded-[var(--radius-md)] bg-surface-50 px-4 py-3" style={{ border: '1px solid var(--color-surface-300)' }}>
+                    <div className="flex justify-between text-[12px] text-neutral-500 mb-1">
+                      <span className="line-through">참가비</span>
+                      <span className="line-through">{formatFee(meetingFee)}원</span>
+                    </div>
+                    <div className="flex justify-between text-[12px] mb-2">
+                      <span className="text-primary-700 font-semibold">스텝 할인 50%</span>
+                      <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}원</span>
+                    </div>
+                    <div className="flex justify-between items-baseline pt-2" style={{ borderTop: '1px dashed var(--color-surface-300)' }}>
+                      <span className="text-[13px] font-bold text-primary-800">결제 금액</span>
+                      <span className="text-lg font-extrabold text-accent-600">{formatFee(effectiveFee)}원</span>
+                    </div>
+                  </div>
+                )}
                 <div className="mt-5 space-y-3">
                   {/* 카드결제 — 'both' 모드면 활성, 'transfer_only' 모드면 비활성 */}
                   {paymentMode === 'both' ? (
@@ -771,9 +796,26 @@ export default function MeetingActionButton({
 
                 <div className="text-center mb-4">
                   <p className="text-sm font-bold text-primary-900">{meetingTitle}</p>
-                  <p className="text-lg font-bold text-accent-600 mt-1">
-                    {formatFee(meetingFee)}원
-                  </p>
+                  {isStaffDiscount ? (
+                    <div className="mt-3 mx-auto max-w-[260px] text-left rounded-[var(--radius-md)] bg-surface-50 px-4 py-3" style={{ border: '1px solid var(--color-surface-300)' }}>
+                      <div className="flex justify-between text-[12px] text-neutral-500 mb-1">
+                        <span className="line-through">참가비</span>
+                        <span className="line-through">{formatFee(meetingFee)}원</span>
+                      </div>
+                      <div className="flex justify-between text-[12px] mb-2">
+                        <span className="text-primary-700 font-semibold">스텝 할인 50%</span>
+                        <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}원</span>
+                      </div>
+                      <div className="flex justify-between items-baseline pt-2" style={{ borderTop: '1px dashed var(--color-surface-300)' }}>
+                        <span className="text-[13px] font-bold text-primary-800">결제 금액</span>
+                        <span className="text-lg font-extrabold text-accent-600">{formatFee(effectiveFee)}원</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-lg font-bold text-accent-600 mt-1">
+                      {formatFee(effectiveFee)}원
+                    </p>
+                  )}
                 </div>
 
                 {bankName && bankAccount && bankHolder && (

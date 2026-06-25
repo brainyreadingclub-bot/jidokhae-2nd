@@ -26,20 +26,21 @@ export default async function MembersPage() {
     phone?: string | null
     email?: string | null
     created_at: string
+    is_staff: boolean
   }
 
   let profiles: ProfileRow[]
   if (profile.role === 'admin') {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, nickname, real_name, role, region, profile_completed_at, phone, email, created_at')
+      .select('id, nickname, real_name, role, region, profile_completed_at, phone, email, created_at, is_staff')
       .order('created_at', { ascending: false })
     if (error) throw new Error(`회원 목록 조회 실패: ${error.message}`)
     profiles = (data ?? []) as ProfileRow[]
   } else {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, nickname, real_name, role, region, profile_completed_at, created_at')
+      .select('id, nickname, real_name, role, region, profile_completed_at, created_at, is_staff')
       .order('created_at', { ascending: false })
     if (error) throw new Error(`회원 목록 조회 실패: ${error.message}`)
     profiles = (data ?? []) as ProfileRow[]

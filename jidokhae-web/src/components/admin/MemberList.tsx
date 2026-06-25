@@ -16,6 +16,7 @@ type Profile = {
   phone?: string | null
   email?: string | null
   created_at: string
+  is_staff: boolean
 }
 
 type Props = {
@@ -23,6 +24,10 @@ type Props = {
   currentUserId: string
   viewerRole: 'admin' | 'editor'
 }
+
+type RoleModal = { type: 'role'; userId: string; nickname: string; newRole: string }
+type StaffModal = { type: 'staff'; userId: string; nickname: string; newIsStaff: boolean }
+type ModalState = RoleModal | StaffModal | null
 
 const SECTIONS = [
   { key: 'admin', label: '운영자' },
@@ -36,7 +41,7 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
   const [filterIncomplete, setFilterIncomplete] = useState(false)
   const [filterNoPhone, setFilterNoPhone] = useState(false)
   const [loadingId, setLoadingId] = useState<string | null>(null)
-  const [modal, setModal] = useState<{ userId: string; nickname: string; newRole: string } | null>(null)
+  const [modal, setModal] = useState<ModalState>(null)
 
   // 필터링
   const filtered = profiles.filter((p) => {
@@ -62,22 +67,27 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
       })
   }
 
-  async function handleRoleChange() {
+  async function handleModalConfirm() {
     if (!modal) return
     setLoadingId(modal.userId)
+    const current = modal
     setModal(null)
     try {
-      const res = await fetch('/api/admin/members/role', {
+      const url = current.type === 'role' ? '/api/admin/members/role' : '/api/admin/members/staff'
+      const body = current.type === 'role'
+        ? { userId: current.userId, newRole: current.newRole }
+        : { userId: current.userId, isStaff: current.newIsStaff }
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: modal.userId, newRole: modal.newRole }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         const data = await res.json()
-        alert(data.message || '역할 변경에 실패했습니다')
+        alert(data.message || '변경에 실패했습니다')
       }
     } catch {
-      alert('역할 변경에 실패했습니다')
+      alert('변경에 실패했습니다')
     }
     setLoadingId(null)
     router.refresh()
@@ -152,10 +162,11 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
             <div className="text-xs text-primary-400 mt-0.5 truncate">{p.email}</div>
           )}
         </div>
-        <div className="ml-3 shrink-0">
+        <div className="ml-3 shrink-0 flex items-center gap-1.5">
           {canChange ? (
             <button
               onClick={() => setModal({
+                type: 'role',
                 userId: p.id,
                 nickname: getDisplayName(p),
                 newRole: p.role === 'editor' ? 'member' : 'editor',
@@ -171,6 +182,39 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
             </button>
           ) : (
             getRoleBadge(p.role, false)
+          )}
+          {/* Staff pill: role='member' AND admin viewer 일 때만 노출. */}
+          {viewerRole === 'admin' && p.role === 'member' && !isSelf && (
+            <button
+              onClick={() => setModal({
+                type: 'staff',
+                userId: p.id,
+                nickname: getDisplayName(p),
+                newIsStaff: !p.is_staff,
+              })}
+              disabled={isLoading}
+              className="cursor-pointer transition-opacity hover:opacity-70 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={p.is_staff ? '스텝 해제' : '스텝 지정'}
+            >
+              {p.is_staff ? (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold text-primary-700"
+                  style={{ backgroundColor: 'var(--color-primary-50)', border: '1px solid var(--color-primary-300)' }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  스텝
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-neutral-500"
+                  style={{ border: '1px solid var(--color-neutral-300)' }}
+                >
+                  스텝
+                </span>
+              )}
+            </button>
           )}
         </div>
       </div>
@@ -257,17 +301,20 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
         </div>
       )}
 
-      {/* 역할 변경 확인 모달 */}
+      {/* 역할/스텝 변경 확인 모달 */}
       {modal && (
         <ModalOverlay onClose={() => setModal(null)}>
           <div className="text-center">
             <p className="text-sm font-bold text-primary-900 mb-2">
-              역할 변경
+              {modal.type === 'role' ? '역할 변경' : '스텝 지정 변경'}
             </p>
             <p className="text-sm text-primary-700 mb-6">
-              {modal.newRole === 'editor'
+              {modal.type === 'role' && (modal.newRole === 'editor'
                 ? `${modal.nickname}님을 운영진으로 지정합니다. 모임 생성/수정 권한이 부여됩니다.`
-                : `${modal.nickname}님의 운영진 권한을 해제합니다.`}
+                : `${modal.nickname}님의 운영진 권한을 해제합니다.`)}
+              {modal.type === 'staff' && (modal.newIsStaff
+                ? `${modal.nickname}님을 스텝으로 지정합니다. 정기모임 참가비 50% 할인이 적용됩니다 (모임당 2명까지).`
+                : `${modal.nickname}님의 스텝 지정을 해제합니다.`)}
             </p>
             <div className="flex gap-3">
               <button
@@ -278,7 +325,7 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
                 취소
               </button>
               <button
-                onClick={handleRoleChange}
+                onClick={handleModalConfirm}
                 className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-700"
                 style={{ backgroundColor: 'var(--color-primary-600)' }}
               >
