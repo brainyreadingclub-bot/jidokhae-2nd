@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { resolveProfileUpdate } from '@/lib/profile-update'
 
 const current = {
