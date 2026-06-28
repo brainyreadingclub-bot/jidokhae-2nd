@@ -106,8 +106,13 @@
 > 상세 단계는 별도 구현 계획(writing-plans)에서 작성.
 
 1. **DB 마이그레이션** — `profiles.nickname_changed_at TIMESTAMPTZ DEFAULT NULL` 추가. 기존 회원 전원 NULL 유지(별도 UPDATE 불필요). SQL은 코드 확정 후 사용자에게 전달(수동 실행).
-2. **신규 API 라우트** `/api/profile/update` (POST) — 부분 수정. 표준 포맷 `{status,message,data}`. 본인 프로필만. 닉네임 변경 시: `nickname_changed_at IS NULL` 확인 + `pending_transfer` 미보유 확인 + 기존 중복 체크 재사용 → 성공 시 `nickname_changed_at = now()` 기록. 실명은 무시(수정 불가). (기존 `/api/profile/setup`은 온보딩 전용으로 유지)
-3. **신규 컴포넌트** `ProfileEditor`(Client) — 보기→편집 토글, 필드별 잠금 처리. RegionPicker는 ProfileSetup에서 공용 추출 검토.
+2. **신규 API 라우트** `/api/profile/update` (POST) — 부분 수정. 표준 포맷 `{status,message,data}`. 본인 프로필만. 실명은 무시(수정 불가). (기존 `/api/profile/setup`은 온보딩 전용으로 유지)
+   - **닉네임 "변경"의 정의 (핵심)**: 제출된 닉네임이 **현재 닉네임과 실제로 다를 때만** 변경으로 취급. 같으면 닉네임/`nickname_changed_at` 일절 건드리지 않음(1회 기회 소비 금지). → 폼이 같은 값을 재전송해도 기회가 날아가지 않음.
+   - 닉네임이 실제 변경된 경우에만: `nickname_changed_at IS NULL` 확인 + `pending_transfer` 미보유 확인(`registrations`에서 `user_id` + `status='pending_transfer'` 조회) + 중복 체크(자기 제외 `.neq('id', user.id)`, 빈 문자열 제외 `.neq('nickname','')`) → UPDATE에 **낙관적 가드** `.is('nickname_changed_at', null)` 포함 + 0행 시 동시 변경 충돌로 처리 → 성공 시 `nickname_changed_at = now()` 기록.
+   - UNIQUE 인덱스 위반(에러코드 `23505`)은 500이 아니라 "이미 사용 중인 닉네임입니다"(409)로 변환.
+   - **부분 업데이트**: 전화/지역/이메일 등 변경된 필드만 set. 닉네임 미변경 시 `nickname_changed_at`을 절대 덮어쓰지 않음.
+   - 검증 재사용: real_name 무시 외 phone(`/^010\d{7,8}$/`)·region(`VALID_REGIONS`)·email 정규식은 setup과 동일 규칙.
+3. **신규 컴포넌트** `ProfileEditor`(Client) — 보기→편집 토글, 필드별 잠금 처리. **RegionPicker 공용 추출 필수** — 현재 `ProfileSetup.tsx` 내부 로컬 함수(export 안 됨)이므로 `src/components/`로 분리해야 재사용 가능. 지역 칩은 실제 `VALID_REGIONS`(경주·포항 우선 + 11개) 사용 — 목업의 단순화된 칩셋 아님.
 4. **`/my/page.tsx` 확장** — 프로필 섹션을 신청 목록 위에 배치. `getProfile()`에 `nickname_changed_at` 추가, `pending_transfer` 보유 여부 조회.
 5. **`getProfile()` 갱신** — `nickname_changed_at` 컬럼 추가.
 
@@ -120,10 +125,12 @@
 
 ## 9. 리스크 / 엣지
 
-- **race condition**(닉네임 동시 변경): 250명 셀프 수정 단건이라 실질 위험 낮음. 앱 레벨 `nickname_changed_at IS NULL` 확인 + UNIQUE 인덱스가 최종 방어.
+- **race condition**(닉네임 동시 변경): 250명 셀프 수정 단건이라 실질 위험 낮음. 앱 레벨 `nickname_changed_at IS NULL` 확인 + UPDATE 낙관적 가드(0행 감지) + UNIQUE 인덱스가 최종 방어.
 - **RLS 우회**: `/api/profile/update`는 service_role 사용 → 반드시 본인(`user.id`) 프로필만 수정하도록 검증.
-- **닉네임 중복**: 기존 setup의 중복 체크 로직 재사용(자기 제외, 빈 문자열 제외).
+- **닉네임 중복**: 기존 setup의 중복 체크 로직 재사용(자기 제외, 빈 문자열 제외). + UPDATE 단계 `23505` 위반도 사용자 친화 메시지로 변환.
 - **실명 잠금 부작용**: 실명 오타 시 알림톡 인사말이 고정됨 → 운영진 수동 수정 경로 안내로 갈음(빈도 낮음 가정).
+- **미완성 프로필 엣지**: `profile_completed_at IS NULL`(온보딩 미완) 회원은 홈의 `ProfileSetup` 게이트에서 먼저 막혀 `/my`에 정상 도달 못 함. ProfileEditor는 완성된 프로필을 전제. 만약을 위해 빈 값 안전 렌더만 보장.
+- **알림 없음**: 프로필 수정은 알림톡/이력 트리거 없음(운영자/회원 모두 무알림). notification·analytics 호출 추가 금지.
 
 ## 10. 미해결 (구현 계획에서 확정)
 - 저장 방식: 필드별 개별 저장 vs 한 번에 일괄 저장 → 일괄 저장 기본 가정(폼 단순).
