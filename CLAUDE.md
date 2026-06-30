@@ -127,7 +127,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | M1 프로젝트 기반 구축 | 3 | Next.js + Supabase DB + Layout |
 | M2 인증 (카카오 로그인) | 2 | Kakao OAuth + Session + Access control |
 | M3 모임 일정 조회 + 운영자 CRUD | 3 | Meeting list/detail + Admin CRUD |
-| M4 결제 + 신청 | 3 | TossPayments payment pipeline + Registration UX |
+| M4 결제 + 신청 | 3 | PortOne V2 (카카오페이) payment pipeline + Registration UX |
 | M5 취소 + 환불 | 2 | Self-cancel + Batch refund on deletion |
 | M6 통합 검증 + 출시 | 2 | E2E verification + Production deploy |
 | M7 기반 정리 + 레이아웃 전환 | 5 | Admin 사이드바/허브 + 모임 관리 분리 + 회원 홈 개선 (Phase 3) |
@@ -147,7 +147,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 |----------|--------|
 | Stack | Next.js 16.1.6 (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase + Vercel |
 | Auth | Supabase Auth ↔ Kakao OAuth |
-| Payment | TossPayments 직접 연동 (REST API + @tosspayments/payment-sdk) |
+| Payment | PortOne V2 (카카오페이 채널, `@portone/browser-sdk` + `@portone/server-sdk`). EASY_PAY payMethod = 카드 + 카카오페이머니 동시 지원. PR #28에서 TossPayments 직연동에서 마이그레이션 (토스 PG 심사 거절 → PortOne 경유). TossPayments SDK는 롤백 안전망으로 잔존(미사용) |
 | DB access | Frontend: Supabase Client (anon key + RLS). Server: API Routes with service_role key |
 | Supabase Clients | 3 variants: Server (anon key), Browser (anon key), Admin (service_role key) |
 | Capacity check | DB Function (RPC) with `FOR UPDATE` row lock — atomic check + INSERT |
@@ -156,9 +156,10 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | Refund calc | Date-unit only (days_remaining = meeting.date - today KST) |
 | Registration uniqueness | `user_id + meeting_id` is NOT UNIQUE — re-registration creates new record |
 | Meeting fee | Per-meeting variable (not hardcoded 10,000원) |
+| Staff discount | admin/editor/`is_staff=true` 회원에게 정기모임 참가비 50% 할인 (모임당 슬롯 2명). 코드 `STAFF_DISCOUNT_RATE=0.5` / `STAFF_DISCOUNT_MAX_PER_MEETING=2` (`src/lib/pricing.ts`) ↔ SQL `staff_discount_max_per_meeting()` 동기 필수. 결제 화이트리스트 `[fee, fee/2]` + RPC FOR UPDATE 락에서 자격/슬롯 재검증 (불일치 시 자동 환불). PR #33~#35 |
 | Batch refund timeout | `Promise.allSettled` required (Vercel 10-second limit) |
-| Payment mode | redirect only (TossPayments SDK는 항상 redirect) |
-| Webhook backup | TossPayments Webhook (`/api/webhooks/tosspayments`) as backup when frontend redirect fails. Signature verification required |
+| Payment mode | redirect. PortOne V2는 결제창에서 완료 시 **이미 승인된 상태**로 redirect → redirect 핸들러/웹훅은 `getPayment()`로 `status === 'PAID'` 검증만 수행 (토스처럼 confirmPayment로 돈을 이동시키지 않음) |
+| Webhook backup | PortOne Webhook (`/api/webhooks/portone`, `PORTONE_WEBHOOK_SECRET` 서명 검증) as backup when frontend redirect fails. 레거시 `/api/webhooks/tosspayments`는 미사용 잔존 |
 | Bank transfer bridge | `site_settings.payment_mode` flag (`transfer_only`/`card_only`). 심사 전 계좌이체로 출시, 심사 후 카드 전환. `pending_transfer` 상태 + `payment_method` 컬럼 |
 | payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
 | Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
@@ -289,7 +290,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 ### Architecture
 
 - **Route groups:** `src/app/(main)/` for authenticated member pages, `src/app/(admin)/` for admin pages, `src/app/auth/` for login/callback, `src/app/policy/` for public pages (about, terms, privacy, refund, meetings — no auth required). Key member routes: `meetings/[id]/page` (detail), `meetings/[id]/confirm/page` (pre-payment confirmation), `meetings/[id]/payment-redirect/page` (post-payment handler), `meetings/[id]/payment-fail/page` (failure), `my/page` (my registrations + 상단 '내 정보' 프로필 자가 수정 섹션 — 닉네임 1회 변경·전화·지역·이메일). Admin routes (Phase 3 M7 Step 2에서 재구성 — 데스크톱 사이드바 + 모바일 드로어): `admin/page` (허브 — WP7-3), `admin/meetings` (목록 + 지역 필터), `admin/meetings/[id]` (상세), `admin/meetings/new` (생성), `admin/meetings/[id]/edit` (수정), `admin/members` (회원 관리), `admin/settings` (사이트 설정 + 공간 관리), `admin/banners` (M8 placeholder, admin 전용), `admin/quotes` (M8 placeholder), `admin/settlements` (M10 placeholder, admin 전용). 사이드바 메뉴는 `src/components/admin/adminMenu.ts`가 단일 소스 (운영/콘텐츠/시스템 3그룹). Public routes: `policy/meetings` (공개 모임 목록), `policy/meetings/[id]` (공개 모임 상세)
-- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (TossPayments verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth)
+- **Middleware** (`src/middleware.ts`): Refreshes Supabase session on every request, redirects unauthenticated users to `/auth/login`, redirects authenticated users away from `/auth`. Skips `/auth/callback` (preserve PKCE cookies), `/policy/*` (public pages), `api/webhooks/` (PortOne/PG verification), and `api/cron/` (Vercel Cron — CRON_SECRET auth)
 - **Layouts:** Root (`src/app/layout.tsx` — fonts, viewport), `(main)/layout.tsx` (header + BottomNav + Footer, auth required), `(admin)/layout.tsx` (admin header + Footer, admin/editor role check), `policy/layout.tsx` (Footer only, public), `auth/layout.tsx` (Footer only, public — PG 심사 대응)
 - **Supabase clients** (`src/lib/supabase/`): `server.ts` (Server Components, anon key), `client.ts` (Client Components, anon key), `admin.ts` (API Routes, service_role key)
 - **Tailwind v4:** Design tokens defined via `@theme inline` in `src/app/globals.css` — NOT `tailwind.config.ts`. Design system: "Editorial Organic" — Primary: Deep Forest Green (`--color-primary-*`), Accent: Warm Terracotta (`--color-accent-*`), Neutral: Warm Gray (`--color-neutral-*`), Surface: Warm Ivory/Cream (`--color-surface-*`). Fonts: Noto Serif KR (titles), Pretendard (body). See `jidokhae-web/DESIGN_TOKENS.md` for full token reference
@@ -328,30 +329,32 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **Parallel data fetching:** `Promise.all()` in page components for concurrent Supabase queries
 - **Next.js 16 params:** Dynamic route params are `Promise<{ id: string }>` (await required)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanDateFull()`, `formatKoreanTime()`, `formatFee()`, `getDaysUntil()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
-- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/tosspayments` (M4 backup + 알림톡), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `profile/update` (마이페이지 프로필 자가 수정 — 부분 수정, 닉네임 1회 변경 낙관적 락 + 중복 409, 본인 행만), `admin/members/role` (역할 변경), `admin/settings` (site_settings UPSERT), `admin/venues` (공간 CRUD), `admin/venues/[id]` (공간 수정), `admin/venues/settle` (정산 확정), `registrations/transfer` (계좌이체 신청), `admin/registrations/confirm-transfer` (운영자 입금 확인), `admin/registrations/mark-refunded` (운영자 환불 완료). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
+- **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `registrations/attendance` (참석 확인 토글), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/portone` (M4 backup + 알림톡, `PORTONE_WEBHOOK_SECRET` 서명 검증), `webhooks/tosspayments` (레거시, 미사용), `admin/members/staff` (스텝 자격 `is_staff` 토글, admin 전용), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `profile/update` (마이페이지 프로필 자가 수정 — 부분 수정, 닉네임 1회 변경 낙관적 락 + 중복 409, 본인 행만), `admin/members/role` (역할 변경), `admin/settings` (site_settings UPSERT), `admin/venues` (공간 CRUD), `admin/venues/[id]` (공간 수정), `admin/venues/settle` (정산 확정), `registrations/transfer` (계좌이체 신청), `admin/registrations/confirm-transfer` (운영자 입금 확인), `admin/registrations/mark-refunded` (운영자 환불 완료). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
 - **API response 표준 포맷:** `{ status: 'success' | 'error', message?, data? }` (Phase 3 M7 Step 1에서 12개 라우트 통일). 신규 API 라우트는 이 포맷을 따를 것. 기존 `{ success: true }` 패턴은 점진적 마이그레이션 중
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수), `tosspayments.ts` (TossPayments API wrapper), `auth.ts` (cached `getUser()` via React `cache()` — safe only after middleware session refresh), `profile.ts` (cached `getProfile()` via React `cache()`), `profile-update.ts` (순수 검증 헬퍼 `resolveProfileUpdate` — 마이페이지 프로필 수정 규칙, Vitest 단위 테스트), `meeting.ts` (cached `getMeeting(id)` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수 — paid_amount 기반이라 스텝 할인 결제도 비율 환불), `portone.ts` (PortOne V2 server SDK 래퍼 — `getPayment`/`cancelPayment`), `tosspayments.ts` (레거시 TossPayments 래퍼, 미사용 잔존), `pricing.ts` (스텝 할인 가격 계산 단일 진입점 — `isStaffEligible`/`calculateFee` + 상수), `staff-slot.ts` (스텝 슬롯 카운트 + `getDisplayFee()`), `auth.ts` (cached `getUser()` via React `cache()` — safe only after middleware session refresh), `profile.ts` (cached `getProfile()` via React `cache()`), `profile-update.ts` (순수 검증 헬퍼 `resolveProfileUpdate` — 마이페이지 프로필 수정 규칙, Vitest 단위 테스트), `meeting.ts` (cached `getMeeting(id)` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true`. **단, 테스트 파일에는 `import { describe, it, expect } from 'vitest'`를 명시할 것** — `globals: true`라 `vitest run`은 import 없이도 통과하지만, `prelaunch`의 `npx tsc --noEmit`가 테스트 파일도 타입 검사하므로 import 없으면 TS2304/TS2582로 실패. 검증은 `vitest run`만으로 끝내지 말고 tsc까지 돌릴 것. Tests in `src/lib/__tests__/` (kst, refund, pricing, visibility, profile-update). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
 
 ### Payment Flow (M4)
 
-1. Client loads TossPayments SDK → `requestPayment('카드', { amount, orderId, ... })`
-2. User completes card payment on TossPayments page
-3. TossPayments redirects to `/meetings/[id]/payment-redirect?paymentKey=...&orderId=...&amount=...`
-4. Redirect page calls `POST /api/registrations/confirm` with those params
-5. API Route: auth check → `processPaymentConfirmation()` → `confirmPayment()` (money moves) → `confirm_registration()` RPC (atomic DB insert — returns 'success' or 'waitlisted')
-6. Webhook backup at `/api/webhooks/tosspayments` handles missed redirects
+> **PortOne V2 핵심 차이:** 토스는 `confirmPayment` 호출로 돈을 이동시켰지만, PortOne V2는 결제창에서 완료 시 **이미 승인된 상태**로 redirect. 따라서 서버는 `getPayment()`로 검증만 한다.
 
-**Webhook orderId format:** `jdkh-{meetingId8}-{userId8}-{timestamp}` where `{meetingId8}` and `{userId8}` are the first 8 hex chars of the UUID (dashes stripped). Webhook reconstructs full UUIDs via `LIKE '{8chars}%'` prefix queries.
+1. Client (`@portone/browser-sdk`) → `PortOne.requestPayment({ storeId, channelKey, paymentId, orderName, totalAmount, payMethod: 'EASY_PAY', ... })` (카카오페이 채널)
+2. User completes payment on PortOne/카카오페이 결제창
+3. PortOne redirects to `/meetings/[id]/payment-redirect?paymentId=...&transactionType=PAYMENT&txId=...` (실패/취소 시 `?paymentId=...&code=...&message=...`)
+4. Redirect page calls `POST /api/registrations/confirm` with `paymentId`
+5. API Route: auth check → `processPaymentConfirmation()` → `getPayment(paymentId)` 로 `status === 'PAID'` + 금액 검증 → `confirm_registration()` RPC (atomic DB insert — returns 'success' or 'waitlisted')
+6. Webhook backup at `/api/webhooks/portone` (`PORTONE_WEBHOOK_SECRET` 서명 검증) handles missed redirects
+
+**paymentId(주문번호) format:** `jdkh-{meetingId8}-{userId8}-{timestamp}` where `{meetingId8}` and `{userId8}` are the first 8 hex chars of the UUID (dashes stripped). Webhook reconstructs full UUIDs via `LIKE '{8chars}%'` prefix queries. PortOne의 `paymentId`가 기존 orderId/paymentKey 역할을 통합.
 
 **Safety patterns:** payment_id idempotency (no double-charge), atomic capacity check via DB function with `FOR UPDATE` lock, rollback refund if DB insert fails
 
 ### Cancel/Refund Flow (M5)
 
 1. User clicks "취소하기" → info modal (refund rate/amount) → confirm modal → API call
-2. `POST /api/registrations/cancel` → `processUserCancel()` → `cancelPayment()` (TossPayments) → DB update → `promoteNextWaitlisted()` (자동 승격)
+2. `POST /api/registrations/cancel` → `processUserCancel()` → `cancelPayment()` (PortOne) → DB update → `promoteNextWaitlisted()` (자동 승격)
 3. Admin delete: `POST /api/meetings/[id]/delete` → set `deleting` → `Promise.allSettled` parallel refund (confirmed + waitlisted 모두) → `deleted`
 
 **Safety patterns:** optimistic lock with `.eq('status', 'confirmed')` + `.select('id')` to detect 0-row updates, race condition handling via `getPayment()` status check, partial failure retry (meeting stays `deleting`)
@@ -372,7 +375,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Waitlist Flow (Phase 2-2)
 
-1. **대기 신청**: 정원 초과 → TossPayments 결제(기존과 동일) → `confirm_registration()` RPC가 `waitlisted` INSERT → 결제 유지, 환불 안 함
+1. **대기 신청**: 정원 초과 → PortOne 결제(기존과 동일) → `confirm_registration()` RPC가 `waitlisted` INSERT → 결제 유지, 환불 안 함
 2. **자동 승격**: 확정자 취소 → cancel API에서 `promoteNextWaitlisted()` 호출 → DB 함수가 FOR UPDATE 락으로 원자적 승격 → 알림톡
 3. **대기 취소**: `POST /api/registrations/waitlist-cancel` → 항상 100% 전액 환불 (환불 규칙 미적용)
 4. **크론 자동 환불**: 매일 KST 18:30, `date <= tomorrow`인 모임의 waitlisted → 전액 환불 + 알림톡
@@ -394,7 +397,8 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 Copy `jidokhae-web/.env.example` to `jidokhae-web/.env.local` and fill in values:
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project
 - `SUPABASE_SERVICE_ROLE_KEY` — Server-side Supabase admin access
-- `NEXT_PUBLIC_TOSSPAYMENTS_CLIENT_KEY` / `TOSSPAYMENTS_SECRET_KEY` — TossPayments payment
+- `NEXT_PUBLIC_PORTONE_STORE_ID` / `NEXT_PUBLIC_PORTONE_CHANNEL_KEY` / `PORTONE_API_SECRET` / `PORTONE_WEBHOOK_SECRET` — PortOne V2 (카카오페이) 결제
+- `NEXT_PUBLIC_TOSSPAYMENTS_CLIENT_KEY` / `TOSSPAYMENTS_SECRET_KEY` — TossPayments (레거시, 롤백용 잔존)
 - `SOLAPI_API_KEY` / `SOLAPI_API_SECRET` — Solapi 알림톡 API
 - `SOLAPI_KAKAO_CHANNEL` / `SOLAPI_SENDER_PHONE` — KakaoTalk 채널 + 발신번호
 - `SOLAPI_TEMPLATE_REMIND` / `SOLAPI_TEMPLATE_CONFIRM` / `SOLAPI_TEMPLATE_WAITLIST_CONFIRM` / `SOLAPI_TEMPLATE_WAITLIST_PROMOTED` / `SOLAPI_TEMPLATE_WAITLIST_REFUNDED` — 알림톡 템플릿 ID 5종
