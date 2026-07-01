@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import DeleteMeetingButton from './DeleteMeetingButton'
-import AttendanceToggle from './AttendanceToggle'
 import DepositToggle from '@/components/admin/DepositToggle'
 import RefundToggle from '@/components/admin/RefundToggle'
 import { getKSTToday, formatFee, toKSTDate } from '@/lib/kst'
@@ -38,21 +37,21 @@ export default function AdminMeetingSection({
   role,
   meetingDate,
 }: Props) {
-  const showAttendance = meetingDate <= getKSTToday()
-
   const confirmedRegs = registrations.filter((r) => r.status === 'confirmed' || r.status === 'cancelled' || r.status === 'pending_transfer')
   const waitlistedRegs = registrations
     .filter((r) => r.status === 'waitlisted' || r.status === 'waitlist_cancelled' || r.status === 'waitlist_refunded')
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
 
   // 요약 통계 계산
+  // 총 결제: 실제 입금 확인된 건만 집계 — pending_transfer(입금 대기)는 제외.
+  // 대시보드/정산과 동일 기준(confirmed + cancelled)으로 정합성 유지.
   const totalPaid = confirmedRegs
+    .filter((r) => r.status === 'confirmed' || r.status === 'cancelled')
     .reduce((sum, r) => sum + (r.paid_amount ?? 0), 0)
   const totalRefunded = confirmedRegs
     .filter((r) => r.status === 'cancelled' && r.refunded_amount)
     .reduce((sum, r) => sum + (r.refunded_amount ?? 0), 0)
   const netRevenue = totalPaid - totalRefunded
-  const attendedCount = confirmedRegs.filter((r) => r.status === 'confirmed' && r.attended).length
 
   function getStatusBadge(status: string) {
     if (status === 'pending_transfer') {
@@ -240,7 +239,7 @@ export default function AdminMeetingSection({
     return regs.filter((r, i) => i <= idx && r.status === 'waitlisted').length
   }
 
-  function renderToggle(reg: RegistrationWithProfile, showQueueNumber: boolean) {
+  function renderToggle(reg: RegistrationWithProfile) {
     if (reg.status === 'pending_transfer') {
       return <DepositToggle registrationId={reg.id} isDeposited={false} />
     }
@@ -260,9 +259,6 @@ export default function AdminMeetingSection({
           isRefunded={reg.refunded_amount !== null && reg.refunded_amount > 0}
         />
       )
-    }
-    if (!showQueueNumber && showAttendance && reg.status === 'confirmed') {
-      return <AttendanceToggle registrationId={reg.id} attended={reg.attended} />
     }
     return null
   }
@@ -291,7 +287,7 @@ export default function AdminMeetingSection({
       <div className="md:hidden space-y-2">
         {regs.map((reg, idx) => {
           const queueNum = showQueueNumber ? getQueueNumber(regs, reg, idx) : null
-          const toggle = renderToggle(reg, showQueueNumber)
+          const toggle = renderToggle(reg)
           const cancelDetail = getMobileAmountLine(reg)
 
           return (
@@ -364,11 +360,6 @@ export default function AdminMeetingSection({
               <th className="px-4 py-2.5 text-right text-xs font-bold text-primary-500">
                 상태
               </th>
-              {!showQueueNumber && showAttendance && (
-                <th className="px-2 py-2.5 text-center text-xs font-bold text-primary-500">
-                  참석
-                </th>
-              )}
             </tr>
           </thead>
           <tbody>
@@ -410,18 +401,6 @@ export default function AdminMeetingSection({
                     {getAmountSubtext(reg)}
                   </div>
                 </td>
-                {!showQueueNumber && showAttendance && (
-                  <td className="px-2 py-1 text-center">
-                    {reg.status === 'confirmed' ? (
-                      <AttendanceToggle
-                        registrationId={reg.id}
-                        attended={reg.attended}
-                      />
-                    ) : (
-                      <span className="text-primary-300">-</span>
-                    )}
-                  </td>
-                )}
               </tr>
             ))}
           </tbody>
@@ -478,11 +457,6 @@ export default function AdminMeetingSection({
               <div className="text-sm font-bold text-primary-800">{formatFee(netRevenue)}원</div>
             </div>
           </div>
-          {showAttendance && confirmedCount > 0 && (
-            <div className="mt-2.5 pt-2.5 text-center text-xs text-primary-500" style={{ borderTop: '1px solid var(--color-surface-300)' }}>
-              참석률 {Math.round((attendedCount / confirmedCount) * 100)}% ({attendedCount}/{confirmedCount}명)
-            </div>
-          )}
         </div>
       )}
 

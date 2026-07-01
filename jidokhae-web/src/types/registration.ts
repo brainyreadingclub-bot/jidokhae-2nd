@@ -11,7 +11,6 @@ export type Registration = {
   refunded_amount: number | null
   created_at: string
   cancelled_at: string | null
-  attended: boolean | null
   payment_method: 'card' | 'transfer'
   is_staff_discount: boolean
 }
