@@ -53,7 +53,7 @@
   | 입금자명 | `M/D 닉네임` (M/D=모임날짜) | **1순위 대조 키.** 은행 명세서에 찍히는 그대로 |
   | 금액 | `paid_amount` | 스텝 할인은 `5,000 스텝½` 배지 |
   | 신청 시각 | `created_at` (KST, 분 단위) | 입금 시각 매칭용 |
-  | 경과 | today − created_at (일) | N일 경과, 임계 초과 시 ⚠ 강조 |
+  | 경과 | today − created_at (일) | N일 경과. **30일 초과 시에만** 작은 아이콘 1개(강한 색 강조 없음) |
   | 모임 | 모임명 | |
   | 연락처 | `profiles.phone` | 미입금 독촉용 (admin 전용이라 정합) |
 - **일괄 액션:** 선택 건 → `선택 입금 확인` 버튼 → `POST /api/admin/registrations/confirm-transfer` (`registrationIds[]`, `action:'confirm'`) — **이미 배치 지원(최대 50건)**
@@ -116,5 +116,5 @@
 - [ ] 스텝 할인 금액 배지 정확성 (`paid_amount`가 반값인지)
 - [ ] 삭제된 모임의 환불 대기 건 — 모임명 join 실패해도 렌더(모임명 "삭제됨" 표시)
 - [ ] admin 전용 이중 방어 (layout role check + API role check) — phone 노출 화면이므로 필수
-- [ ] 경과일 임계값 확정 (며칠부터 ⚠? — 구현 전 사용자 확인)
+- [x] 경과일 표시: **30일 초과 시에만** 작은 아이콘 1개. 색 강조/⚠ 없음 (2026-07-04 확정)
 - [ ] SW 캐시: phone 포함 화면 — admin HTML은 NetworkFirst라 캐시 fallback 존재. 민감도 낮으나 인지
