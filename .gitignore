@@ -18,5 +18,11 @@
 # full-scan 스킬 검증 리포트 산출물 (날짜별 폴더, 참조용)
 verification-squad/reports/
 
+# screenshot 스킬 UI 리뷰 산출물 (날짜별 스크린샷, 참조용)
+검토문서/ui-review/
+
+# brainstorming 스킬 목업 산출물 (세션별 HTML, 참조용)
+.superpowers/
+
 # Stray root-level node_modules (project deps live in jidokhae-web/)
 /node_modules/
