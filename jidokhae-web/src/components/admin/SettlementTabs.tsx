@@ -24,6 +24,8 @@ export default function SettlementTabs({ deposits, refunds }: Props) {
         <button
           type="button"
           role="tab"
+          id="tab-deposit"
+          aria-controls="tab-panel-deposit"
           aria-selected={tab === 'deposit'}
           onClick={() => setTab('deposit')}
           className={[
@@ -58,6 +60,8 @@ export default function SettlementTabs({ deposits, refunds }: Props) {
         <button
           type="button"
           role="tab"
+          id="tab-refund"
+          aria-controls="tab-panel-refund"
           aria-selected={tab === 'refund'}
           onClick={() => setTab('refund')}
           className={[
@@ -91,7 +95,12 @@ export default function SettlementTabs({ deposits, refunds }: Props) {
       </div>
 
       {/* 탭 콘텐츠 */}
-      <div className="mt-4">
+      <div
+        role="tabpanel"
+        id={tab === 'deposit' ? 'tab-panel-deposit' : 'tab-panel-refund'}
+        aria-labelledby={tab === 'deposit' ? 'tab-deposit' : 'tab-refund'}
+        className="mt-4"
+      >
         {tab === 'deposit' && <DepositConfirmTable rows={deposits} />}
         {tab === 'refund' && <RefundWaitingTable rows={refunds} />}
       </div>
