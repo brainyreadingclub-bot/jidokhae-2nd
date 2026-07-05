@@ -38,7 +38,7 @@ function translateReason(code: string): string {
   return REASON_MAP[code] ?? code
 }
 
-// "YYYY-MM-DD" → "M/D 형식 (미팅 날짜 기반 입금자명 접두어)
+// "YYYY-MM-DD" → "M/D" 형식 (미팅 날짜 기반 입금자명 접두어)
 function meetingDatePrefix(meetingDate: string): string {
   if (!meetingDate) return ''
   const parts = meetingDate.split('-')
@@ -70,9 +70,6 @@ export default function DepositConfirmTable({ rows }: Props) {
 
   useEffect(() => {
     if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = isIndeterminate
-  }, [isIndeterminate])
-
-  useEffect(() => {
     if (mobileSelectAllRef.current) mobileSelectAllRef.current.indeterminate = isIndeterminate
   }, [isIndeterminate])
 
@@ -248,7 +245,7 @@ export default function DepositConfirmTable({ rows }: Props) {
             >
               {/* Row 1: 체크박스 + 입금자명 + 금액 */}
               <div className="flex items-center gap-3">
-                <label className="flex items-center cursor-pointer p-1 -m-1">
+                <label className="flex items-center justify-center cursor-pointer min-w-[44px] min-h-[44px]">
                   <input
                     type="checkbox"
                     checked={isChecked}

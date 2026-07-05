@@ -7,10 +7,11 @@ type Props = {
   rows: RefundRow[]
 }
 
-// "YYYY-MM-DD" → "M/D" 표시 (표시 전용 — new Date()는 날짜 문자열 파싱용이라 KST 비즈니스 계산 없음)
+// "YYYY-MM-DD" → "M/D" 표시
 function formatMeetingDate(dateStr: string): string {
-  const d = new Date(dateStr)
-  return `${d.getMonth() + 1}/${d.getDate()}`
+  const parts = dateStr.split('-')
+  if (parts.length < 3) return dateStr
+  return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`
 }
 
 export default function RefundWaitingTable({ rows }: Props) {
