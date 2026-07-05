@@ -18,7 +18,7 @@ export default async function AdminMeetingsPage({ searchParams }: Props) {
             운영
           </div>
           <h1
-            className="mt-1 text-2xl font-extrabold tracking-tight text-primary-900"
+            className="mt-1 text-2xl font-extrabold tracking-tight text-primary-900 lg:text-3xl"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             모임 관리

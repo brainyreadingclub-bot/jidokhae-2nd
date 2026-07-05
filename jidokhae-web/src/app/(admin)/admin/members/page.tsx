@@ -47,10 +47,21 @@ export default async function MembersPage() {
   }
 
   return (
-    <div className="px-5 pt-4 pb-6">
-      <h1 className="text-lg font-extrabold text-primary-900 tracking-tight mb-5">
-        회원 관리
-      </h1>
+    <div className="px-5 pt-6 pb-10 lg:px-10 lg:pt-10">
+      <div className="mb-6">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-500">
+          회원
+        </div>
+        <h1
+          className="mt-1 text-2xl font-extrabold tracking-tight text-primary-900 lg:text-3xl"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          회원 관리
+        </h1>
+        <p className="mt-1 text-sm text-neutral-500">
+          회원 목록과 역할, 스텝 자격을 관리합니다.
+        </p>
+      </div>
       <MemberList
         profiles={profiles}
         currentUserId={user.id}

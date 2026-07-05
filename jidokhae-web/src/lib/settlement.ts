@@ -18,6 +18,7 @@ export type RefundRow = {
   cancelledAt: string | null
   refundAmount: number
   meetingTitle: string | null
+  meetingDate: string | null
   nickname: string
   phone: string | null
 }
@@ -125,6 +126,7 @@ export async function getPendingRefunds(supabase: SupabaseClient): Promise<Refun
     cancelledAt: r.cancelled_at,
     refundAmount: r.paid_amount ?? 0,
     meetingTitle: r.meetings?.title ?? null,
+    meetingDate: r.meetings?.date ?? null,
     nickname: r.profiles?.nickname ?? '(알수없음)',
     phone: r.profiles?.phone ?? null,
   }))

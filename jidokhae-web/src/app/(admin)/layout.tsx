@@ -21,7 +21,10 @@ export default async function AdminLayout({
   const nickname = profile.nickname || user.email || '운영자'
 
   return (
-    <div className="min-h-screen">
+    // full-bleed: root 레이아웃의 max-w-screen-sm(640) 캡을 벗어나 admin을 전체 폭으로.
+    // ⚠️ transform(-translate-*) 금지 — 아래 fixed 사이드바의 기준이 뷰포트에서 이 div로 바뀌어 깨진다.
+    // 음수 마진 기법은 containing block을 만들지 않아 fixed가 뷰포트 기준을 유지한다.
+    <div className="min-h-screen w-screen ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)] bg-surface-50">
       {/* 모바일 헤더 + Drawer */}
       <AdminMobileNav role={role} nickname={nickname} />
 
@@ -32,7 +35,10 @@ export default async function AdminLayout({
 
       {/* Main — 데스크톱에서는 사이드바 폭만큼 오프셋 */}
       <main className="min-h-[calc(100vh-56px)] lg:ml-[220px] lg:min-h-screen">
-        {children}
+        {/* 초광폭 화면에서 가독성 유지 — 콘텐츠 최대폭 제한 + 중앙정렬 */}
+        <div className="mx-auto max-w-[1400px]">
+          {children}
+        </div>
       </main>
     </div>
   )
