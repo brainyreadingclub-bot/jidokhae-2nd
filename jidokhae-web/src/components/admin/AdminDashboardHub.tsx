@@ -82,7 +82,7 @@ export default async function AdminDashboardHub() {
         <div className="mb-6 space-y-2">
           {transferAlerts.pendingTransferCount > 0 && (
             <Link
-              href="/admin/meetings"
+              href="/admin/settlements"
               className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-accent-700 transition-colors hover:bg-accent-100"
               style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-200)' }}
             >
@@ -95,7 +95,7 @@ export default async function AdminDashboardHub() {
           )}
           {transferAlerts.pendingRefundCount > 0 && (
             <Link
-              href="/admin/meetings"
+              href="/admin/settlements"
               className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3 text-sm font-medium text-accent-700 transition-colors hover:bg-accent-100"
               style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-200)' }}
             >
