@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatFee } from '@/lib/kst'
 import { sortDepositRows, formatKSTDateTime } from '@/lib/settlement'
@@ -60,9 +60,16 @@ export default function DepositConfirmTable({ rows }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [banner, setBanner] = useState<BannerState | null>(null)
 
+  const headerCheckboxRef = useRef<HTMLInputElement>(null)
+
   const sorted = sortDepositRows(rows, sort)
   const allIds = sorted.map((r) => r.id)
   const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id))
+  const isIndeterminate = selected.size > 0 && !allSelected
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = isIndeterminate
+  }, [isIndeterminate])
 
   function toggleAll() {
     if (allSelected) {
@@ -222,6 +229,7 @@ export default function DepositConfirmTable({ rows }: Props) {
             >
               <th className="px-3 py-2.5 text-left">
                 <input
+                  ref={headerCheckboxRef}
                   type="checkbox"
                   checked={allSelected}
                   onChange={toggleAll}
@@ -245,8 +253,6 @@ export default function DepositConfirmTable({ rows }: Props) {
               return (
                 <tr
                   key={row.id}
-                  onClick={() => toggleRow(row.id)}
-                  className="cursor-pointer"
                   style={{
                     borderBottom: '1px solid var(--color-surface-200)',
                     backgroundColor: isChecked
@@ -260,7 +266,6 @@ export default function DepositConfirmTable({ rows }: Props) {
                       type="checkbox"
                       checked={isChecked}
                       onChange={() => toggleRow(row.id)}
-                      onClick={(e) => e.stopPropagation()}
                       aria-label={`${depositName} 선택`}
                       className="w-4 h-4 accent-[var(--color-primary-600)] cursor-pointer"
                     />
