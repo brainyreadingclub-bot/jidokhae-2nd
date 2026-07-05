@@ -27,7 +27,7 @@ export type DepositSort = 'created' | 'amount' | 'meeting'
 // 신청 시각(UTC ISO) → 오늘(KST YYYY-MM-DD) 기준 경과 일수
 export function elapsedDaysKST(createdAtUTC: string, kstToday: string): number {
   const createdKSTDate = toKSTDate(new Date(createdAtUTC))
-  return getDaysUntil(kstToday, createdKSTDate)
+  return getDaysUntil(kstToday, createdKSTDate) // today - created = 경과 일수
 }
 
 // UTC ISO → "M/D 오전/오후 h:mm" (KST)
@@ -95,6 +95,14 @@ export async function getPendingDeposits(supabase: SupabaseClient): Promise<Depo
   }))
 }
 
+type RefundRegRow = {
+  id: string
+  cancelled_at: string | null
+  paid_amount: number | null
+  profiles: { nickname: string | null; phone: string | null } | null
+  meetings: { title: string | null; date: string | null } | null
+}
+
 // 탭 B: 환불 대기 (계좌이체 취소 + 미환불 + 실입금)
 export async function getPendingRefunds(supabase: SupabaseClient): Promise<RefundRow[]> {
   const { data, error } = await supabase
@@ -112,7 +120,7 @@ export async function getPendingRefunds(supabase: SupabaseClient): Promise<Refun
   // 실제 환불 처리는 mark-refunded 라우트가 calculateRefund(meeting.date, paid_amount, cancelled_at)로
   // 서버에서 재계산해 기록한다. 이 탭에 뜨는 계좌이체 취소 건은 대부분 100%(모임 삭제 or 3일+ 전 취소)라
   // 원금 표시가 실무상 오해를 최소화한다.
-  return ((data ?? []) as unknown as RegRow[]).map((r) => ({
+  return ((data ?? []) as unknown as RefundRegRow[]).map((r) => ({
     id: r.id,
     cancelledAt: r.cancelled_at,
     refundAmount: r.paid_amount ?? 0,
