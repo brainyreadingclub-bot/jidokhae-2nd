@@ -256,9 +256,11 @@ export async function getVenueSettlementData(
 /** 계좌이체 관련 알림 집계 */
 export async function getTransferAlerts(supabase: SupabaseClient) {
   const [pendingResult, refundResult] = await Promise.all([
+    // 무료 회원(is_free)은 코멥이라 입금이 없어 정산 목록에서 제외된다 →
+    // 배지 카운트도 목록과 정합을 맞추려 함께 제외. 대기 건은 소수라 행을 받아 JS 필터해도 부담 없음.
     supabase
       .from('registrations')
-      .select('id', { count: 'exact', head: true })
+      .select('id, profiles(is_free)')
       .eq('status', 'pending_transfer'),
     supabase
       .from('registrations')
@@ -269,8 +271,13 @@ export async function getTransferAlerts(supabase: SupabaseClient) {
       .gt('paid_amount', 0),
   ])
 
+  const pendingRows = (pendingResult.data ?? []) as unknown as {
+    profiles: { is_free: boolean | null } | null
+  }[]
+  const pendingTransferCount = pendingRows.filter((r) => r.profiles?.is_free !== true).length
+
   return {
-    pendingTransferCount: pendingResult.count ?? 0,
+    pendingTransferCount,
     pendingRefundCount: refundResult.count ?? 0,
   }
 }

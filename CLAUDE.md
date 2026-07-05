@@ -157,6 +157,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | Registration uniqueness | `user_id + meeting_id` is NOT UNIQUE — re-registration creates new record |
 | Meeting fee | Per-meeting variable (not hardcoded 10,000원) |
 | Staff discount | admin/editor/`is_staff=true` 회원에게 정기모임 참가비 50% 할인 (모임당 슬롯 2명). 코드 `STAFF_DISCOUNT_RATE=0.5` / `STAFF_DISCOUNT_MAX_PER_MEETING=2` (`src/lib/pricing.ts`) ↔ SQL `staff_discount_max_per_meeting()` 동기 필수. 결제 화이트리스트 `[fee, fee/2]` + RPC FOR UPDATE 락에서 자격/슬롯 재검증 (불일치 시 자동 환불). PR #33~#35 |
+| Free member (100% 할인) | `profiles.is_free=true` 회원은 정산 "입금 확인 대기" 목록/배지에서 제외 (`settlement.ts getPendingDeposits` + `dashboard.ts getTransferAlerts`, JS 필터 `is_free !== true`). 배경: 운영자 본인 + 소수 고정 무료 참석자가 계좌이체로 신청 후 미입금(코멥)하여 `pending_transfer`로 영구 잔존 → 정산 노이즈. 최소 설계 — 대상자는 **기존 계좌이체 흐름 그대로** 신청(신청/결제/취소 코드 무변경), 정산 조회에서만 제외. `pending_transfer`는 원래 매출·환불 대기에도 안 잡히므로 추가 처리 불필요. 스텝 할인(`is_staff`)과 완전 별개. 대상 지정은 SQL `UPDATE profiles SET is_free=true WHERE nickname=...` (토글 UI 없음, 고정 소수라). 마이그레이션: `migration-free-member.sql` |
 | Batch refund timeout | `Promise.allSettled` required (Vercel 10-second limit) |
 | Payment mode | redirect. PortOne V2는 결제창에서 완료 시 **이미 승인된 상태**로 redirect → redirect 핸들러/웹훅은 `getPayment()`로 `status === 'PAID'` 검증만 수행 (토스처럼 confirmPayment로 돈을 이동시키지 않음) |
 | Webhook backup | PortOne Webhook (`/api/webhooks/portone`, `PORTONE_WEBHOOK_SECRET` 서명 검증) as backup when frontend redirect fails. 레거시 `/api/webhooks/tosspayments`는 미사용 잔존 |

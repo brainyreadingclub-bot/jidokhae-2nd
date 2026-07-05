@@ -68,22 +68,25 @@ type RegRow = {
   cancelled_at: string | null
   paid_amount: number | null
   is_staff_discount: boolean
-  profiles: { nickname: string | null; phone: string | null } | null
+  profiles: { nickname: string | null; phone: string | null; is_free: boolean | null } | null
   meetings: { title: string | null; date: string | null } | null
 }
 
 // 탭 A: pending_transfer 전체 (모임/프로필 join)
+// 무료 회원(is_free)은 코멥이라 입금이 없다 — 입금 확인 대기 목록에서 제외.
 export async function getPendingDeposits(supabase: SupabaseClient): Promise<DepositRow[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, phone), meetings(title, date)')
+    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, phone, is_free), meetings(title, date)')
     .eq('status', 'pending_transfer')
     .order('created_at', { ascending: true })
 
   if (error) throw error
   const kstToday = getKSTToday()
 
-  return ((data ?? []) as unknown as RegRow[]).map((r) => ({
+  return ((data ?? []) as unknown as RegRow[])
+    .filter((r) => r.profiles?.is_free !== true)
+    .map((r) => ({
     id: r.id,
     createdAt: r.created_at,
     paidAmount: r.paid_amount ?? 0,
