@@ -38,7 +38,7 @@ function translateReason(code: string): string {
   return REASON_MAP[code] ?? code
 }
 
-// "YYYY-MM-DD" → "M/D" 형식 (미팅 날짜 기반 입금자명 접두어)
+// "YYYY-MM-DD" → "M/D 형식 (미팅 날짜 기반 입금자명 접두어)
 function meetingDatePrefix(meetingDate: string): string {
   if (!meetingDate) return ''
   const parts = meetingDate.split('-')
@@ -61,6 +61,7 @@ export default function DepositConfirmTable({ rows }: Props) {
   const [banner, setBanner] = useState<BannerState | null>(null)
 
   const headerCheckboxRef = useRef<HTMLInputElement>(null)
+  const mobileSelectAllRef = useRef<HTMLInputElement>(null)
 
   const sorted = sortDepositRows(rows, sort)
   const allIds = sorted.map((r) => r.id)
@@ -69,6 +70,10 @@ export default function DepositConfirmTable({ rows }: Props) {
 
   useEffect(() => {
     if (headerCheckboxRef.current) headerCheckboxRef.current.indeterminate = isIndeterminate
+  }, [isIndeterminate])
+
+  useEffect(() => {
+    if (mobileSelectAllRef.current) mobileSelectAllRef.current.indeterminate = isIndeterminate
   }, [isIndeterminate])
 
   function toggleAll() {
@@ -154,6 +159,18 @@ export default function DepositConfirmTable({ rows }: Props) {
           <span className="text-sm text-neutral-500">
             {selected.size > 0 ? `${selected.size}건 선택됨` : `총 ${rows.length}건`}
           </span>
+          {/* 모바일 전체 선택 (md 이상에서는 테이블 헤더 체크박스 사용) */}
+          <label className="md:hidden flex items-center gap-1.5 cursor-pointer select-none">
+            <input
+              ref={mobileSelectAllRef}
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleAll}
+              aria-label="전체 선택"
+              className="w-5 h-5 accent-[var(--color-primary-600)] cursor-pointer"
+            />
+            <span className="text-xs text-neutral-500">전체 선택</span>
+          </label>
         </div>
         <div className="flex items-center gap-2">
           <label htmlFor="deposit-sort" className="text-xs text-neutral-400 sr-only">
@@ -214,9 +231,83 @@ export default function DepositConfirmTable({ rows }: Props) {
         </div>
       )}
 
-      {/* 테이블 */}
+      {/* 모바일 카드 목록 */}
+      <div className="md:hidden space-y-2">
+        {sorted.map((row) => {
+          const isChecked = selected.has(row.id)
+          const prefix = meetingDatePrefix(row.meetingDate)
+          const depositName = `${prefix}${row.nickname}`
+          return (
+            <div
+              key={row.id}
+              className="rounded-[var(--radius-md)] p-3"
+              style={{
+                backgroundColor: isChecked ? 'var(--color-primary-50)' : 'var(--color-surface-50)',
+                border: '1px solid var(--color-surface-200)',
+              }}
+            >
+              {/* Row 1: 체크박스 + 입금자명 + 금액 */}
+              <div className="flex items-center gap-3">
+                <label className="flex items-center cursor-pointer p-1 -m-1">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleRow(row.id)}
+                    aria-label={`${depositName} 선택`}
+                    className="w-5 h-5 accent-[var(--color-primary-600)] cursor-pointer"
+                  />
+                </label>
+                <div className="flex items-center justify-between flex-1 min-w-0 gap-2">
+                  <span className="text-sm font-medium text-primary-800 truncate">
+                    {depositName}
+                  </span>
+                  <span className="text-sm text-primary-800 whitespace-nowrap shrink-0">
+                    {row.isStaffDiscount ? (
+                      <span>
+                        <span className="text-accent-600 font-bold">{formatFee(row.paidAmount)}원</span>
+                        <span
+                          className="ml-1 text-[10px] font-bold text-accent-600 rounded px-1 py-0.5"
+                          style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-200)' }}
+                        >
+                          스텝½
+                        </span>
+                      </span>
+                    ) : (
+                      <span>{formatFee(row.paidAmount)}원</span>
+                    )}
+                  </span>
+                </div>
+              </div>
+              {/* Row 2: 신청 시각 + 경과 */}
+              <div className="mt-1.5 flex items-center gap-2 text-xs text-neutral-500">
+                <span>{formatKSTDateTime(row.createdAt)}</span>
+                <span className="text-neutral-300">·</span>
+                <span>
+                  {row.elapsedDays}일
+                  {row.elapsedDays > 30 && (
+                    <span
+                      className="ml-0.5"
+                      title="30일 초과 미입금"
+                      aria-label="30일 초과 미입금"
+                    >
+                      ⏳
+                    </span>
+                  )}
+                </span>
+              </div>
+              {/* Row 3: 모임 + 연락처 */}
+              <div className="mt-1 flex items-center justify-between gap-2 text-xs">
+                <span className="text-primary-600 truncate">{row.meetingTitle}</span>
+                <span className="text-neutral-400 shrink-0">{row.phone ?? '-'}</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 데스크톱 테이블 */}
       <div
-        className="rounded-[var(--radius-md)] overflow-x-auto"
+        className="hidden md:block rounded-[var(--radius-md)] overflow-x-auto"
         style={{ border: '1px solid var(--color-surface-300)' }}
       >
         <table className="w-full text-sm min-w-[640px]">
