@@ -8,9 +8,10 @@ import type { DepositRow, RefundRow } from '@/lib/settlement'
 type Props = {
   deposits: DepositRow[]
   refunds: RefundRow[]
+  excludedDeposits: DepositRow[]
 }
 
-export default function SettlementTabs({ deposits, refunds }: Props) {
+export default function SettlementTabs({ deposits, refunds, excludedDeposits }: Props) {
   const [tab, setTab] = useState<'deposit' | 'refund'>('deposit')
 
   return (
@@ -101,7 +102,7 @@ export default function SettlementTabs({ deposits, refunds }: Props) {
         aria-labelledby={tab === 'deposit' ? 'tab-deposit' : 'tab-refund'}
         className="mt-4"
       >
-        {tab === 'deposit' && <DepositConfirmTable rows={deposits} />}
+        {tab === 'deposit' && <DepositConfirmTable rows={deposits} excludedRows={excludedDeposits} />}
         {tab === 'refund' && <RefundWaitingTable rows={refunds} />}
       </div>
     </div>

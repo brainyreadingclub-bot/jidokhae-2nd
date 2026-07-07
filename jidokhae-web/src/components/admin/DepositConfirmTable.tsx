@@ -52,14 +52,17 @@ function meetingDatePrefix(meetingDate: string): string {
 
 type Props = {
   rows: DepositRow[]
+  excludedRows: DepositRow[]
 }
 
-export default function DepositConfirmTable({ rows }: Props) {
+export default function DepositConfirmTable({ rows, excludedRows }: Props) {
   const router = useRouter()
   const [sort, setSort] = useState<DepositSort>('created')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [submitting, setSubmitting] = useState(false)
   const [banner, setBanner] = useState<BannerState | null>(null)
+  const [excludingId, setExcludingId] = useState<string | null>(null)
+  const [showExcluded, setShowExcluded] = useState(false)
 
   const headerCheckboxRef = useRef<HTMLInputElement>(null)
   const mobileSelectAllRef = useRef<HTMLInputElement>(null)
@@ -141,7 +144,36 @@ export default function DepositConfirmTable({ rows }: Props) {
     setSubmitting(false)
   }
 
-  if (rows.length === 0) {
+  // "확인 제외" 토글 (개별 건). excluded=true → 목록에서 숨김, false → 복구.
+  async function handleExclude(id: string, excluded: boolean) {
+    if (excludingId) return
+    setExcludingId(id)
+    setBanner(null)
+    try {
+      const res = await fetch('/api/admin/registrations/exclude-settlement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationId: id, excluded }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ message: undefined })) as { message?: string }
+        setBanner({ confirmed: 0, failures: [], networkError: body.message || '요청에 실패했습니다' })
+        setExcludingId(null)
+        return
+      }
+      setSelected((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+      router.refresh()
+    } catch {
+      setBanner({ confirmed: 0, failures: [], networkError: '네트워크 오류' })
+    }
+    setExcludingId(null)
+  }
+
+  if (rows.length === 0 && excludedRows.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-neutral-400">
         입금 확인 대기 중인 건이 없습니다.
@@ -151,6 +183,48 @@ export default function DepositConfirmTable({ rows }: Props) {
 
   return (
     <div>
+      {/* 결과 배너 */}
+      {banner && (
+        <div
+          className="mb-3 rounded-md px-3 py-2.5 text-sm"
+          style={{
+            backgroundColor: banner.networkError || banner.failures.length > 0
+              ? 'var(--color-accent-50)'
+              : 'var(--color-primary-50)',
+            border: `1px solid ${banner.networkError || banner.failures.length > 0 ? 'var(--color-accent-200)' : 'var(--color-primary-200)'}`,
+          }}
+        >
+          {banner.networkError ? (
+            <span className="text-accent-700">{banner.networkError}</span>
+          ) : (
+            <span>
+              <span className="font-medium text-primary-800">✅ {banner.confirmed}건 확인</span>
+              {banner.failures.length > 0 && (
+                <>
+                  <span className="text-neutral-400"> · </span>
+                  <span className="font-medium text-accent-700">{banner.failures.length}건 실패</span>
+                  <ul className="mt-1 space-y-0.5">
+                    {banner.failures.map((f, i) => (
+                      <li key={i} className="text-xs text-accent-600">
+                        {f.nickname} ({f.reason})
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </span>
+          )}
+        </div>
+      )}
+
+      {rows.length === 0 && (
+        <p className="py-12 text-center text-sm text-neutral-400">
+          입금 확인 대기 중인 건이 없습니다.
+        </p>
+      )}
+
+      {rows.length > 0 && (
+      <>
       {/* 툴바 */}
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
@@ -194,40 +268,6 @@ export default function DepositConfirmTable({ rows }: Props) {
           </button>
         </div>
       </div>
-
-      {/* 결과 배너 */}
-      {banner && (
-        <div
-          className="mb-3 rounded-md px-3 py-2.5 text-sm"
-          style={{
-            backgroundColor: banner.networkError || banner.failures.length > 0
-              ? 'var(--color-accent-50)'
-              : 'var(--color-primary-50)',
-            border: `1px solid ${banner.networkError || banner.failures.length > 0 ? 'var(--color-accent-200)' : 'var(--color-primary-200)'}`,
-          }}
-        >
-          {banner.networkError ? (
-            <span className="text-accent-700">{banner.networkError}</span>
-          ) : (
-            <span>
-              <span className="font-medium text-primary-800">✅ {banner.confirmed}건 확인</span>
-              {banner.failures.length > 0 && (
-                <>
-                  <span className="text-neutral-400"> · </span>
-                  <span className="font-medium text-accent-700">{banner.failures.length}건 실패</span>
-                  <ul className="mt-1 space-y-0.5">
-                    {banner.failures.map((f, i) => (
-                      <li key={i} className="text-xs text-accent-600">
-                        {f.nickname} ({f.reason})
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </span>
-          )}
-        </div>
-      )}
 
       {/* 모바일 카드 목록 */}
       <div className="md:hidden space-y-2">
@@ -301,6 +341,18 @@ export default function DepositConfirmTable({ rows }: Props) {
                   {row.phone ?? '-'}
                 </span>
               </div>
+              {/* Row 4: 확인 제외 */}
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleExclude(row.id, true)}
+                  disabled={excludingId === row.id}
+                  className="text-xs text-neutral-500 rounded-md px-2 py-1 hover:text-accent-700 disabled:opacity-40"
+                  style={{ border: '1px solid var(--color-surface-300)' }}
+                >
+                  {excludingId === row.id ? '처리 중…' : '확인 제외'}
+                </button>
+              </div>
             </div>
           )
         })}
@@ -337,6 +389,7 @@ export default function DepositConfirmTable({ rows }: Props) {
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">연락처</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">모임</th>
               <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">경과</th>
+              <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">관리</th>
             </tr>
           </thead>
           <tbody>
@@ -418,12 +471,77 @@ export default function DepositConfirmTable({ rows }: Props) {
                   <td className="px-3 py-2.5 text-right text-neutral-600 whitespace-nowrap">
                     {row.elapsedDays}일
                   </td>
+                  {/* 관리: 확인 제외 */}
+                  <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => handleExclude(row.id, true)}
+                      disabled={excludingId === row.id}
+                      className="text-xs text-neutral-500 rounded-md px-2 py-1 hover:text-accent-700 disabled:opacity-40"
+                      style={{ border: '1px solid var(--color-surface-300)' }}
+                    >
+                      {excludingId === row.id ? '처리 중…' : '확인 제외'}
+                    </button>
+                  </td>
                 </tr>
               )
             })}
           </tbody>
         </table>
       </div>
+      </>
+      )}
+
+      {/* 확인 제외된 건 (접힘, 복구용) */}
+      {excludedRows.length > 0 && (
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => setShowExcluded((v) => !v)}
+            className="text-xs text-neutral-500 hover:text-primary-700"
+          >
+            {showExcluded ? '▾' : '▸'} 제외된 건 {excludedRows.length}개 {showExcluded ? '숨기기' : '보기'}
+          </button>
+          {showExcluded && (
+            <div className="mt-2 space-y-2">
+              {excludedRows.map((row) => {
+                const prefix = meetingDatePrefix(row.meetingDate)
+                const depositName = `${prefix}${row.nickname}`
+                return (
+                  <div
+                    key={row.id}
+                    className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] px-3 py-2"
+                    style={{ backgroundColor: 'var(--color-surface-100)', border: '1px solid var(--color-surface-200)' }}
+                  >
+                    <div className="min-w-0 text-xs">
+                      <span className="font-medium text-neutral-600">{depositName}</span>
+                      <span className="mx-1.5 text-neutral-300">·</span>
+                      <span className="text-neutral-500">{formatFee(row.paidAmount)}원</span>
+                      {row.realName && (
+                        <>
+                          <span className="mx-1.5 text-neutral-300">·</span>
+                          <span className="text-neutral-500">{row.realName}</span>
+                        </>
+                      )}
+                      <span className="mx-1.5 text-neutral-300">·</span>
+                      <span className="text-neutral-400 truncate">{row.meetingTitle}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleExclude(row.id, false)}
+                      disabled={excludingId === row.id}
+                      className="shrink-0 text-xs text-primary-700 rounded-md px-2 py-1 hover:bg-primary-50 disabled:opacity-40"
+                      style={{ border: '1px solid var(--color-primary-200)' }}
+                    >
+                      {excludingId === row.id ? '처리 중…' : '제외 해제'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

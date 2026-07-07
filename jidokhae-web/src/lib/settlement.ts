@@ -76,21 +76,9 @@ type RegRow = {
   meetings: { id: string | null; title: string | null; date: string | null } | null
 }
 
-// 탭 A: pending_transfer 전체 (모임/프로필 join)
-// 무료 회원(is_free)은 코멥이라 입금이 없다 — 입금 확인 대기 목록에서 제외.
-export async function getPendingDeposits(supabase: SupabaseClient): Promise<DepositRow[]> {
-  const { data, error } = await supabase
-    .from('registrations')
-    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, real_name, phone, is_free), meetings(id, title, date)')
-    .eq('status', 'pending_transfer')
-    .order('created_at', { ascending: true })
-
-  if (error) throw error
-  const kstToday = getKSTToday()
-
-  return ((data ?? []) as unknown as RegRow[])
-    .filter((r) => r.profiles?.is_free !== true)
-    .map((r) => ({
+// RegRow → DepositRow 변환 (getPendingDeposits / getExcludedDeposits 공용)
+function toDepositRow(r: RegRow, kstToday: string): DepositRow {
+  return {
     id: r.id,
     createdAt: r.created_at,
     paidAmount: r.paid_amount ?? 0,
@@ -102,7 +90,41 @@ export async function getPendingDeposits(supabase: SupabaseClient): Promise<Depo
     phone: r.profiles?.phone ?? null,
     elapsedDays: elapsedDaysKST(r.created_at, kstToday),
     isStaffDiscount: r.is_staff_discount,
-  }))
+  }
+}
+
+// 탭 A: pending_transfer 전체 (모임/프로필 join)
+// 무료 회원(is_free)은 코멥이라 입금이 없다 — 입금 확인 대기 목록에서 제외.
+// settlement_excluded=true(운영자가 "확인 제외" 처리)도 목록에서 숨긴다.
+export async function getPendingDeposits(supabase: SupabaseClient): Promise<DepositRow[]> {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, real_name, phone, is_free), meetings(id, title, date)')
+    .eq('status', 'pending_transfer')
+    .eq('settlement_excluded', false)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  const kstToday = getKSTToday()
+
+  return ((data ?? []) as unknown as RegRow[])
+    .filter((r) => r.profiles?.is_free !== true)
+    .map((r) => toDepositRow(r, kstToday))
+}
+
+// "확인 제외" 처리된 pending_transfer 건 (최신순) — 정산 화면 하단 복구용
+export async function getExcludedDeposits(supabase: SupabaseClient): Promise<DepositRow[]> {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, real_name, phone, is_free), meetings(id, title, date)')
+    .eq('status', 'pending_transfer')
+    .eq('settlement_excluded', true)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  const kstToday = getKSTToday()
+
+  return ((data ?? []) as unknown as RegRow[]).map((r) => toDepositRow(r, kstToday))
 }
 
 type RefundRegRow = {

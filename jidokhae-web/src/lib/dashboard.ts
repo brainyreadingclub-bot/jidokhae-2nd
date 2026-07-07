@@ -258,10 +258,12 @@ export async function getTransferAlerts(supabase: SupabaseClient) {
   const [pendingResult, refundResult] = await Promise.all([
     // 무료 회원(is_free)은 코멥이라 입금이 없어 정산 목록에서 제외된다 →
     // 배지 카운트도 목록과 정합을 맞추려 함께 제외. 대기 건은 소수라 행을 받아 JS 필터해도 부담 없음.
+    // settlement_excluded(운영자 "확인 제외")도 목록에서 숨기므로 배지에서도 제외.
     supabase
       .from('registrations')
       .select('id, profiles(is_free)')
-      .eq('status', 'pending_transfer'),
+      .eq('status', 'pending_transfer')
+      .eq('settlement_excluded', false),
     supabase
       .from('registrations')
       .select('id', { count: 'exact', head: true })

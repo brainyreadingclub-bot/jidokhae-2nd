@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { createServiceClient } from '@/lib/supabase/admin'
-import { getPendingDeposits, getPendingRefunds } from '@/lib/settlement'
+import { getPendingDeposits, getPendingRefunds, getExcludedDeposits } from '@/lib/settlement'
 import SettlementTabs from '@/components/admin/SettlementTabs'
 
 export default async function AdminSettlementsPage() {
@@ -14,9 +14,10 @@ export default async function AdminSettlementsPage() {
 
   const supabase = createServiceClient()
 
-  const [deposits, refunds] = await Promise.all([
+  const [deposits, refunds, excludedDeposits] = await Promise.all([
     getPendingDeposits(supabase),
     getPendingRefunds(supabase),
+    getExcludedDeposits(supabase),
   ])
 
   return (
@@ -36,7 +37,7 @@ export default async function AdminSettlementsPage() {
         </p>
       </div>
       <div className="mt-6">
-        <SettlementTabs deposits={deposits} refunds={refunds} />
+        <SettlementTabs deposits={deposits} refunds={refunds} excludedDeposits={excludedDeposits} />
       </div>
     </div>
   )
