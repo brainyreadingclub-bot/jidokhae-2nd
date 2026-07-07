@@ -3,16 +3,19 @@
 import { useState } from 'react'
 import DepositConfirmTable from '@/components/admin/DepositConfirmTable'
 import RefundWaitingTable from '@/components/admin/RefundWaitingTable'
-import type { DepositRow, RefundRow } from '@/lib/settlement'
+import RegionRevenueTable from '@/components/admin/RegionRevenueTable'
+import type { DepositRow, RefundRow, RegionRevenueEntry } from '@/lib/settlement'
 
 type Props = {
   deposits: DepositRow[]
   refunds: RefundRow[]
   excludedDeposits: DepositRow[]
+  regionEntries: RegionRevenueEntry[]
+  currentMonth: string
 }
 
-export default function SettlementTabs({ deposits, refunds, excludedDeposits }: Props) {
-  const [tab, setTab] = useState<'deposit' | 'refund'>('deposit')
+export default function SettlementTabs({ deposits, refunds, excludedDeposits, regionEntries, currentMonth }: Props) {
+  const [tab, setTab] = useState<'deposit' | 'refund' | 'region'>('deposit')
 
   return (
     <div>
@@ -93,17 +96,40 @@ export default function SettlementTabs({ deposits, refunds, excludedDeposits }: 
             {refunds.length}
           </span>
         </button>
+
+        <button
+          type="button"
+          role="tab"
+          id="tab-region"
+          aria-controls="tab-panel-region"
+          aria-selected={tab === 'region'}
+          onClick={() => setTab('region')}
+          className={[
+            'flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors',
+            tab === 'region'
+              ? 'text-primary-800'
+              : 'text-neutral-500 hover:text-primary-700',
+          ].join(' ')}
+          style={
+            tab === 'region'
+              ? { borderBottom: '2px solid var(--color-primary-600)', marginBottom: '-1px' }
+              : undefined
+          }
+        >
+          지역별 매출
+        </button>
       </div>
 
       {/* 탭 콘텐츠 */}
       <div
         role="tabpanel"
-        id={tab === 'deposit' ? 'tab-panel-deposit' : 'tab-panel-refund'}
-        aria-labelledby={tab === 'deposit' ? 'tab-deposit' : 'tab-refund'}
+        id={`tab-panel-${tab}`}
+        aria-labelledby={`tab-${tab}`}
         className="mt-4"
       >
         {tab === 'deposit' && <DepositConfirmTable rows={deposits} excludedRows={excludedDeposits} />}
         {tab === 'refund' && <RefundWaitingTable rows={refunds} />}
+        {tab === 'region' && <RegionRevenueTable entries={regionEntries} currentMonth={currentMonth} />}
       </div>
     </div>
   )

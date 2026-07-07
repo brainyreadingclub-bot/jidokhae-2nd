@@ -127,6 +127,50 @@ export async function getExcludedDeposits(supabase: SupabaseClient): Promise<Dep
   return ((data ?? []) as unknown as RegRow[]).map((r) => toDepositRow(r, kstToday))
 }
 
+// ============================================================
+// 지역별 매출 보고서 — 공간대여비 정산 근거
+// confirmed(결제 완료) 등록의 paid_amount를 지역별로 집계한다.
+// 매출은 "실제 결제된 총액"(gross) — 환불 차감 없음 (앱 대시보드 순매출과 다름).
+// 지역 목록은 데이터에서 동적 추출 (하드코딩 금지 — 대구 등 추가 대비).
+// ============================================================
+
+// 등록 1건 = 1 entry. 클라이언트가 월별/전체로 그룹핑.
+export type RegionRevenueEntry = {
+  region: string
+  month: string // "YYYY-MM" (meeting.date 기준)
+  meetingId: string
+  paidAmount: number
+}
+
+type RegionRegRow = {
+  paid_amount: number | null
+  meetings: { id: string | null; region: string | null; date: string | null; status: string | null } | null
+}
+
+export async function getRegionRevenueData(supabase: SupabaseClient): Promise<RegionRevenueEntry[]> {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('paid_amount, meetings!inner(id, region, date, status)')
+    .eq('status', 'confirmed')
+
+  if (error) throw error
+
+  const rows = (data ?? []) as unknown as RegionRegRow[]
+  const entries: RegionRevenueEntry[] = []
+  for (const r of rows) {
+    const m = r.meetings
+    // 삭제된 모임 방어적 제외 (confirmed와 공존 불가하지만 안전하게)
+    if (!m || !m.id || !m.date || m.status === 'deleted') continue
+    entries.push({
+      region: m.region ?? '미지정',
+      month: m.date.slice(0, 7),
+      meetingId: m.id,
+      paidAmount: r.paid_amount ?? 0,
+    })
+  }
+  return entries
+}
+
 type RefundRegRow = {
   id: string
   cancelled_at: string | null
