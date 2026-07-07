@@ -55,6 +55,11 @@ export default function RegionRevenueTable({ entries, currentMonth }: Props) {
     return entries.reduce((min, e) => (e.month < min ? e.month : min), currentMonth)
   }, [entries, currentMonth])
 
+  // 월 네비 상한 — 현재 월 또는 미래 예정 모임(선결제 confirmed)이 있으면 그 최신 월까지
+  const latestMonth = useMemo(() => {
+    return entries.reduce((max, e) => (e.month > max ? e.month : max), currentMonth)
+  }, [entries, currentMonth])
+
   const rows = useMemo(() => {
     const filtered = view === 'all' ? entries : entries.filter((e) => e.month === month)
     return aggregate(filtered)
@@ -74,7 +79,7 @@ export default function RegionRevenueTable({ entries, currentMonth }: Props) {
   )
 
   const canPrev = month > earliestMonth
-  const canNext = month < currentMonth
+  const canNext = month < latestMonth
 
   return (
     <div>

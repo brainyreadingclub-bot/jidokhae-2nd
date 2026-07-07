@@ -150,7 +150,7 @@ type RegionRegRow = {
 export async function getRegionRevenueData(supabase: SupabaseClient): Promise<RegionRevenueEntry[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('paid_amount, meetings!inner(id, region, date, status)')
+    .select('paid_amount, meetings(id, region, date, status)')
     .eq('status', 'confirmed')
 
   if (error) throw error
@@ -159,8 +159,8 @@ export async function getRegionRevenueData(supabase: SupabaseClient): Promise<Re
   const entries: RegionRevenueEntry[] = []
   for (const r of rows) {
     const m = r.meetings
-    // 삭제된 모임 방어적 제외 (confirmed와 공존 불가하지만 안전하게)
-    if (!m || !m.id || !m.date || m.status === 'deleted') continue
+    // active 모임만 집계 — deleting(환불 진행 중)/deleted 제외. getVenueSettlementData 선례와 동일.
+    if (!m || !m.id || !m.date || m.status !== 'active') continue
     entries.push({
       region: m.region ?? '미지정',
       month: m.date.slice(0, 7),
