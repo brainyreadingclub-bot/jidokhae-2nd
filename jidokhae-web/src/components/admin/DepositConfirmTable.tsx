@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatFee } from '@/lib/kst'
 import { sortDepositRows, formatKSTDateTime } from '@/lib/settlement'
@@ -279,22 +280,21 @@ export default function DepositConfirmTable({ rows }: Props) {
               <div className="mt-1.5 flex items-center gap-2 text-xs text-neutral-500">
                 <span>{formatKSTDateTime(row.createdAt)}</span>
                 <span className="text-neutral-300">·</span>
-                <span>
-                  {row.elapsedDays}일
-                  {row.elapsedDays > 30 && (
-                    <span
-                      className="ml-0.5"
-                      title="30일 초과 미입금"
-                      aria-label="30일 초과 미입금"
-                    >
-                      ⏳
-                    </span>
-                  )}
-                </span>
+                <span>{row.elapsedDays}일</span>
               </div>
               {/* Row 3: 모임 + 실명·연락처 */}
               <div className="mt-1 flex items-center justify-between gap-2 text-xs">
-                <span className="text-primary-600 truncate">{row.meetingTitle}</span>
+                {row.meetingId ? (
+                  <Link
+                    href={`/admin/meetings/${row.meetingId}`}
+                    target="_blank"
+                    className="text-primary-600 truncate underline underline-offset-2 hover:text-primary-800"
+                  >
+                    {row.meetingTitle}
+                  </Link>
+                ) : (
+                  <span className="text-primary-600 truncate">{row.meetingTitle}</span>
+                )}
                 <span className="text-neutral-400 shrink-0">
                   {row.realName && <span className="text-neutral-500">{row.realName}</span>}
                   {row.realName && <span className="mx-1 text-neutral-300">·</span>}
@@ -329,14 +329,14 @@ export default function DepositConfirmTable({ rows }: Props) {
                   className="w-4 h-4 accent-[var(--color-primary-600)] cursor-pointer"
                 />
               </th>
+              <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">신청 시각</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">입금자명</th>
+              <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">금액</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">닉네임</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">실명</th>
-              <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">금액</th>
-              <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">신청 시각</th>
-              <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">경과</th>
-              <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">모임</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">연락처</th>
+              <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">모임</th>
+              <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">경과</th>
             </tr>
           </thead>
           <tbody>
@@ -364,17 +364,13 @@ export default function DepositConfirmTable({ rows }: Props) {
                       className="w-4 h-4 accent-[var(--color-primary-600)] cursor-pointer"
                     />
                   </td>
+                  {/* 신청 시각 */}
+                  <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
+                    {formatKSTDateTime(row.createdAt)}
+                  </td>
                   {/* 입금자명 */}
                   <td className="px-3 py-2.5 font-medium text-primary-800 whitespace-nowrap">
                     {depositName}
-                  </td>
-                  {/* 닉네임 */}
-                  <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
-                    {row.nickname}
-                  </td>
-                  {/* 실명 */}
-                  <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
-                    {row.realName ?? '-'}
                   </td>
                   {/* 금액 */}
                   <td className="px-3 py-2.5 text-right text-primary-800 whitespace-nowrap">
@@ -392,30 +388,35 @@ export default function DepositConfirmTable({ rows }: Props) {
                       <span>{formatFee(row.paidAmount)}원</span>
                     )}
                   </td>
-                  {/* 신청 시각 */}
+                  {/* 닉네임 */}
                   <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
-                    {formatKSTDateTime(row.createdAt)}
+                    {row.nickname}
+                  </td>
+                  {/* 실명 */}
+                  <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
+                    {row.realName ?? '-'}
+                  </td>
+                  {/* 연락처 */}
+                  <td className="px-3 py-2.5 text-neutral-500 whitespace-nowrap">
+                    {row.phone ?? '-'}
+                  </td>
+                  {/* 모임 */}
+                  <td className="px-3 py-2.5 max-w-[160px] truncate">
+                    {row.meetingId ? (
+                      <Link
+                        href={`/admin/meetings/${row.meetingId}`}
+                        target="_blank"
+                        className="text-primary-700 underline underline-offset-2 hover:text-primary-900"
+                      >
+                        {row.meetingTitle}
+                      </Link>
+                    ) : (
+                      <span className="text-primary-700">{row.meetingTitle}</span>
+                    )}
                   </td>
                   {/* 경과 */}
                   <td className="px-3 py-2.5 text-right text-neutral-600 whitespace-nowrap">
                     {row.elapsedDays}일
-                    {row.elapsedDays > 30 && (
-                      <span
-                        className="ml-1"
-                        title="30일 초과 미입금"
-                        aria-label="30일 초과 미입금"
-                      >
-                        ⏳
-                      </span>
-                    )}
-                  </td>
-                  {/* 모임 */}
-                  <td className="px-3 py-2.5 text-primary-700 max-w-[160px] truncate">
-                    {row.meetingTitle}
-                  </td>
-                  {/* 연락처 */}
-                  <td className="px-3 py-2.5 text-neutral-500">
-                    {row.phone ?? '-'}
                   </td>
                 </tr>
               )

@@ -78,6 +78,7 @@ function makeRow(overrides: Partial<DepositRow> & { id: string }): DepositRow {
   return {
     createdAt: '2026-07-01T00:00:00Z',
     paidAmount: 10000,
+    meetingId: 'm-test',
     meetingTitle: '테스트 모임',
     meetingDate: '2026-07-15',
     nickname: '테스트',

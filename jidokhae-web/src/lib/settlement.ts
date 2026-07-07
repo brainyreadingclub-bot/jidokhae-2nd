@@ -5,6 +5,7 @@ export type DepositRow = {
   id: string
   createdAt: string
   paidAmount: number
+  meetingId: string | null
   meetingTitle: string
   meetingDate: string
   nickname: string
@@ -18,6 +19,7 @@ export type RefundRow = {
   id: string
   cancelledAt: string | null
   refundAmount: number
+  meetingId: string | null
   meetingTitle: string | null
   meetingDate: string | null
   nickname: string
@@ -71,7 +73,7 @@ type RegRow = {
   paid_amount: number | null
   is_staff_discount: boolean
   profiles: { nickname: string | null; real_name: string | null; phone: string | null; is_free: boolean | null } | null
-  meetings: { title: string | null; date: string | null } | null
+  meetings: { id: string | null; title: string | null; date: string | null } | null
 }
 
 // 탭 A: pending_transfer 전체 (모임/프로필 join)
@@ -79,7 +81,7 @@ type RegRow = {
 export async function getPendingDeposits(supabase: SupabaseClient): Promise<DepositRow[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, real_name, phone, is_free), meetings(title, date)')
+    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, real_name, phone, is_free), meetings(id, title, date)')
     .eq('status', 'pending_transfer')
     .order('created_at', { ascending: true })
 
@@ -92,6 +94,7 @@ export async function getPendingDeposits(supabase: SupabaseClient): Promise<Depo
     id: r.id,
     createdAt: r.created_at,
     paidAmount: r.paid_amount ?? 0,
+    meetingId: r.meetings?.id ?? null,
     meetingTitle: r.meetings?.title ?? '삭제된 모임',
     meetingDate: r.meetings?.date ?? '',
     nickname: r.profiles?.nickname ?? '(알수없음)',
@@ -107,14 +110,14 @@ type RefundRegRow = {
   cancelled_at: string | null
   paid_amount: number | null
   profiles: { nickname: string | null; real_name: string | null; phone: string | null } | null
-  meetings: { title: string | null; date: string | null } | null
+  meetings: { id: string | null; title: string | null; date: string | null } | null
 }
 
 // 탭 B: 환불 대기 (계좌이체 취소 + 미환불 + 실입금)
 export async function getPendingRefunds(supabase: SupabaseClient): Promise<RefundRow[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, cancelled_at, paid_amount, profiles(nickname, real_name, phone), meetings(title, date)')
+    .select('id, cancelled_at, paid_amount, profiles(nickname, real_name, phone), meetings(id, title, date)')
     .eq('status', 'cancelled')
     .eq('payment_method', 'transfer')
     .is('refunded_amount', null)
@@ -131,6 +134,7 @@ export async function getPendingRefunds(supabase: SupabaseClient): Promise<Refun
     id: r.id,
     cancelledAt: r.cancelled_at,
     refundAmount: r.paid_amount ?? 0,
+    meetingId: r.meetings?.id ?? null,
     meetingTitle: r.meetings?.title ?? null,
     meetingDate: r.meetings?.date ?? null,
     nickname: r.profiles?.nickname ?? '(알수없음)',

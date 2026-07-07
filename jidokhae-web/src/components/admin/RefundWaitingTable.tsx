@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { formatFee } from '@/lib/kst'
 import { formatKSTDateTime } from '@/lib/settlement'
 import type { RefundRow } from '@/lib/settlement'
@@ -50,7 +51,17 @@ export default function RefundWaitingTable({ rows }: Props) {
             {/* Row 2: 모임 + 날짜 */}
             <div className="mt-1 text-xs text-primary-600 truncate">
               {row.meetingTitle != null ? (
-                <span>{row.meetingTitle}</span>
+                row.meetingId ? (
+                  <Link
+                    href={`/admin/meetings/${row.meetingId}`}
+                    target="_blank"
+                    className="underline underline-offset-2 hover:text-primary-800"
+                  >
+                    {row.meetingTitle}
+                  </Link>
+                ) : (
+                  <span>{row.meetingTitle}</span>
+                )
               ) : (
                 <span className="text-neutral-400">삭제된 모임</span>
               )}
@@ -132,7 +143,17 @@ export default function RefundWaitingTable({ rows }: Props) {
                 {/* 모임 */}
                 <td className="px-3 py-2.5 max-w-[160px] truncate">
                   {row.meetingTitle != null ? (
-                    <span className="text-primary-700">{row.meetingTitle}</span>
+                    row.meetingId ? (
+                      <Link
+                        href={`/admin/meetings/${row.meetingId}`}
+                        target="_blank"
+                        className="text-primary-700 underline underline-offset-2 hover:text-primary-900"
+                      >
+                        {row.meetingTitle}
+                      </Link>
+                    ) : (
+                      <span className="text-primary-700">{row.meetingTitle}</span>
+                    )
                   ) : (
                     <span className="text-neutral-400">삭제된 모임</span>
                   )}
