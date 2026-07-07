@@ -2,7 +2,8 @@ import { redirect } from 'next/navigation'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { createServiceClient } from '@/lib/supabase/admin'
-import { getPendingDeposits, getPendingRefunds, getExcludedDeposits } from '@/lib/settlement'
+import { getPendingDeposits, getPendingRefunds, getExcludedDeposits, getRegionRevenueData } from '@/lib/settlement'
+import { getKSTMonth } from '@/lib/kst'
 import SettlementTabs from '@/components/admin/SettlementTabs'
 
 export default async function AdminSettlementsPage() {
@@ -14,11 +15,13 @@ export default async function AdminSettlementsPage() {
 
   const supabase = createServiceClient()
 
-  const [deposits, refunds, excludedDeposits] = await Promise.all([
+  const [deposits, refunds, excludedDeposits, regionEntries] = await Promise.all([
     getPendingDeposits(supabase),
     getPendingRefunds(supabase),
     getExcludedDeposits(supabase),
+    getRegionRevenueData(supabase),
   ])
+  const currentMonth = getKSTMonth()
 
   return (
     <div className="px-5 pt-6 pb-10 lg:px-10 lg:pt-10">
@@ -37,7 +40,13 @@ export default async function AdminSettlementsPage() {
         </p>
       </div>
       <div className="mt-6">
-        <SettlementTabs deposits={deposits} refunds={refunds} excludedDeposits={excludedDeposits} />
+        <SettlementTabs
+          deposits={deposits}
+          refunds={refunds}
+          excludedDeposits={excludedDeposits}
+          regionEntries={regionEntries}
+          currentMonth={currentMonth}
+        />
       </div>
     </div>
   )
