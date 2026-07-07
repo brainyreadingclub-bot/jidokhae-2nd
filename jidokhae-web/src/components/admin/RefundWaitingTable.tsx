@@ -66,6 +66,9 @@ export default function RefundWaitingTable({ rows }: Props) {
                 ) : (
                   <span>-</span>
                 )}
+                {row.realName && (
+                  <span className="ml-1.5 text-neutral-500">{row.realName}</span>
+                )}
                 {row.phone && (
                   <span className="ml-1.5 text-neutral-400">{row.phone}</span>
                 )}
@@ -83,7 +86,7 @@ export default function RefundWaitingTable({ rows }: Props) {
         className="hidden md:block rounded-[var(--radius-md)] overflow-x-auto"
         style={{ border: '1px solid var(--color-surface-300)' }}
       >
-        <table className="w-full text-sm min-w-[640px]">
+        <table className="w-full text-sm min-w-[720px]">
           <thead>
             <tr
               style={{
@@ -92,6 +95,7 @@ export default function RefundWaitingTable({ rows }: Props) {
               }}
             >
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">닉네임</th>
+              <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">실명</th>
               <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">환불액</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">취소 시각</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">모임</th>
@@ -112,6 +116,10 @@ export default function RefundWaitingTable({ rows }: Props) {
                 {/* 닉네임 */}
                 <td className="px-3 py-2.5 font-medium text-primary-800 whitespace-nowrap">
                   {row.nickname}
+                </td>
+                {/* 실명 */}
+                <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
+                  {row.realName ?? '-'}
                 </td>
                 {/* 환불액 */}
                 <td className="px-3 py-2.5 text-right text-primary-800 whitespace-nowrap">

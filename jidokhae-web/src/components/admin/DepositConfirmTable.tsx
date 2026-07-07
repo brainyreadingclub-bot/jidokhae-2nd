@@ -292,10 +292,14 @@ export default function DepositConfirmTable({ rows }: Props) {
                   )}
                 </span>
               </div>
-              {/* Row 3: 모임 + 연락처 */}
+              {/* Row 3: 모임 + 실명·연락처 */}
               <div className="mt-1 flex items-center justify-between gap-2 text-xs">
                 <span className="text-primary-600 truncate">{row.meetingTitle}</span>
-                <span className="text-neutral-400 shrink-0">{row.phone ?? '-'}</span>
+                <span className="text-neutral-400 shrink-0">
+                  {row.realName && <span className="text-neutral-500">{row.realName}</span>}
+                  {row.realName && <span className="mx-1 text-neutral-300">·</span>}
+                  {row.phone ?? '-'}
+                </span>
               </div>
             </div>
           )
@@ -307,7 +311,7 @@ export default function DepositConfirmTable({ rows }: Props) {
         className="hidden md:block rounded-[var(--radius-md)] overflow-x-auto"
         style={{ border: '1px solid var(--color-surface-300)' }}
       >
-        <table className="w-full text-sm min-w-[640px]">
+        <table className="w-full text-sm min-w-[800px]">
           <thead>
             <tr
               style={{
@@ -326,6 +330,8 @@ export default function DepositConfirmTable({ rows }: Props) {
                 />
               </th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">입금자명</th>
+              <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">닉네임</th>
+              <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">실명</th>
               <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">금액</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">신청 시각</th>
               <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">경과</th>
@@ -361,6 +367,14 @@ export default function DepositConfirmTable({ rows }: Props) {
                   {/* 입금자명 */}
                   <td className="px-3 py-2.5 font-medium text-primary-800 whitespace-nowrap">
                     {depositName}
+                  </td>
+                  {/* 닉네임 */}
+                  <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
+                    {row.nickname}
+                  </td>
+                  {/* 실명 */}
+                  <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
+                    {row.realName ?? '-'}
                   </td>
                   {/* 금액 */}
                   <td className="px-3 py-2.5 text-right text-primary-800 whitespace-nowrap">

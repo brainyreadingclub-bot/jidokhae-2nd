@@ -8,6 +8,7 @@ export type DepositRow = {
   meetingTitle: string
   meetingDate: string
   nickname: string
+  realName: string | null
   phone: string | null
   elapsedDays: number
   isStaffDiscount: boolean
@@ -20,6 +21,7 @@ export type RefundRow = {
   meetingTitle: string | null
   meetingDate: string | null
   nickname: string
+  realName: string | null
   phone: string | null
 }
 
@@ -68,7 +70,7 @@ type RegRow = {
   cancelled_at: string | null
   paid_amount: number | null
   is_staff_discount: boolean
-  profiles: { nickname: string | null; phone: string | null; is_free: boolean | null } | null
+  profiles: { nickname: string | null; real_name: string | null; phone: string | null; is_free: boolean | null } | null
   meetings: { title: string | null; date: string | null } | null
 }
 
@@ -77,7 +79,7 @@ type RegRow = {
 export async function getPendingDeposits(supabase: SupabaseClient): Promise<DepositRow[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, phone, is_free), meetings(title, date)')
+    .select('id, created_at, paid_amount, is_staff_discount, profiles(nickname, real_name, phone, is_free), meetings(title, date)')
     .eq('status', 'pending_transfer')
     .order('created_at', { ascending: true })
 
@@ -93,6 +95,7 @@ export async function getPendingDeposits(supabase: SupabaseClient): Promise<Depo
     meetingTitle: r.meetings?.title ?? '삭제된 모임',
     meetingDate: r.meetings?.date ?? '',
     nickname: r.profiles?.nickname ?? '(알수없음)',
+    realName: r.profiles?.real_name ?? null,
     phone: r.profiles?.phone ?? null,
     elapsedDays: elapsedDaysKST(r.created_at, kstToday),
     isStaffDiscount: r.is_staff_discount,
@@ -103,7 +106,7 @@ type RefundRegRow = {
   id: string
   cancelled_at: string | null
   paid_amount: number | null
-  profiles: { nickname: string | null; phone: string | null } | null
+  profiles: { nickname: string | null; real_name: string | null; phone: string | null } | null
   meetings: { title: string | null; date: string | null } | null
 }
 
@@ -111,7 +114,7 @@ type RefundRegRow = {
 export async function getPendingRefunds(supabase: SupabaseClient): Promise<RefundRow[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, cancelled_at, paid_amount, profiles(nickname, phone), meetings(title, date)')
+    .select('id, cancelled_at, paid_amount, profiles(nickname, real_name, phone), meetings(title, date)')
     .eq('status', 'cancelled')
     .eq('payment_method', 'transfer')
     .is('refunded_amount', null)
@@ -131,6 +134,7 @@ export async function getPendingRefunds(supabase: SupabaseClient): Promise<Refun
     meetingTitle: r.meetings?.title ?? null,
     meetingDate: r.meetings?.date ?? null,
     nickname: r.profiles?.nickname ?? '(알수없음)',
+    realName: r.profiles?.real_name ?? null,
     phone: r.profiles?.phone ?? null,
   }))
 }
