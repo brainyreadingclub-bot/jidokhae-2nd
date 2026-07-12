@@ -3,14 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BookCover from '@/components/library/BookCover'
+import { trackEvent } from '@/lib/analytics'
 import type { BookSearchResult } from '@/types/book'
 
 type Props = {
   /** 담기 성공 후 콜백 (없으면 router.refresh만) */
   onAdded?: () => void
+  /** 물어보기 strip에서 재사용 시: 이 정기모임 출처로 ask 답변 처리 */
+  askMeetingId?: string
 }
 
-export default function BookSearchInput({ onAdded }: Props) {
+export default function BookSearchInput({ onAdded, askMeetingId }: Props) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<BookSearchResult[]>([])
@@ -43,13 +46,20 @@ export default function BookSearchInput({ onAdded }: Props) {
     setAddingKey(key)
     setError(null)
     try {
-      const res = await fetch('/api/library/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(book),
-      })
+      const res = askMeetingId
+        ? await fetch('/api/library/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'answer', meetingId: askMeetingId, book }),
+          })
+        : await fetch('/api/library/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(book),
+          })
       const json = await res.json()
       if (json.status === 'success') {
+        if (askMeetingId) trackEvent('ask_answered', { meeting_id: askMeetingId })
         setQuery('')
         setResults([])
         if (onAdded) onAdded()
