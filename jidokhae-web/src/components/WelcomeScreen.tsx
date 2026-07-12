@@ -1,18 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Props = {
   nickname: string
   settings: Record<string, string>
+  memberCount: number | null
 }
 
-export default function WelcomeScreen({ nickname, settings }: Props) {
+export default function WelcomeScreen({ nickname, settings, memberCount }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const count = useCountUp(memberCount)
 
   const displayName = nickname || '회원'
+  const regionsLabel = settings['active_regions_label'] ?? '경주·포항'
 
   const handleCTA = async () => {
     setLoading(true)
@@ -26,10 +29,13 @@ export default function WelcomeScreen({ nickname, settings }: Props) {
 
   return (
     <div className="fixed inset-0 z-[60] flex min-h-screen flex-col overflow-hidden animate-[fadeIn_300ms_ease-out_both]">
-      {/* ── 상단: Dark editorial section (40%) ── */}
+      {/* ── 상단: Dark editorial section (~62%) ── */}
       <section
-        className="relative flex flex-[2] flex-col justify-end px-[var(--spacing-page)] pb-14"
-        style={{ backgroundColor: 'var(--color-primary-900)' }}
+        className="relative flex flex-[1.6] flex-col justify-end overflow-hidden px-[var(--spacing-page)] pb-12 text-left [word-break:keep-all]"
+        style={{
+          background:
+            'radial-gradient(circle at 70% 20%, var(--color-primary-600), var(--color-primary-900) 68%)',
+        }}
       >
         {/* Grain texture overlay */}
         <div
@@ -43,74 +49,99 @@ export default function WelcomeScreen({ nickname, settings }: Props) {
         {/* Organic shapes */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
-            className="absolute -top-20 -right-20 h-64 w-64 rounded-full"
-            style={{ background: 'radial-gradient(circle, var(--color-accent-400) 0%, transparent 70%)', opacity: 0.06 }}
+            className="absolute -top-8 -right-9 h-40 w-40 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-accent-500) 0%, transparent 70%)', opacity: 0.1 }}
           />
           <div
-            className="absolute top-1/3 -left-16 h-48 w-48 rounded-full"
-            style={{ background: 'radial-gradient(circle, var(--color-primary-300) 0%, transparent 70%)', opacity: 0.05 }}
-          />
-          <div
-            className="absolute bottom-12 right-8 h-32 w-32 rounded-full"
-            style={{ background: 'radial-gradient(circle, var(--color-accent-300) 0%, transparent 70%)', opacity: 0.04 }}
+            className="absolute top-20 -left-10 h-32 w-32 rounded-full"
+            style={{ background: 'radial-gradient(circle, var(--color-primary-400) 0%, transparent 70%)', opacity: 0.12 }}
           />
         </div>
 
         {/* Brand content */}
         <div className="relative">
           <p
-            className="text-xl font-bold text-white"
+            className="text-xl font-black tracking-tight text-white"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             지독해
           </p>
 
           {/* Editorial rule */}
-          <div className="mt-5 mb-5 h-px w-[60px] bg-neutral-600" />
+          <div className="mt-4 mb-4 h-px w-[52px] bg-white/30" />
 
-          <p className="text-base text-neutral-400">
+          <p className="text-sm text-white/50">
             {displayName}님,
           </p>
 
           <h1
-            className="mt-2 text-3xl font-bold leading-tight text-white"
+            className="mt-1.5 text-[1.65rem] font-black leading-[1.26] tracking-tight text-white [word-break:keep-all]"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            <span className="text-neutral-400">넷플릭스 말고,</span>
+            <span className="text-white/[0.46]">넷플릭스 말고,</span>
             <br />
             독서습관이 생깁니다.
           </h1>
         </div>
       </section>
 
-      {/* ── 하단: Light parchment section ── */}
-      {/* ── 하단: Light parchment section (60%) ── */}
+      {/* ── 하단: Light section (~38%) ── */}
       <section
-        className="relative z-10 -mt-6 flex flex-[3] flex-col items-center justify-center rounded-t-[24px] px-[var(--spacing-page)] py-10"
+        className="relative z-10 -mt-[18px] flex flex-[1] flex-col items-center justify-center rounded-t-[22px] px-[var(--spacing-page)] py-8"
         style={{ backgroundColor: 'var(--color-neutral-50)' }}
       >
-        <p className="mb-6 text-center font-sans text-base text-neutral-500 leading-relaxed">
-          매주 모이는 사람들, {settings['member_count'] ?? '250'}명.
+        <p className="mb-5 text-center font-sans text-sm text-neutral-600 leading-relaxed">
+          매주 모이는 사람들
+          {count !== null && (
+            <>
+              , <span className="font-bold tabular-nums text-primary-500">{count}</span>명
+            </>
+          )}
+          .
           <br />
-          {settings['active_regions_label'] ?? '경주·포항'}, 3년째.
+          {regionsLabel}에서 꾸준히.
         </p>
 
         <button
           onClick={handleCTA}
           disabled={loading}
-          className="flex w-full max-w-[320px] items-center justify-center rounded-[var(--radius-md)] px-6 py-4 text-sm font-bold text-white shadow-sm transition-shadow hover:shadow-md disabled:opacity-50 active:scale-[0.98]"
+          className="flex w-full max-w-[320px] items-center justify-center rounded-[13px] px-6 py-3.5 text-sm font-bold text-white transition-shadow hover:shadow-md disabled:opacity-50 active:scale-[0.98]"
           style={{
             backgroundColor: 'var(--color-primary-600)',
-            transitionDuration: 'var(--transition-base)',
+            boxShadow: '0 8px 18px -8px rgba(18, 122, 90, 0.5)',
           }}
         >
           {loading ? '잠시만요...' : '이번 달 모임 보기 →'}
         </button>
 
-        <p className="mt-4 text-small text-neutral-400">
+        <p className="mt-3.5 text-small text-neutral-400">
           처음 오는 사람이 제일 많습니다.
         </p>
       </section>
     </div>
   )
+}
+
+function useCountUp(target: number | null) {
+  const [value, setValue] = useState<number | null>(target)
+  const started = useRef(false)
+
+  useEffect(() => {
+    if (target === null || started.current) return
+    started.current = true
+    const start = Math.round(target * 0.6)
+    const dur = 2600
+    const t0 = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur)
+      const e = 1 - Math.pow(1 - p, 3)
+      setValue(Math.round(start + (target - start) * e))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target])
+
+  return value
 }

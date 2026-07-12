@@ -54,12 +54,12 @@ export default async function MyRegistrationContent() {
     .filter((r) => !isUpcoming(r))
     .sort((a, b) => b.meetings.date.localeCompare(a.meetings.date))
 
-  function getBadge(reg: RegistrationWithMeeting): { label: string; color: 'success' | 'gray' | 'accent' } {
+  function getBadge(reg: RegistrationWithMeeting): { label: string; color: 'success' | 'gray' } {
     if (reg.status === 'cancelled') return { label: '취소됨', color: 'gray' }
-    if (reg.status === 'waitlisted') return { label: '대기 중', color: 'accent' }
+    if (reg.status === 'waitlisted') return { label: '대기 중', color: 'gray' }
     if (reg.status === 'waitlist_cancelled') return { label: '대기 취소', color: 'gray' }
     if (reg.status === 'waitlist_refunded') return { label: '대기 환불', color: 'gray' }
-    if (reg.status === 'pending_transfer') return { label: '입금 대기', color: 'accent' }
+    if (reg.status === 'pending_transfer') return { label: '입금 대기', color: 'success' }
     if (reg.meetings.date < kstToday) return { label: '참여 완료', color: 'success' }
     return { label: '신청완료', color: 'success' }
   }

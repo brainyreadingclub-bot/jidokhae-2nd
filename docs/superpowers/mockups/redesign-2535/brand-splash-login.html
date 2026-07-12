@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스플래시 + 로그인 — B 라이트 (회원수 카운트업)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Pretendard',sans-serif; background:#E9EBEE; color:#191F28; padding:36px 24px 90px; }
+  .sk { font-family:'Noto Serif KR',serif; }
+  .wrap { max-width:900px; margin:0 auto; }
+  .pagehead h1 { font-family:'Noto Serif KR',serif; font-size:23px; font-weight:900; letter-spacing:-1px; }
+  .pagehead p { font-size:13px; color:#5A6B7A; margin-top:8px; line-height:1.6; }
+
+  .rail { display:flex; gap:34px; flex-wrap:wrap; justify-content:center; align-items:flex-start; margin-top:32px; }
+  .cell { text-align:center; }
+  .cell .cap { font-size:10px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:#8B95A1; margin-top:12px; }
+  .ph { width:212px; height:440px; border-radius:34px; overflow:hidden; position:relative;
+    box-shadow:0 22px 50px -16px rgba(20,40,32,.32), 0 3px 10px rgba(0,0,0,.08); border:1px solid rgba(0,0,0,.05); }
+
+  .grain { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.12; z-index:5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+
+  /* 아이콘 타일 (확정: 지 솔리드) */
+  .tile { border-radius:24%; display:flex; align-items:center; justify-content:center; position:relative;
+    background:linear-gradient(150deg,#127A5A,#0d5c43); box-shadow:0 10px 24px -8px rgba(7,42,32,.5); }
+  .tile .g { color:#fff; font-weight:900; letter-spacing:-2px; font-family:'Noto Serif KR',serif; }
+  .tile.t76 { width:76px; height:76px; } .tile.t76 .g { font-size:42px; }
+
+  /* ---------- 스플래시 (라이트) ---------- */
+  .sp { position:absolute; inset:0; background:radial-gradient(circle at 50% 42%, #FFFFFF, #F9FAFB 55%, #EAEEF1);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .sp .wm { font-size:32px; font-weight:900; color:#127A5A; letter-spacing:-1.8px; margin-top:22px; }
+  .sp .est { font-size:9px; color:#6B7684; letter-spacing:1.6px; margin-top:10px; }
+
+  /* ---------- 로그인 (라이트, 가벼운 버전) ---------- */
+  .lg { position:absolute; inset:0; background:#F9FAFB; display:flex; flex-direction:column; overflow:hidden; }
+  .lg .hero { flex:1; padding:44px 26px 0; position:relative; z-index:2; display:flex; flex-direction:column; }
+  .lg .hero .wm { font-size:40px; font-weight:900; color:#127A5A; letter-spacing:-2px; line-height:1; }
+  .lg .hero .tag { font-size:10.5px; color:#6B7684; letter-spacing:.9px; margin-top:13px; }
+  .lg .hero .rule { width:32px; height:2px; background:#F4552A; border-radius:2px; margin:22px 0; }
+  .lg .hero .head { font-family:'Noto Serif KR',serif; font-size:21px; color:#191F28; line-height:1.45; font-weight:700; }
+  .lg .hero .head b { color:#127A5A; }
+  .lg .blob { position:absolute; border-radius:50%; z-index:1; }
+  /* 하단 — 그림자·카드 없이 헤어라인만으로 가볍게 앵커 */
+  .lg .foot { padding:16px 22px 24px; position:relative; z-index:3; }
+  .lg .foot .proof { font-size:11px; color:#6B7684; text-align:center; margin-bottom:13px; }
+  .lg .foot .proof .num { color:#127A5A; font-weight:800; font-variant-numeric:tabular-nums; }
+
+  .kakao { display:flex; align-items:center; justify-content:center; gap:7px; background:#FEE500; color:rgba(0,0,0,.85);
+    border-radius:13px; padding:14px 0; font-size:13.5px; font-weight:800; }
+  .kakao svg { width:17px; height:17px; }
+  .terms { font-size:9px; color:#8B95A1; text-align:center; margin-top:12px; line-height:1.5; }
+  .peek { display:block; text-align:center; font-size:11px; font-weight:700; color:#127A5A; margin-top:13px; }
+
+  .verdict { margin-top:30px; background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:16px 18px; font-size:12.5px; color:#333d48; line-height:1.8; max-width:640px; margin-left:auto; margin-right:auto; }
+  .verdict b { color:#127A5A; }
+  .verdict .fix { display:inline-block; background:#F3FAF6; border:1px solid #CDE9DB; color:#0d5c43; font-size:11px; font-weight:700; border-radius:6px; padding:3px 9px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="pagehead">
+    <h1>스플래시 + 로그인 — B 라이트 확정본</h1>
+    <p>A(다크) 제외. 하단 카드 그림자 제거해 가볍게. "지금 N명"은 실제 가입 회원수까지 차오르는 카운트업(아래는 데모라 반복 재생).</p>
+  </div>
+
+  <div class="rail">
+
+    <div class="cell">
+      <div class="ph">
+        <div class="sp">
+          <div class="grain"></div>
+          <div class="tile t76"><span class="g">지</span></div>
+          <div class="sk wm">지독해</div>
+          <div class="est">경주 · 포항 · EST.2024</div>
+        </div>
+      </div>
+      <div class="cap">스플래시</div>
+    </div>
+
+    <div class="cell">
+      <div class="ph">
+        <div class="lg">
+          <div class="blob" style="width:180px;height:180px;background:#127A5A;opacity:.05;top:-50px;right:-56px;"></div>
+          <div class="blob" style="width:130px;height:130px;background:#F4552A;opacity:.045;bottom:170px;left:-46px;"></div>
+          <div class="hero">
+            <div class="grain"></div>
+            <div class="sk wm">지독해</div>
+            <div class="tag">경주 · 포항 독서모임</div>
+            <div class="rule"></div>
+            <div class="sk head">책으로<br>연결되는<br><b>사람들</b></div>
+          </div>
+          <div class="foot">
+            <div class="proof">지금 <span class="num countnum" data-target="250">142</span>명이 함께 읽고 있어요</div>
+            <div class="kakao"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.7-2.5.7.1 1.4.2 2 .2 5.5 0 10-3.6 10-8C24 6.6 19.5 3 12 3Z"/></svg>카카오로 시작하기</div>
+            <div class="terms">약관 및 개인정보처리방침 동의</div>
+            <span class="peek">모임 일정 먼저 보기</span>
+          </div>
+        </div>
+      </div>
+      <div class="cap">로그인 · 회원수 카운트업</div>
+    </div>
+
+  </div>
+
+  <div class="verdict">
+    <b>B 라이트 확정.</b> <span class="fix">FIXED</span><br>
+    · <b>두툼함 제거</b> — 하단 흰 카드+그림자 빼고, 얇은 여백만으로 버튼을 가볍게 앉힘. 아래가 뭉툭하지 않게.<br>
+    · <b>회원수 카운트업</b> — "지금 <b>N명</b>"의 N이 낮은 값에서 실제 가입 회원수까지 슬슬 차오름(~2.6초, ease-out). 실제 앱에선 <b>진입 시 1회</b>, 회원이 늘면 목표 숫자도 자연히 커짐. 목업은 확인용으로 4초마다 반복.<br>
+    · 실제 숫자를 넘겨 무한 증가시키면 거짓이 되므로, "진짜 회원수까지 차오르는" 정직한 연출로 잡았습니다.
+  </div>
+
+</div>
+
+<script>
+  function runCount(){
+    document.querySelectorAll('.countnum').forEach(function(el){
+      var target = +el.dataset.target, start = 142, dur = 2600, t0 = performance.now();
+      function tick(now){
+        var p = Math.min(1,(now-t0)/dur), e = 1-Math.pow(1-p,3);
+        el.textContent = Math.round(start + (target-start)*e);
+        if(p<1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+  runCount();
+  setInterval(runCount, 4000);
+</script>
+</body>
+</html>

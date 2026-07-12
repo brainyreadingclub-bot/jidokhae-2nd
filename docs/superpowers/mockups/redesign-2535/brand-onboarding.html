@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>온보딩 — 웰컴 + 프로필 폼 (리스킨)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Pretendard',sans-serif; background:#E9EBEE; color:#191F28; padding:36px 24px 90px; }
+  .sk { font-family:'Noto Serif KR',serif; }
+  .wrap { max-width:900px; margin:0 auto; }
+  .pagehead h1 { font-family:'Noto Serif KR',serif; font-size:23px; font-weight:900; letter-spacing:-1px; }
+  .pagehead p { font-size:13px; color:#5A6B7A; margin-top:8px; line-height:1.6; }
+
+  .rail { display:flex; gap:34px; flex-wrap:wrap; justify-content:center; align-items:flex-start; margin-top:32px; }
+  .cell { text-align:center; }
+  .cell .cap { font-size:10px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:#8B95A1; margin-top:12px; }
+  .ph { width:212px; height:452px; border-radius:34px; overflow:hidden; position:relative;
+    box-shadow:0 22px 50px -16px rgba(20,40,32,.32), 0 3px 10px rgba(0,0,0,.08); border:1px solid rgba(0,0,0,.05); }
+
+  .grain { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.12; z-index:5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+  .grain.on-dark { mix-blend-mode:overlay; opacity:.05; }
+
+  /* ---------- 웰컴 ---------- */
+  .wc { position:absolute; inset:0; display:flex; flex-direction:column; }
+  .wc .top { flex:1.6; position:relative; background:radial-gradient(circle at 70% 20%, #0d5c43, #072A20 68%);
+    display:flex; flex-direction:column; justify-content:flex-end; padding:0 22px 34px; overflow:hidden;
+    text-align:left; word-break:keep-all; }
+  .wc .top .blob { position:absolute; border-radius:50%; }
+  .wc .top .wm { font-size:19px; font-weight:900; color:#fff; letter-spacing:-1px; position:relative; z-index:2; }
+  .wc .top .rule { width:52px; height:1px; background:rgba(255,255,255,.28); margin:14px 0; position:relative; z-index:2; }
+  .wc .top .hi { font-size:13px; color:rgba(255,255,255,.5); position:relative; z-index:2; }
+  .wc .top .h1 { font-size:24px; font-weight:900; color:#fff; line-height:1.26; letter-spacing:-.8px; margin-top:6px; position:relative; z-index:2; word-break:keep-all; }
+  .wc .top .h1 .mute { color:rgba(255,255,255,.46); }
+  .wc .bot { flex:1; margin-top:-18px; border-radius:22px 22px 0 0; background:#F9FAFB; position:relative; z-index:3;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:26px 24px 30px; }
+  .wc .bot .lead { font-size:13.5px; color:#5A6B7A; text-align:center; line-height:1.7; margin-bottom:22px; }
+  .wc .bot .lead .num { color:#127A5A; font-weight:800; font-variant-numeric:tabular-nums; }
+  .wc .bot .cta { width:100%; max-width:230px; background:#127A5A; color:#fff; font-size:13.5px; font-weight:700;
+    border-radius:13px; padding:14px 0; text-align:center; box-shadow:0 8px 18px -8px rgba(18,122,90,.5); }
+  .wc .bot .sub { font-size:11px; color:#B0B8C1; margin-top:15px; }
+
+  /* ---------- 프로필 폼 ---------- */
+  .ps { position:absolute; inset:0; background:#F9FAFB; overflow-y:auto; padding:34px 26px; }
+  .ps .head { text-align:center; margin-bottom:22px; }
+  .ps .head h1 { font-size:19px; font-weight:800; color:#0d5c43; letter-spacing:-.5px; }
+  .ps .head p { font-size:11.5px; color:#6B7684; margin-top:8px; line-height:1.6; }
+  .ps .fld { margin-bottom:14px; }
+  .ps .fld label { display:block; font-size:10.5px; font-weight:800; color:#127A5A; letter-spacing:-.2px; margin-bottom:6px; }
+  .ps .fld label .req { color:#F4552A; margin-left:2px; }
+  .ps .fld input { width:100%; border:1px solid #E5E8EB; background:#fff; border-radius:11px; padding:11px 12px;
+    font-size:12.5px; color:#191F28; font-family:'Pretendard',sans-serif; }
+  .ps .fld input::placeholder { color:#B0B8C1; }
+  .ps .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .ps .chip { font-size:11.5px; font-weight:700; padding:8px 13px; border-radius:999px; border:1px solid #E5E8EB;
+    background:#fff; color:#5A6B7A; }
+  .ps .chip.on { background:#127A5A; border-color:#127A5A; color:#fff; }
+  .ps .chip.more { color:#B0B8C1; }
+  .ps .cta { margin-top:20px; width:100%; background:#127A5A; color:#fff; font-size:13.5px; font-weight:700;
+    border-radius:13px; padding:13px 0; text-align:center; box-shadow:0 8px 18px -8px rgba(18,122,90,.5); }
+
+  .verdict { margin-top:30px; background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:16px 18px; font-size:12.5px; color:#333d48; line-height:1.8; max-width:660px; margin-left:auto; margin-right:auto; }
+  .verdict b { color:#127A5A; }
+  .verdict .fix { display:inline-block; background:#F3FAF6; border:1px solid #CDE9DB; color:#0d5c43; font-size:11px; font-weight:700; border-radius:6px; padding:3px 9px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="pagehead">
+    <h1>온보딩 — 웰컴 + 프로필 폼 (질문 수집)</h1>
+    <p>로그인 직후 흐름: 웰컴 → 프로필 입력. 실제 문구·필드 그대로, 새 잉크그린 팔레트. "3년째"만 안 늙는 문구로 교체.</p>
+  </div>
+
+  <div class="rail">
+
+    <!-- 웰컴 -->
+    <div class="cell">
+      <div class="ph">
+        <div class="wc">
+          <div class="top">
+            <div class="grain on-dark"></div>
+            <div class="blob" style="width:150px;height:150px;background:radial-gradient(circle,#F4552A,transparent 70%);opacity:.10;top:-30px;right:-34px;"></div>
+            <div class="blob" style="width:120px;height:120px;background:radial-gradient(circle,#3FA97F,transparent 70%);opacity:.12;top:80px;left:-40px;"></div>
+            <div class="sk wm">지독해</div>
+            <div class="rule"></div>
+            <div class="hi">초록고래님,</div>
+            <div class="sk h1"><span class="mute">넷플릭스 말고,</span><br>독서습관이 생깁니다.</div>
+          </div>
+          <div class="bot">
+            <div class="lead">매주 모이는 사람들, <span class="num countnum" data-target="250">168</span>명.<br>경주 · 포항에서 꾸준히.</div>
+            <div class="cta">이번 달 모임 보기 →</div>
+            <div class="sub">처음 오는 사람이 제일 많습니다.</div>
+          </div>
+        </div>
+      </div>
+      <div class="cap">웰컴 (로그인 직후)</div>
+    </div>
+
+    <!-- 프로필 폼 -->
+    <div class="cell">
+      <div class="ph">
+        <div class="ps">
+          <div class="head">
+            <h1 class="sk">초록고래님, 반갑습니다!</h1>
+            <p>모임 안내와 리마인드 알림을 위해<br>아래 정보를 입력해주세요.</p>
+          </div>
+          <div class="fld">
+            <label>실명<span class="req">*</span></label>
+            <input placeholder="홍길동">
+          </div>
+          <div class="fld">
+            <label>닉네임<span class="req">*</span></label>
+            <input placeholder="닉네임">
+          </div>
+          <div class="fld">
+            <label>전화번호<span class="req">*</span></label>
+            <input placeholder="010-0000-0000">
+          </div>
+          <div class="fld">
+            <label>주로 참여할 지역 (복수 선택 가능)<span class="req">*</span></label>
+            <div class="chips">
+              <span class="chip on">경주</span>
+              <span class="chip">포항</span>
+              <span class="chip more">그 외 지역 +</span>
+            </div>
+          </div>
+          <div class="fld">
+            <label style="color:#6B7684">이메일 (선택)</label>
+            <input placeholder="email@example.com">
+          </div>
+          <div class="cta">시작하기</div>
+        </div>
+      </div>
+      <div class="cap">프로필 폼 (정보 수집)</div>
+    </div>
+
+  </div>
+
+  <div class="verdict">
+    <b>온보딩 리스킨.</b> <span class="fix">문구 유지</span><br>
+    · <b>웰컴</b>: "넷플릭스 말고, 독서습관이 생깁니다"는 이 브랜드의 히어로 문장이라 유지. 상단 다크 밴드는 이 한 방을 위한 <b>의도적 대비</b>(≈40%만, 곧 라이트로 복귀). 회원수는 로그인과 같은 <b>라이브 카운트업</b>.<br>
+    · <b>"3년째" → "경주·포항에서 꾸준히"</b>로 교체 — 연차 숫자는 해 넘어가면 틀리니 안 늙는 문구로.<br>
+    · <b>프로필 폼</b>: 실명·닉네임·전화·지역·이메일 필드/순서 그대로. 필수 표시 별(*)만 감귤로, 라벨은 잉크그린, 선택된 지역 칩만 그린 채움 = "그린은 점" 원칙 유지.<br>
+    · 다크 밴드가 부담되면 웰컴도 완전 라이트로 바꿀 수 있음(그럼 "넷플릭스 말고"의 펀치가 약해짐). 지금은 원본 구조 살린 버전.
+  </div>
+
+</div>
+
+<script>
+  function runCount(){
+    document.querySelectorAll('.countnum').forEach(function(el){
+      var target=+el.dataset.target, start=168, dur=2600, t0=performance.now();
+      function tick(now){ var p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
+        el.textContent=Math.round(start+(target-start)*e); if(p<1)requestAnimationFrame(tick); }
+      requestAnimationFrame(tick);
+    });
+  }
+  runCount(); setInterval(runCount, 4000);
+</script>
+</body>
+</html>

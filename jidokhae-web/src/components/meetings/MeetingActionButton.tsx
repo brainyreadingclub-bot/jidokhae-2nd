@@ -298,11 +298,7 @@ export default function MeetingActionButton({
           {buttonState.type === 'full' && (
             <button
               disabled
-              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold cursor-not-allowed"
-              style={{
-                backgroundColor: 'var(--color-surface-200)',
-                color: 'var(--color-primary-300)',
-              }}
+              className="w-full rounded-[var(--radius-lg)] bg-neutral-100 py-4 text-sm font-bold text-neutral-400 cursor-not-allowed"
             >
               마감
             </button>
@@ -311,11 +307,9 @@ export default function MeetingActionButton({
           {buttonState.type === 'cancel' && cancelPhase === 'idle' && (
             <button
               onClick={() => setCancelPhase('info')}
-              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+              className="w-full rounded-[var(--radius-lg)] bg-white py-4 text-sm font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]"
               style={{
-                backgroundColor: 'var(--color-surface-50)',
-                border: '1px solid var(--color-surface-300)',
-                color: 'var(--color-primary-600)',
+                border: '1px solid var(--color-neutral-300)',
               }}
             >
               취소하기
@@ -350,11 +344,9 @@ export default function MeetingActionButton({
           {buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle' && (
             <button
               onClick={() => setWaitlistCancelPhase('confirm')}
-              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+              className="w-full rounded-[var(--radius-lg)] bg-white py-4 text-sm font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]"
               style={{
-                backgroundColor: 'var(--color-surface-50)',
-                border: '1px solid var(--color-surface-300)',
-                color: 'var(--color-primary-600)',
+                border: '1px solid var(--color-neutral-300)',
               }}
             >
               대기 취소하기
@@ -364,11 +356,9 @@ export default function MeetingActionButton({
           {buttonState.type === 'pending_transfer' && pendingTransferCancelPhase === 'idle' && (
             <button
               onClick={() => setPendingTransferCancelPhase('confirm')}
-              className="w-full rounded-[var(--radius-lg)] py-4 text-sm font-bold transition-all hover:bg-primary-50 active:scale-[0.98]"
+              className="w-full rounded-[var(--radius-lg)] bg-white py-4 text-sm font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]"
               style={{
-                backgroundColor: 'var(--color-surface-50)',
-                border: '1px solid var(--color-surface-300)',
-                color: 'var(--color-primary-600)',
+                border: '1px solid var(--color-neutral-300)',
               }}
             >
               신청 취소
@@ -700,17 +690,17 @@ export default function MeetingActionButton({
                 {/* 자격자 — 결제 금액 사전 확인용 영수증 (정가 + 할인 + 총액) */}
                 {isStaffDiscount && (
                   <div className="mt-4 mx-auto max-w-[280px] text-left rounded-[var(--radius-md)] bg-surface-50 px-4 py-3" style={{ border: '1px solid var(--color-surface-300)' }}>
-                    <div className="flex justify-between text-[12px] text-neutral-500 mb-1">
+                    <div className="flex justify-between text-[12px] text-neutral-400 mb-1">
                       <span className="line-through">참가비</span>
-                      <span className="line-through">{formatFee(meetingFee)}원</span>
+                      <span className="line-through">{formatFee(meetingFee)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] mb-2">
                       <span className="text-primary-700 font-semibold">스텝 할인 50%</span>
-                      <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}원</span>
+                      <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}</span>
                     </div>
                     <div className="flex justify-between items-baseline pt-2" style={{ borderTop: '1px dashed var(--color-surface-300)' }}>
-                      <span className="text-[13px] font-bold text-primary-800">결제 금액</span>
-                      <span className="text-lg font-extrabold text-accent-600">{formatFee(effectiveFee)}원</span>
+                      <span className="text-[13px] font-bold text-neutral-800">결제 금액</span>
+                      <span className="text-lg font-extrabold text-primary-500">{formatFee(effectiveFee)}</span>
                     </div>
                   </div>
                 )}
@@ -798,22 +788,22 @@ export default function MeetingActionButton({
                   <p className="text-sm font-bold text-primary-900">{meetingTitle}</p>
                   {isStaffDiscount ? (
                     <div className="mt-3 mx-auto max-w-[260px] text-left rounded-[var(--radius-md)] bg-surface-50 px-4 py-3" style={{ border: '1px solid var(--color-surface-300)' }}>
-                      <div className="flex justify-between text-[12px] text-neutral-500 mb-1">
+                      <div className="flex justify-between text-[12px] text-neutral-400 mb-1">
                         <span className="line-through">참가비</span>
-                        <span className="line-through">{formatFee(meetingFee)}원</span>
+                        <span className="line-through">{formatFee(meetingFee)}</span>
                       </div>
                       <div className="flex justify-between text-[12px] mb-2">
                         <span className="text-primary-700 font-semibold">스텝 할인 50%</span>
-                        <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}원</span>
+                        <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}</span>
                       </div>
                       <div className="flex justify-between items-baseline pt-2" style={{ borderTop: '1px dashed var(--color-surface-300)' }}>
-                        <span className="text-[13px] font-bold text-primary-800">결제 금액</span>
-                        <span className="text-lg font-extrabold text-accent-600">{formatFee(effectiveFee)}원</span>
+                        <span className="text-[13px] font-bold text-neutral-800">결제 금액</span>
+                        <span className="text-lg font-extrabold text-primary-500">{formatFee(effectiveFee)}</span>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-lg font-bold text-accent-600 mt-1">
-                      {formatFee(effectiveFee)}원
+                    <p className="text-lg font-bold text-neutral-900 mt-1">
+                      {formatFee(effectiveFee)}
                     </p>
                   )}
                 </div>

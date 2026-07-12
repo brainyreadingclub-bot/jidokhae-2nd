@@ -1,0 +1,117 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Noto+Serif+KR:wght@500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<style>
+  .b-wrap{font-family:'Pretendard',sans-serif;display:flex;gap:26px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+  .b-wrap *{box-sizing:border-box}
+  .sk{font-family:'Noto Serif KR',serif}.sl{font-family:'Fraunces',serif}
+  /* 뉴트럴: 대비 수정본 */
+  .n-head{color:#191F28}.n-sub{color:#5A6B7A}.n-mut{color:#6B7684}
+  .bgrain{position:absolute;inset:0;pointer-events:none;opacity:.2;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E")}
+  @keyframes bUp{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
+  .phone>*{animation:bUp .55s cubic-bezier(.22,1,.36,1) both}
+  .phone .d1{animation-delay:.05s}.phone .d2{animation-delay:.12s}.phone .d3{animation-delay:.2s}.phone .d4{animation-delay:.28s}.phone .d5{animation-delay:.36s}
+  .phone{position:relative;width:340px;border-radius:30px;overflow:hidden;padding:24px 20px 26px;
+    background:#F9FAFB;border:1px solid #E9ECF0;box-shadow:0 24px 60px -12px rgba(25,31,40,.22)}
+  .btag{font-size:10.5px;letter-spacing:.2px;font-weight:800;display:inline-block;padding:4px 10px;border-radius:7px}
+  .bcta{transition:transform .35s cubic-bezier(.22,1,.36,1)}
+  .mcard:hover .bcta{transform:translateX(3px)}
+  .mcard{transition:box-shadow .3s,transform .3s;cursor:pointer}
+  .mcard:hover{transform:translateY(-2px);box-shadow:0 12px 28px -10px rgba(25,31,40,.18)}
+  .notes{max-width:300px;font-size:12.5px;line-height:1.7;color:#4E5968}
+  .notes b{color:#191F28}
+  .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+</style>
+
+<h2 class="sk" style="font-weight:700;color:#191F28">A안 v2 — 잉크 그린 + 감귤 포인트</h2>
+<p class="subtitle">전문가 처방 반영: 그린 앵커 + <b style="color:#F4552A">감귤 코럴 포인트(순간에만)</b> + 큰 디스플레이 세리프 + 대비 수정. 마음에 들면 클릭, 고칠 곳 있으면 터미널로 알려줘요.</p>
+
+<div class="b-wrap">
+
+  <!-- ============ PHONE ============ -->
+  <div class="phone">
+    <div class="bgrain"></div>
+
+    <!-- 헤더 워드마크 -->
+    <div class="d1" style="position:relative;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="sk n-head" style="font-size:34px;font-weight:900;letter-spacing:-2px;line-height:1">지독해</div>
+        <div class="n-mut" style="font-size:10.5px;letter-spacing:1px;margin-top:5px">경주·포항 독서모임 · est.2024</div>
+      </div>
+      <div style="width:38px;height:38px;border-radius:50%;background:#127A5A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">초</div>
+    </div>
+
+    <!-- 히어로 디스플레이 세리프 -->
+    <div class="d2 sk n-head" style="position:relative;font-size:29px;font-weight:700;line-height:1.25;letter-spacing:-1.3px;margin-top:22px">
+      이번 주,<br>같이 <span style="color:#127A5A">읽어요</span>
+    </div>
+    <div class="d2 n-sub" style="position:relative;font-size:12px;margin-top:8px">함께 읽는 사람들 · 8명이 모이는 중</div>
+
+    <!-- 요일 스트립 -->
+    <div class="d3" style="position:relative;display:flex;gap:6px;margin-top:18px">
+      <div style="flex:1;text-align:center;padding:10px 0;border-radius:12px;background:#127A5A;color:#fff;font-size:11px;font-weight:800">토<br><span class="sl" style="font-size:16px">12</span></div>
+      <div style="flex:1;text-align:center;padding:10px 0;border-radius:12px;background:#EEF1F4;color:#6B7684;font-size:11px">일<br><span class="sl" style="font-size:16px">13</span></div>
+      <div style="flex:1;text-align:center;padding:10px 0;border-radius:12px;background:#EEF1F4;color:#6B7684;font-size:11px">월<br><span class="sl" style="font-size:16px">14</span></div>
+      <div style="flex:1;text-align:center;padding:10px 0;border-radius:12px;background:#EEF1F4;color:#6B7684;font-size:11px">화<br><span class="sl" style="font-size:16px">15</span></div>
+      <div style="flex:1;text-align:center;padding:10px 0;border-radius:12px;background:#EEF1F4;color:#6B7684;font-size:11px">수<br><span class="sl" style="font-size:16px">16</span></div>
+    </div>
+
+    <!-- 카드 1 : 모집중 (그린) -->
+    <div class="d4 mcard" style="position:relative;margin-top:16px;background:#fff;border:1px solid #E5E8EB;border-radius:18px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="btag" style="color:#0d5c43;background:#E3F2EC">● 모집중 6/8</span>
+        <span class="n-mut" style="font-size:10.5px">D-7</span>
+      </div>
+      <div class="sk n-head" style="font-size:21px;font-weight:700;letter-spacing:-.7px;margin-top:11px">불안</div>
+      <div class="n-sub" style="font-size:11.5px;margin-top:5px">알랭 드 보통 · 7.12 토 15:00 · 황리단길</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+        <span style="font-size:15px;font-weight:700;color:#191F28;font-variant-numeric:tabular-nums">10,000</span>
+        <span class="bcta" style="font-size:12px;font-weight:800;color:#fff;background:#127A5A;padding:9px 17px;border-radius:9px">신청하기 →</span>
+      </div>
+    </div>
+
+    <!-- 카드 2 : 마감임박 (감귤 포인트 폭발) -->
+    <div class="d4 mcard" style="position:relative;margin-top:11px;background:#fff;border:1px solid #FADFD5;border-radius:18px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="btag" style="color:#fff;background:#F4552A">🔥 마감임박 7/8</span>
+        <span style="font-size:10.5px;font-weight:800;color:#F4552A">D-3 · 1자리</span>
+      </div>
+      <div class="sk n-head" style="font-size:21px;font-weight:700;letter-spacing:-.7px;margin-top:11px">아몬드</div>
+      <div class="n-sub" style="font-size:11.5px;margin-top:5px">손원평 · 7.15 화 19:00 · 효자동</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+        <span style="font-size:15px;font-weight:700;color:#191F28;font-variant-numeric:tabular-nums">10,000</span>
+        <span class="bcta" style="font-size:12px;font-weight:800;color:#fff;background:#127A5A;padding:9px 17px;border-radius:9px">신청하기 →</span>
+      </div>
+    </div>
+
+    <!-- 카드 3 : 본인 신청 완료 (그린 인라인) -->
+    <div class="d5" style="position:relative;margin-top:11px;background:#F3FAF6;border:1px solid #CDE9DB;border-radius:18px;padding:13px 16px;display:flex;align-items:center;gap:11px">
+      <div style="width:22px;height:22px;border-radius:50%;background:#127A5A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">✓</div>
+      <div style="flex:1">
+        <div class="n-head" style="font-size:12.5px;font-weight:700">《데미안》 신청 완료</div>
+        <div class="n-sub" style="font-size:11px;margin-top:2px">7.19 토 15:00 · 내가 신청한 모임</div>
+      </div>
+      <span class="sl" style="font-size:11px;font-weight:700;color:#127A5A">D-11</span>
+    </div>
+  </div>
+
+  <!-- ============ 설명 노트 ============ -->
+  <div class="notes" style="padding-top:6px">
+    <div class="mcard" data-choice="a-v2" onclick="toggleSelect(this)" style="border:1.5px solid #127A5A;border-radius:14px;padding:14px 16px;margin-bottom:16px;background:#F3FAF6;cursor:pointer">
+      <div class="n-head" style="font-weight:800;font-size:13px;color:#127A5A">👍 이 방향 채택 (클릭)</div>
+    </div>
+    <p style="margin:0 0 14px"><b>색 운용</b><br>
+      <span class="swatch" style="background:#127A5A"></span><b>잉크 그린</b> — CTA·활성일·가격·완료. 브랜드 앵커<br>
+      <span class="swatch" style="background:#F4552A"></span><b>감귤 코럴</b> — 마감임박·D-day '순간'에만 폭발. 배경 면엔 절대 안 씀 (유치함 방지)<br>
+      <span class="swatch" style="background:#F9FAFB;border:1px solid #ddd"></span>오프화이트 배경 + 웜그레이 (크림 아님)</p>
+    <p style="margin:0 0 14px"><b>타이포</b><br>
+      워드마크 34px·책제목 21px·히어로 29px <b>디스플레이 세리프</b>(Noto Serif KR). 본문은 Pretendard. 크기 낙차로 잡지 위계.</p>
+    <p style="margin:0 0 14px"><b>전문가 처방 반영</b><br>
+      ① 감귤 보조색 포인트(민서·도윤) ② 서브텍스트 대비 수정 #5A6B7A(도윤) ③ 세리프 디스플레이 스케일업(한결) ④ 상태 3종 노출—모집중/마감임박/신청완료(태오)</p>
+    <p style="margin:0;color:#6B7684;font-size:11.5px"><b style="color:#F4552A">다음 단계</b> — 채택하면 워드마크/심볼('지독' 언어유희, 지현 제안)까지 확장하고 전체 디자인 시스템 문서로 굳혀요.</p>
+  </div>
+
+</div>

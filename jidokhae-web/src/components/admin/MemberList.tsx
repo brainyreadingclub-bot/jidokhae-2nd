@@ -121,7 +121,7 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
     }
     if (role === 'editor') {
       return (
-        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-accent-600" style={{ backgroundColor: 'var(--color-accent-50)', border: '1px solid var(--color-accent-200)' }}>
+        <span className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-primary-600" style={{ border: '1px solid var(--color-primary-200)' }}>
           운영진{arrow}
         </span>
       )

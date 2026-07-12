@@ -34,8 +34,9 @@ export default async function HomeContent() {
       const tSettings = diag.elapsed()
       const settings = await getSiteSettings()
       diag.stage('getSiteSettings done', ` in ${diag.elapsed() - tSettings}ms`)
+      const { data: memberCount } = await supabase.rpc('get_member_count')
       diag.stage('complete (welcome screen)')
-      return <WelcomeScreen nickname={profile.nickname} settings={settings} />
+      return <WelcomeScreen nickname={profile.nickname} settings={settings} memberCount={memberCount ?? null} />
     }
     if (!profile.profile_completed_at || !profile.real_name) {
       diag.stage('complete (profile setup)')

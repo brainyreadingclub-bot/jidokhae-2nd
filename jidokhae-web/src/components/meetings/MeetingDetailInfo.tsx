@@ -21,18 +21,18 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity, i
     ? 'text-neutral-400'
     : isAlmostFull
       ? 'text-accent-500'
-      : 'text-primary-600'
+      : 'text-neutral-700'
 
   return (
     <div className="space-y-6">
-      {/* Title */}
-      <h1 className="text-xl font-extrabold text-primary-900 leading-snug tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+      {/* Title (세리프 헤드라인) */}
+      <h1 className="text-2xl font-black text-neutral-900 leading-snug tracking-tight [word-break:keep-all]" style={{ fontFamily: 'var(--font-display)' }}>
         {meeting.title}
       </h1>
 
       {/* Description */}
       {meeting.description && (
-        <p className="text-sm leading-relaxed text-primary-600/80 whitespace-pre-line">
+        <p className="text-sm leading-relaxed text-neutral-700 whitespace-pre-line">
           {meeting.description}
         </p>
       )}
@@ -88,7 +88,7 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity, i
           }
           label="참여"
           value={isMasked ? `${capacity}명 모집 중` : `${confirmedCount}/${capacity}명`}
-          valueClassName={isMasked ? capacityClass : `${capacityClass} font-mono tabular-nums`}
+          valueClassName={isMasked ? capacityClass : `${capacityClass} tabular-nums`}
         />
         <InfoRow
           icon={
@@ -131,11 +131,11 @@ function InfoRow({
       className={`flex items-center gap-3 py-2.5 ${!isLast ? '' : ''}`}
       style={!isLast ? { borderBottom: '1px solid var(--color-surface-300)' } : undefined}
     >
-      <span className="text-primary-400 flex-shrink-0">{icon}</span>
-      <span className="text-xs font-medium text-primary-500/70 w-11 flex-shrink-0">{label}</span>
+      <span className="text-neutral-400 flex-shrink-0">{icon}</span>
+      <span className="text-xs font-medium text-neutral-600 w-11 flex-shrink-0">{label}</span>
       <div className="flex flex-col">
         <span
-          className={`text-sm font-semibold ${valueClassName || (highlight ? 'text-accent-600' : 'text-primary-800')}`}
+          className={`text-sm font-semibold ${valueClassName || (highlight ? 'text-neutral-900' : 'text-neutral-800')}`}
         >
           {value}
         </span>

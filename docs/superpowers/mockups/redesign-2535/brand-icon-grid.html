@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>앱 아이콘 — 홈 화면 스탠드아웃 검증</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Pretendard',sans-serif; background:#E9EBEE; color:#191F28; padding:36px 24px 90px; }
+  .sk { font-family:'Noto Serif KR',serif; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  .pagehead h1 { font-family:'Noto Serif KR',serif; font-size:23px; font-weight:900; letter-spacing:-1px; }
+  .pagehead p { font-size:13px; color:#5A6B7A; margin-top:8px; line-height:1.6; }
+  .secttitle { margin:38px 0 18px; display:flex; align-items:baseline; gap:10px; }
+  .secttitle .n { font-family:'Noto Serif KR',serif; font-size:18px; font-weight:900; letter-spacing:-.5px; }
+  .secttitle .d { font-size:12.5px; color:#6B7684; }
+  .secttitle::after { content:''; flex:1; height:1px; background:#D4D8DE; }
+  .row { display:flex; gap:40px; flex-wrap:wrap; align-items:flex-start; }
+
+  /* ===== 홈 화면 목업 ===== */
+  .home { width:270px; border-radius:30px; padding:22px 16px 26px; position:relative; overflow:hidden;
+    background:linear-gradient(170deg,#cfd9e6,#b9c6d8); box-shadow:0 18px 40px -14px rgba(20,40,32,.32); }
+  .home .clock { text-align:center; color:#fff; font-weight:700; font-size:30px; letter-spacing:-1px; margin:6px 0 18px; text-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px 14px; }
+  .app { text-align:center; }
+  .app .ic { width:50px; height:50px; border-radius:13px; margin:0 auto 5px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 5px rgba(0,0,0,.18); font-weight:800; color:#fff; font-size:20px; position:relative; overflow:hidden; }
+  .app .nm { font-size:8.5px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.3); font-weight:500; }
+  /* 더미 앱들 (초록 경쟁 없음 확인용) */
+  .d-blue { background:linear-gradient(#3182f6,#1b64da); }
+  .d-yel { background:#FEE500; color:#3c1e1e !important; }
+  .d-org { background:linear-gradient(#ff8a3d,#ff6f0f); }
+  .d-red { background:linear-gradient(#ff5a5f,#e0353b); }
+  .d-purp { background:linear-gradient(#8b5cf6,#6d28d9); }
+  .d-sky { background:linear-gradient(#38bdf8,#0ea5e9); }
+  .d-pink { background:linear-gradient(#f472b6,#db2777); }
+  .d-gray { background:linear-gradient(#4b5563,#1f2937); }
+  .d-teal { background:linear-gradient(#2dd4bf,#0d9488); }
+  .d-indigo { background:linear-gradient(#6366f1,#4338ca); }
+  .d-amber { background:linear-gradient(#fbbf24,#f59e0b); color:#3c1e1e !important; }
+  /* 우리 후보 (홈 그리드 안) */
+  .jd-ji { background:linear-gradient(150deg,#127A5A,#0d5c43); }
+  .jd-ji .g { font-size:26px; font-weight:900; letter-spacing:-1.5px; }
+  .jd-dok { background:linear-gradient(150deg,#127A5A,#0B4B37); }
+  .jd-dok .g { font-size:24px; font-weight:700; }
+  .homecap { text-align:center; font-size:11px; color:#6B7684; margin-top:12px; line-height:1.5; }
+
+  /* ===== 크기 사다리 ===== */
+  .ladder { display:flex; gap:28px; flex-wrap:wrap; }
+  .lcol { text-align:center; }
+  .lcol .kk { font-size:13px; font-weight:800; margin-bottom:12px; }
+  .sizes { display:flex; gap:14px; align-items:flex-end; justify-content:center; }
+  .sz { text-align:center; }
+  .sz .lab { font-size:9px; color:#8B95A1; margin-top:5px; }
+  .tile { border-radius:22%; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;
+    box-shadow:0 6px 16px -6px rgba(20,40,32,.3), 0 1px 3px rgba(0,0,0,.1); color:#fff; }
+  .tile.big { width:104px; height:104px; }
+  .tile.mid { width:60px; height:60px; }
+  .tile.sm { width:40px; height:40px; }
+  .grain { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.15;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+  .bg-solid { background:linear-gradient(150deg,#127A5A,#0d5c43); }
+  .bg-deep { background:linear-gradient(150deg,#0d5c43,#0A3A2B); }
+  .tile .ji104 { font-size:58px; font-weight:900; letter-spacing:-2px; }
+  .tile .ji60 { font-size:33px; font-weight:900; letter-spacing:-1.5px; }
+  .tile .ji40 { font-size:22px; font-weight:900; letter-spacing:-1px; }
+  .tile .dok104 { font-size:56px; font-weight:700; }
+  .tile .dok60 { font-size:32px; font-weight:700; }
+  .tile .dok40 { font-size:21px; font-weight:700; }
+
+  /* ===== 점 유무 비교 ===== */
+  .dotcmp { display:flex; gap:30px; flex-wrap:wrap; }
+  .dc { text-align:center; }
+  .dc .kk { font-size:12.5px; font-weight:800; margin-bottom:10px; }
+  .dc .ss { font-size:10.5px; color:#6B7684; margin-top:8px; max-width:150px; line-height:1.5; }
+  .dot { position:absolute; width:11px; height:11px; background:#F4552A; border-radius:3px; top:22px; right:24px; transform:rotate(45deg); }
+
+  .verdict { margin-top:20px; background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:16px 18px; font-size:12.5px; color:#333d48; line-height:1.8; }
+  .verdict b { color:#127A5A; } .verdict .coral { color:#F4552A; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="pagehead">
+    <h1>앱 아이콘 — 홈 화면에서 진짜 튀는지 검증</h1>
+    <p>잉크그린 솔리드로 확정 방향. 실제 홈 그리드·크기 사다리·감귤 점 유무로 검증. '지' vs '讀' 글자만 결정하면 됩니다.</p>
+  </div>
+
+  <!-- ① 홈 화면 스탠드아웃 -->
+  <div class="secttitle"><span class="n">① 홈 화면 스탠드아웃</span><span class="d">다른 앱들 사이에 놓고 초록이 튀는지</span></div>
+  <div class="row">
+    <div>
+      <div class="home">
+        <div class="clock">9:41</div>
+        <div class="grid">
+          <div class="app"><div class="ic d-blue">T</div><div class="nm">뱅킹</div></div>
+          <div class="app"><div class="ic d-yel">K</div><div class="nm">메신저</div></div>
+          <div class="app"><div class="ic d-org">C</div><div class="nm">중고</div></div>
+          <div class="app"><div class="ic d-red">M</div><div class="nm">지도</div></div>
+          <div class="app"><div class="ic d-purp">N</div><div class="nm">노트</div></div>
+          <div class="app"><div class="ic d-sky">W</div><div class="nm">날씨</div></div>
+          <div class="app"><div class="ic jd-ji"><span class="sk g">지</span></div><div class="nm">지독해</div></div>
+          <div class="app"><div class="ic d-pink">P</div><div class="nm">사진</div></div>
+          <div class="app"><div class="ic d-gray">S</div><div class="nm">설정</div></div>
+          <div class="app"><div class="ic d-teal">H</div><div class="nm">건강</div></div>
+          <div class="app"><div class="ic d-indigo">B</div><div class="nm">브라우저</div></div>
+          <div class="app"><div class="ic d-amber">M</div><div class="nm">음악</div></div>
+        </div>
+        <div class="homecap">'지' 솔리드 (7번째)</div>
+      </div>
+    </div>
+    <div>
+      <div class="home">
+        <div class="clock">9:41</div>
+        <div class="grid">
+          <div class="app"><div class="ic d-blue">T</div><div class="nm">뱅킹</div></div>
+          <div class="app"><div class="ic d-yel">K</div><div class="nm">메신저</div></div>
+          <div class="app"><div class="ic d-org">C</div><div class="nm">중고</div></div>
+          <div class="app"><div class="ic d-red">M</div><div class="nm">지도</div></div>
+          <div class="app"><div class="ic d-purp">N</div><div class="nm">노트</div></div>
+          <div class="app"><div class="ic d-sky">W</div><div class="nm">날씨</div></div>
+          <div class="app"><div class="ic jd-dok"><span class="sk g">讀</span></div><div class="nm">지독해</div></div>
+          <div class="app"><div class="ic d-pink">P</div><div class="nm">사진</div></div>
+          <div class="app"><div class="ic d-gray">S</div><div class="nm">설정</div></div>
+          <div class="app"><div class="ic d-teal">H</div><div class="nm">건강</div></div>
+          <div class="app"><div class="ic d-indigo">B</div><div class="nm">브라우저</div></div>
+          <div class="app"><div class="ic d-amber">M</div><div class="nm">음악</div></div>
+        </div>
+        <div class="homecap">'讀' 솔리드 (7번째)</div>
+      </div>
+    </div>
+    <div style="max-width:230px">
+      <div class="verdict" style="margin-top:0">
+        초록은 파랑·노랑·주황·빨강 사이에서 <b>혼자 초록</b>이라 시선이 바로 꽂힙니다. 색이 곧 차별점.<br><br>
+        <b>지</b> = 크게, 한 번에 읽힘.<br><b>讀</b> = 획이 많아 작을 때 뭉개질 위험(아래 크기 사다리 확인).
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 크기 사다리 -->
+  <div class="secttitle"><span class="n">② 크기 사다리</span><span class="d">104px → 60px(홈 실제) → 40px(설정/스포트라이트)</span></div>
+  <div class="ladder">
+    <div class="lcol">
+      <div class="kk">'지'</div>
+      <div class="sizes">
+        <div class="sz"><div class="tile big bg-solid"><div class="grain"></div><span class="sk ji104">지</span></div><div class="lab">104</div></div>
+        <div class="sz"><div class="tile mid bg-solid"><div class="grain"></div><span class="sk ji60">지</span></div><div class="lab">60</div></div>
+        <div class="sz"><div class="tile sm bg-solid"><span class="sk ji40">지</span></div><div class="lab">40</div></div>
+      </div>
+    </div>
+    <div class="lcol">
+      <div class="kk">'讀'</div>
+      <div class="sizes">
+        <div class="sz"><div class="tile big bg-solid"><div class="grain"></div><span class="sk dok104">讀</span></div><div class="lab">104</div></div>
+        <div class="sz"><div class="tile mid bg-solid"><div class="grain"></div><span class="sk dok60">讀</span></div><div class="lab">60</div></div>
+        <div class="sz"><div class="tile sm bg-solid"><span class="sk dok40">讀</span></div><div class="lab">40</div></div>
+      </div>
+    </div>
+    <div class="lcol">
+      <div class="kk">더 깊은 그린(대안 배경)</div>
+      <div class="sizes">
+        <div class="sz"><div class="tile big bg-deep"><div class="grain"></div><span class="sk ji104">지</span></div><div class="lab">104</div></div>
+        <div class="sz"><div class="tile mid bg-deep"><div class="grain"></div><span class="sk ji60">지</span></div><div class="lab">60</div></div>
+        <div class="sz"><div class="tile sm bg-deep"><span class="sk ji40">지</span></div><div class="lab">40</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 감귤 점 유무 -->
+  <div class="secttitle"><span class="n">③ 감귤 점 — 빼는 게 맞을까?</span><span class="d">우상단 점 = iOS 알림 배지와 헷갈림</span></div>
+  <div class="dotcmp">
+    <div class="dc">
+      <div class="kk">점 없음 (추천)</div>
+      <div class="tile big bg-solid" style="margin:0 auto"><div class="grain"></div><span class="sk ji104">지</span></div>
+      <div class="ss">깨끗함. 색으로 이미 충분히 튐. 감귤은 앱 안 '순간'에만 아껴 씀</div>
+    </div>
+    <div class="dc">
+      <div class="kk">점 있음</div>
+      <div class="tile big bg-solid" style="margin:0 auto"><div class="grain"></div><span class="sk ji104">지</span><span class="dot"></span></div>
+      <div class="ss coral" style="color:#F4552A">우상단 주황 점 = 알림 배지처럼 보여 "안 읽음?" 착각. 희소색 낭비</div>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <b>전문 판단</b> — 배경은 <b>잉크그린 솔리드</b> 확정(홈에서 색으로 튐). 감귤 점은 <span class="coral">빼기</span>(알림 배지 오인 + 희소성 보존). 남은 건 글자:<br>
+    · <b>'지'</b> — 40px에서도 또렷. 안전하고 강함. 워드마크 '지독해' 첫 글자라 연결도 자연스러움.<br>
+    · <b>'讀'</b> — '읽다'라 정체성은 최고지만 40px에서 획이 뭉갬. 크게 쓰는 스플래시/OG엔 좋고 홈 아이콘엔 리스크.<br>
+    → <b>추천: 홈 아이콘은 '지', 스플래시·OG 같은 큰 화면엔 '讀'로 이원화</b>도 가능. 아니면 전부 '지'로 통일. 어느 쪽?
+  </div>
+
+</div>
+</body>
+</html>

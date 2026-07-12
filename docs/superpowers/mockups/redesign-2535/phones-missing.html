@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빠진 화면 — 미신청 상세 · 빈 상태 3종 · 대기/입금대기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Pretendard',sans-serif; background:#E9EBEE; color:#191F28; padding:36px 24px 90px; }
+  .pagehead { max-width:1180px; margin:0 auto 26px; }
+  .pagehead h1 { font-family:'Noto Serif KR',serif; font-size:23px; font-weight:900; letter-spacing:-1px; }
+  .pagehead p { font-size:13px; color:#5A6B7A; margin-top:8px; line-height:1.6; }
+
+  .secttitle { max-width:1180px; margin:40px auto 16px; display:flex; align-items:baseline; gap:10px; }
+  .secttitle .n { font-family:'Noto Serif KR',serif; font-size:17px; font-weight:900; color:#191F28; letter-spacing:-.5px; }
+  .secttitle .d { font-size:12.5px; color:#6B7684; }
+  .secttitle::after { content:''; flex:1; height:1px; background:#D4D8DE; }
+
+  .rail { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; align-items:flex-start; max-width:1180px; margin:0 auto; }
+  .col { width:302px; }
+  .col > .cap { text-align:center; margin-bottom:11px; }
+  .col > .cap .k { display:block; font-size:12.5px; font-weight:800; color:#191F28; letter-spacing:-.3px; }
+  .col > .cap .s { display:block; font-size:11px; color:#8892a0; margin-top:2px; }
+
+  .ph { width:302px; height:620px; border-radius:34px; overflow:hidden; position:relative;
+    box-shadow:0 20px 48px -14px rgba(20,40,32,.32), 0 3px 10px rgba(0,0,0,.08); border:1px solid rgba(0,0,0,.06); }
+  .scr { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; background:#F9FAFB; }
+  .scr::-webkit-scrollbar { width:0; }
+  .grain { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.2; z-index:5; }
+
+  .appbar { display:flex; align-items:center; justify-content:space-between; padding:13px 18px 8px; }
+  .wm { font-family:'Noto Serif KR',serif; font-weight:900; letter-spacing:-1.4px; color:#191F28; font-size:22px; }
+  .avatar { width:28px; height:28px; border-radius:50%; background:#E3F2EC; }
+  .back { display:flex; align-items:center; gap:5px; padding:13px 18px 4px; font-size:13px; color:#5A6B7A; font-weight:500; }
+  .body { padding:2px 18px 90px; }
+
+  /* ---- tags ---- */
+  .tag { display:inline-block; font-size:11px; font-weight:800; padding:3px 9px; border-radius:6px; letter-spacing:-.2px; }
+  .tag.open { background:#E3F2EC; color:#0d5c43; }
+  .tag.hot  { background:#F4552A; color:#fff; }
+  .tag.wait { background:#EEF1F4; color:#5A6B7A; }   /* 대기중 = 뉴트럴 (그린/코럴과 구분) */
+  .tag.done { background:#F0F2F5; color:#6B7684; }
+  .tag.ddayhot { background:#F4552A; color:#fff; }
+  .tag.dday { background:#EEF1F4; color:#6B7684; }
+
+  /* ---- 모임 상세 히어로 ---- */
+  .hero-book { font-family:'Noto Serif KR',serif; font-size:27px; font-weight:900; letter-spacing:-1.4px; line-height:1.28; color:#191F28; margin:12px 0 0; }
+  .hero-meta { font-size:12.5px; color:#5A6B7A; margin-top:9px; line-height:1.6; }
+
+  /* ---- 정보 카드 ---- */
+  .infocard { background:#fff; border:1px solid #E5E8EB; border-radius:16px; padding:15px 16px; margin-top:16px; }
+  .irow { display:flex; align-items:center; gap:9px; font-size:12.5px; color:#5A6B7A; padding:6px 0; }
+  .irow svg { color:#6B7684; flex-shrink:0; }
+  .irow + .irow { border-top:1px solid #F4F6F8; }
+  .feerow { display:flex; align-items:center; justify-content:space-between; margin-top:4px; padding-top:11px; border-top:1px solid #EEF1F4; }
+  .feerow .lbl { font-size:12px; font-weight:500; color:#6B7684; }
+  .feerow .val { font-size:14px; font-weight:600; color:#191F28; font-variant-numeric:tabular-nums; }
+
+  .sectlabel { font-size:12px; font-weight:700; color:#6B7684; margin:20px 0 8px; letter-spacing:.2px; }
+  .desc { font-size:13px; line-height:1.75; color:#4E5968; }
+
+  /* ---- sticky CTA ---- */
+  .sticky { position:absolute; left:0; right:0; bottom:0; padding:12px 18px calc(12px + 8px); background:rgba(249,250,251,.92); backdrop-filter:blur(8px); border-top:1px solid #EEF1F4; z-index:8; }
+  .cta { display:block; width:100%; text-align:center; padding:14px; border-radius:11px; font-size:14px; font-weight:700; letter-spacing:.2px; }
+  .cta.primary { background:#127A5A; color:#fff; box-shadow:0 4px 14px rgba(18,122,90,.24); }
+  .cta.ghost { background:#fff; color:#5A6B7A; border:1px solid #DDE2E7; box-shadow:none; }
+  .cta.off { background:#EEF1F4; color:#B0B8C1; }
+  .stickynote { text-align:center; font-size:11px; color:#6B7684; margin-top:8px; line-height:1.5; }
+
+  /* ---- 신청완료 / 대기 / 입금 배너 ---- */
+  .strip { display:flex; align-items:center; gap:10px; border-radius:14px; padding:11px 13px; margin-top:16px; }
+  .strip.done { background:#F3FAF6; border:1px solid #CDE9DB; }
+  .strip.waiting { background:#F5F7F9; border:1px solid #E1E6EB; }
+  .strip .ck { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; color:#fff; }
+  .strip.done .ck { background:#127A5A; }
+  .strip.waiting .ck { background:#6B7684; font-weight:800; font-size:11px; }
+  .strip .t1 { font-size:13px; font-weight:700; }
+  .strip.done .t1 { color:#0d5c43; }
+  .strip.waiting .t1 { color:#4E5968; }
+  .strip .t2 { font-size:11px; color:#6B7684; margin-top:1px; font-weight:500; }
+  .strip .dd { margin-left:auto; font-size:12px; font-weight:800; }
+
+  /* ---- 입금 안내 박스 (뉴트럴 + 안내, 그린 아님) ---- */
+  .paybox { background:#fff; border:1px solid #E5E8EB; border-radius:14px; padding:14px 15px; margin-top:12px; }
+  .paybox .h { font-size:12.5px; font-weight:700; color:#191F28; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+  .paybox .h .dot { width:6px; height:6px; border-radius:50%; background:#F4552A; }  /* 미입금=주의 점 */
+  .pline { display:flex; justify-content:space-between; align-items:center; font-size:12.5px; padding:5px 0; }
+  .pline .k { color:#6B7684; }
+  .pline .v { color:#191F28; font-weight:600; font-variant-numeric:tabular-nums; }
+  .pline .copy { font-size:10px; color:#127A5A; font-weight:700; border:1px solid #CDE9DB; border-radius:5px; padding:2px 6px; margin-left:7px; }
+  .paynote { font-size:11px; color:#6B7684; line-height:1.6; margin-top:9px; padding-top:9px; border-top:1px solid #F4F6F8; }
+
+  /* ---- 빈 상태 ---- */
+  .summary { display:flex; align-items:center; gap:7px; font-size:12.5px; color:#6B7684; margin:2px 0 15px; font-weight:500; }
+  .week { display:flex; justify-content:space-between; margin-bottom:22px; }
+  .day { width:34px; text-align:center; }
+  .day .dl { font-size:10px; color:#6B7684; margin-bottom:5px; font-weight:600; }
+  .day .dn { width:32px; height:32px; line-height:32px; border-radius:10px; font-size:13px; font-weight:600; color:#4E5968; }
+  .day.on .dn { background:#127A5A; color:#fff; }
+  .empty { text-align:center; padding:38px 20px; }
+  .empty .ico { width:62px; height:62px; border-radius:20px; background:#F0F4F2; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .empty .ico svg { color:#127A5A; opacity:.85; }
+  .empty .et { font-family:'Noto Serif KR',serif; font-size:17px; font-weight:700; color:#191F28; letter-spacing:-.5px; }
+  .empty .es { font-size:12.5px; color:#6B7684; margin-top:8px; line-height:1.6; }
+  .empty .eb { display:inline-block; margin-top:18px; background:#127A5A; color:#fff; font-size:13px; font-weight:700; padding:11px 22px; border-radius:10px; }
+  .empty .eb.ghost { background:#fff; color:#127A5A; border:1px solid #CDE9DB; }
+  .allh { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:700; color:#4E5968; letter-spacing:-.4px; margin:6px 0 11px; }
+  .softnote { background:#F5F7F9; border:1px solid #E1E6EB; border-radius:12px; padding:11px 13px; font-size:12px; color:#5A6B7A; line-height:1.55; margin-bottom:14px; }
+
+  /* ---- 목록 카드 (빈상태/마감용) ---- */
+  .dsh { display:flex; align-items:center; gap:9px; padding:2px 0 9px; }
+  .dsh .dt { font-size:13px; font-weight:700; color:#191F28; }
+  .dsh .line { flex:1; height:1px; background:#EEF1F4; }
+  .card { position:relative; background:#fff; border:1px solid #E5E8EB; border-radius:16px; padding:15px; margin-bottom:11px; }
+  .card .badge { position:absolute; top:14px; right:15px; }
+  .card .dtp { display:inline-flex; align-items:center; gap:5px; color:#4E5968; font-size:11.5px; font-weight:600; vertical-align:middle; }
+  .card .dtp svg { opacity:.5; }
+  .card .tm { font-size:11.5px; color:#6B7684; margin-left:7px; font-weight:500; vertical-align:middle; }
+  .card .ttl { font-family:'Noto Serif KR',serif; font-size:17px; font-weight:700; letter-spacing:-.6px; color:#191F28; margin:8px 0 0; line-height:1.32; padding-right:52px; }
+  .card .meta { display:flex; align-items:center; gap:9px; margin-top:13px; font-size:12px; color:#6B7684; }
+  .card .meta .sep { width:1px; height:10px; background:#E5E8EB; }
+  .card .ctarow { display:flex; align-items:center; justify-content:space-between; margin-top:13px; padding-top:12px; border-top:1px solid #F0F2F5; }
+  .card .ctarow .f2 { font-variant-numeric:tabular-nums; font-weight:600; font-size:13px; color:#5A6B7A; }
+  .card .miniCta { font-size:12px; font-weight:700; padding:7px 16px; border-radius:9px; }
+  .card .miniCta.g { background:#127A5A; color:#fff; }
+  .card .miniCta.w { background:#fff; color:#127A5A; border:1px solid #CDE9DB; }
+  .card .miniCta.off { background:#F0F2F5; color:#6B7684; }
+
+  .note { max-width:1180px; margin:18px auto 0; background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:14px 16px; font-size:12px; color:#4E5968; line-height:1.7; }
+  .note b { color:#127A5A; }
+</style>
+</head>
+<body>
+  <div class="pagehead">
+    <h1>빠진 화면 완성 — 디자인 문서 적용</h1>
+    <p>미신청 유저의 모임 상세(최다 진입 경로), 빈 상태 3종, 대기중·입금대기 상태. §5에서 TBD였던 두 상태색을 확정합니다.</p>
+  </div>
+
+  <!-- ============ SECTION 1 ============ -->
+  <div class="secttitle"><span class="n">1. 미신청 유저의 모임 상세</span><span class="d">최다 진입 경로 · 명단 미노출 · 하단 신청 CTA</span></div>
+  <div class="rail">
+    <div class="col">
+      <div class="cap"><span class="k">모임 상세 (미신청)</span><span class="s">모집중</span></div>
+      <div class="ph"><div class="scr">
+        <svg class="grain"><filter id="g1"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g1)"/></svg>
+        <div class="back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>모임 일정</div>
+        <div class="body">
+          <span class="tag open">모집중 6/8</span>
+          <div class="hero-book">우리가 빛의 속도로<br>갈 수 없다면</div>
+          <div class="hero-meta">김초엽 · 소설<br>SF가 그리는 다정한 미래에 대하여</div>
+          <div class="infocard">
+            <div class="irow"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 9일 (수) 저녁 7:30</div>
+            <div class="irow"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>경주 황리단길 · 책방 사이</div>
+            <div class="irow"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>6명이 함께해요 · 8명 정원</div>
+            <div class="feerow"><span class="lbl">참가비</span><span class="val">10,000</span></div>
+          </div>
+          <div class="sectlabel">모임 소개</div>
+          <div class="desc">이번 달은 김초엽 작가의 첫 소설집을 함께 읽어요. 과학과 다정함이 공존하는 세계에서, 우리가 서로를 이해한다는 건 어떤 의미일까요. 편하게 읽고 오시면 됩니다 — 다 못 읽어도 괜찮아요.</div>
+        </div>
+        <div class="sticky"><span class="cta primary">신청하기</span></div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 2 ============ -->
+  <div class="secttitle"><span class="n">2. 빈 상태 3종</span><span class="d">이번 주 없음 · 내 신청 0건 · 전부 마감</span></div>
+  <div class="rail">
+
+    <!-- 2a 이번 주 없음 -->
+    <div class="col">
+      <div class="cap"><span class="k">이번 주 모임 없음</span><span class="s">홈 · 목록 비어있음</span></div>
+      <div class="ph"><div class="scr">
+        <svg class="grain"><filter id="g2"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g2)"/></svg>
+        <div class="appbar"><span class="wm">지독해</span><span class="avatar"></span></div>
+        <div class="body">
+          <div class="summary"><span>이번 주 예정된 모임 없음</span></div>
+          <div class="week">
+            <div class="day"><div class="dl">일</div><div class="dn">6</div></div>
+            <div class="day"><div class="dl">월</div><div class="dn">7</div></div>
+            <div class="day"><div class="dl">화</div><div class="dn">8</div></div>
+            <div class="day"><div class="dl">수</div><div class="dn">9</div></div>
+            <div class="day"><div class="dl">목</div><div class="dn">10</div></div>
+            <div class="day"><div class="dl">금</div><div class="dn">11</div></div>
+            <div class="day"><div class="dl">토</div><div class="dn">12</div></div>
+          </div>
+          <div class="empty">
+            <div class="ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg></div>
+            <div class="et">이번 주는 쉬어가요</div>
+            <div class="es">예정된 모임이 아직 없어요.<br>다음 주 일정을 미리 둘러볼까요?</div>
+            <span class="eb ghost">다음 주 보기 ›</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 2b 내 신청 0건 -->
+    <div class="col">
+      <div class="cap"><span class="k">내 신청 0건</span><span class="s">마이페이지 · 내 모임</span></div>
+      <div class="ph"><div class="scr">
+        <svg class="grain"><filter id="g3"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g3)"/></svg>
+        <div class="appbar"><span class="wm" style="font-size:20px">내 모임</span><span class="avatar"></span></div>
+        <div class="body">
+          <div class="empty" style="padding-top:64px">
+            <div class="ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+            <div class="et">아직 신청한 모임이 없어요</div>
+            <div class="es">마음에 드는 책이 있는지<br>이번 주 모임을 둘러볼까요?</div>
+            <span class="eb">모임 둘러보기</span>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 2c 전부 마감 -->
+    <div class="col">
+      <div class="cap"><span class="k">전부 마감</span><span class="s">홈 · 대기 신청 유도</span></div>
+      <div class="ph"><div class="scr">
+        <svg class="grain"><filter id="g4"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g4)"/></svg>
+        <div class="appbar"><span class="wm">지독해</span><span class="avatar"></span></div>
+        <div class="body">
+          <div class="summary"><span>이번 주 3회 모임 · 모두 마감</span></div>
+          <div class="softnote">이번 주 모임이 모두 찼어요. <b style="color:#127A5A">대기 신청</b>하면 자리가 날 때 자동으로 확정돼요.</div>
+          <div class="allh">전체 일정</div>
+          <div class="dsh"><span class="dt">7월 9일 수요일</span><span class="line"></span></div>
+          <div class="card">
+            <span class="badge tag done">마감</span>
+            <span class="dtp"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 9일</span><span class="tm">저녁 7:30</span>
+            <div class="ttl">달러구트 꿈 백화점</div>
+            <div class="meta"><span>포항 북구</span><span class="sep"></span><span>8/8명</span></div>
+            <div class="ctarow"><span class="f2">10,000</span><span class="miniCta w">대기 신청</span></div>
+          </div>
+          <div class="dsh"><span class="dt">7월 12일 토요일</span><span class="line"></span></div>
+          <div class="card">
+            <span class="badge tag done">마감</span>
+            <span class="dtp"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 12일</span><span class="tm">오후 2:00</span>
+            <div class="ttl">불편한 편의점</div>
+            <div class="meta"><span>경주 성건동</span><span class="sep"></span><span>10/10명</span></div>
+            <div class="ctarow"><span class="f2">12,000</span><span class="miniCta w">대기 신청</span></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 3 ============ -->
+  <div class="secttitle"><span class="n">3. 대기중 · 입금대기 상태</span><span class="d">§5 TBD 색상 확정 — 대기중=뉴트럴, 입금대기=그린 스트립+뉴트럴 안내</span></div>
+  <div class="rail">
+
+    <!-- 3a 대기중 -->
+    <div class="col">
+      <div class="cap"><span class="k">대기중 (본인)</span><span class="s">뉴트럴 회색 — 그린과 구분</span></div>
+      <div class="ph"><div class="scr">
+        <svg class="grain"><filter id="g5"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g5)"/></svg>
+        <div class="back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>모임 일정</div>
+        <div class="body">
+          <span class="tag done">마감 8/8</span>
+          <div class="hero-book">달러구트 꿈 백화점</div>
+          <div class="hero-meta">이미예 · 소설</div>
+          <div class="strip waiting">
+            <span class="ck">3</span>
+            <div><div class="t1">대기 3번</div><div class="t2">자리가 나면 순서대로 자동 확정돼요</div></div>
+          </div>
+          <div class="infocard">
+            <div class="irow"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 9일 (수) 저녁 7:30</div>
+            <div class="irow"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>포항 북구 · 책방 하다</div>
+            <div class="feerow"><span class="lbl">결제 금액</span><span class="val">10,000</span></div>
+          </div>
+          <div class="softnote" style="margin-top:14px">모임 전날까지 자리가 나지 않으면 <b style="color:#127A5A">자동 전액 환불</b>돼요.</div>
+        </div>
+        <div class="sticky"><span class="cta ghost">대기 취소하기</span></div>
+      </div></div>
+    </div>
+
+    <!-- 3b 입금대기 -->
+    <div class="col">
+      <div class="cap"><span class="k">입금대기 (본인)</span><span class="s">그린 스트립(안심) + 뉴트럴 입금안내</span></div>
+      <div class="ph"><div class="scr">
+        <svg class="grain"><filter id="g6"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g6)"/></svg>
+        <div class="back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>모임 일정</div>
+        <div class="body">
+          <span class="tag open">모집중 7/8</span>
+          <div class="hero-book">우리가 빛의 속도로<br>갈 수 없다면</div>
+          <div class="hero-meta">김초엽 · 소설</div>
+          <div class="strip done">
+            <span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <div><div class="t1">신청 완료</div><div class="t2">초록고래님, 6명과 함께해요</div></div>
+            <span class="dd" style="color:#F4552A">D-2</span>
+          </div>
+          <div class="paybox">
+            <div class="h"><span class="dot"></span>입금 안내 · 입금 후 자리가 확정돼요</div>
+            <div class="pline"><span class="k">은행</span><span class="v">국민 123456-78-901234</span></div>
+            <div class="pline"><span class="k">예금주</span><span class="v">지독해</span></div>
+            <div class="pline"><span class="k">입금자명</span><span class="v">7/7 초록고래<span class="copy">복사</span></span></div>
+            <div class="pline"><span class="k">금액</span><span class="v">10,000</span></div>
+            <div class="paynote">입금자명을 꼭 위와 같이 적어주세요. 운영자가 확인하면 신청이 확정됩니다.</div>
+          </div>
+        </div>
+        <div class="sticky"><span class="cta ghost">신청 취소</span></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>§5 상태색 확정</b> — 대기중 = 뉴트럴 회색(`#EEF1F4`/`#5A6B7A`): 미확정 상태라 그린(확정)·코럴(긴박)과 명확히 구분. · 입금대기 = confirmed와 동일 <b>그린 신청완료 스트립</b>(회원 안심, 운영자 입금 확인 지연 대비) + 입금 안내는 <b>뉴트럴 박스 + 감귤 주의 점</b>(입금 잊음 방지, 면 아닌 점). · 빈 상태 CTA는 그린 solid(둘러보기)/고스트(다음 주)로 위계 분리.
+  </div>
+</body>
+</html>

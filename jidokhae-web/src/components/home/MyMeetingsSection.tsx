@@ -3,10 +3,10 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { formatDDay } from '@/lib/kst'
-import MeetingCard from '@/components/meetings/MeetingCard'
 import type { Meeting } from '@/types/meeting'
 
 const VISIBLE_LIMIT = 4
+const DOW = ['일', '월', '화', '수', '목', '금', '토']
 
 type RegistrationKind = 'confirmed' | 'pending_transfer' | 'waitlisted'
 
@@ -20,33 +20,99 @@ type Props = {
   items: MyMeetingItem[]
   countMap: Record<string, number>
   kstToday: string
-  isPrivileged: boolean
 }
 
-function pickBadge(item: MyMeetingItem, kstToday: string): { label: string; classes: string } {
-  // waitlisted: D-Day 대신 "대기 중" (정원 미차지)
-  if (item.kind === 'waitlisted') {
-    return { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
+function shortDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00+09:00')
+  const [, mm, dd] = dateStr.split('-')
+  return `${Number(mm)}/${Number(dd)}(${DOW[d.getUTCDay()]})`
+}
+
+/**
+ * "내 모임" 상태별 strip — 스펙 §4-5·§5.
+ * - confirmed / pending_transfer: 초록 strip (모임 정체성). 이 뷰에선 D-day 코럴 톤다운(연그린).
+ * - waitlisted: 뉴트럴 회색 strip (확정 아님 + 긴박 아님 → 무채색 "보류").
+ * 코럴은 pending 입금 안내 점 1개에만.
+ */
+function MyMeetingStrip({ item, countMap, kstToday }: { item: MyMeetingItem; countMap: Record<string, number>; kstToday: string }) {
+  const { meeting, kind } = item
+  const href = `/meetings/${meeting.id}`
+  const date = shortDate(meeting.date)
+
+  // waitlisted — 뉴트럴 회색 (그린·코럴 어느 쪽도 아님)
+  if (kind === 'waitlisted') {
+    return (
+      <Link
+        href={href}
+        className="flex items-center gap-2.5 rounded-[var(--radius-md)] px-3.5 py-2.5 transition-colors hover:bg-neutral-100"
+        style={{ backgroundColor: 'var(--color-neutral-100)', border: '1px solid var(--color-neutral-200)' }}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13px] font-bold tracking-tight text-neutral-700" style={{ fontFamily: 'var(--font-display)' }}>
+            대기 중 · {meeting.title}
+          </div>
+          <div className="mt-0.5 text-[12px] text-neutral-500">{date} · 자리가 나면 알려드려요</div>
+        </div>
+        <span
+          className="ml-auto flex-shrink-0 rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-neutral-500"
+          style={{ border: '1px solid var(--color-neutral-300)' }}
+        >
+          대기 중
+        </span>
+      </Link>
+    )
   }
-  // confirmed + pending_transfer: D-Day 뱃지로 통일
-  // (운영자 입금 확인 지연 시 회원 입장에서 사실상 신청 완료 상태이므로 동등 취급)
-  const dDay = formatDDay(item.meeting.date, item.meeting.time, kstToday)
-  if (!dDay) {
-    return { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }
-  }
-  // D-3 이하 강조 (오늘/내일 포함)
-  const isUrgent = dDay.startsWith('오늘') || dDay === '내일' || /^D-[0-3]$/.test(dDay)
-  return isUrgent
-    ? { label: dDay, classes: 'bg-accent-500 text-white border-accent-500' }
-    : { label: dDay, classes: 'bg-accent-50 text-accent-700 border-accent-200' }
+
+  // confirmed | pending_transfer — 초록 strip (동등 안심)
+  const isPending = kind === 'pending_transfer'
+  const dDay = formatDDay(meeting.date, meeting.time, kstToday)
+  const count = countMap[meeting.id] ?? 0
+
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2.5 rounded-[var(--radius-md)] px-3.5 py-2.5 transition-colors hover:brightness-[0.98]"
+      style={{ backgroundColor: 'var(--color-primary-50)', border: '1px solid var(--color-primary-200)' }}
+    >
+      <span
+        className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-white"
+        style={{ backgroundColor: 'var(--color-primary-500)' }}
+        aria-hidden="true"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13px] font-bold tracking-tight text-primary-800" style={{ fontFamily: 'var(--font-display)' }}>
+          {isPending ? '신청 접수됨' : '신청 완료'} · {meeting.title}
+        </div>
+        <div className="mt-0.5 flex items-center gap-1 text-[12px] text-primary-600">
+          {isPending ? (
+            <>
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-500" aria-hidden="true" />
+              {date} · 입금 확인 대기 중
+            </>
+          ) : (
+            <>{date} · {count}명과 함께 읽어요</>
+          )}
+        </div>
+      </div>
+      {dDay && (
+        <span className="ml-auto flex-shrink-0 rounded-full bg-primary-100 px-2 py-0.5 text-[11px] font-bold text-primary-700">
+          {dDay}
+        </span>
+      )}
+    </Link>
+  )
 }
 
 /**
  * 홈 "내 모임" 그룹.
- * Refactoring UI · Linear/Notion 패턴 — 박스 외피 없이 그룹 헤더 + 카드 리스트.
+ * Refactoring UI · Linear/Notion 패턴 — 박스 외피 없이 그룹 헤더 + strip 리스트.
  * "전체 일정"과 동등 위계로 연속 흐름.
  */
-export default function MyMeetingsSection({ nickname, items, countMap, kstToday, isPrivileged }: Props) {
+export default function MyMeetingsSection({ nickname, items, countMap, kstToday }: Props) {
   const [expanded, setExpanded] = useState(false)
 
   const visibleItems = useMemo(
@@ -92,17 +158,9 @@ export default function MyMeetingsSection({ nickname, items, countMap, kstToday,
         </Link>
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2">
         {visibleItems.map((item) => (
-          <MeetingCard
-            key={item.meeting.id}
-            meeting={item.meeting}
-            confirmedCount={countMap[item.meeting.id] ?? 0}
-            isRegistered={item.kind === 'confirmed' || item.kind === 'pending_transfer'}
-            isWaitlisted={item.kind === 'waitlisted'}
-            isPrivileged={isPrivileged}
-            customBadge={pickBadge(item, kstToday)}
-          />
+          <MyMeetingStrip key={item.meeting.id} item={item} countMap={countMap} kstToday={kstToday} />
         ))}
       </div>
 

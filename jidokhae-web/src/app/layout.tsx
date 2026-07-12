@@ -13,7 +13,7 @@ const GA_ID = /^G-[A-Z0-9]+$/.test(RAW_GA_ID ?? '') ? RAW_GA_ID : null
 
 const notoSerifKR = Noto_Serif_KR({
   subsets: ['latin'],
-  weight: ['600', '700'],
+  weight: ['500', '600', '700', '900'],
   display: 'swap',
   variable: '--font-noto-serif',
 })

@@ -32,14 +32,14 @@ export default function MainError({
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
       </div>
-      <h2 className="text-lg font-bold text-gray-900">
+      <h2 className="text-lg font-bold text-neutral-900">
         문제가 발생했습니다
       </h2>
-      <p className="mt-2 text-sm text-gray-500">
+      <p className="mt-2 text-sm text-neutral-600">
         일시적인 오류입니다. 잠시 후 다시 시도해 주세요.
       </p>
       {process.env.NODE_ENV === 'development' && (
-        <pre className="mt-4 max-w-full overflow-auto rounded-lg bg-gray-100 p-3 text-left text-xs text-gray-700">
+        <pre className="mt-4 max-w-full overflow-auto rounded-lg bg-neutral-100 p-3 text-left text-xs text-neutral-700">
           {error.message}
         </pre>
       )}

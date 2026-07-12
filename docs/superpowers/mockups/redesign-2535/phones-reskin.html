@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>문서 적용 리스킨 vs A안 v2 — 검증</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body {
+    font-family:'Pretendard',sans-serif;
+    background:#E9EBEE;
+    color:#191F28;
+    padding:36px 24px 80px;
+  }
+  .pagehead { max-width:1100px; margin:0 auto 30px; }
+  .pagehead h1 { font-family:'Noto Serif KR',serif; font-size:23px; font-weight:900; letter-spacing:-1px; color:#191F28; }
+  .pagehead p { font-size:13px; color:#5A6B7A; margin-top:8px; line-height:1.6; }
+  .pagehead .verdict { margin-top:14px; background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:14px 16px; font-size:12.5px; color:#333d48; line-height:1.7; }
+  .pagehead .verdict b { color:#127A5A; }
+
+  .rail { display:flex; gap:26px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+  .col { width:302px; }
+  .col > .caption { text-align:center; margin-bottom:12px; }
+  .col > .caption .k { display:block; font-size:13px; font-weight:800; letter-spacing:-.3px; }
+  .col > .caption .s { display:block; font-size:11px; color:#8892a0; margin-top:3px; }
+  .cap-before .k { color:#8a7a5c; }
+  .cap-reskin .k { color:#127A5A; }
+  .cap-a .k { color:#191F28; }
+
+  /* phone shell */
+  .ph {
+    width:302px; height:640px; border-radius:34px; overflow:hidden; position:relative;
+    box-shadow:0 20px 48px -14px rgba(20,40,32,.32), 0 3px 10px rgba(0,0,0,.08);
+    border:1px solid rgba(0,0,0,.06);
+  }
+  .scr { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; }
+  .scr::-webkit-scrollbar { width:0; }
+  .grain { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.2; z-index:5; }
+
+  /* ============ shared inner header ============ */
+  .appbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px 10px; }
+  .wm { font-family:'Noto Serif KR',serif; font-weight:900; letter-spacing:-1.4px; }
+  .avatar { width:28px; height:28px; border-radius:50%; }
+
+  .body { padding:2px 18px 40px; }
+
+  /* ==================================================
+     COLUMN 1 — BEFORE (Editorial Organic, 현재 실제)
+     ================================================== */
+  .before .scr { background:#FDF8F1; }
+  .before .wm { color:#1B4332; font-size:22px; }
+  .before .avatar { background:#D9EDE3; }
+  .before .summary { display:flex; align-items:center; gap:7px; font-size:13px; color:#2D7D5F; margin:2px 0 14px; }
+  .before .summary .dot { color:#C4BAA8; }
+  /* weekly strip */
+  .before .week { display:flex; justify-content:space-between; margin-bottom:20px; }
+  .before .day { width:34px; text-align:center; }
+  .before .day .dl { font-size:10px; color:#9E9484; margin-bottom:5px; }
+  .before .day .dn { width:32px; height:32px; line-height:32px; border-radius:9px; font-size:13px; font-weight:700; color:#5C544A; }
+  .before .day.on .dn { background:#2D7D5F; color:#fff; }
+  .before .day .mk { width:4px; height:4px; border-radius:50%; background:#2D7D5F; margin:4px auto 0; }
+  /* section header */
+  .before .sh { display:flex; align-items:center; gap:6px; margin:0 0 11px; }
+  .before .sh .ck { width:16px; height:16px; border-radius:50%; background:#2D7D5F; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; }
+  .before .sh .st { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:800; color:#163528; letter-spacing:-.3px; }
+  .before .sh .cnt { font-size:11px; font-weight:600; color:#2D7D5F; }
+  .before .sh .more { margin-left:auto; font-size:11px; color:#1B6347; }
+  .before .allh { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:800; color:#7A7164; letter-spacing:-.3px; margin:22px 0 10px; }
+  /* date section header */
+  .before .dsh { display:flex; align-items:center; gap:9px; padding:2px 0 8px; }
+  .before .dsh .dt { font-size:13px; font-weight:700; color:#1B4332; }
+  .before .dsh .dd { font-size:11px; font-weight:700; padding:1px 7px; border-radius:20px; border:1px solid; }
+  .before .dsh .line { flex:1; height:1px; background:#F0EBE1; }
+  /* card */
+  .before .card { position:relative; background:#fff; border:1px solid #F0EBE1; border-left:4px solid #2D7D5F; border-radius:14px; padding:15px; margin-bottom:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+  .before .card .badge { position:absolute; top:13px; right:15px; font-size:10px; font-weight:600; padding:2px 9px; border-radius:20px; border:1px solid; }
+  .before .card .datepill { display:inline-flex; align-items:center; gap:5px; background:#F0F7F4; color:#1B6347; font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
+  .before .card .time { font-size:11px; color:#7A7164; margin-left:7px; font-weight:500; }
+  .before .card .ttl { font-size:16px; font-weight:700; letter-spacing:-.4px; color:#1F1B17; margin:9px 0 0; line-height:1.35; padding-right:56px; }
+  .before .card .meta { display:flex; align-items:center; gap:10px; margin-top:15px; font-size:12px; color:#C4BAA8; }
+  .before .card .meta .sep { width:1px; height:11px; background:#F0EBE1; }
+  .before .card .meta .cap { color:#1B6347; }
+  .before .card .meta .cap.warn { color:#C75B3A; }
+  .before .card .meta .fee { font-family:ui-monospace,Menlo,monospace; font-weight:700; color:#A84A2E; }
+
+  /* ==================================================
+     COLUMN 2 — RESKIN (문서 엄격 적용, 동일 화면)
+     ================================================== */
+  .reskin .scr { background:#F9FAFB; }
+  .reskin .wm { color:#191F28; font-size:22px; }
+  .reskin .avatar { background:#E3F2EC; }
+  .reskin .summary { display:flex; align-items:center; gap:7px; font-size:12.5px; color:#6B7684; margin:2px 0 15px; font-weight:500; }
+  .reskin .summary .dot { color:#CDD3DA; }
+  .reskin .summary .mine { color:#191F28; font-weight:600; }
+  /* weekly strip — 그린 점만 앵커, 선택일만 그린 */
+  .reskin .week { display:flex; justify-content:space-between; margin-bottom:22px; }
+  .reskin .day { width:34px; text-align:center; }
+  .reskin .day .dl { font-size:10px; color:#6B7684; margin-bottom:5px; font-weight:600; }
+  .reskin .day .dn { width:32px; height:32px; line-height:32px; border-radius:10px; font-size:13px; font-weight:600; color:#4E5968; }
+  .reskin .day.on .dn { background:#127A5A; color:#fff; }
+  .reskin .day .mk { width:4px; height:4px; border-radius:50%; background:#127A5A; margin:5px auto 0; }
+  /* section header — 그린 점 특권: ✓ 동그라미 + 제목만 잉크, 카운트 뮤트 */
+  .reskin .sh { display:flex; align-items:center; gap:6px; margin:0 0 12px; }
+  .reskin .sh .ck { width:16px; height:16px; border-radius:50%; background:#127A5A; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; }
+  .reskin .sh .st { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:700; color:#191F28; letter-spacing:-.4px; }
+  .reskin .sh .cnt { font-size:11px; font-weight:600; color:#6B7684; }
+  .reskin .sh .more { margin-left:auto; font-size:11px; color:#5A6B7A; font-weight:500; }
+  .reskin .allh { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:700; color:#4E5968; letter-spacing:-.4px; margin:24px 0 11px; }
+  /* date section header — D-day는 통일 토큰, 색만 임박 분기 */
+  .reskin .dsh { display:flex; align-items:center; gap:9px; padding:2px 0 9px; }
+  .reskin .dsh .dt { font-size:13px; font-weight:700; color:#191F28; }
+  .reskin .dsh .dd { font-size:11px; font-weight:800; padding:1px 7px; border-radius:6px; }
+  .reskin .dsh .line { flex:1; height:1px; background:#EEF1F4; }
+  /* card — 흰 배경, 얇은 뉴트럴 보더, 그린 좌측선 없음(점 규칙) */
+  .reskin .card { position:relative; background:#fff; border:1px solid #E5E8EB; border-radius:16px; padding:15px; margin-bottom:11px; }
+  .reskin .card.mine { background:#F3FAF6; border-color:#CDE9DB; }  /* 내 것 단건만 연그린 */
+  .reskin .card .badge { position:absolute; top:14px; right:15px; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; }
+  .reskin .card .datepill { display:inline-flex; align-items:center; gap:5px; color:#4E5968; font-size:11.5px; font-weight:600; vertical-align:middle; }
+  .reskin .card .datepill svg { opacity:.5; }
+  .reskin .card .time { font-size:11.5px; color:#6B7684; margin-left:7px; font-weight:500; vertical-align:middle; }
+  .reskin .card .ttl { font-family:'Noto Serif KR',serif; font-size:17px; font-weight:700; letter-spacing:-.6px; color:#191F28; margin:8px 0 0; line-height:1.32; padding-right:52px; }
+  .reskin .card .meta { display:flex; align-items:center; gap:9px; margin-top:14px; font-size:12px; color:#6B7684; }
+  .reskin .card .meta .sep { width:1px; height:10px; background:#E5E8EB; }
+  .reskin .card .meta .cap { color:#5A6B7A; }
+  .reskin .card .meta .cap.warn { color:#F4552A; font-weight:700; }
+  .reskin .card .meta .fee { font-variant-numeric:tabular-nums; font-feature-settings:'tnum'; font-weight:600; color:#5A6B7A; }
+  /* 상태 인지형 신청 숏컷 CTA row */
+  .reskin .card .ctarow { display:flex; align-items:center; justify-content:space-between; margin-top:13px; padding-top:12px; border-top:1px solid #F0F2F5; }
+  .reskin .card .ctarow .fee2 { font-variant-numeric:tabular-nums; font-weight:600; font-size:13px; color:#5A6B7A; }
+  .reskin .card .cta { background:#127A5A; color:#fff; font-size:12px; font-weight:700; padding:7px 16px; border-radius:9px; }
+  .reskin .card .cta.wait { background:#fff; color:#127A5A; border:1px solid #CDE9DB; }
+  .reskin .card .cta.off { background:#F0F2F5; color:#6B7684; }
+
+  /* ==================================================
+     COLUMN 3 — A안 v2 (승인 시안 홈)
+     ================================================== */
+  .avv .scr { background:#F9FAFB; }
+  .avv .wm { color:#191F28; font-size:23px; }
+  .avv .avatar { background:#E3F2EC; }
+  .avv .hero { font-family:'Noto Serif KR',serif; font-size:18px; font-weight:700; letter-spacing:-.9px; color:#191F28; margin:6px 0 3px; }
+  .avv .herosub { font-size:12px; color:#5A6B7A; margin-bottom:16px; }
+  .avv .sh { display:flex; align-items:center; gap:6px; margin:0 0 12px; }
+  .avv .sh .ck { width:16px; height:16px; border-radius:50%; background:#127A5A; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; }
+  .avv .sh .st { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:700; color:#191F28; letter-spacing:-.4px; }
+  .avv .sh .cnt { font-size:11px; font-weight:600; color:#6B7684; }
+  /* 신청완료 스트립 (inline) */
+  .avv .strip { display:flex; align-items:center; gap:9px; background:#F3FAF6; border:1px solid #CDE9DB; border-radius:12px; padding:9px 12px; margin-bottom:12px; }
+  .avv .strip .ck { width:20px; height:20px; border-radius:50%; background:#127A5A; color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+  .avv .strip .txt { font-size:12px; color:#0d5c43; font-weight:600; }
+  .avv .strip .txt small { display:block; color:#5A6B7A; font-weight:500; font-size:10.5px; margin-top:1px; }
+  .avv .strip .dd { margin-left:auto; font-size:11px; font-weight:800; color:#F4552A; }
+  .avv .allh { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:700; color:#4E5968; letter-spacing:-.4px; margin:22px 0 11px; }
+  .avv .dsh { display:flex; align-items:center; gap:9px; padding:2px 0 9px; }
+  .avv .dsh .dt { font-size:13px; font-weight:700; color:#191F28; }
+  .avv .dsh .dd { font-size:11px; font-weight:800; padding:1px 7px; border-radius:6px; }
+  .avv .dsh .line { flex:1; height:1px; background:#EEF1F4; }
+  .avv .card { position:relative; background:#fff; border:1px solid #E5E8EB; border-radius:16px; padding:15px; margin-bottom:11px; }
+  .avv .card.almost { border-color:#FADFD5; }
+  .avv .card .badge { position:absolute; top:14px; right:15px; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; }
+  .avv .card .datepill { display:inline-flex; align-items:center; gap:5px; color:#4E5968; font-size:11.5px; font-weight:600; vertical-align:middle; }
+  .avv .card .datepill svg { opacity:.5; }
+  .avv .card .time { font-size:11.5px; color:#6B7684; margin-left:7px; font-weight:500; vertical-align:middle; }
+  .avv .card .ttl { font-family:'Noto Serif KR',serif; font-size:17px; font-weight:700; letter-spacing:-.6px; color:#191F28; margin:8px 0 0; line-height:1.32; padding-right:52px; }
+  .avv .card .meta { display:flex; align-items:center; gap:9px; margin-top:13px; font-size:12px; color:#6B7684; }
+  .avv .card .meta .sep { width:1px; height:10px; background:#E5E8EB; }
+  .avv .card .meta .cap.warn { color:#F4552A; font-weight:700; }
+  .avv .card .meta .fee { font-variant-numeric:tabular-nums; font-feature-settings:'tnum'; font-weight:600; color:#5A6B7A; }
+  .avv .card .ctarow { display:flex; align-items:center; justify-content:space-between; margin-top:13px; padding-top:12px; border-top:1px solid #F0F2F5; }
+  .avv .card .ctarow .fee2 { font-variant-numeric:tabular-nums; font-weight:600; font-size:13px; color:#5A6B7A; }
+  .avv .card .cta { background:#127A5A; color:#fff; font-size:12px; font-weight:700; padding:7px 15px; border-radius:9px; }
+
+  .legend { max-width:1100px; margin:34px auto 0; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .legend .box { background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:16px 18px; }
+  .legend .box h3 { font-size:13px; font-weight:800; margin-bottom:9px; letter-spacing:-.3px; }
+  .legend .box.g h3 { color:#127A5A; }
+  .legend .box.r h3 { color:#c0392b; }
+  .legend .box ul { list-style:none; font-size:12px; color:#4E5968; line-height:1.85; }
+  .legend .box li::before { content:'— '; color:#B0B8C1; }
+</style>
+</head>
+<body>
+  <div class="pagehead">
+    <h1>문서 검증 · 실제 서비스 화면을 디자인 문서로 리스킨</h1>
+    <p>왼쪽은 <b>지금 배포 중인 실제 홈</b>(Editorial Organic)을 그대로 재현했고, 가운데는 <b>같은 화면·같은 데이터</b>를 디자인 문서 규칙만 보고 다시 칠한 것, 오른쪽은 승인된 A안 v2 홈입니다. 가운데가 오른쪽만큼 좋으면 문서가 좋은 것.</p>
+    <div class="verdict">
+      결론 미리보기: 문서를 실제 화면에 적용하니 <b>A안 v2에 근접</b>. 다만 실제 화면에만 있던 3가지가 문서 공백을 드러냈다 — ① <b>카드마다 그린 좌측선</b>(그린=면 위반), ② <b>카드마다 그린 날짜 pill</b>(그린=면 위반), ③ <b>대기중/입금대기 상태색 TBD</b>. 이 3개를 문서 §4-1·§5에 확정해야 함.
+    </div>
+  </div>
+
+  <div class="rail">
+
+    <!-- ============ BEFORE ============ -->
+    <div class="col">
+      <div class="caption cap-before"><span class="k">① 현재 실제 홈 (Before)</span><span class="s">Editorial Organic · 배포 중</span></div>
+      <div class="ph before">
+        <div class="scr">
+          <div class="appbar"><span class="wm">지독해</span><span class="avatar"></span></div>
+          <div class="body">
+            <div class="summary"><span>이번 달 4회 모임</span><span class="dot">·</span><span>내 신청 1건</span></div>
+            <div class="week">
+              <div class="day"><div class="dl">일</div><div class="dn">6</div></div>
+              <div class="day on"><div class="dl">월</div><div class="dn">7</div><div class="mk"></div></div>
+              <div class="day"><div class="dl">화</div><div class="dn">8</div></div>
+              <div class="day"><div class="dl">수</div><div class="dn">9</div><div class="mk"></div></div>
+              <div class="day"><div class="dl">목</div><div class="dn">10</div></div>
+              <div class="day"><div class="dl">금</div><div class="dn">11</div></div>
+              <div class="day"><div class="dl">토</div><div class="dn">12</div><div class="mk"></div></div>
+            </div>
+            <div class="sh"><span class="ck">✓</span><span class="st">초록고래님이 신청한 모임</span><span class="cnt">· 1건</span><span class="more">전체 보기 ›</span></div>
+            <div class="card">
+              <span class="badge" style="background:#2D7D5F;color:#fff;border-color:#2D7D5F;">D-2</span>
+              <span class="datepill">📅 7월 7일</span><span class="time">저녁 7:30</span>
+              <div class="ttl">우리가 빛의 속도로<br>갈 수 없다면</div>
+              <div class="meta"><span>📍 경주 황리단길</span><span class="sep"></span><span class="cap">6/8명</span><span class="sep"></span><span class="fee">10,000원</span></div>
+            </div>
+            <div class="allh">전체 일정</div>
+            <div class="dsh"><span class="dt">7월 9일 수요일</span><span class="dd" style="background:#F0F7F4;color:#1B6347;border-color:#B3DBC7;">D-4</span><span class="line"></span></div>
+            <div class="card">
+              <span class="badge" style="background:#F0F7F4;color:#1B4332;border-color:#B3DBC7;">모집 중</span>
+              <span class="datepill">📅 7월 9일</span><span class="time">저녁 7:30</span>
+              <div class="ttl">달러구트 꿈 백화점</div>
+              <div class="meta"><span>📍 포항 북구</span><span class="sep"></span><span class="cap">3/8명</span><span class="sep"></span><span class="fee">10,000원</span></div>
+            </div>
+            <div class="dsh"><span class="dt">7월 12일 토요일</span><span class="dd" style="background:#FAF6EF;color:#9E9484;border-color:#F0EBE1;">D-7</span><span class="line"></span></div>
+            <div class="card" style="border-left-color:#C4BAA8;">
+              <span class="badge" style="background:#FAF6EF;color:#9E9484;border-color:#F0EBE1;">마감</span>
+              <span class="datepill">📅 7월 12일</span><span class="time">오후 2:00</span>
+              <div class="ttl">불편한 편의점</div>
+              <div class="meta"><span>📍 경주 성건동</span><span class="sep"></span><span class="cap warn">8/8명</span><span class="sep"></span><span class="fee">12,000원</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ RESKIN ============ -->
+    <div class="col">
+      <div class="caption cap-reskin"><span class="k">② 문서 적용 리스킨</span><span class="s">동일 화면 · 잉크그린 문서 규칙</span></div>
+      <div class="ph reskin">
+        <div class="scr">
+          <svg class="grain"><filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#gr)"/></svg>
+          <div class="appbar"><span class="wm">지독해</span><span class="avatar"></span></div>
+          <div class="body">
+            <div class="summary"><span>이번 달 4회 모임</span><span class="dot">·</span><span class="mine">내 신청 1건</span></div>
+            <div class="week">
+              <div class="day"><div class="dl">일</div><div class="dn">6</div></div>
+              <div class="day on"><div class="dl">월</div><div class="dn">7</div><div class="mk"></div></div>
+              <div class="day"><div class="dl">화</div><div class="dn">8</div></div>
+              <div class="day"><div class="dl">수</div><div class="dn">9</div><div class="mk"></div></div>
+              <div class="day"><div class="dl">목</div><div class="dn">10</div></div>
+              <div class="day"><div class="dl">금</div><div class="dn">11</div></div>
+              <div class="day"><div class="dl">토</div><div class="dn">12</div><div class="mk"></div></div>
+            </div>
+            <div class="sh"><span class="ck">✓</span><span class="st">초록고래님이 신청한 모임</span><span class="cnt">· 1건</span><span class="more">전체 보기 ›</span></div>
+            <div class="card mine">
+              <span class="badge" style="background:#F4552A;color:#fff;">D-2</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 7일</span><span class="time">저녁 7:30</span>
+              <div class="ttl">우리가 빛의 속도로<br>갈 수 없다면</div>
+              <div class="meta"><span>경주 황리단길</span><span class="sep"></span><span class="cap">6/8명</span><span class="sep"></span><span class="fee">10,000</span></div>
+            </div>
+            <div class="allh">전체 일정</div>
+            <div class="dsh"><span class="dt">7월 9일 수요일</span><span class="dd" style="background:#EEF1F4;color:#6B7684;">D-4</span><span class="line"></span></div>
+            <div class="card">
+              <span class="badge" style="background:#E3F2EC;color:#0d5c43;">모집중</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 9일</span><span class="time">저녁 7:30</span>
+              <div class="ttl">달러구트 꿈 백화점</div>
+              <div class="meta"><span>포항 북구</span><span class="sep"></span><span class="cap">3/8명</span></div>
+              <div class="ctarow"><span class="fee2">10,000</span><span class="cta">신청하기</span></div>
+            </div>
+            <div class="dsh"><span class="dt">7월 12일 토요일</span><span class="dd" style="background:#EEF1F4;color:#6B7684;">D-7</span><span class="line"></span></div>
+            <div class="card">
+              <span class="badge" style="background:#F0F2F5;color:#6B7684;">마감</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 12일</span><span class="time">오후 2:00</span>
+              <div class="ttl">불편한 편의점</div>
+              <div class="meta"><span>경주 성건동</span><span class="sep"></span><span class="cap">8/8명</span></div>
+              <div class="ctarow"><span class="fee2">12,000</span><span class="cta off">마감</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ A안 v2 ============ -->
+    <div class="col">
+      <div class="caption cap-a"><span class="k">③ A안 v2 (승인 시안)</span><span class="s">이상형 · 목업</span></div>
+      <div class="ph avv">
+        <div class="scr">
+          <svg class="grain"><filter id="gr2"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#gr2)"/></svg>
+          <div class="appbar"><span class="wm">지독해</span><span class="avatar"></span></div>
+          <div class="body">
+            <div class="hero">이번 주, 같이 읽어요</div>
+            <div class="herosub">경주·포항 4개 모임이 열려 있어요</div>
+            <div class="sh"><span class="ck">✓</span><span class="st">신청한 모임</span></div>
+            <div class="strip">
+              <span class="ck">✓</span>
+              <span class="txt">신청 완료<small>초록고래님, 6명과 함께해요</small></span>
+              <span class="dd">D-2</span>
+            </div>
+            <div class="allh">전체 일정</div>
+            <div class="dsh"><span class="dt">7월 9일 수요일</span><span class="dd" style="background:#EEF1F4;color:#6B7684;">D-4</span><span class="line"></span></div>
+            <div class="card">
+              <span class="badge" style="background:#E3F2EC;color:#0d5c43;">모집중</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 9일</span><span class="time">저녁 7:30</span>
+              <div class="ttl">달러구트 꿈 백화점</div>
+              <div class="ctarow"><span class="fee2">10,000</span><span class="cta">신청하기</span></div>
+            </div>
+            <div class="dsh"><span class="dt">7월 8일 화요일</span><span class="dd" style="background:#F4552A;color:#fff;">D-1</span><span class="line"></span></div>
+            <div class="card almost">
+              <span class="badge" style="background:#F4552A;color:#fff;">마감임박</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 8일</span><span class="time">저녁 8:00</span>
+              <div class="ttl">아몬드</div>
+              <div class="meta"><span>경주 동부동</span><span class="sep"></span><span class="cap warn">잔여 1자리</span></div>
+              <div class="ctarow"><span class="fee2">10,000</span><span class="cta">신청하기</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <div class="box r">
+      <h3>①→② 리스킨이 고친 것 (문서가 옳게 작동)</h3>
+      <ul>
+        <li>금액: 테라코타 mono + '원' → 뉴트럴 tabular-nums 숫자만</li>
+        <li>제목: Pretendard → Noto Serif KR (읽는 것)</li>
+        <li>배경: 크림 #FDF8F1 → 오프화이트 #F9FAFB</li>
+        <li>태그: 알약형 → radius 6 각진 태그, 감귤은 마감임박에만</li>
+        <li>D-2 뱃지: 그린 → 감귤(임박) / D-day 색만 분기</li>
+        <li>마감 카운트 경고색: 테라코타 → 감귤</li>
+      </ul>
+    </div>
+    <div class="box g">
+      <h3>실제 화면이 드러낸 문서 공백 (보완 필요)</h3>
+      <ul>
+        <li>§4-1: 카드 좌측 4px 컬러선 — 카드마다 그린선=그린 면화. "좌측 컬러선 금지, 상태는 태그로" 명문화</li>
+        <li>§4-1: 날짜 pill 그린 배경 — 카드마다 반복=면화. "날짜 메타는 무배경 뉴트럴" 명문화</li>
+        <li>§5: 대기중·입금대기 색 TBD — 대기중=뉴트럴(회색), 입금대기=뉴트럴+안내. 확정 필요</li>
+        <li>§4: "내 것 단건만 연그린 카드" 규칙은 목록엔 신청 카드가 상단 분리돼 자연히 지켜짐 → 문서에 근거 명시</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

@@ -29,69 +29,63 @@ export default function MeetingCard({
   const isMasked = shouldMaskConfirmedCount(confirmedCount, meeting.capacity, isPrivileged)
   const isAlmostFull = !isFull && !isMasked && confirmedCount >= meeting.capacity * 0.8
 
-  // Status-based left border color
-  const borderColor = isRegistered
-    ? 'var(--color-accent-500)'
-    : isWaitlisted
-      ? 'var(--color-accent-400)'
-      : isFull
-        ? 'var(--color-status-full)'
-        : 'var(--color-status-open)'
+  // 본인 신청/대기가 아닌 공개 카드에서만 신청 CTA row 노출 (스펙 §4-2-1: 카드는 모집중/마감 2분기)
+  const showCta = !isRegistered && !isWaitlisted
 
-  // Status badge config (priority: customBadge > registered > waitlisted > full > default)
+  // 상태 뱃지 (우선순위: customBadge > 신청완료 > 대기 중 > 마감 > 모집중)
   const badge = customBadge ?? (
     isRegistered
-      ? { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }
+      ? { label: '신청완료', classes: 'bg-primary-100 text-primary-600' }
       : isWaitlisted
-        ? { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
+        ? { label: '대기 중', classes: 'bg-neutral-100 text-neutral-700' }
         : isFull
-          ? { label: '마감', classes: 'bg-neutral-100 text-neutral-500 border-neutral-200' }
-          : { label: '모집 중', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
+          ? { label: '마감', classes: 'bg-neutral-100 text-neutral-600' }
+          : { label: '모집중', classes: 'bg-primary-100 text-primary-600' }
   )
 
-  // Capacity color
+  // 인원 카운트 색 (마감=뮤트, 임박=코럴 포인트, 그외=뉴트럴)
   const capacityClass = isFull
     ? 'text-neutral-400'
     : isAlmostFull
-      ? 'text-accent-500'
-      : 'text-primary-600'
+      ? 'text-accent-500 font-semibold'
+      : 'text-neutral-700'
+
+  const detailHref = `${basePath}/${meeting.id}`
 
   return (
-    <Link
-      href={`${basePath}/${meeting.id}`}
-      className="group relative block overflow-hidden rounded-[var(--radius-md)] border border-neutral-200 bg-white shadow-sm transition-all hover:-translate-y-px hover:shadow-md"
-      style={{ borderLeft: `4px solid ${borderColor}` }}
-    >
-      {/* Badge — top right */}
-      <div className="absolute top-3.5 right-4">
-        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-small font-medium ${badge.classes}`}>
+    <article className="group relative overflow-hidden rounded-[var(--radius-lg)] border border-neutral-200 bg-white shadow-sm transition-all hover:-translate-y-px hover:shadow-md">
+      {/* 상태 뱃지 — 우상단 */}
+      <div className="absolute top-3.5 right-4 z-10">
+        <span className={`inline-flex items-center rounded-[var(--radius-sm)] px-2 py-0.5 text-small font-extrabold ${badge.classes}`}>
           {badge.label}
         </span>
       </div>
 
-      <div className="p-[var(--spacing-card)]">
-        {/* Date + Time */}
-        <div className="mb-2.5 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-700">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+      <Link href={detailHref} className={`block px-4 pt-4 ${showCta ? 'pb-3.5' : 'pb-4'}`}>
+        {/* 날짜 + 시간 (무배경 뉴트럴 — 그린 pill 금지) */}
+        <div className="flex items-center">
+          <span className="inline-flex items-center gap-1.5 text-caption font-semibold text-neutral-700">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
             {formatKoreanDate(meeting.date)}
           </span>
-          <span className="text-caption font-medium text-neutral-600">
+          <span className="ml-2 text-caption font-medium text-neutral-600">
             {formatKoreanTime(meeting.time)}
           </span>
         </div>
 
-        {/* Title */}
-        <h3 className="pr-16 text-[16px] font-bold leading-snug tracking-tight text-neutral-900 transition-colors group-hover:text-primary-600">
+        {/* 제목 (세리프) */}
+        <h3
+          className="mt-2 pr-14 text-[17px] font-bold leading-snug tracking-tight text-neutral-900 transition-colors group-hover:text-primary-600"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
           {meeting.title}
         </h3>
 
-        {/* Details row */}
-        <div className="mt-4 flex items-center gap-3 text-[12px] text-neutral-400">
-          {/* Location */}
+        {/* 상세 메타 — 장소 · 인원 (참가비는 하단 CTA row로 이동) */}
+        <div className="mt-3.5 flex items-center gap-2.5 text-[12px] text-neutral-600">
           <span className="flex items-center gap-1">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -100,9 +94,8 @@ export default function MeetingCard({
             {meeting.location}
           </span>
 
-          <span className="h-3 w-px bg-neutral-200" />
+          <span className="h-2.5 w-px bg-neutral-200" />
 
-          {/* Participant count */}
           <span className={`flex items-center gap-1 ${capacityClass}`}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -112,18 +105,32 @@ export default function MeetingCard({
             </svg>
             {isMasked
               ? <span>{meeting.capacity}명 모집 중</span>
-              : <><span className="font-mono tabular-nums">{confirmedCount}/{meeting.capacity}</span>명</>
+              : <><span className="tabular-nums">{confirmedCount}/{meeting.capacity}</span>명</>
             }
           </span>
-
-          <span className="h-3 w-px bg-neutral-200" />
-
-          {/* Fee */}
-          <span className="font-mono font-bold tabular-nums text-accent-600">
-            {formatFee(meeting.fee)}원
-          </span>
         </div>
-      </div>
-    </Link>
+      </Link>
+
+      {/* 상태 인지형 신청 숏컷 CTA row — 공개 카드 전용 */}
+      {showCta && (
+        <div className="mx-4 flex items-center justify-between border-t border-neutral-100 pt-3 pb-4">
+          <span className="text-[13px] font-semibold tabular-nums text-neutral-700">
+            {formatFee(meeting.fee)}
+          </span>
+          {isFull ? (
+            <span className="rounded-[9px] bg-neutral-100 px-4 py-1.5 text-xs font-bold text-neutral-600">
+              마감
+            </span>
+          ) : (
+            <Link
+              href={detailHref}
+              className="rounded-[9px] bg-primary-500 px-4 py-1.5 text-xs font-bold text-white transition-colors hover:bg-primary-600"
+            >
+              신청하기
+            </Link>
+          )}
+        </div>
+      )}
+    </article>
   )
 }

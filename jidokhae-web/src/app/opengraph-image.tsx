@@ -35,7 +35,7 @@ export default async function OpenGraphImage() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          background: '#0d2920',
+          background: '#072A20',
           color: 'white',
           fontFamily: 'NotoSerifKR',
           position: 'relative',
@@ -50,7 +50,7 @@ export default async function OpenGraphImage() {
             height: 320,
             borderRadius: 9999,
             background:
-              'radial-gradient(circle, rgba(201,123,80,0.18) 0%, rgba(13,41,32,0) 70%)',
+              'radial-gradient(circle, rgba(62,154,120,0.20) 0%, rgba(7,42,32,0) 70%)',
             display: 'flex',
           }}
         />
@@ -63,7 +63,7 @@ export default async function OpenGraphImage() {
             height: 240,
             borderRadius: 9999,
             background:
-              'radial-gradient(circle, rgba(136,181,160,0.14) 0%, rgba(13,41,32,0) 70%)',
+              'radial-gradient(circle, rgba(143,203,176,0.14) 0%, rgba(7,42,32,0) 70%)',
             display: 'flex',
           }}
         />
@@ -76,7 +76,7 @@ export default async function OpenGraphImage() {
             height: 180,
             borderRadius: 9999,
             background:
-              'radial-gradient(circle, rgba(201,123,80,0.14) 0%, rgba(13,41,32,0) 70%)',
+              'radial-gradient(circle, rgba(62,154,120,0.14) 0%, rgba(7,42,32,0) 70%)',
             display: 'flex',
           }}
         />
@@ -106,8 +106,8 @@ export default async function OpenGraphImage() {
               style={{
                 width: 64,
                 height: 2,
-                background: '#c97b50',
-                opacity: 0.85,
+                background: '#F4552A',
+                opacity: 0.9,
                 margin: '28px 0 24px',
               }}
             />

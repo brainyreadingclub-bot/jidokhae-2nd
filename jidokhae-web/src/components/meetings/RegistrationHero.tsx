@@ -5,6 +5,7 @@ type Props = {
   meetingDate: string
   meetingTime: string
   kstToday: string
+  isPending?: boolean
 }
 
 /**
@@ -15,7 +16,7 @@ type Props = {
  * 디자인 원칙: banner가 아닌 inline indicator (Refactoring UI · Apple HIG).
  * 높이 ~40px, primary-50 배경 + primary-200 border, 그림자 없음.
  */
-export default function RegistrationHero({ nickname, meetingDate, meetingTime, kstToday }: Props) {
+export default function RegistrationHero({ nickname, meetingDate, meetingTime, kstToday, isPending = false }: Props) {
   const dDay = formatDDay(meetingDate, meetingTime, kstToday)
   const days = getDaysUntil(meetingDate, kstToday)
   // D-3 이하 (오늘·내일 포함)면 긴급 톤
@@ -46,7 +47,7 @@ export default function RegistrationHero({ nickname, meetingDate, meetingTime, k
         </svg>
       </span>
       <span className="text-[13px] font-bold tracking-tight text-primary-800">
-        신청 완료
+        {isPending ? '신청 접수됨' : '신청 완료'}
       </span>
       <span className="text-xs text-primary-600 tracking-tight">
         {greeting}님, {shortDate} 만나요

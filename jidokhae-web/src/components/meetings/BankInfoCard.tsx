@@ -29,22 +29,22 @@ export default function BankInfoCard({ bankName, bankAccount, bankHolder }: Prop
         border: '1px solid var(--color-surface-300)',
       }}
     >
-      <p className="text-sm font-medium text-primary-500 mb-4">
+      <p className="text-sm font-medium text-neutral-700 mb-4">
         입금 안내
       </p>
 
       <div className="space-y-2.5">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-primary-500/70 w-12 flex-shrink-0">은행</span>
-          <span className="text-sm font-semibold text-primary-800">{bankName}</span>
+          <span className="text-xs font-medium text-neutral-500 w-12 flex-shrink-0">은행</span>
+          <span className="text-sm font-semibold text-neutral-800">{bankName}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-primary-500/70 w-12 flex-shrink-0">계좌</span>
-          <span className="text-sm font-semibold text-primary-800 font-mono tabular-nums">{bankAccount}</span>
+          <span className="text-xs font-medium text-neutral-500 w-12 flex-shrink-0">계좌</span>
+          <span className="text-sm font-semibold text-neutral-800 font-mono tabular-nums">{bankAccount}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-primary-500/70 w-12 flex-shrink-0">예금주</span>
-          <span className="text-sm font-semibold text-primary-800">{bankHolder}</span>
+          <span className="text-xs font-medium text-neutral-500 w-12 flex-shrink-0">예금주</span>
+          <span className="text-sm font-semibold text-neutral-800">{bankHolder}</span>
         </div>
       </div>
 

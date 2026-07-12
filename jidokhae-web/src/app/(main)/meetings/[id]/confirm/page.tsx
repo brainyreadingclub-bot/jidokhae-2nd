@@ -67,10 +67,10 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
           </svg>
         </div>
 
-        <h1 className="text-xl font-extrabold text-primary-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+        <h1 className="text-xl font-extrabold text-neutral-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
           {isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
         </h1>
-        <p className="mt-2 text-sm text-primary-500/70">
+        <p className="mt-2 text-sm text-neutral-500">
           {isPendingTransfer
             ? '아래 계좌로 입금해주세요'
             : isWaitlisted
@@ -78,7 +78,7 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
               : '모임에 참여해 주셔서 감사합니다'}
         </p>
         {isWaitlisted && (
-          <p className="mt-1 text-xs text-primary-400">
+          <p className="mt-1 text-xs text-neutral-500">
             모임 전날까지 승격되지 않으면 자동 전액 환불됩니다
           </p>
         )}
@@ -93,29 +93,29 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
             border: '1px solid var(--color-surface-300)',
           }}
         >
-          <h2 className="text-base font-bold text-primary-900">
+          <h2 className="text-base font-bold text-neutral-900">
             {typedMeeting.title}
           </h2>
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex items-center gap-2">
-              <span className="text-primary-400 text-xs w-10">날짜</span>
-              <span className="text-primary-700 font-medium">{formatKoreanDate(typedMeeting.date)}</span>
+              <span className="text-neutral-600 text-xs w-10">날짜</span>
+              <span className="text-neutral-800 font-medium">{formatKoreanDate(typedMeeting.date)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-primary-400 text-xs w-10">시간</span>
-              <span className="text-primary-700 font-medium">{formatKoreanTime(typedMeeting.time)}</span>
+              <span className="text-neutral-600 text-xs w-10">시간</span>
+              <span className="text-neutral-800 font-medium">{formatKoreanTime(typedMeeting.time)}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-primary-400 text-xs w-10">장소</span>
-              <span className="text-primary-700 font-medium">{typedMeeting.location}</span>
+              <span className="text-neutral-600 text-xs w-10">장소</span>
+              <span className="text-neutral-800 font-medium">{typedMeeting.location}</span>
             </div>
             <div
               className="flex items-start gap-2 pt-2"
               style={{ borderTop: '1px solid var(--color-surface-300)' }}
             >
-              <span className="text-primary-400 text-xs w-10 mt-0.5">결제</span>
+              <span className="text-neutral-600 text-xs w-10 mt-0.5">결제</span>
               <div className="flex flex-col">
-                <span className="font-bold text-accent-600">
+                <span className="font-bold text-neutral-900">
                   {formatFee(paidAmount ?? typedMeeting.fee)}
                 </span>
                 {paidAmount !== null && paidAmount < typedMeeting.fee && (

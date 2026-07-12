@@ -32,8 +32,7 @@ export default async function AppleIcon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background:
-            'radial-gradient(circle at 35% 30%, #FFFCF5 0%, #FAF7F0 55%, #EFE6D2 100%)',
+          background: 'linear-gradient(150deg, #127A5A 0%, #0d5c43 100%)',
           position: 'relative',
           fontFamily: 'NotoSerifKR',
         }}
@@ -44,26 +43,13 @@ export default async function AppleIcon() {
             fontWeight: 700,
             lineHeight: 1,
             letterSpacing: '-0.04em',
-            color: '#0d2920',
-            textShadow: '0 1px 0 rgba(13,41,32,0.06)',
+            color: '#ffffff',
             marginTop: -4,
             display: 'flex',
           }}
         >
           지
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            top: 38,
-            right: 42,
-            width: 6,
-            height: 6,
-            background: '#c97b50',
-            transform: 'rotate(45deg)',
-            display: 'flex',
-          }}
-        />
       </div>
     ),
     {

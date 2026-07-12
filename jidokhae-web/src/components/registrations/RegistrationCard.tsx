@@ -6,7 +6,7 @@ import type { RegistrationWithMeeting } from '@/types/registration'
 
 type Props = {
   registration: RegistrationWithMeeting
-  badge: { label: string; color: 'success' | 'gray' | 'accent' }
+  badge: { label: string; color: 'success' | 'gray' }
 }
 
 export default function RegistrationCard({ registration, badge }: Props) {
@@ -18,10 +18,6 @@ export default function RegistrationCard({ registration, badge }: Props) {
     registration.status === 'waitlist_refunded'
 
   const isMuted = isCancelled || isDeleted
-
-  const borderColor = isMuted
-    ? 'var(--color-neutral-300)'
-    : 'var(--color-accent-500)'
 
   const cardInner = (
     <>
@@ -43,16 +39,12 @@ export default function RegistrationCard({ registration, badge }: Props) {
             className={`ml-3 inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-tight ${
               badge.color === 'success'
                 ? 'bg-primary-50 text-primary-700'
-                : badge.color === 'accent'
-                  ? 'bg-accent-50 text-accent-700'
-                  : 'text-neutral-500'
+                : 'text-neutral-500'
             }`}
             style={
               badge.color === 'success'
                 ? { border: '1px solid var(--color-primary-100)' }
-                : badge.color === 'accent'
-                  ? { border: '1px solid var(--color-accent-200)' }
-                  : { backgroundColor: 'var(--color-neutral-200)', border: '1px solid var(--color-neutral-300)' }
+                : { backgroundColor: 'var(--color-neutral-200)', border: '1px solid var(--color-neutral-300)' }
             }
           >
             {badge.label}
@@ -82,8 +74,7 @@ export default function RegistrationCard({ registration, badge }: Props) {
   )
 
   const cardStyle = {
-    backgroundColor: isMuted ? 'var(--color-surface-100)' : 'var(--color-surface-50)',
-    borderLeft: `4px solid ${borderColor}`,
+    backgroundColor: isMuted ? 'var(--color-neutral-50)' : '#fff',
     boxShadow: isMuted ? 'none' : 'var(--shadow-sm)',
   }
 
