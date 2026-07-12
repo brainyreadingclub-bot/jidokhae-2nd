@@ -21,7 +21,22 @@ export const getMyLibrary = cache(async (userId: string): Promise<LibraryEntryWi
     .select('*, books(*)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
-  return (data ?? []) as LibraryEntryWithBook[]
+
+  const entries = (data ?? []) as LibraryEntryWithBook[]
+
+  // source='ask' 항목의 출처 모임 날짜 붙이기 (라벨 "N월 정기모임에서")
+  const meetingIds = Array.from(
+    new Set(entries.filter((e) => e.source_meeting_id).map((e) => e.source_meeting_id as string)),
+  )
+  if (meetingIds.length > 0) {
+    const { data: meetings } = await admin.from('meetings').select('id, date').in('id', meetingIds)
+    const dateMap = new Map((meetings ?? []).map((m) => [m.id as string, m.date as string]))
+    for (const e of entries) {
+      e.source_meeting_date = e.source_meeting_id ? dateMap.get(e.source_meeting_id) ?? null : null
+    }
+  }
+
+  return entries
 })
 
 /**
