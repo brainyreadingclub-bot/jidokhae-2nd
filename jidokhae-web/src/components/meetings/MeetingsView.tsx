@@ -151,7 +151,7 @@ export default function MeetingsView({
   return (
     <div>
       {/* Header summary */}
-      <div className="flex items-center gap-2 text-[13px] text-primary-500 mb-3">
+      <div className="flex items-center gap-2 text-[13px] text-neutral-500 mb-3">
         <span>이번 달 {thisMonthCount}회 모임</span>
         {myRegistrationCount > 0 && (
           <>

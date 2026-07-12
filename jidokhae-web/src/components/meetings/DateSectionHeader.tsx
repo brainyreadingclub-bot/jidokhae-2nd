@@ -26,7 +26,7 @@ export default function DateSectionHeader({ date, kstToday }: Props) {
 
   return (
     <div className="flex items-center gap-2.5 pt-1 pb-2">
-      <span className="text-[13px] font-bold text-primary-700">
+      <span className="text-[13px] font-bold text-neutral-700">
         {formatKoreanDateFull(date)}
       </span>
       {badgeText && (

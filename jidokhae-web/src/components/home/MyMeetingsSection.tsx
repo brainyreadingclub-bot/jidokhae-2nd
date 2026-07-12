@@ -24,21 +24,21 @@ type Props = {
 }
 
 function pickBadge(item: MyMeetingItem, kstToday: string): { label: string; classes: string } {
-  // waitlisted: D-Day 대신 "대기 중" (정원 미차지)
+  // waitlisted: D-Day 대신 "대기 중" (정원 미차지) — 확정 아님/비긴급이라 뮤트 뉴트럴
   if (item.kind === 'waitlisted') {
-    return { label: '대기 중', classes: 'bg-accent-50 text-accent-600 border-accent-200' }
+    return { label: '대기 중', classes: 'bg-neutral-100 text-neutral-700 border-neutral-200' }
   }
   // confirmed + pending_transfer: D-Day 뱃지로 통일
   // (운영자 입금 확인 지연 시 회원 입장에서 사실상 신청 완료 상태이므로 동등 취급)
   const dDay = formatDDay(item.meeting.date, item.meeting.time, kstToday)
   if (!dDay) {
-    return { label: '신청완료', classes: 'bg-accent-50 text-accent-700 border-accent-200' }
+    return { label: '신청완료', classes: 'bg-primary-50 text-primary-700 border-primary-200' }
   }
-  // D-3 이하 강조 (오늘/내일 포함)
+  // D-3 이하만 코럴 강조(긴급=점). 여유는 연그린(내 모임 정체성).
   const isUrgent = dDay.startsWith('오늘') || dDay === '내일' || /^D-[0-3]$/.test(dDay)
   return isUrgent
     ? { label: dDay, classes: 'bg-accent-500 text-white border-accent-500' }
-    : { label: dDay, classes: 'bg-accent-50 text-accent-700 border-accent-200' }
+    : { label: dDay, classes: 'bg-primary-50 text-primary-700 border-primary-200' }
 }
 
 /**
