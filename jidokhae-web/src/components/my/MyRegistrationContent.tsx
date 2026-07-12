@@ -89,14 +89,16 @@ export default async function MyRegistrationContent() {
       )}
 
       {past.length > 0 && (
-        <>
-          <h2 className="mt-6 mb-3 text-xs font-bold text-neutral-400 tracking-tight">지난 내역</h2>
-          <div className="flex flex-col gap-3">
+        <details className="mt-6">
+          <summary className="cursor-pointer list-none text-xs font-bold text-neutral-400 tracking-tight">
+            지난 내역 {past.length}건 ▸
+          </summary>
+          <div className="mt-3 flex max-h-[420px] flex-col gap-3 overflow-y-auto pr-1">
             {past.map((reg) => (
               <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} />
             ))}
           </div>
-        </>
+        </details>
       )}
     </>
   )
