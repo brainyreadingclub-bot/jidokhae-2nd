@@ -111,7 +111,7 @@ export default function PaymentRedirectPage({ params }: Props) {
       {error ? (
         <div className="text-center">
           <p className="text-sm font-medium text-error">{error}</p>
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 text-xs text-neutral-400">
             잠시 후 모임 페이지로 이동합니다...
           </p>
         </div>
@@ -136,7 +136,7 @@ export default function PaymentRedirectPage({ params }: Props) {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             />
           </svg>
-          <p className="mt-4 text-sm text-gray-500">결제를 확인하고 있습니다...</p>
+          <p className="mt-4 text-sm text-neutral-600">결제를 확인하고 있습니다...</p>
         </div>
       )}
     </div>

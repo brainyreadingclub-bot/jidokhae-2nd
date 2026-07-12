@@ -1,20 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 type Props = {
   settings: Record<string, string>
+  memberCount: number | null
 }
 
-export default function LoginClient({ settings }: Props) {
+export default function LoginClient({ settings, memberCount }: Props) {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [termsAgreed, setTermsAgreed] = useState(false)
+  const count = useCountUp(memberCount)
 
-  const memberCount = settings['member_count'] ?? '250'
   const regionsLabel = settings['active_regions_label'] ?? '경주 · 포항'
+
   async function handleKakaoLogin() {
     setIsLoading(true)
     setErrorMessage('')
@@ -34,118 +36,87 @@ export default function LoginClient({ settings }: Props) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col overflow-hidden">
-      {/* ── Top Section: Brand Editorial ── */}
-      <section
-        className="relative flex flex-[3] flex-col justify-end px-[var(--spacing-page)] pb-14 md:px-10"
-        style={{ backgroundColor: 'var(--color-primary-900)' }}
-      >
-        {/* Grain texture overlay */}
+    <div
+      className="relative flex min-h-screen flex-col overflow-hidden"
+      style={{ backgroundColor: 'var(--color-neutral-50)' }}
+    >
+      {/* Organic blobs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
-          className="pointer-events-none absolute inset-0"
+          className="absolute -top-14 -right-14 h-52 w-52 rounded-full"
+          style={{ backgroundColor: 'var(--color-primary-500)', opacity: 0.05 }}
+        />
+        <div
+          className="absolute bottom-40 -left-12 h-36 w-36 rounded-full"
+          style={{ backgroundColor: 'var(--color-accent-500)', opacity: 0.045 }}
+        />
+      </div>
+
+      {/* ── Hero: Brand Editorial ── */}
+      <section className="relative z-10 flex flex-1 flex-col justify-center px-[var(--spacing-page)] pt-12 md:px-10">
+        <h1
+          className="text-[2.5rem] font-black leading-none tracking-tight text-primary-500 md:text-[3rem]"
           style={{
-            opacity: 0.035,
-            backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+            fontFamily: 'var(--font-display)',
+            animation: 'loginFadeUp 600ms ease-out both',
+          }}
+        >
+          지독해
+        </h1>
+
+        <p
+          className="mt-3.5 text-xs text-neutral-600"
+          style={{
+            letterSpacing: '0.06em',
+            animation: 'loginFadeUp 600ms ease-out both',
+            animationDelay: '150ms',
+          }}
+        >
+          {regionsLabel} 독서모임
+        </p>
+
+        {/* Coral editorial rule */}
+        <div
+          className="mt-5 mb-5 h-0.5 w-8 rounded-full bg-accent-500"
+          style={{
+            animation: 'loginFadeUp 600ms ease-out both',
+            animationDelay: '300ms',
           }}
         />
 
-        {/* Organic shapes */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div
-            className="absolute -top-20 -right-20 h-64 w-64 rounded-full"
-            style={{ background: 'radial-gradient(circle, var(--color-accent-400) 0%, transparent 70%)', opacity: 0.06 }}
-          />
-          <div
-            className="absolute top-1/3 -left-16 h-48 w-48 rounded-full"
-            style={{ background: 'radial-gradient(circle, var(--color-primary-300) 0%, transparent 70%)', opacity: 0.05 }}
-          />
-          <div
-            className="absolute bottom-12 right-8 h-32 w-32 rounded-full"
-            style={{ background: 'radial-gradient(circle, var(--color-accent-300) 0%, transparent 70%)', opacity: 0.04 }}
-          />
-        </div>
-
-        {/* Brand content */}
-        <div className="relative">
-          <h1
-            className="text-[2.75rem] font-bold leading-[1.1] text-white md:text-[3.25rem]"
-            style={{
-              fontFamily: 'var(--font-display)',
-              animation: 'loginFadeUp 600ms ease-out both',
-            }}
-          >
-            지독해
-          </h1>
-
-          <p
-            className="mt-3 text-caption text-neutral-400"
-            style={{
-              letterSpacing: '0.15em',
-              animation: 'loginFadeUp 600ms ease-out both',
-              animationDelay: '150ms',
-            }}
-          >
-            {regionsLabel} 독서모임
-          </p>
-
-          {/* Thin editorial rule */}
-          <div
-            className="mt-6 mb-6 h-px w-[60px] bg-neutral-600"
-            style={{
-              animation: 'loginFadeUp 600ms ease-out both',
-              animationDelay: '300ms',
-            }}
-          />
-
-          <p
-            className="text-subheading text-neutral-300"
-            style={{
-              animation: 'loginFadeUp 600ms ease-out both',
-              animationDelay: '300ms',
-            }}
-          >
-            책으로 연결되는 사람들
-          </p>
-        </div>
+        <p
+          className="text-[1.35rem] font-bold leading-[1.45] text-neutral-900 [word-break:keep-all]"
+          style={{
+            fontFamily: 'var(--font-display)',
+            animation: 'loginFadeUp 600ms ease-out both',
+            animationDelay: '300ms',
+          }}
+        >
+          책으로
+          <br />
+          연결되는
+          <br />
+          <span className="text-primary-500">사람들</span>
+        </p>
       </section>
 
-      {/* ── Bottom Section: Login Action ── */}
-      <section
-        className="relative z-10 -mt-6 flex flex-[2] flex-col items-center justify-center rounded-t-[24px] px-[var(--spacing-page)] py-10 md:px-10"
-        style={{
-          backgroundColor: 'var(--color-neutral-50)',
-          animation: 'loginSlideUp 500ms ease-out both',
-          animationDelay: '200ms',
-        }}
-      >
+      {/* ── Foot: Login Action (경량 — 카드/그림자 없음) ── */}
+      <section className="relative z-10 px-[var(--spacing-page)] pb-8 pt-2 md:px-10">
         {/* Social proof */}
-        <p className="mb-6 text-caption text-neutral-500">
-          지금 {memberCount}명이 함께 읽고 있어요
-        </p>
-
-        {/* Terms Agreement */}
-        <label className="flex w-full max-w-[320px] items-start gap-2.5 mb-4 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={termsAgreed}
-            onChange={(e) => setTermsAgreed(e.target.checked)}
-            className="mt-1 w-4 h-4 accent-primary-600 rounded"
-          />
-          <span className="text-xs text-neutral-400 leading-relaxed">
-            <a href="/policy/terms" target="_blank" className="underline">이용약관</a> 및{' '}
-            <a href="/policy/privacy" target="_blank" className="underline">개인정보처리방침</a>에 동의합니다
-          </span>
-        </label>
+        {count !== null && (
+          <p className="mb-3.5 text-center text-xs text-neutral-600">
+            지금 <span className="font-bold tabular-nums text-primary-500">{count}</span>명이 함께 읽고 있어요
+          </p>
+        )}
 
         {/* Kakao Login Button */}
         <button
           onClick={handleKakaoLogin}
           disabled={isLoading || !termsAgreed}
-          className={`flex w-full max-w-[320px] items-center justify-center gap-2.5 rounded-[var(--radius-md)] px-6 py-4 text-sm font-bold shadow-sm transition-shadow hover:shadow-md active:scale-[0.98] ${!termsAgreed ? 'opacity-40 cursor-not-allowed' : isLoading ? 'opacity-50' : ''}`}
+          className={`flex w-full items-center justify-center gap-2 rounded-[13px] px-6 py-3.5 text-sm font-bold transition-transform active:scale-[0.98] ${!termsAgreed ? 'opacity-40 cursor-not-allowed' : isLoading ? 'opacity-50' : ''}`}
           style={{
             backgroundColor: '#FEE500',
             color: 'rgba(0,0,0,0.85)',
-            transitionDuration: 'var(--transition-base)',
           }}
         >
           <KakaoIcon />
@@ -156,22 +127,56 @@ export default function LoginClient({ settings }: Props) {
           <p className="mt-3 text-center text-sm text-error">{errorMessage}</p>
         )}
 
-        <p className="mt-4 text-small text-neutral-400">
-          카카오 계정으로 간편하게 시작하세요
-        </p>
+        {/* Terms Agreement */}
+        <label className="mt-3.5 flex cursor-pointer items-center justify-center gap-2">
+          <input
+            type="checkbox"
+            checked={termsAgreed}
+            onChange={(e) => setTermsAgreed(e.target.checked)}
+            className="h-3.5 w-3.5 rounded accent-primary-600"
+          />
+          <span className="text-[11px] leading-relaxed text-neutral-500">
+            <a href="/policy/terms" target="_blank" className="underline">이용약관</a> 및{' '}
+            <a href="/policy/privacy" target="_blank" className="underline">개인정보처리방침</a> 동의
+          </span>
+        </label>
 
         <Link
           href="/policy/meetings"
-          className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="mt-3 flex items-center justify-center gap-1 text-xs font-bold text-primary-500 hover:text-primary-600"
         >
           모임 일정 먼저 보기
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </Link>
       </section>
     </div>
   )
+}
+
+function useCountUp(target: number | null) {
+  const [value, setValue] = useState<number | null>(target)
+  const started = useRef(false)
+
+  useEffect(() => {
+    if (target === null || started.current) return
+    started.current = true
+    const start = Math.round(target * 0.6)
+    const dur = 2600
+    const t0 = performance.now()
+    let raf = 0
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur)
+      const e = 1 - Math.pow(1 - p, 3)
+      setValue(Math.round(start + (target - start) * e))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [target])
+
+  return value
 }
 
 function KakaoIcon() {
