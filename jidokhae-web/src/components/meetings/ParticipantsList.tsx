@@ -23,15 +23,15 @@ export default function ParticipantsList({ nicknames }: ParticipantsListProps) {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-primary-500"
+          className="text-neutral-400"
         >
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
           <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
-        <h3 className="text-sm font-bold text-primary-800">
-          함께하는 멤버 <span className="font-mono tabular-nums text-primary-500">({nicknames.length}명)</span>
+        <h3 className="text-sm font-bold text-neutral-800">
+          함께하는 멤버 <span className="tabular-nums text-neutral-500">({nicknames.length}명)</span>
         </h3>
       </div>
       <ul className="flex flex-wrap gap-2">

@@ -213,7 +213,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
               <div className="text-sm font-bold text-primary-800">
                 관리자 페이지에서 보기
               </div>
-              <div className="mt-0.5 text-xs text-primary-500">
+              <div className="mt-0.5 text-xs text-neutral-500">
                 신청자 목록 · 입금 확인 · 재정 요약
               </div>
             </div>
