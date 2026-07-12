@@ -86,7 +86,7 @@ export default function AdminSidebar({ role, nickname, onNavigate }: Props) {
                         aria-current={active ? 'page' : undefined}
                         className={`flex items-center gap-3 border-l-2 px-5 py-2.5 text-[13px] transition-colors ${
                           active
-                            ? 'border-accent-500 bg-accent-500/12 font-semibold text-surface-100'
+                            ? 'border-primary-400 bg-primary-400/15 font-semibold text-surface-100'
                             : 'border-transparent text-surface-100/70 hover:bg-white/5 hover:text-surface-100'
                         }`}
                       >
@@ -117,7 +117,7 @@ export default function AdminSidebar({ role, nickname, onNavigate }: Props) {
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            className="text-xs font-medium text-accent-300 transition-colors hover:text-accent-200 disabled:opacity-50"
+            className="text-xs font-medium text-surface-100/60 transition-colors hover:text-surface-100 disabled:opacity-50"
           >
             {loggingOut ? '로그아웃 중...' : '로그아웃'}
           </button>
