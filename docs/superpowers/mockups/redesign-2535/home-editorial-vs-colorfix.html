@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홈 — 색규율 교정선 vs 에디토리얼 반영</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-50:#E7F3EE; --primary-100:#CFE7DD; --primary-200:#A6D3C1;
+    --primary-500:#127A5A; --primary-600:#0F6B4F; --primary-700:#0C5A42;
+    --accent-50:#FDECE7; --accent-200:#FBC9BB; --accent-500:#F4552A; --accent-700:#C6421F;
+    --neutral-50:#F9FAFB; --neutral-100:#F1F3F5; --neutral-200:#E6E9EC; --neutral-300:#D2D7DD;
+    --neutral-400:#9AA3AD; --neutral-500:#6B747E; --neutral-600:#525B65; --neutral-700:#3C444D; --neutral-900:#1A1F24;
+    --serif:'Noto Serif KR', serif;
+    --sans:'Pretendard','Apple SD Gothic Neo',-apple-system,'Segoe UI',sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--sans); background:#E9ECEF; color:var(--neutral-900); padding:40px 24px; -webkit-font-smoothing:antialiased; }
+  .page-title { text-align:center; font-size:24px; font-weight:800; margin-bottom:6px; letter-spacing:-.02em; }
+  .page-sub { text-align:center; font-size:14px; color:var(--neutral-500); margin-bottom:36px; }
+  .cols { display:flex; gap:40px; justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+  .col { width:390px; }
+  .col-label { text-align:center; font-size:13px; font-weight:800; margin-bottom:4px; letter-spacing:-.01em; }
+  .col-label .tag { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; margin-right:6px; vertical-align:middle; }
+  .tag-now { background:var(--neutral-200); color:var(--neutral-600); }
+  .tag-ed { background:var(--primary-500); color:#fff; }
+  .col-note { text-align:center; font-size:12px; color:var(--neutral-500); margin-bottom:14px; min-height:32px; }
+  .phone { background:var(--neutral-50); border-radius:28px; padding:22px 18px 26px; box-shadow:0 10px 40px rgba(0,0,0,.08); border:1px solid var(--neutral-200); }
+
+  /* header */
+  .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .top-name { font-size:14px; font-weight:700; }
+  .top-role { font-size:11px; font-weight:700; color:var(--primary-600); background:var(--primary-50); padding:2px 8px; border-radius:999px; margin-left:6px; }
+  .top-logout { font-size:12px; color:var(--neutral-500); }
+  .wordmark { font-family:var(--serif); font-size:22px; font-weight:700; color:var(--primary-500); }
+
+  /* 현재 — functional header */
+  .h-func { font-size:22px; font-weight:800; letter-spacing:-.02em; margin-bottom:4px; }
+  .h-func-sub { font-size:13px; color:var(--neutral-500); margin-bottom:16px; }
+
+  /* 에디토리얼 hero */
+  .hero { font-family:var(--serif); font-size:26px; font-weight:700; letter-spacing:-.02em; line-height:1.3; margin-bottom:6px; }
+  .hero-sub { font-size:13px; color:var(--neutral-500); margin-bottom:20px; }
+  /* 절충안 — 1줄 컴팩트 히어로 */
+  .hero-c { font-family:var(--serif); font-size:21px; font-weight:700; letter-spacing:-.02em; line-height:1.3; margin-bottom:3px; }
+  .hero-c-sub { font-size:12px; color:var(--neutral-500); margin-bottom:16px; }
+
+  /* calendar strip (현재만) */
+  .cal { background:#fff; border:1px solid var(--neutral-200); border-radius:16px; padding:12px 14px; margin-bottom:20px; }
+  .cal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .cal-mon { font-size:14px; font-weight:700; }
+  .cal-nav { color:var(--neutral-400); font-size:13px; }
+  .cal-row { display:flex; justify-content:space-between; }
+  .cal-cell { width:38px; text-align:center; }
+  .cal-dow { font-size:11px; color:var(--neutral-400); margin-bottom:6px; }
+  .cal-dow.sun { color:var(--accent-500); }
+  .cal-day { font-size:13px; color:var(--neutral-700); position:relative; padding:4px 0; }
+  .cal-day.today { background:var(--primary-500); color:#fff; border-radius:999px; font-weight:700; }
+  .cal-day.muted { color:var(--neutral-300); }
+  .cal-dot { width:4px; height:4px; border-radius:999px; background:var(--primary-500); margin:2px auto 0; }
+
+  /* section header */
+  .sec { display:flex; justify-content:space-between; align-items:center; margin:0 2px 12px; }
+  .sec-title { display:flex; align-items:center; gap:7px; font-size:14px; font-weight:800; }
+  .sec-check { width:18px; height:18px; border-radius:999px; background:var(--primary-500); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .sec-more { font-size:12px; color:var(--neutral-400); }
+  .sec-plain { font-size:14px; font-weight:800; color:var(--neutral-600); margin:22px 2px 12px; }
+
+  /* date group header */
+  .dgrp { display:flex; align-items:center; gap:8px; margin:0 2px 8px; }
+  .dgrp-date { font-size:13px; font-weight:700; color:var(--neutral-600); }
+  .dgrp-dday { font-size:11px; font-weight:700; color:var(--neutral-500); background:var(--neutral-100); padding:1px 7px; border-radius:999px; }
+
+  /* standard meeting card */
+  .card { position:relative; background:#fff; border:1px solid var(--neutral-200); border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+  .card-badge { position:absolute; top:14px; right:16px; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; background:var(--primary-100); color:var(--primary-600); }
+  .card-badge.dday { background:var(--neutral-100); color:var(--neutral-500); }
+  .card-badge.imminent { background:var(--accent-500); color:#fff; }
+  .card-meta { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--neutral-700); margin-bottom:8px; }
+  .card-title { font-family:var(--serif); font-size:17px; font-weight:700; letter-spacing:-.01em; line-height:1.35; margin-bottom:12px; padding-right:50px; }
+  .card-info { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--neutral-600); }
+  .card-info .sep { width:1px; height:10px; background:var(--neutral-200); }
+  .card-info .coral { color:var(--accent-500); font-weight:600; }
+  .card-cta { display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--neutral-100); margin-top:14px; padding-top:12px; }
+  .card-fee { font-size:13px; font-weight:700; color:var(--neutral-700); }
+  .card-apply { background:var(--primary-500); color:#fff; font-size:12px; font-weight:700; padding:6px 16px; border-radius:9px; }
+
+  /* 에디토리얼 — green summary strip for 내 모임 */
+  .mystrip { display:flex; align-items:center; gap:11px; background:var(--primary-50); border:1px solid var(--primary-200); border-radius:14px; padding:13px 15px; margin-bottom:20px; }
+  .mystrip-check { width:24px; height:24px; flex:0 0 auto; border-radius:999px; background:var(--primary-500); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .mystrip-body { flex:1; }
+  .mystrip-t { font-family:var(--serif); font-size:14px; font-weight:700; color:var(--primary-700); line-height:1.3; }
+  .mystrip-m { font-size:12px; color:var(--primary-600); margin-top:1px; }
+  .mystrip-dday { font-size:11px; font-weight:700; color:var(--primary-700); background:var(--primary-100); padding:3px 9px; border-radius:999px; }
+
+  .diff-line { border:none; border-top:1px dashed var(--neutral-300); margin:20px 0 6px; }
+  .diff { font-size:11px; color:var(--neutral-500); line-height:1.6; padding:0 2px; }
+  .diff b { color:var(--neutral-700); }
+
+  /* status demo (절충안 하단) */
+  .statusdemo { margin-top:16px; padding:14px; background:#fff; border:1px solid var(--neutral-200); border-radius:12px; }
+  .statusdemo-t { font-size:11px; font-weight:800; color:var(--neutral-700); margin-bottom:10px; }
+  .statusdemo-n { font-size:10px; color:var(--neutral-400); line-height:1.5; margin-top:4px; }
+  .mystrip.sd, .waitstrip.sd { margin-bottom:8px; padding:10px 12px; }
+  .warn-dot { display:inline-block; width:5px; height:5px; border-radius:999px; background:var(--accent-500); margin-right:3px; vertical-align:middle; }
+  .waitstrip { display:flex; align-items:center; gap:11px; background:#EEF1F4; border:1px solid var(--neutral-200); border-radius:14px; }
+  .waitstrip-body { flex:1; }
+  .waitstrip-t { font-family:var(--serif); font-size:14px; font-weight:700; color:var(--neutral-700); line-height:1.3; }
+  .waitstrip-m { font-size:12px; color:var(--neutral-500); margin-top:1px; }
+  .waitstrip-badge { font-size:11px; font-weight:700; color:#5A6B7A; background:#fff; border:1px solid var(--neutral-300); padding:3px 9px; border-radius:999px; }
+</style>
+</head>
+<body>
+  <div class="page-title">홈 화면 — 세 갈래 비교</div>
+  <div class="page-sub">같은 데이터·같은 색 토큰. 오른쪽 절충안이 톤(히어로)과 기능(캘린더)을 둘 다 취합니다.</div>
+
+  <div class="cols">
+
+    <!-- ============ 현재: 색규율 교정선 ============ -->
+    <div class="col">
+      <div class="col-label"><span class="tag tag-now">현재</span>색규율 교정선</div>
+      <div class="col-note">코럴 오용만 제거. 기능적 헤더 + 캘린더 + 표준 카드 유지 (지금 배포된 상태)</div>
+      <div class="phone">
+        <div class="top">
+          <div><span class="top-name">단무지님</span><span class="top-role">운영자</span></div>
+          <div class="top-logout">로그아웃</div>
+        </div>
+
+        <div class="h-func">모임 일정</div>
+        <div class="h-func-sub">이번 달 3회 모임 · 내 신청 1건</div>
+
+        <div class="cal">
+          <div class="cal-head"><span class="cal-mon">‹ &nbsp;2026년 7월&nbsp; ›</span><span class="cal-nav">오늘 ⌄</span></div>
+          <div class="cal-row">
+            <div class="cal-cell"><div class="cal-dow sun">일</div><div class="cal-day muted">12</div></div>
+            <div class="cal-cell"><div class="cal-dow">월</div><div class="cal-day muted">13</div></div>
+            <div class="cal-cell"><div class="cal-dow">화</div><div class="cal-day muted">14</div></div>
+            <div class="cal-cell"><div class="cal-dow">수</div><div class="cal-day today">15</div><div class="cal-dot"></div></div>
+            <div class="cal-cell"><div class="cal-dow">목</div><div class="cal-day muted">16</div></div>
+            <div class="cal-cell"><div class="cal-dow">금</div><div class="cal-day muted">17</div></div>
+            <div class="cal-cell"><div class="cal-dow">토</div><div class="cal-day muted">18</div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-title"><span class="sec-check">✓</span>단무지님이 신청한 모임 ·1건</div>
+          <div class="sec-more">전체 보기 ›</div>
+        </div>
+        <div class="card">
+          <div class="card-badge dday">D-10</div>
+          <div class="card-meta">🗓 7월 22일 (수) &nbsp;오후 7:00</div>
+          <div class="card-title">매주 수요일 정기모임</div>
+          <div class="card-info"><span>📍 공간 지그시 1711호</span><span class="sep"></span><span>👥 4/12 명</span></div>
+        </div>
+
+        <div class="dgrp"><span class="dgrp-date">7월 15일 수요일</span><span class="dgrp-dday">D-3</span></div>
+        <div class="card">
+          <div class="card-badge">모집중</div>
+          <div class="card-meta">🗓 7월 15일 (수) &nbsp;오후 7:00</div>
+          <div class="card-title">매주 수요일 정기모임</div>
+          <div class="card-info"><span>📍 우연히 책방</span><span class="sep"></span><span class="coral">👥 10/12 명</span></div>
+          <div class="card-cta"><span class="card-fee">12,000</span><span class="card-apply">신청하기</span></div>
+        </div>
+
+        <div class="dgrp"><span class="dgrp-date">7월 29일 수요일</span><span class="dgrp-dday">D-17</span></div>
+        <div class="card">
+          <div class="card-badge">모집중</div>
+          <div class="card-meta">🗓 7월 29일 (수) &nbsp;오후 7:00</div>
+          <div class="card-title">매주 수요일 정기모임</div>
+          <div class="card-info"><span>📍 우연히 책방</span><span class="sep"></span><span>👥 3/12 명</span></div>
+          <div class="card-cta"><span class="card-fee">12,000</span><span class="card-apply">신청하기</span></div>
+        </div>
+      </div>
+
+      <hr class="diff-line">
+      <div class="diff">
+        · 상단: <b>"모임 일정"</b> 산세리프 볼드 + 기능적 부제<br>
+        · 캘린더 스트립 <b>유지</b><br>
+        · 내 모임: 다른 모임과 <b>동일한 표준 카드</b> (D-day 뱃지만 다름)
+      </div>
+    </div>
+
+    <!-- ============ 에디토리얼 반영: A안 v2 ============ -->
+    <div class="col">
+      <div class="col-label"><span class="tag tag-ed">A안 v2</span>에디토리얼 반영</div>
+      <div class="col-note">세리프 히어로 + 내 모임을 그린 요약 strip으로. 색규율은 동일 (추가 작업 필요분)</div>
+      <div class="phone">
+        <div class="top">
+          <div class="wordmark">지독해</div>
+          <div class="top-logout">로그아웃</div>
+        </div>
+
+        <div class="hero">이번 주,<br>같이 읽어요</div>
+        <div class="hero-sub">경주·포항 3개 모임이 열려 있어요</div>
+
+        <div class="sec">
+          <div class="sec-title"><span class="sec-check">✓</span>단무지님이 신청한 모임</div>
+        </div>
+        <div class="mystrip">
+          <div class="mystrip-check">✓</div>
+          <div class="mystrip-body">
+            <div class="mystrip-t">신청 완료 · 매주 수요일 정기모임</div>
+            <div class="mystrip-m">7월 22일 (수) 저녁, 4명과 함께해요</div>
+          </div>
+          <div class="mystrip-dday">D-10</div>
+        </div>
+
+        <div class="sec-plain">전체 일정</div>
+
+        <div class="dgrp"><span class="dgrp-date">7월 15일 수요일</span><span class="dgrp-dday">D-3</span></div>
+        <div class="card">
+          <div class="card-badge">모집중</div>
+          <div class="card-meta">🗓 7월 15일 (수) &nbsp;오후 7:00</div>
+          <div class="card-title">매주 수요일 정기모임</div>
+          <div class="card-info"><span>📍 우연히 책방</span><span class="sep"></span><span class="coral">👥 10/12 명</span></div>
+          <div class="card-cta"><span class="card-fee">12,000</span><span class="card-apply">신청하기</span></div>
+        </div>
+
+        <div class="dgrp"><span class="dgrp-date">7월 29일 수요일</span><span class="dgrp-dday">D-17</span></div>
+        <div class="card">
+          <div class="card-badge">모집중</div>
+          <div class="card-meta">🗓 7월 29일 (수) &nbsp;오후 7:00</div>
+          <div class="card-title">매주 수요일 정기모임</div>
+          <div class="card-info"><span>📍 우연히 책방</span><span class="sep"></span><span>👥 3/12 명</span></div>
+          <div class="card-cta"><span class="card-fee">12,000</span><span class="card-apply">신청하기</span></div>
+        </div>
+      </div>
+
+      <hr class="diff-line">
+      <div class="diff">
+        · 상단: <b>세리프 히어로</b> "이번 주, 같이 읽어요" + 따뜻한 부제<br>
+        · 캘린더 스트립 <b>제거</b> (히어로가 자리 대체 — 존치 여부는 판단 필요)<br>
+        · 내 모임: <b>그린 요약 strip</b>으로 "내 것" 위계 강조
+      </div>
+    </div>
+
+    <!-- ============ 절충안: 히어로 + 캘린더 공존 ============ -->
+    <div class="col">
+      <div class="col-label"><span class="tag tag-ed">추천</span>절충안 (히어로+캘린더)</div>
+      <div class="col-note">1줄 컴팩트 히어로로 톤은 살리고, 캘린더·내 모임 strip은 유지. 3초 확인 + 온기 둘 다</div>
+      <div class="phone">
+        <div class="top">
+          <div class="wordmark">지독해</div>
+          <div class="top-logout">로그아웃</div>
+        </div>
+
+        <div class="hero-c">지독하게, 함께 읽어요</div>
+        <div class="hero-c-sub">이번 달 3회 모임 · 내 신청 1건</div>
+
+        <div class="cal">
+          <div class="cal-head"><span class="cal-mon">‹ &nbsp;2026년 7월&nbsp; ›</span><span class="cal-nav">오늘 ⌄</span></div>
+          <div class="cal-row">
+            <div class="cal-cell"><div class="cal-dow sun">일</div><div class="cal-day muted">12</div></div>
+            <div class="cal-cell"><div class="cal-dow">월</div><div class="cal-day muted">13</div></div>
+            <div class="cal-cell"><div class="cal-dow">화</div><div class="cal-day muted">14</div></div>
+            <div class="cal-cell"><div class="cal-dow">수</div><div class="cal-day today">15</div><div class="cal-dot"></div></div>
+            <div class="cal-cell"><div class="cal-dow">목</div><div class="cal-day muted">16</div></div>
+            <div class="cal-cell"><div class="cal-dow">금</div><div class="cal-day muted">17</div></div>
+            <div class="cal-cell"><div class="cal-dow">토</div><div class="cal-day muted">18</div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-title"><span class="sec-check">✓</span>단무지님이 신청한 모임</div>
+        </div>
+        <!-- confirmed: 초록 strip + 톤다운 그린 D-day (코럴 아님) -->
+        <div class="mystrip">
+          <div class="mystrip-check">✓</div>
+          <div class="mystrip-body">
+            <div class="mystrip-t">신청 완료 · 매주 수요일 정기모임</div>
+            <div class="mystrip-m">7월 22일 (수) 저녁 · 4/12명 함께해요</div>
+          </div>
+          <div class="mystrip-dday">D-10</div>
+        </div>
+
+        <div class="sec-plain">전체 일정</div>
+
+        <div class="dgrp"><span class="dgrp-date">7월 15일 수요일</span><span class="dgrp-dday">D-3</span></div>
+        <div class="card">
+          <div class="card-badge">모집중</div>
+          <div class="card-meta">🗓 7월 15일 (수) &nbsp;오후 7:00</div>
+          <div class="card-title">매주 수요일 정기모임</div>
+          <div class="card-info"><span>📍 우연히 책방</span><span class="sep"></span><span class="coral">👥 10/12 명</span></div>
+          <div class="card-cta"><span class="card-fee">12,000</span><span class="card-apply">신청하기</span></div>
+        </div>
+
+        <div class="dgrp"><span class="dgrp-date">7월 29일 수요일</span><span class="dgrp-dday">D-17</span></div>
+        <div class="card">
+          <div class="card-badge">모집중</div>
+          <div class="card-meta">🗓 7월 29일 (수) &nbsp;오후 7:00</div>
+          <div class="card-title">매주 수요일 정기모임</div>
+          <div class="card-info"><span>📍 우연히 책방</span><span class="sep"></span><span>👥 3/12 명</span></div>
+          <div class="card-cta"><span class="card-fee">12,000</span><span class="card-apply">신청하기</span></div>
+        </div>
+      </div>
+
+      <hr class="diff-line">
+      <div class="diff">
+        · 상단: <b>1줄 컴팩트 세리프 히어로</b> "지독하게, 함께 읽어요"<br>
+        · 캘린더 스트립 <b>유지</b> (3초 확인 기능 보존)<br>
+        · 내 모임: <b>상태별 strip</b> (D-day 코럴→톤다운 그린)<br>
+        <b>→ 온기 + 기능 둘 다. 추천 방향.</b>
+      </div>
+
+      <div class="statusdemo">
+        <div class="statusdemo-t">내 모임 strip — 상태별 3분기 (스펙 §5)</div>
+        <!-- confirmed -->
+        <div class="mystrip sd">
+          <div class="mystrip-check">✓</div>
+          <div class="mystrip-body">
+            <div class="mystrip-t">신청 완료 · 정기모임</div>
+            <div class="mystrip-m">4/12명 함께해요</div>
+          </div>
+          <div class="mystrip-dday">D-10</div>
+        </div>
+        <!-- pending_transfer -->
+        <div class="mystrip sd">
+          <div class="mystrip-check">✓</div>
+          <div class="mystrip-body">
+            <div class="mystrip-t">신청 접수됨 · 정기모임</div>
+            <div class="mystrip-m"><span class="warn-dot"></span> 입금 확인 대기 중</div>
+          </div>
+          <div class="mystrip-dday">D-10</div>
+        </div>
+        <!-- waitlisted (뉴트럴, strip 아님) -->
+        <div class="waitstrip sd">
+          <div class="waitstrip-body">
+            <div class="waitstrip-t">대기 중 · 정기모임</div>
+            <div class="waitstrip-m">자리가 나면 알려드려요</div>
+          </div>
+          <div class="waitstrip-badge">대기 2번</div>
+        </div>
+        <div class="statusdemo-n">confirmed·pending = 초록 strip / waitlisted = 뉴트럴 회색. 코럴은 안내 점 1개만.</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

@@ -177,7 +177,6 @@ export default function MeetingsView({
           items={myMeetingItems}
           countMap={countMap}
           kstToday={kstToday}
-          isPrivileged={isPrivileged}
         />
       )}
 
