@@ -20,6 +20,8 @@ export type LibraryEntry = {
 
 export type LibraryEntryWithBook = LibraryEntry & {
   books: Book
+  // Plan B: source='ask'인 항목의 출처 정기모임 날짜(라벨 "N월 정기모임에서"용). 없으면 null
+  source_meeting_date?: string | null
 }
 
 // 카카오 검색 결과를 우리 화면용으로 정규화한 형태
