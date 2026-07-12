@@ -1,0 +1,91 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<style>
+  .wm2{font-family:'Pretendard',sans-serif;max-width:860px;margin:0 auto}
+  .wm2 *{box-sizing:border-box}
+  .sk{font-family:'Noto Serif KR',serif}
+  .ink{color:#127A5A}.coral{color:#F4552A}.head{color:#191F28}.sub{color:#5A6B7A}
+  @keyframes wUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .wm2 .blk{animation:wUp .5s cubic-bezier(.22,1,.36,1) both}
+  .d1{animation-delay:.05s}.d2{animation-delay:.14s}.d3{animation-delay:.24s}.d4{animation-delay:.34s}
+  .panel{background:#fff;border:1px solid #E5E8EB;border-radius:20px;padding:30px 28px;margin-bottom:18px}
+  .stage{background:#F9FAFB;border:1px solid #EEF1F4;border-radius:16px;padding:40px 24px;display:flex;align-items:center;justify-content:center;position:relative}
+  .lbl{font-size:11px;font-weight:800;letter-spacing:.4px;color:#6B7684;text-transform:uppercase;margin-bottom:14px}
+  .note{font-size:12.5px;line-height:1.7;color:#5A6B7A;margin-top:16px}
+  .note b{color:#191F28}
+  .appicon{width:74px;height:74px;border-radius:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -6px rgba(0,0,0,.28);position:relative}
+  .iconrow{display:flex;gap:20px;align-items:center;flex-wrap:wrap;justify-content:center}
+  .pickbar{border:1.5px solid #127A5A;background:#F3FAF6;border-radius:14px;padding:14px 18px;cursor:pointer;transition:box-shadow .25s}
+  .pickbar:hover{box-shadow:0 8px 22px -10px rgba(18,122,90,.4)}
+</style>
+
+<div class="wm2">
+<h2 class="sk head blk d1" style="font-weight:700;font-size:22px;margin:0 0 4px">워드마크 방향 — 讀(독)을 삼킨 세리프 <span class="sub" style="font-size:13px;font-weight:500">· 전문가 1순위</span></h2>
+<p class="sub blk d1" style="font-size:13px;margin:0 0 22px">색·점·아이콘이 아니라 <b class="head">글자 골격</b>으로 승부. '<b class="ink">독</b>'만 획 밀도를 높여 응시하면 한자 讀가 배어납니다. (아래는 웹폰트 근사 — 실제는 커스텀 글리프로 획을 조각합니다.)</p>
+
+<!-- 메인 워드마크 -->
+<div class="panel blk d2">
+  <div class="lbl">01 · 메인 워드마크</div>
+  <div class="stage">
+    <div class="sk head" style="font-size:64px;font-weight:700;letter-spacing:-3px;line-height:1;display:flex;align-items:baseline">
+      <span>지</span><span style="font-weight:900;position:relative;padding:0 1px">독<span style="position:absolute;left:0;right:0;bottom:2px;height:34%;background:linear-gradient(transparent 60%, rgba(18,122,90,.08) 60%);pointer-events:none"></span></span><span>해</span>
+    </div>
+  </div>
+  <div class="note"><b>독</b>만 weight 900 + 획 밀도 상승 → 시각 무게중심이 가운데(이름의 '지독함' = 밀도). 전체 잉크 그린 단색, 자간 -3%로 조여 도장(印) 한 덩어리. 세리프 = 讀解의 고전·지적 권위.</div>
+</div>
+
+<!-- 앱 아이콘 -->
+<div class="panel blk d3">
+  <div class="lbl">02 · 앱 아이콘 · 파비콘 시스템</div>
+  <div class="stage">
+    <div class="iconrow">
+      <!-- 메인 아이콘: 독 전각 -->
+      <div style="text-align:center">
+        <div class="appicon" style="background:#127A5A">
+          <span class="sk" style="color:#fff;font-size:40px;font-weight:900;letter-spacing:-1px">독</span>
+          <span style="position:absolute;right:11px;bottom:11px;width:9px;height:9px;background:#F4552A;border-radius:2px 2px 2px 0;transform:rotate(0deg)"></span>
+        </div>
+        <div class="sub" style="font-size:11px;margin-top:9px">'독' 전각(篆刻) + 감귤 낙관</div>
+      </div>
+      <!-- 서브 심볼: 읽기 커서 (컨셉4) -->
+      <div style="text-align:center">
+        <div class="appicon" style="background:#F9FAFB;border:1px solid #E5E8EB">
+          <svg width="38" height="42" viewBox="0 0 38 42" fill="none">
+            <!-- 감귤 I-beam 커서 -->
+            <rect x="16" y="8" width="4" height="26" rx="1.5" fill="#F4552A"/>
+            <rect x="10" y="8" width="16" height="3.4" rx="1.5" fill="#F4552A"/>
+            <rect x="10" y="30.6" width="16" height="3.4" rx="1.5" fill="#F4552A"/>
+            <!-- 그린 닫는 따옴표 -->
+            <path d="M27 9c3 0 5 2 5 5 0 3-2 5-5 6l-1-2c1.5-.6 2.5-1.6 2.6-3H27a2.4 2.4 0 010-4.8z" fill="#127A5A"/>
+            <path d="M31.6 9c3 0 5 2 5 5 0 3-2 5-5 6l-1-2c1.5-.6 2.5-1.6 2.6-3h-1.6a2.4 2.4 0 010-4.8z" fill="#127A5A" opacity="0"/>
+          </svg>
+        </div>
+        <div class="sub" style="font-size:11px;margin-top:9px">읽기 커서 + 따옴표 (서브)</div>
+      </div>
+    </div>
+  </div>
+  <div class="note"><b>메인</b>은 '독' 한 글자 전각 인장 — 홈 화면에서 즉시 눈에 띄고 커뮤니티 자부심. <b>서브 심볼</b>(문장부호 "읽기 커서")은 파비콘·워터마크·확장용 — 감귤 커서(행위/지금 읽는 중) + 그린 따옴표(텍스트/인용). 색이 장식이 아니라 <b>기표</b>.</div>
+</div>
+
+<!-- 락업 (실제 헤더 적용 예) -->
+<div class="panel blk d4">
+  <div class="lbl">03 · 앱 헤더 락업 (실제 적용)</div>
+  <div class="stage" style="justify-content:flex-start;padding:26px 28px">
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <div class="sk head" style="font-size:30px;font-weight:700;letter-spacing:-1.6px;line-height:1;display:flex;align-items:baseline">
+        <span>지</span><span style="font-weight:900">독</span><span>해</span>
+      </div>
+      <div class="sub" style="font-size:10.5px;letter-spacing:1px">경주·포항 독서모임 · est.2024</div>
+    </div>
+  </div>
+  <div class="note">축소해도 '독'의 밀도 대비가 유지돼 위계가 살아있음. 워드마크(컨셉1) + 서브 심볼(컨셉4) = 조형 개성 & 시스템 확장성 둘 다.</div>
+</div>
+
+<div class="pickbar blk d4" data-choice="wm-v2-doku" onclick="toggleSelect(this)">
+  <div class="ink" style="font-weight:800;font-size:13px">👍 이 방향으로 (讀 삼킨 세리프 + 읽기 커서 심볼) — 클릭</div>
+</div>
+<p class="sub blk d4" style="font-size:12px;margin-top:14px;line-height:1.7">웹폰트로는 한자 획 밀도를 <b class="head">근사</b>만 했어요 — 실제 확정 시 '독'을 커스텀 글리프로 조각합니다. 방향이 맞으면 '독' 획 강도(한자 느낌 세게/은은하게)를 다이얼로 조절해 확정하고, 이 워드마크를 홈·상세·마이 화면에 얹겠습니다. 다른 컨셉(해:돋이 / 리게이처 / 문장부호 단독)이 궁금하면 말해주세요.</p>
+</div>

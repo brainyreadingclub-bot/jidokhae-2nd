@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>브랜드 껍데기 — 아이콘 · 스플래시 · 로그인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Pretendard',sans-serif; background:#E9EBEE; color:#191F28; padding:36px 24px 90px; }
+  .sk { font-family:'Noto Serif KR',serif; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  .pagehead h1 { font-family:'Noto Serif KR',serif; font-size:23px; font-weight:900; letter-spacing:-1px; }
+  .pagehead p { font-size:13px; color:#5A6B7A; margin-top:8px; line-height:1.6; }
+
+  .secttitle { margin:40px 0 18px; display:flex; align-items:baseline; gap:10px; }
+  .secttitle .n { font-family:'Noto Serif KR',serif; font-size:18px; font-weight:900; color:#191F28; letter-spacing:-.5px; }
+  .secttitle .d { font-size:12.5px; color:#6B7684; }
+  .secttitle::after { content:''; flex:1; height:1px; background:#D4D8DE; }
+
+  /* ---------- 아이콘 후보 ---------- */
+  .iconrail { display:flex; gap:34px; flex-wrap:wrap; }
+  .iconcol { width:150px; text-align:center; }
+  .tile { width:104px; height:104px; border-radius:24px; margin:0 auto 12px; position:relative;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    box-shadow:0 10px 24px -8px rgba(20,40,32,.28), 0 2px 6px rgba(0,0,0,.08); }
+  .tile .dot { position:absolute; border-radius:3px; }
+  .grain { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.18;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E"); }
+  .iconcol .kk { font-size:13px; font-weight:800; letter-spacing:-.3px; margin-top:2px; }
+  .iconcol .ss { font-size:11px; color:#6B7684; margin-top:3px; line-height:1.5; }
+
+  /* A: 크림 + 잉크그린 글자 + 감귤 점 (에디토리얼) */
+  .t-a { background:radial-gradient(circle at 38% 32%, #FFFFFF, #F9FAFB 55%, #EDF0F2); }
+  .t-a .g { font-size:58px; font-weight:900; color:#127A5A; letter-spacing:-2px; }
+  .t-a .dot { width:11px; height:11px; background:#F4552A; top:24px; right:26px; transform:rotate(45deg); }
+  /* B: 잉크그린 솔리드 + 흰 글자 (모던 앱 타일) */
+  .t-b { background:linear-gradient(150deg, #127A5A, #0d5c43); }
+  .t-b .g { font-size:58px; font-weight:900; color:#fff; letter-spacing:-2px; }
+  .t-b .dot { width:11px; height:11px; background:#F4552A; top:24px; right:26px; transform:rotate(45deg); }
+  /* C: 잉크그린 솔리드 + 흰 讀(독) 한자 */
+  .t-c { background:linear-gradient(150deg, #127A5A, #0B4B37); }
+  .t-c .g { font-size:54px; font-weight:700; color:#fff; }
+  .t-c .dot { width:10px; height:10px; background:#F4552A; top:23px; right:25px; border-radius:50%; }
+  /* D: 오프화이트 + 잉크그린 펼친 책 심볼 */
+  .t-d { background:radial-gradient(circle at 40% 30%, #FFFFFF, #F4F7F5 60%, #E6EEEA); }
+
+  /* ---------- 폰(스플래시+로그인) ---------- */
+  .phrail { display:flex; gap:30px; flex-wrap:wrap; align-items:flex-start; }
+  .phcol { width:300px; }
+  .phcaption { text-align:center; margin-bottom:12px; }
+  .phcaption .k { display:block; font-size:13px; font-weight:800; letter-spacing:-.3px; }
+  .phcaption .s { display:block; font-size:11px; color:#6B7684; margin-top:3px; line-height:1.5; }
+  .phpair { display:flex; gap:14px; justify-content:center; }
+  .ph { width:143px; height:300px; border-radius:26px; overflow:hidden; position:relative;
+    box-shadow:0 18px 40px -14px rgba(20,40,32,.32), 0 3px 10px rgba(0,0,0,.08); border:1px solid rgba(0,0,0,.06); }
+  .ph .plabel { position:absolute; bottom:8px; left:0; right:0; text-align:center; font-size:9.5px; font-weight:800;
+    letter-spacing:.4px; color:rgba(255,255,255,.62); text-transform:uppercase; z-index:6; }
+  .ph.light .plabel { color:rgba(25,31,40,.4); }
+
+  /* 스플래시 다크 */
+  .sp-dark { background:linear-gradient(165deg, #0A3A2B, #072A20); display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .sp-dark .wm { font-size:34px; font-weight:900; color:#fff; letter-spacing:-2px; position:relative; }
+  .sp-dark .wm .d { position:absolute; width:7px; height:7px; background:#F4552A; border-radius:2px; top:5px; right:-11px; transform:rotate(45deg); }
+  .sp-dark .est { font-size:9px; color:rgba(255,255,255,.45); letter-spacing:1.5px; margin-top:10px; }
+  /* 스플래시 라이트 */
+  .sp-light { background:radial-gradient(circle at 50% 42%, #FFFFFF, #F9FAFB 60%, #EEF1F4); display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .sp-light .wm { font-size:34px; font-weight:900; color:#127A5A; letter-spacing:-2px; position:relative; }
+  .sp-light .wm .d { position:absolute; width:7px; height:7px; background:#F4552A; border-radius:2px; top:5px; right:-11px; transform:rotate(45deg); }
+  .sp-light .est { font-size:9px; color:#6B7684; letter-spacing:1.5px; margin-top:10px; }
+
+  /* 로그인 다크 */
+  .lg-dark { background:#072A20; display:flex; flex-direction:column; }
+  .lg-dark .hero { flex:1; padding:34px 20px 0; position:relative; }
+  .lg-dark .hero .wm { font-size:31px; font-weight:900; color:#fff; letter-spacing:-1.6px; line-height:1.05; position:relative; display:inline-block; }
+  .lg-dark .hero .wm .d { position:absolute; width:6px; height:6px; background:#F4552A; border-radius:2px; top:4px; right:-9px; transform:rotate(45deg); }
+  .lg-dark .hero .tag { font-size:9.5px; color:rgba(255,255,255,.5); letter-spacing:.8px; margin-top:9px; }
+  .lg-dark .hero .rule { width:34px; height:1px; background:rgba(255,255,255,.28); margin:15px 0; }
+  .lg-dark .hero .head { font-size:13px; color:rgba(255,255,255,.82); line-height:1.5; }
+  .lg-dark .sheet { background:#F9FAFB; border-radius:20px 20px 0 0; padding:18px 16px 20px; }
+  .lg-dark .sheet .proof { font-size:9.5px; color:#6B7684; text-align:center; margin-bottom:11px; }
+  /* 로그인 라이트 */
+  .lg-light { background:#F9FAFB; display:flex; flex-direction:column; position:relative; }
+  .lg-light .hero { flex:1; padding:40px 20px 0; position:relative; z-index:2; }
+  .lg-light .hero .wm { font-size:31px; font-weight:900; color:#127A5A; letter-spacing:-1.6px; line-height:1.05; position:relative; display:inline-block; }
+  .lg-light .hero .wm .d { position:absolute; width:6px; height:6px; background:#F4552A; border-radius:2px; top:4px; right:-9px; transform:rotate(45deg); }
+  .lg-light .hero .tag { font-size:9.5px; color:#6B7684; letter-spacing:.8px; margin-top:9px; }
+  .lg-light .hero .rule { width:34px; height:1px; background:#CDE9DB; margin:15px 0; }
+  .lg-light .hero .head { font-size:14px; color:#191F28; line-height:1.45; font-weight:600; }
+  .lg-light .hero .head b { color:#127A5A; }
+  .lg-light .sheet { padding:16px; position:relative; z-index:2; }
+  .lg-light .sheet .proof { font-size:9.5px; color:#6B7684; text-align:center; margin-bottom:11px; }
+  .lg-light .blob { position:absolute; border-radius:50%; z-index:1; }
+
+  .kakao { display:flex; align-items:center; justify-content:center; gap:6px; background:#FEE500; color:rgba(0,0,0,.85);
+    border-radius:11px; padding:11px 0; font-size:12px; font-weight:800; }
+  .kakao svg { width:14px; height:14px; }
+  .terms { font-size:8.5px; color:#8B95A1; text-align:center; margin-top:10px; line-height:1.5; }
+  .terms a { color:#6B7684; text-decoration:underline; }
+  .peek { display:block; text-align:center; font-size:10px; font-weight:700; color:#127A5A; margin-top:11px; }
+
+  .verdict { margin-top:16px; background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:14px 16px; font-size:12px; color:#333d48; line-height:1.75; }
+  .verdict b { color:#127A5A; }
+  .verdict .coral { color:#F4552A; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="pagehead">
+    <h1>브랜드 껍데기 시안 — 아이콘 · 스플래시 · 로그인</h1>
+    <p>확정 팔레트(잉크그린 <b style="color:#127A5A">#127A5A</b> 앵커 + 감귤 <b style="color:#F4552A">#F4552A</b> 점 + 오프화이트 + 세리프)로만. 마음에 드는 아이콘 방향 + 로그인 컨셉(다크/라이트) 골라주세요.</p>
+  </div>
+
+  <!-- ============ 아이콘 ============ -->
+  <div class="secttitle"><span class="n">① 앱 아이콘</span><span class="d">홈 화면 · 스플래시 · 파비콘 공용. 새 디자인 포함 4방향</span></div>
+  <div class="iconrail">
+
+    <div class="iconcol">
+      <div class="tile t-a"><div class="grain"></div><span class="sk g">지</span><span class="dot"></span></div>
+      <div class="kk">A · 크림 + 잉크 글자</div>
+      <div class="ss">현재안 진화형. 오프화이트 타일 + 잉크그린 '지' + 감귤 점. 에디토리얼·차분</div>
+    </div>
+
+    <div class="iconcol">
+      <div class="tile t-b"><div class="grain"></div><span class="sk g">지</span><span class="dot"></span></div>
+      <div class="kk">B · 그린 솔리드 + 흰 글자</div>
+      <div class="ss">토스·당근식 모던 앱 타일. 잉크그린 채움 + 흰 '지' + 감귤 점. 강한 존재감</div>
+    </div>
+
+    <div class="iconcol">
+      <div class="tile t-c"><div class="grain"></div><span class="sk g">讀</span><span class="dot"></span></div>
+      <div class="kk">C · 讀(독) 한자</div>
+      <div class="ss">'읽다 讀' = 지독해 언어유희. 그린 솔리드 + 흰 한자 + 감귤 점. 독서 정체성·차별화</div>
+    </div>
+
+    <div class="iconcol">
+      <div class="tile t-d">
+        <div class="grain"></div>
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+          <path d="M26 13c-4-3-10-3.5-15-2.5v27c5-1 11-.6 15 2.5 4-3.1 10-3.5 15-2.5v-27c-5-1-11-.5-15 2.5Z" stroke="#127A5A" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M26 13v27" stroke="#127A5A" stroke-width="2.4"/>
+          <circle cx="41.5" cy="11" r="3.2" fill="#F4552A"/>
+        </svg>
+      </div>
+      <div class="kk">D · 펼친 책 심볼</div>
+      <div class="ss">글자 없는 추상 심볼. 오프화이트 + 잉크그린 책 라인 + 감귤 점. 확장성·앱스러움</div>
+    </div>
+
+  </div>
+
+  <!-- ============ 스플래시 + 로그인 ============ -->
+  <div class="secttitle"><span class="n">② 스플래시 + 로그인</span><span class="d">앱 열 때 잠깐 뜨는 화면 + 첫 로그인. 다크 vs 라이트 컨셉</span></div>
+
+  <div class="phrail">
+
+    <!-- 컨셉 A: 다크 -->
+    <div class="phcol">
+      <div class="phcaption">
+        <span class="k">컨셉 A — 다크 에디토리얼</span>
+        <span class="s">현재 유지 계열(어두운 잉크그린). 첫인상 무게감·프리미엄. 인앱(밝음)과 대비</span>
+      </div>
+      <div class="phpair">
+        <div class="ph">
+          <div class="sp-dark">
+            <div class="sk wm">지독해<span class="d"></span></div>
+            <div class="est">경주 · 포항 · EST.2024</div>
+          </div>
+          <div class="plabel">스플래시</div>
+        </div>
+        <div class="ph">
+          <div class="lg-dark">
+            <div class="hero">
+              <div class="sk wm">지독해<span class="d"></span></div>
+              <div class="tag">경주 · 포항 독서모임</div>
+              <div class="rule"></div>
+              <div class="sk head">책으로<br>연결되는<br>사람들</div>
+            </div>
+            <div class="sheet">
+              <div class="proof">지금 250명이 함께 읽고 있어요</div>
+              <div class="kakao"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.7-2.5.7.1 1.4.2 2 .2 5.5 0 10-3.6 10-8C24 6.6 19.5 3 12 3Z"/></svg>카카오로 시작하기</div>
+              <div class="terms">약관 및 개인정보처리방침에 동의합니다</div>
+              <span class="peek">모임 일정 먼저 보기</span>
+            </div>
+          </div>
+          <div class="plabel">로그인</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 컨셉 B: 라이트 -->
+    <div class="phcol">
+      <div class="phcaption">
+        <span class="k">컨셉 B — 라이트 (인앱 통일)</span>
+        <span class="s">오프화이트 + 잉크그린 점. 인앱과 완전 통일. '그린=점' 원칙 일관</span>
+      </div>
+      <div class="phpair">
+        <div class="ph">
+          <div class="sp-light">
+            <div class="sk wm">지독해<span class="d"></span></div>
+            <div class="est">경주 · 포항 · EST.2024</div>
+          </div>
+          <div class="plabel light">스플래시</div>
+        </div>
+        <div class="ph light">
+          <div class="lg-light">
+            <div class="blob" style="width:120px;height:120px;background:#127A5A;opacity:.05;top:-30px;right:-30px;"></div>
+            <div class="blob" style="width:90px;height:90px;background:#F4552A;opacity:.05;bottom:80px;left:-25px;"></div>
+            <div class="hero">
+              <div class="sk wm">지독해<span class="d"></span></div>
+              <div class="tag">경주 · 포항 독서모임</div>
+              <div class="rule"></div>
+              <div class="sk head">책으로<br>연결되는<br><b>사람들</b></div>
+            </div>
+            <div class="sheet">
+              <div class="proof">지금 250명이 함께 읽고 있어요</div>
+              <div class="kakao"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.7 2.6-.8 3-.1.5.2.5.4.4.2-.1 2.6-1.8 3.7-2.5.7.1 1.4.2 2 .2 5.5 0 10-3.6 10-8C24 6.6 19.5 3 12 3Z"/></svg>카카오로 시작하기</div>
+              <div class="terms">약관 및 개인정보처리방침에 동의합니다</div>
+              <span class="peek">모임 일정 먼저 보기</span>
+            </div>
+          </div>
+          <div class="plabel light">로그인</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="verdict">
+    <b>제 추천</b> — 아이콘은 <b>C(讀 한자)</b> 또는 <b>B(그린 솔리드 + 흰 지)</b>. 홈 화면에서 다른 앱들 사이에 있을 때 솔리드 타일이 눈에 확 띄고 2535 앱 감도에 맞습니다(토스/당근). C는 '독서'라는 정체성까지 담아 차별화. A(크림)는 차분하지만 홈 화면에서 다소 묻힐 수 있어요.<br>
+    로그인은 <span class="coral">여기서 갈립니다</span> — <b>A(다크)</b>는 첫인상 임팩트가 크고 지금 코드와 가깝지만 "그린=점" 원칙과 살짝 어긋나고, <b>B(라이트)</b>는 인앱과 완전히 하나로 흐릅니다. 앱 전체의 톤 일관성을 최우선이면 B, 첫 화면만은 강렬한 무게감을 주고 싶으면 A.
+  </div>
+
+</div>
+</body>
+</html>

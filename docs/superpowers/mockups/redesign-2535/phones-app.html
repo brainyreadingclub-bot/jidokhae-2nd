@@ -1,0 +1,173 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+<style>
+  .app-wrap{font-family:'Pretendard',sans-serif;display:flex;gap:22px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+  .app-wrap *{box-sizing:border-box}
+  .sk{font-family:'Noto Serif KR',serif}
+  .ink{color:#127A5A}.coral{color:#F4552A}.head{color:#191F28}.sub{color:#5A6B7A}.mut{color:#6B7684}
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:.2;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.25'/%3E%3C/svg%3E")}
+  .ph{position:relative;width:302px;border-radius:28px;overflow:hidden;background:#F9FAFB;border:1px solid #E9ECF0;box-shadow:0 22px 54px -14px rgba(25,31,40,.22)}
+  .scr{position:relative;padding:20px 17px 20px}
+  .label{font-size:11px;font-weight:800;letter-spacing:1px;color:#6B7684;text-transform:uppercase;margin:0 0 9px 3px}
+  .tag{font-size:11px;letter-spacing:.2px;font-weight:800;display:inline-block;padding:4px 9px;border-radius:6px}
+  .cta{display:block;text-align:center;font-size:13.5px;font-weight:800;color:#fff;background:#127A5A;padding:13px;border-radius:11px}
+  .card{background:#fff;border:1px solid #E5E8EB;border-radius:16px;padding:15px}
+  .navbar{display:flex;justify-content:space-around;align-items:center;padding:10px 0 6px;border-top:1px solid #EEF1F4;background:#fff}
+  .navbar div{font-size:10px;text-align:center;color:#B0B8C1}
+  .navbar div.on{color:#127A5A;font-weight:700}
+  .dot{width:5px;height:5px;border-radius:50%;background:#127A5A;display:inline-block}
+</style>
+
+<h2 class="sk head" style="font-weight:700">A안 v2 — 실제 서비스 적용 (홈 · 모임상세 · 마이페이지)</h2>
+<p class="subtitle">확정된 색·타이포 시스템을 실제 화면 3개에 얹었어요. (워드마크 심볼은 전문가 작업 중이라 임시로 세리프 텍스트) 톤이 서비스 전반에 어떻게 흐르는지 봐주세요.</p>
+
+<div class="app-wrap">
+
+  <!-- ========================= 1. 홈 ========================= -->
+  <div class="ph">
+    <div class="grain"></div>
+    <div class="scr">
+      <p class="label">① 홈</p>
+      <!-- 헤더 -->
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="sk head" style="font-size:25px;font-weight:900;letter-spacing:-1.5px">지독해</div>
+        <div style="width:33px;height:33px;border-radius:50%;background:#127A5A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">초</div>
+      </div>
+      <!-- 히어로 -->
+      <div class="sk head" style="font-size:18px;font-weight:700;line-height:1.2;letter-spacing:-.9px;margin-top:15px">이번 주, 같이 <span class="ink">읽어요</span></div>
+      <!-- 내 신청 모임 -->
+      <div style="margin-top:18px;display:flex;align-items:center;gap:6px">
+        <span style="width:16px;height:16px;border-radius:50%;background:#127A5A;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800">✓</span>
+        <span class="head" style="font-size:11.5px;font-weight:700">초록고래님이 신청한 모임 · 1건</span>
+      </div>
+      <div class="card" style="margin-top:9px;border-color:#CDE9DB;background:#F3FAF6;padding:13px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="sk head" style="font-size:16px;font-weight:700">데미안</div>
+          <span class="tag" style="color:#127A5A;background:#fff">D-11</span>
+        </div>
+        <div class="sub" style="font-size:11px;margin-top:4px">7.19 토 15:00 · 황리단길</div>
+      </div>
+      <!-- 전체 일정 -->
+      <p class="label" style="margin:18px 0 9px 3px">전체 일정</p>
+      <div class="card" style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="tag" style="color:#0d5c43;background:#E3F2EC">모집중 6/8</span><span class="mut" style="font-size:11px">D-7</span>
+        </div>
+        <div class="sk head" style="font-size:18px;font-weight:700;letter-spacing:-.6px;margin-top:9px">불안</div>
+        <div class="sub" style="font-size:11.5px;margin-top:4px">알랭 드 보통 · 7.12 토 15:00</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px">
+          <span style="font-size:13px;font-weight:600;color:#5A6B7A;font-feature-settings:'tnum'">10,000</span>
+          <span style="font-size:11.5px;font-weight:800;color:#fff;background:#127A5A;padding:7px 14px;border-radius:8px">신청 →</span>
+        </div>
+      </div>
+      <div class="card" style="border-color:#FADFD5">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="tag" style="color:#fff;background:#F4552A">마감임박 7/8</span><span style="font-size:11px;font-weight:800;color:#F4552A">D-3·1자리</span>
+        </div>
+        <div class="sk head" style="font-size:18px;font-weight:700;letter-spacing:-.6px;margin-top:9px">아몬드</div>
+        <div class="sub" style="font-size:11.5px;margin-top:4px">손원평 · 7.15 화 19:00</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px">
+          <span style="font-size:13px;font-weight:600;color:#5A6B7A;font-feature-settings:'tnum'">10,000</span>
+          <span style="font-size:11.5px;font-weight:800;color:#fff;background:#127A5A;padding:7px 14px;border-radius:8px">신청 →</span>
+        </div>
+      </div>
+    </div>
+    <div class="navbar">
+      <div class="on"><div style="font-size:15px">✦</div>홈</div>
+      <div><div style="font-size:15px">◷</div>일정</div>
+      <div><div style="font-size:15px">◎</div>마이</div>
+    </div>
+  </div>
+
+  <!-- ========================= 2. 모임 상세 ========================= -->
+  <div class="ph">
+    <div class="grain"></div>
+    <div class="scr">
+      <p class="label">② 모임 상세</p>
+      <div class="mut" style="font-size:12px;font-weight:700">← 모임</div>
+      <!-- 책 히어로 -->
+      <div style="margin-top:14px">
+        <span class="tag" style="color:#5A6B7A;background:#EEF1F4">7/8명 함께해요</span>
+        <div class="sk head" style="font-size:32px;font-weight:900;letter-spacing:-1.6px;line-height:1.1;margin-top:11px">아몬드</div>
+        <div class="sub" style="font-size:12.5px;margin-top:6px">손원평 장편소설 · 낭독회</div>
+      </div>
+      <!-- 신청완료 히어로 스트립 (본인) -->
+      <div style="margin-top:16px;display:flex;align-items:center;gap:10px;background:#F3FAF6;border:1px solid #CDE9DB;border-radius:12px;padding:11px 13px">
+        <span style="width:20px;height:20px;border-radius:50%;background:#127A5A;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">✓</span>
+        <div style="flex:1"><div class="head" style="font-size:12px;font-weight:700">신청 완료</div><div class="sub" style="font-size:10.5px">초록고래님 · 곧 만나요</div></div>
+        <span class="sk coral" style="font-size:13px;font-weight:800">D-3</span>
+      </div>
+      <!-- 모임 정보 -->
+      <div class="card" style="margin-top:12px;padding:0;overflow:hidden">
+        <div style="display:flex;padding:13px 15px;border-bottom:1px solid #F0F2F5"><span class="mut" style="width:58px;font-size:11.5px">일시</span><span class="head" style="font-size:11.5px;font-weight:600">7월 15일 화 · 오후 7시</span></div>
+        <div style="display:flex;padding:13px 15px;border-bottom:1px solid #F0F2F5"><span class="mut" style="width:58px;font-size:11.5px">장소</span><span class="head" style="font-size:11.5px;font-weight:600">효자동 책방 그믐</span></div>
+        <div style="display:flex;padding:13px 15px;align-items:center"><span class="mut" style="width:58px;font-size:11.5px">참가비</span><span style="font-size:14px;font-weight:600;color:#191F28;font-feature-settings:'tnum'">10,000</span></div>
+      </div>
+      <!-- 함께하는 멤버 -->
+      <p class="label" style="margin:17px 0 9px 3px">함께하는 멤버 7명</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        <span class="tag" style="background:#EEF1F4;color:#5A6B7A">초록고래</span>
+        <span class="tag" style="background:#EEF1F4;color:#5A6B7A">밤독서</span>
+        <span class="tag" style="background:#EEF1F4;color:#5A6B7A">쉼표</span>
+        <span class="tag" style="background:#EEF1F4;color:#5A6B7A">여름밤</span>
+        <span class="tag" style="background:#EEF1F4;color:#5A6B7A">책장수</span>
+        <span class="tag" style="background:#EEF1F4;color:#5A6B7A">+2</span>
+      </div>
+    </div>
+    <div style="padding:12px 15px 15px;background:#fff;border-top:1px solid #EEF1F4">
+      <div class="cta" style="background:#fff;color:#5A6B7A;border:1px solid #DDE2E7">취소하기</div>
+    </div>
+  </div>
+
+  <!-- ========================= 3. 마이페이지 ========================= -->
+  <div class="ph">
+    <div class="grain"></div>
+    <div class="scr">
+      <p class="label">③ 마이페이지</p>
+      <div class="sk head" style="font-size:24px;font-weight:900;letter-spacing:-1.3px">마이</div>
+      <!-- 내 정보 -->
+      <div class="card" style="margin-top:14px;display:flex;align-items:center;gap:13px">
+        <div style="width:46px;height:46px;border-radius:50%;background:#127A5A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px">초</div>
+        <div style="flex:1">
+          <div class="head" style="font-size:15px;font-weight:800">초록고래</div>
+          <div class="sub" style="font-size:11px;margin-top:2px">경주 · 010-••••-1234</div>
+        </div>
+        <span class="tag" style="background:#EEF1F4;color:#5A6B7A">수정</span>
+      </div>
+      <!-- 신청한 모임 -->
+      <p class="label" style="margin:18px 0 9px 3px">내가 신청한 모임 · 2건</p>
+      <div class="card" style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="tag" style="color:#127A5A;background:#E3F2EC">✓ 신청완료</span><span class="sk coral" style="font-size:12px;font-weight:800">D-3</span>
+        </div>
+        <div class="sk head" style="font-size:17px;font-weight:700;margin-top:9px">아몬드</div>
+        <div class="sub" style="font-size:11px;margin-top:4px">7.15 화 19:00 · 효자동 책방 그믐</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="tag" style="color:#127A5A;background:#E3F2EC">✓ 신청완료</span><span class="sk ink" style="font-size:12px;font-weight:800">D-11</span>
+        </div>
+        <div class="sk head" style="font-size:17px;font-weight:700;margin-top:9px">데미안</div>
+        <div class="sub" style="font-size:11px;margin-top:4px">7.19 토 15:00 · 황리단길</div>
+      </div>
+      <!-- 지난 모임 -->
+      <p class="label" style="margin:18px 0 9px 3px">함께한 기록 · 8회</p>
+      <div class="card" style="opacity:.7">
+        <div class="sk head" style="font-size:15px;font-weight:700">보통의 존재 <span class="mut" style="font-size:11px;font-weight:500">· 참여함</span></div>
+        <div class="sub" style="font-size:11px;margin-top:4px">6.28 토 · 함께한 6명</div>
+      </div>
+    </div>
+    <div class="navbar">
+      <div><div style="font-size:15px">✦</div>홈</div>
+      <div><div style="font-size:15px">◷</div>일정</div>
+      <div class="on"><div style="font-size:15px">◎</div>마이</div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:22px">셋 다 같은 시스템 — <b class="ink">그린</b>이 CTA·상태·내 모임을, <b class="coral">감귤</b>이 마감임박·D-day 순간을, 세리프가 책제목을 잡습니다. 서비스 전반이 하나의 톤으로 흐르는지 봐주세요. 고칠 곳 알려주면 반영할게요. (워드마크 심볼은 전문가 결과 나오면 이 화면들에도 얹습니다.)</p>

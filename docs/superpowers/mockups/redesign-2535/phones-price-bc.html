@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B(미노출) vs C(내 금액) — 스텝 회원 관점</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+  body { font-family:'Pretendard',sans-serif; background:#E9EBEE; color:#191F28; padding:36px 24px 90px; }
+  .pagehead { max-width:980px; margin:0 auto 30px; }
+  .pagehead h1 { font-family:'Noto Serif KR',serif; font-size:23px; font-weight:900; letter-spacing:-1px; }
+  .pagehead p { font-size:13px; color:#5A6B7A; margin-top:8px; line-height:1.65; }
+  .pagehead .q { margin-top:14px; background:#fff; border:1px solid #E5E8EB; border-radius:12px; padding:15px 17px; font-size:12.5px; color:#333d48; line-height:1.7; }
+  .pagehead .q b { color:#127A5A; }
+  .pagehead .who { display:inline-flex; align-items:center; gap:6px; margin-top:12px; background:#F3FAF6; border:1px solid #CDE9DB; border-radius:20px; padding:5px 13px; font-size:12px; font-weight:700; color:#0d5c43; }
+
+  .rail { display:flex; gap:40px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+  .col { width:302px; }
+  .col > .caption { text-align:center; margin-bottom:12px; }
+  .col > .caption .k { display:block; font-size:14px; font-weight:800; letter-spacing:-.3px; }
+  .col > .caption .s { display:block; font-size:11px; color:#6B7684; margin-top:4px; line-height:1.5; }
+  .cap-b .k { color:#8a6d2e; }
+  .cap-c .k { color:#127A5A; }
+
+  .ph { width:302px; height:600px; border-radius:34px; overflow:hidden; position:relative;
+        box-shadow:0 20px 48px -14px rgba(20,40,32,.30), 0 3px 10px rgba(0,0,0,.08); border:1px solid rgba(0,0,0,.06); }
+  .scr { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; background:#F9FAFB; }
+  .scr::-webkit-scrollbar { width:0; }
+  .grain { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.15; z-index:5; }
+
+  .appbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px 10px; }
+  .wm { font-family:'Noto Serif KR',serif; font-weight:900; letter-spacing:-1.4px; color:#191F28; font-size:22px; }
+  .avatar { width:28px; height:28px; border-radius:50%; background:#E3F2EC; }
+  .body { padding:2px 18px 40px; }
+  .allh { font-family:'Noto Serif KR',serif; font-size:14px; font-weight:700; color:#4E5968; letter-spacing:-.4px; margin:4px 0 11px; }
+  .dsh { display:flex; align-items:center; gap:9px; padding:2px 0 9px; }
+  .dsh .dt { font-size:13px; font-weight:700; color:#191F28; }
+  .dsh .dd { font-size:11px; font-weight:800; padding:1px 7px; border-radius:6px; }
+  .dsh .line { flex:1; height:1px; background:#EEF1F4; }
+
+  .card { position:relative; background:#fff; border:1px solid #E5E8EB; border-radius:16px; padding:15px; margin-bottom:11px; }
+  .card.almost { border-color:#FADFD5; }
+  .card .badge { position:absolute; top:14px; right:15px; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; }
+  .card .datepill { display:inline-flex; align-items:center; gap:5px; color:#4E5968; font-size:11.5px; font-weight:600; vertical-align:middle; }
+  .card .datepill svg { opacity:.5; }
+  .card .time { font-size:11.5px; color:#6B7684; margin-left:7px; font-weight:500; vertical-align:middle; }
+  .card .ttl { font-family:'Noto Serif KR',serif; font-size:17px; font-weight:700; letter-spacing:-.6px; color:#191F28; margin:8px 0 0; line-height:1.32; padding-right:52px; }
+  .card .meta { display:flex; align-items:center; gap:9px; margin-top:13px; font-size:12px; color:#6B7684; }
+  .card .meta .sep { width:1px; height:10px; background:#E5E8EB; }
+  .card .meta .cap.warn { color:#F4552A; font-weight:700; }
+  .card .ctarow { display:flex; align-items:center; justify-content:space-between; margin-top:13px; padding-top:12px; border-top:1px solid #F0F2F5; }
+  .card .cta { background:#127A5A; color:#fff; font-size:12px; font-weight:700; padding:7px 16px; border-radius:9px; }
+  .card .cta.wide { display:block; text-align:center; margin-top:13px; padding:9px; border-radius:10px; }
+
+  /* fee variants */
+  .fee-plain { font-variant-numeric:tabular-nums; font-weight:600; font-size:13px; color:#5A6B7A; }
+  .fee-disc { display:inline-flex; align-items:baseline; gap:7px; }
+  .fee-disc .orig { font-variant-numeric:tabular-nums; font-size:12px; color:#B0B8C1; text-decoration:line-through; font-weight:500; }
+  .fee-disc .now { font-variant-numeric:tabular-nums; font-size:14px; font-weight:800; color:#127A5A; }
+  .stafftag { font-size:9.5px; font-weight:800; color:#0d5c43; background:#E3F2EC; padding:1px 6px; border-radius:5px; letter-spacing:.2px; vertical-align:middle; }
+
+  /* mini detail sheet */
+  .detailnote { margin-top:16px; background:#fff; border:1px solid #E5E8EB; border-radius:14px; padding:14px 15px; }
+  .detailnote .dh { font-size:11px; font-weight:700; color:#6B7684; letter-spacing:.2px; margin-bottom:10px; display:flex; align-items:center; gap:5px; }
+  .detailnote .frow { display:flex; align-items:baseline; justify-content:space-between; padding:6px 0; border-bottom:1px solid #F2F4F6; }
+  .detailnote .frow:last-child { border-bottom:none; }
+  .detailnote .frow .lbl { font-size:12px; color:#5A6B7A; }
+  .detailnote .frow .val { font-variant-numeric:tabular-nums; font-weight:700; font-size:14px; color:#191F28; }
+  .detailnote .frow .val.strike { color:#B0B8C1; font-weight:500; text-decoration:line-through; font-size:12px; }
+  .detailnote .frow .val.disc { color:#127A5A; }
+
+  .matchbar { margin-top:11px; padding:9px 12px; border-radius:10px; font-size:11.5px; line-height:1.5; font-weight:600; }
+  .matchbar.ok { background:#F3FAF6; border:1px solid #CDE9DB; color:#0d5c43; }
+  .matchbar.neutral { background:#FBF7EE; border:1px solid #ECDFC3; color:#8a6d2e; }
+
+  .legend { max-width:980px; margin:36px auto 0; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .box { border-radius:14px; padding:18px 20px; }
+  .box.b { background:#FBF7EE; border:1px solid #ECDFC3; }
+  .box.c { background:#F3FAF6; border:1px solid #CDE9DB; }
+  .box h3 { font-size:14px; font-weight:800; margin-bottom:3px; letter-spacing:-.3px; }
+  .box.b h3 { color:#8a6d2e; }
+  .box.c h3 { color:#0d5c43; }
+  .box .one { font-size:11.5px; color:#6B7684; margin-bottom:13px; }
+  .box ul { list-style:none; font-size:12px; color:#4E5968; line-height:1.5; }
+  .box li { padding:4px 0 4px 15px; position:relative; }
+  .box li::before { content:''; position:absolute; left:0; top:9px; width:5px; height:5px; border-radius:50%; }
+  .box.b li.pro::before { background:#C79A3B; }
+  .box.c li.pro::before { background:#127A5A; }
+  .box li.con::before { background:#E0956B; }
+  .box li b { color:#191F28; }
+  .verdict { background:#191F28; color:#EAF3EE; border-radius:14px; padding:18px 22px; font-size:13px; line-height:1.7; margin-top:18px; }
+  .verdict b { color:#5FD6A6; }
+</style>
+</head>
+<body>
+  <div class="pagehead">
+    <h1>B(가격 숨김) vs C(내 금액 표시) — 스텝 회원이 볼 때</h1>
+    <p>두 화면 모두 <b>스텝 할인 대상 회원</b>이 보는 목록입니다. C는 카드에 <b>정가 10,000을 그어서 → 5,000</b>으로 내려 보여줘 "반값이네" 하는 할인 체감을 살리고, 카드·상세 숫자가 항상 같습니다. 일반 회원이 볼 때는 각 카드 아래 회색 메모로 표시했어요.</p>
+    <div class="who">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      지금 보는 사람 = 스텝(운영진) 회원, 할인 슬롯 여유 있음
+    </div>
+  </div>
+
+  <div class="rail">
+
+    <!-- ============ B : 가격 미노출 ============ -->
+    <div class="col">
+      <div class="caption cap-b"><span class="k">B · 가격 숨김</span><span class="s">카드엔 가격 없음 · 상세에서 5,000</span></div>
+      <div class="ph">
+        <div class="scr">
+          <svg class="grain"><filter id="g1"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g1)"/></svg>
+          <div class="appbar"><span class="wm">지독해</span><span class="avatar"></span></div>
+          <div class="body">
+            <div class="allh">전체 일정</div>
+
+            <div class="dsh"><span class="dt">7월 9일 수요일</span><span class="dd" style="background:#EEF1F4;color:#6B7684;">D-4</span><span class="line"></span></div>
+            <div class="card">
+              <span class="badge" style="background:#E3F2EC;color:#0d5c43;">모집중</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 9일</span><span class="time">저녁 7:30</span>
+              <div class="ttl">달러구트 꿈 백화점</div>
+              <div class="meta"><span>포항 북구</span><span class="sep"></span><span>3명 모집 중</span></div>
+              <span class="cta wide">신청하기</span>
+            </div>
+
+            <div class="dsh"><span class="dt">7월 8일 화요일</span><span class="dd" style="background:#F4552A;color:#fff;">D-1</span><span class="line"></span></div>
+            <div class="card almost">
+              <span class="badge" style="background:#F4552A;color:#fff;">마감임박</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 8일</span><span class="time">저녁 8:00</span>
+              <div class="ttl">아몬드</div>
+              <div class="meta"><span>경주 동부동</span><span class="sep"></span><span class="cap warn">잔여 1자리</span></div>
+              <span class="cta wide">신청하기</span>
+            </div>
+
+            <div class="detailnote">
+              <div class="dh"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>상세로 들어가면 (여기서 처음 금액 등장)</div>
+              <div class="frow"><span class="lbl">참가비</span><span class="val strike">10,000</span></div>
+              <div class="frow"><span class="lbl">스텝 할인 −50%</span><span class="val disc">5,000</span></div>
+            </div>
+            <div class="matchbar neutral">할인은 상세에서 처음 보임 — 목록에선 "얼마 이득인지" 안 보임</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ C : 내 금액 노출 ============ -->
+    <div class="col">
+      <div class="caption cap-c"><span class="k">C · 내 금액 표시</span><span class="s">카드에 10,000 → 5,000 · 상세와 동일</span></div>
+      <div class="ph">
+        <div class="scr">
+          <svg class="grain"><filter id="g2"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g2)"/></svg>
+          <div class="appbar"><span class="wm">지독해</span><span class="avatar"></span></div>
+          <div class="body">
+            <div class="allh">전체 일정</div>
+
+            <div class="dsh"><span class="dt">7월 9일 수요일</span><span class="dd" style="background:#EEF1F4;color:#6B7684;">D-4</span><span class="line"></span></div>
+            <div class="card">
+              <span class="badge" style="background:#E3F2EC;color:#0d5c43;">모집중</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 9일</span><span class="time">저녁 7:30</span>
+              <div class="ttl">달러구트 꿈 백화점</div>
+              <div class="meta"><span>포항 북구</span><span class="sep"></span><span>3명 모집 중</span></div>
+              <div class="ctarow">
+                <span class="fee-disc"><span class="stafftag">스텝 −50%</span><span class="orig">10,000</span><span class="now">5,000</span></span>
+                <span class="cta">신청하기</span>
+              </div>
+            </div>
+
+            <div class="dsh"><span class="dt">7월 8일 화요일</span><span class="dd" style="background:#F4552A;color:#fff;">D-1</span><span class="line"></span></div>
+            <div class="card almost">
+              <span class="badge" style="background:#F4552A;color:#fff;">마감임박</span>
+              <span class="datepill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>7월 8일</span><span class="time">저녁 8:00</span>
+              <div class="ttl">아몬드</div>
+              <div class="meta"><span>경주 동부동</span><span class="sep"></span><span class="cap warn">잔여 1자리</span></div>
+              <div class="ctarow">
+                <span class="fee-disc"><span class="stafftag">스텝 −50%</span><span class="orig">10,000</span><span class="now">5,000</span></span>
+                <span class="cta">신청하기</span>
+              </div>
+            </div>
+
+            <div class="detailnote">
+              <div class="dh"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>상세로 들어가면 (카드와 똑같은 숫자)</div>
+              <div class="frow"><span class="lbl">참가비</span><span class="val strike">10,000</span></div>
+              <div class="frow"><span class="lbl">스텝 할인 −50%</span><span class="val disc">5,000</span></div>
+            </div>
+            <div class="matchbar ok">카드 10,000→5,000 = 상세 10,000→5,000 · 숫자 완전 일치, 할인 체감은 목록에서 이미</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <div class="grid">
+      <div class="box b">
+        <h3>B · 가격 숨김</h3>
+        <div class="one">목록은 가볍게, 돈은 상세에서</div>
+        <ul>
+          <li class="pro"><b>목록이 가장 깔끔</b> — 카드가 '무슨 책 읽나'에만 집중</li>
+          <li class="pro"><b>불일치 걱정 0</b> — 가격이 상세에만 있으니 어긋날 일 자체가 없음</li>
+          <li class="con"><b>할인 체감 늦음</b> — "반값 이득"을 상세 들어가야 처음 앎</li>
+          <li class="con"><b>가격 궁금하면 클릭 1회 더</b></li>
+        </ul>
+      </div>
+      <div class="box c">
+        <h3>C · 내 금액 표시</h3>
+        <div class="one">정가 그어서 → 내 금액, 카드부터 할인 체감</div>
+        <ul>
+          <li class="pro"><b>할인을 목록에서 즉시 체감</b> — 10,000 그어진 5,000 = "반값!" (단무지님 원한 그림)</li>
+          <li class="pro"><b>카드=상세 항상 일치</b> — 같은 함수로 계산해 어긋날 수 없음</li>
+          <li class="pro"><b>일반 회원은 그냥 10,000</b> — 계산·조회 부담 0</li>
+          <li class="con"><b>목록에 '돈' 신호가 조금 일찍</b> 등장 (균일 소액이라 부담 약함)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="verdict">
+      정리 — 단무지님이 원한 <b>"처음엔 10,000을 보여주고 5,000임을 알게"</b>는 <b>C안</b>이 정확히 그 그림입니다. 예전에 C를 망설이게 했던 "카드·상세 숫자 불일치" 문제는 <b>같은 계산 함수(getDisplayFee)를 카드에도 쓰면 사라져서</b>, 이제 C는 안전하면서 할인 체감까지 잡습니다. B는 목록이 조금 더 미니멀할 뿐, 할인 매력을 상세까지 미룹니다. <b>스텝 할인을 '혜택'으로 보이게 하고 싶다면 C, 목록 미니멀리즘이 최우선이면 B.</b>
+    </div>
+  </div>
+</body>
+</html>
