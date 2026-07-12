@@ -99,7 +99,7 @@ function DayCell({ date, kstToday, selectedDate, meetingDates, registeredDates, 
       </span>
       {hasMeeting && !isSelected && (
         <span className={`absolute bottom-0.5 h-1 w-1 rounded-full ${
-          hasRegistration ? 'bg-accent-500' : 'bg-primary-400'
+          hasRegistration ? 'bg-primary-600' : 'bg-primary-300'
         }`} />
       )}
     </button>

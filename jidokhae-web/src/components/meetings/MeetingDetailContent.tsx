@@ -143,6 +143,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
           meetingDate={typedMeeting.date}
           meetingTime={typedMeeting.time}
           kstToday={kstToday}
+          isPending={hasPendingTransfer}
         />
       )}
       <RegistrationStatusBadge status={registrationStatus} />
@@ -157,9 +158,12 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
 
       {hasPendingTransfer && (
         <div className="mt-4 space-y-3">
-          <div className="bg-accent-50 border border-accent-200 rounded-xl p-4 text-center">
-            <p className="text-sm font-medium text-accent-700">입금 확인 대기 중입니다</p>
-            <p className="text-xs text-accent-600 mt-1">아직 입금 전이라면 아래 계좌로 입금해주세요</p>
+          <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 text-center">
+            <p className="flex items-center justify-center gap-1.5 text-sm font-medium text-neutral-800">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-500" aria-hidden="true" />
+              입금 확인 대기 중입니다
+            </p>
+            <p className="text-xs text-neutral-600 mt-1">아직 입금 전이라면 아래 계좌로 입금해주세요</p>
           </div>
           <BankInfoCard
             bankName={settings.bank_name ?? ''}

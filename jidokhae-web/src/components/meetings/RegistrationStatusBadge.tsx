@@ -5,15 +5,15 @@ type RegistrationStatusBadgeProps = {
 const STATUS_BADGE = {
   confirmed: {
     label: '신청완료',
-    classes: 'bg-accent-50 text-accent-700 border-accent-200',
+    classes: 'bg-primary-50 text-primary-700 border-primary-200',
   },
   pending_transfer: {
     label: '입금대기',
-    classes: 'bg-accent-50 text-accent-600 border-accent-200',
+    classes: 'bg-primary-50 text-primary-700 border-primary-200',
   },
   waitlisted: {
     label: '대기 중',
-    classes: 'bg-accent-50 text-accent-600 border-accent-200',
+    classes: 'bg-neutral-100 text-neutral-600 border-neutral-200',
   },
 } as const
 
