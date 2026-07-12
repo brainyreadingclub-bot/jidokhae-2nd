@@ -1,55 +1,60 @@
 # 지독해 Design Tokens
 
-> "따뜻한 독립서점에서 발행하는 정기 간행물" — Editorial × Organic aesthetic
+> "잉크 그린 × 에디토리얼" — 2535 리디자인 (2026-07-07). 그린은 **점(포인트)**이지 면이 아니다. 감귤 코랄은 긴급·희소·에러에만.
 
 All tokens are defined in `src/app/globals.css` via Tailwind v4 `@theme inline`.
 
 ## Colors
 
-### Primary — Deep Forest Green
+### Primary — Ink Green (`#127A5A`)
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `primary-50` | `#F0F7F4` | Badges bg, highlights |
-| `primary-100` – `200` | `#D9EDE3` – `#B3DBC7` | Borders, light fills |
-| `primary-500` | `#2D7D5F` | Brand green, success |
-| `primary-600` | `#1B6347` | Buttons, links |
-| `primary-700` | `#1B4332` | Login bg, headings |
-| `primary-900` | `#0F2318` | Title text |
+| `primary-50` | `#F3FAF6` | Badges bg, highlights |
+| `primary-100` – `200` | `#E3F2EC` – `#CDE9DB` | Borders, light fills |
+| `primary-300` | `#8FCBB0` | Muted green accents |
+| `primary-400` | `#3E9A78` | Secondary green |
+| `primary-500` | `#127A5A` | 브랜드 앵커 — 워드마크·링크·강조 포인트 |
+| `primary-600` | `#0d5c43` | Buttons, hover |
+| `primary-700` – `800` | `#0B4B37` – `#0A3A2B` | Deep sections |
+| `primary-900` | `#072A20` | Title text (near-black) |
 
-### Accent — Warm Terracotta
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `accent-50` | `#FFF5F2` | Light accent bg |
-| `accent-500` | `#C75B3A` | CTA highlights, "신청완료" badge |
-| `accent-600` | `#A84A2E` | Prices, fee display |
+### Accent — Citrus Coral (`#F4552A`)
+> 긴급·희소·에러·필수 표시에만. 장식·선택·금액에는 금지.
 
-### Neutral — Warm Gray
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `neutral-50` | `#FDFBF7` | bg-base (parchment) |
-| `neutral-200` | `#F0EBE1` | Card borders, dividers |
-| `neutral-400` | `#C4BAA8` | "마감" status, muted borders |
-| `neutral-500` | `#9E9484` | Secondary text, captions |
-| `neutral-900` | `#1F1B17` | Dark text |
+| `accent-50` | `#FFF1EC` | Light accent bg |
+| `accent-500` | `#F4552A` | 긴급/희소 포인트, 에디토리얼 룰, 필수(*) |
+| `accent-600` | `#D8431C` | Coral hover |
+
+### Neutral — Cool Warm Gray
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `neutral-50` | `#F9FAFB` | bg-base (off-white) |
+| `neutral-200` | `#E5E8EB` | Card borders, dividers |
+| `neutral-400` | `#B0B8C1` | "마감" status, muted borders |
+| `neutral-500` | `#8B95A1` | ≥12px 텍스트/아이콘 stroke만 (대비 2.9:1, 소형 본문 금지) |
+| `neutral-600` | `#6B7684` | Secondary text, captions |
+| `neutral-900` | `#191F28` | Dark text |
 
 ### Surface (legacy, kept for backward compatibility)
-`surface-50` through `surface-300` — Warm Ivory/Cream tones.
+`surface-50` through `surface-300` — off-white/그레이 톤 (neutral과 정렬).
 
 ### Semantic
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `success` | `#2D7D5F` | Positive states |
-| `warning` | `#D9802A` | Caution, closing soon |
+| `success` | `#127A5A` | Positive states (ink green) |
+| `warning` | `#F4552A` | Caution, closing soon (coral) |
 | `error` | `#B5403A` | Destructive, cancel, delete |
 | `info` | `#3A8A8C` | Informational |
 
 ### Status (meeting cards)
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `status-open` | `#2D7D5F` | 모집중 |
-| `status-closing` | `#D9802A` | 마감임박 |
-| `status-full` | `#C4BAA8` | 마감 |
-| `status-completed` | `#E4DDD1` | 종료 |
+| `status-open` | `#127A5A` | 모집중 |
+| `status-closing` | `#F4552A` | 마감임박 |
+| `status-full` | `#B0B8C1` | 마감 |
+| `status-completed` | `#CDE9DB` | 종료 |
 | `status-cancelled` | `#B5403A` | 취소됨 |
 
 ## Typography
