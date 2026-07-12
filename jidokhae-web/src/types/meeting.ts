@@ -9,6 +9,8 @@ export type Meeting = {
   capacity: number
   fee: number
   status: 'active' | 'deleting' | 'deleted'
+  // 토론모임 개편 0조각 — 정기/토론 구분
+  meeting_type: 'regular' | 'discussion'
   // Phase 3 (WP7-2)
   region: string // VALID_REGIONS 중 1, default '경주'
   is_featured: boolean // 인라인 PICK 배너 노출 대상

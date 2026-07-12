@@ -53,6 +53,7 @@ export default async function EditMeetingPage({ params }: Props) {
           fee: String(typed.fee),
           region: typed.region,
           is_featured: typed.is_featured,
+          meeting_type: typed.meeting_type,
         }}
       />
     </div>

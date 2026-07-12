@@ -16,6 +16,7 @@ type MeetingValues = {
   fee: string
   region: string
   is_featured: boolean
+  meeting_type: 'regular' | 'discussion'
 }
 
 type VenueOption = {
@@ -52,6 +53,7 @@ const defaultValues: MeetingValues = {
   fee: '',
   region: '경주',
   is_featured: false,
+  meeting_type: 'regular',
 }
 
 export default function MeetingForm({ mode, meetingId, initialValues, confirmedCount = 0, venues = [] }: Props) {
@@ -117,6 +119,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
       fee,
       region: values.region,
       is_featured: values.is_featured,
+      meeting_type: values.meeting_type,
     }
 
     if (mode === 'create') {
@@ -178,6 +181,36 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
           className={inputClassName}
           style={inputStyle}
         />
+      </Field>
+
+      <Field label="모임 유형" required>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { value: 'regular', label: '정기모임' },
+            { value: 'discussion', label: '토론모임' },
+          ] as const).map((opt) => {
+            const selected = values.meeting_type === opt.value
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleChange('meeting_type', opt.value)}
+                className={`rounded-[var(--radius-md)] py-3 text-sm font-bold tracking-tight transition-all ${
+                  selected
+                    ? 'bg-primary-600 text-white'
+                    : 'text-primary-600 hover:bg-surface-100'
+                }`}
+                style={
+                  selected
+                    ? { boxShadow: 'var(--shadow-sm)' }
+                    : { backgroundColor: 'var(--color-surface-50)', border: '1px solid var(--color-surface-300)' }
+                }
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
       </Field>
 
       <Field label="모임 소개">
