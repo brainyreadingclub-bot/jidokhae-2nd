@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isAskEligibleMeeting, askSourceLabel, ASK_WINDOW_DAYS } from '@/lib/asks'
+import { isAskEligibleMeeting, askSourceLabel, ASK_WINDOW_DAYS } from '@/lib/asks-pure'
 
 const today = '2026-07-12'
 

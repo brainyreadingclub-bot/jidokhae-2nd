@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BookCover from '@/components/library/BookCover'
+import { askSourceLabel } from '@/lib/asks-pure'
 import type { LibraryEntryWithBook } from '@/types/book'
 
 const VISIBLE_LIMIT = 6
@@ -57,7 +58,9 @@ export default function LibraryGrid({ entries }: Props) {
               {entry.completed ? '✓ 완독' : '완독 표시'}
             </button>
             {entry.source === 'ask' && (
-              <p className="mt-0.5 text-[10px] text-neutral-400 leading-tight break-keep">모임에서 담음</p>
+              <p className="mt-0.5 text-[10px] text-neutral-400 leading-tight break-keep">
+                {askSourceLabel(entry.source_meeting_date) ?? '모임에서 담음'}
+              </p>
             )}
           </div>
         ))}

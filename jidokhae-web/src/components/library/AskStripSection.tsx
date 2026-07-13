@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/auth'
 import { isLibraryEnabled } from '@/lib/library'
-import { getPendingAsk, askSourceLabel } from '@/lib/asks'
+import { getPendingAsk } from '@/lib/asks'
+import { askSourceLabel } from '@/lib/asks-pure'
 import AskStrip from '@/components/library/AskStrip'
 
 export default async function AskStripSection() {
