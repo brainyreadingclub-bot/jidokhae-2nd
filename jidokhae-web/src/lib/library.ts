@@ -4,8 +4,13 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { BookSearchResult, LibraryEntryWithBook } from '@/types/book'
 
-/** 서재 기능 플래그. site_settings.library_enabled === 'on' 일 때만 노출 */
+/**
+ * 서재 기능 플래그. site_settings.library_enabled === 'on' 일 때만 노출.
+ * LIBRARY_PREVIEW === 'on' env는 Vercel Preview 전용 우회(Production 미설정) —
+ * DB 플래그를 켜지 않고 preview에서만 화면 검토용. prod 회원 노출 0.
+ */
 export async function isLibraryEnabled(): Promise<boolean> {
+  if (process.env.LIBRARY_PREVIEW === 'on') return true
   const settings = await getSiteSettings()
   return settings.library_enabled === 'on'
 }
