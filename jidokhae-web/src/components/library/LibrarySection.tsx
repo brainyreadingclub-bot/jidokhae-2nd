@@ -2,6 +2,7 @@ import { getUser } from '@/lib/auth'
 import { isLibraryEnabled, getMyLibrary } from '@/lib/library'
 import LibraryGrid from '@/components/library/LibraryGrid'
 import BookSearchInput from '@/components/library/BookSearchInput'
+import LibraryIntroStrip from '@/components/library/LibraryIntroStrip'
 
 export default async function LibrarySection() {
   if (!(await isLibraryEnabled())) return null
@@ -13,6 +14,7 @@ export default async function LibrarySection() {
 
   return (
     <section className="mt-8">
+      <LibraryIntroStrip />
       <div className="flex items-baseline gap-2">
         <h2
           className="text-lg font-extrabold text-neutral-800 tracking-tight"
