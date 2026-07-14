@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BookCover from '@/components/library/BookCover'
+import { useLibraryToastOptional } from '@/components/library/LibraryToast'
+import { withObjectParticle } from '@/lib/hangul'
 import { trackEvent } from '@/lib/analytics'
 import type { BookSearchResult } from '@/types/book'
 
@@ -15,6 +17,7 @@ type Props = {
 
 export default function BookSearchInput({ onAdded, askMeetingId }: Props) {
   const router = useRouter()
+  const { show } = useLibraryToastOptional()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<BookSearchResult[]>([])
   const [searching, setSearching] = useState(false)
@@ -60,6 +63,12 @@ export default function BookSearchInput({ onAdded, askMeetingId }: Props) {
       const json = await res.json()
       if (json.status === 'success') {
         if (askMeetingId) trackEvent('ask_answered', { meeting_id: askMeetingId })
+        const result = json.data?.result as 'added' | 'already' | undefined
+        if (result === 'already') {
+          show({ message: '이미 서재에 있는 책이에요', tone: 'neutral' })
+        } else {
+          show({ message: `${withObjectParticle(book.title)} 담았어요`, tone: 'success' })
+        }
         setQuery('')
         setResults([])
         if (onAdded) onAdded()

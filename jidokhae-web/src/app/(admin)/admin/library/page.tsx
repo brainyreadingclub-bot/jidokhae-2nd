@@ -22,7 +22,8 @@ export default async function AdminLibraryPage() {
     { label: '정기 참여(분모)', value: `${stats.denominator}건` },
     { label: '담음(응답)', value: `${stats.answered}건` },
     { label: '닫음', value: `${stats.dismissed}건` },
-    { label: '미응답', value: `${stats.pending}건`, hint: '분모 − 담음 − 닫음' },
+    { label: '노출·미응답', value: `${stats.viewed}건`, hint: '봤지만 안 담고 안 닫음' },
+    { label: '미노출', value: `${stats.unexposed}건`, hint: '아직 물어보기 안 뜬 참여' },
   ]
 
   return (
@@ -43,7 +44,7 @@ export default async function AdminLibraryPage() {
       </div>
 
       <p className="mt-4 text-[11px] text-neutral-400 break-keep">
-        노출됐지만 미응답(봄·안 담음)의 정밀 구분은 GA4 이벤트(ask_strip_view / ask_answered / ask_dismissed)에서 확인.
+        노출·미응답 = 물어보기를 봤지만 담지도 닫지도 않은 참여. 노출 경로(마이페이지 / 모임 상세)별 세부는 GA4 이벤트(ask_strip_view의 entry_point)에서 확인.
       </p>
     </div>
   )

@@ -2,12 +2,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { isLibraryEnabled, upsertBookAndEntry } from '@/lib/library'
-import { verifyEligibleParticipation, recordAskAnswered, recordAskDismissed } from '@/lib/asks'
+import { verifyEligibleParticipation, recordAskAnswered, recordAskDismissed, recordAskViewed } from '@/lib/asks'
 import type { BookSearchResult } from '@/types/book'
 
 type AnswerBody = { action: 'answer'; meetingId: string; book: BookSearchResult }
 type DismissBody = { action: 'dismiss'; meetingId: string }
-type AskBody = AnswerBody | DismissBody
+type ViewBody = { action: 'view'; meetingId: string }
+type AskBody = AnswerBody | DismissBody | ViewBody
 
 export async function POST(request: NextRequest) {
   if (!(await isLibraryEnabled())) {
@@ -44,6 +45,12 @@ export async function POST(request: NextRequest) {
   const eligible = await verifyEligibleParticipation(admin, user.id, body.meetingId)
   if (!eligible) {
     return NextResponse.json({ status: 'error', message: '대상 모임이 아닙니다' }, { status: 400 })
+  }
+
+  if (body.action === 'view') {
+    // 노출 계측(최초 1회). 실패해도 화면엔 영향 없음.
+    await recordAskViewed(admin, user.id, body.meetingId)
+    return NextResponse.json({ status: 'success' })
   }
 
   if (body.action === 'dismiss') {

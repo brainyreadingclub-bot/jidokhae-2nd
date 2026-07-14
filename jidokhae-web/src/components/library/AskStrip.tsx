@@ -9,16 +9,24 @@ type Props = {
   meetingId: string
   /** "N월 정기모임 · 서재에 기록해두세요" 의 앞부분 라벨. 예: "7월 정기모임" */
   meetingLabel: string
+  /** 노출 경로 계측용. 마이페이지='my', 모임 상세='meeting_detail' */
+  entryPoint?: 'my' | 'meeting_detail'
 }
 
-export default function AskStrip({ meetingId, meetingLabel }: Props) {
+export default function AskStrip({ meetingId, meetingLabel, entryPoint = 'my' }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [closing, setClosing] = useState(false)
 
   useEffect(() => {
-    trackEvent('ask_strip_view', { meeting_id: meetingId })
-  }, [meetingId])
+    trackEvent('ask_strip_view', { meeting_id: meetingId, entry_point: entryPoint })
+    // 서버 노출 기록(최초 1회). 응답률 분석용 — 실패해도 화면 영향 없음.
+    fetch('/api/library/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'view', meetingId }),
+    }).catch(() => {})
+  }, [meetingId, entryPoint])
 
   async function handleDismiss() {
     setClosing(true)
@@ -28,7 +36,7 @@ export default function AskStrip({ meetingId, meetingLabel }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'dismiss', meetingId }),
       })
-      trackEvent('ask_dismissed', { meeting_id: meetingId })
+      trackEvent('ask_dismissed', { meeting_id: meetingId, entry_point: entryPoint })
       router.refresh()
     } finally {
       setClosing(false)
@@ -49,10 +57,10 @@ export default function AskStrip({ meetingId, meetingLabel }: Props) {
             className="text-sm font-bold text-primary-700"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            무슨 책 읽으셨어요?
+            {entryPoint === 'meeting_detail' ? '이번 모임, 무슨 책 읽으셨어요?' : '무슨 책 읽으셨어요?'}
           </p>
           <p className="mt-0.5 text-caption text-primary-600 break-keep">
-            {meetingLabel} · 서재에 기록해두세요
+            {meetingLabel} · 서재에 담아두세요
           </p>
         </div>
         <button
@@ -77,7 +85,7 @@ export default function AskStrip({ meetingId, meetingLabel }: Props) {
           onClick={() => setOpen(true)}
           className="mt-3 w-full rounded-[var(--radius-md)] bg-primary-500 py-2 text-sm font-semibold text-white"
         >
-          책 기록하기
+          책 담기
         </button>
       )}
     </section>

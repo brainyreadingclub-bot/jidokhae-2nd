@@ -2,7 +2,7 @@ import { getUser } from '@/lib/auth'
 import { isLibraryEnabled, getMyLibrary } from '@/lib/library'
 import LibraryGrid from '@/components/library/LibraryGrid'
 import BookSearchInput from '@/components/library/BookSearchInput'
-import LibraryIntroStrip from '@/components/library/LibraryIntroStrip'
+import LibraryToastProvider from '@/components/library/LibraryToast'
 
 export default async function LibrarySection() {
   if (!(await isLibraryEnabled())) return null
@@ -14,7 +14,6 @@ export default async function LibrarySection() {
 
   return (
     <section className="mt-8">
-      <LibraryIntroStrip />
       <div className="flex items-baseline gap-2">
         <h2
           className="text-lg font-extrabold text-neutral-800 tracking-tight"
@@ -27,30 +26,37 @@ export default async function LibrarySection() {
         )}
       </div>
 
-      {entries.length === 0 ? (
-        <div className="mt-3 rounded-[var(--radius-md)] bg-surface-50 border border-dashed border-neutral-300 p-4">
-          <p className="text-sm text-neutral-600 break-keep">
-            다녀온 모임 책이 여기 쌓여요. 나중에 &ldquo;그 책 뭐였지&rdquo; 할 때 여기서 찾으세요.
-          </p>
-          <div className="mt-3">
-            <BookSearchInput />
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="mt-3">
-            <LibraryGrid entries={entries} />
-          </div>
-          <details className="mt-3">
-            <summary className="cursor-pointer text-sm font-semibold text-primary-600 list-none">
-              + 책 검색해서 담기
-            </summary>
-            <div className="mt-2">
-              <BookSearchInput />
+      <LibraryToastProvider>
+        {entries.length === 0 ? (
+          <>
+            <p className="mt-1 text-sm text-neutral-600 break-keep">
+              모임에서 읽은 책이 여기 쌓여요.
+            </p>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-semibold text-primary-600 list-none">
+                + 책 검색해서 담기
+              </summary>
+              <div className="mt-2">
+                <BookSearchInput />
+              </div>
+            </details>
+          </>
+        ) : (
+          <>
+            <div className="mt-3">
+              <LibraryGrid entries={entries} />
             </div>
-          </details>
-        </>
-      )}
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-semibold text-primary-600 list-none">
+                + 책 검색해서 담기
+              </summary>
+              <div className="mt-2">
+                <BookSearchInput />
+              </div>
+            </details>
+          </>
+        )}
+      </LibraryToastProvider>
     </section>
   )
 }

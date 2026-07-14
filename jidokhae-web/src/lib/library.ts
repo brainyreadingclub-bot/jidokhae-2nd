@@ -100,6 +100,23 @@ export async function upsertBookAndEntry(
   return 'added'
 }
 
+/** 서재 항목 삭제(빼기). 본인 항목만. 반환: 삭제된 book 정보(undo용) 또는 null */
+export async function removeEntry(
+  admin: SupabaseClient,
+  userId: string,
+  entryId: string,
+): Promise<{ title: string } | null> {
+  const { data, error } = await admin
+    .from('library_entries')
+    .delete()
+    .eq('id', entryId)
+    .eq('user_id', userId)
+    .select('id, books(title)')
+  if (error || !data || data.length === 0) return null
+  const row = data[0] as unknown as { books: { title: string } | null }
+  return { title: row.books?.title ?? '책' }
+}
+
 /** 완독 토글. 본인 항목만. 반환: 성공 여부 */
 export async function setCompleted(
   admin: SupabaseClient,

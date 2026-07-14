@@ -34,10 +34,15 @@ export async function getPendingAsk(userId: string): Promise<PendingAsk | null> 
 
   const { data: asks } = await admin
     .from('book_asks')
-    .select('meeting_id')
+    .select('meeting_id, status')
     .eq('user_id', userId)
 
-  const resolved = new Set((asks ?? []).map((a) => a.meeting_id as string))
+  // 'viewed'(노출만 됨, 미응답)는 계속 띄운다 — 해소는 answered/dismissed만
+  const resolved = new Set(
+    (asks ?? [])
+      .filter((a) => a.status === 'answered' || a.status === 'dismissed')
+      .map((a) => a.meeting_id as string),
+  )
 
   const open = eligible
     .filter((r) => !resolved.has(r.meeting_id))
@@ -46,6 +51,26 @@ export async function getPendingAsk(userId: string): Promise<PendingAsk | null> 
   const top = open[0]
   if (!top || !top.meetings) return null
   return { meetingId: top.meeting_id, meetingDate: top.meetings.date }
+}
+
+/**
+ * 이 회원이 특정 모임에 대해 아직 물어보기가 열려 있는지(모임 상세 진입점용).
+ * 자격 통과 + book_asks가 answered/dismissed로 해소되지 않음(viewed는 열림 유지).
+ */
+export async function isAskPendingForMeeting(userId: string, meetingId: string): Promise<boolean> {
+  const admin = createServiceClient()
+  const eligible = await verifyEligibleParticipation(admin, userId, meetingId)
+  if (!eligible) return false
+
+  const { data } = await admin
+    .from('book_asks')
+    .select('status')
+    .eq('user_id', userId)
+    .eq('meeting_id', meetingId)
+    .maybeSingle()
+
+  if (data && (data.status === 'answered' || data.status === 'dismissed')) return false
+  return true
 }
 
 /**
@@ -72,16 +97,34 @@ export async function verifyEligibleParticipation(
   return isAskEligibleMeeting(row.meetings, kstToday)
 }
 
-/** book_asks upsert(해소 기록). 반환: 성공 여부 */
+/**
+ * 노출만 기록(status='viewed'). 최초 1회만 삽입 — 이미 행이 있으면(노출/해소) 무시.
+ * first_viewed_at을 덮어쓰지 않기 위해 ignoreDuplicates. 반환: 성공 여부.
+ */
+export async function recordAskViewed(
+  admin: SupabaseClient,
+  userId: string,
+  meetingId: string,
+): Promise<boolean> {
+  const { error } = await admin.from('book_asks').upsert(
+    { user_id: userId, meeting_id: meetingId, status: 'viewed', first_viewed_at: new Date().toISOString() },
+    { onConflict: 'user_id,meeting_id', ignoreDuplicates: true },
+  )
+  return !error
+}
+
+/** book_asks upsert(해소 기록). first_viewed_at은 payload에 없으므로 기존 값 보존. */
 async function recordAsk(
   admin: SupabaseClient,
   userId: string,
   meetingId: string,
   status: 'answered' | 'dismissed',
 ): Promise<boolean> {
+  const row: Record<string, unknown> = { user_id: userId, meeting_id: meetingId, status }
+  if (status === 'dismissed') row.dismissed_at = new Date().toISOString()
   const { error } = await admin
     .from('book_asks')
-    .upsert({ user_id: userId, meeting_id: meetingId, status }, { onConflict: 'user_id,meeting_id' })
+    .upsert(row, { onConflict: 'user_id,meeting_id' })
   return !error
 }
 
@@ -117,13 +160,17 @@ export async function getAskStats(): Promise<AskStats> {
   const { data: asks } = await admin.from('book_asks').select('status')
   let answered = 0
   let dismissed = 0
+  let viewed = 0
   for (const a of asks ?? []) {
     if (a.status === 'answered') answered += 1
     else if (a.status === 'dismissed') dismissed += 1
+    else if (a.status === 'viewed') viewed += 1
   }
 
+  // 미응답 = 노출됐지만 미응답(viewed) + 아직 노출 안 됨(unexposed)
   const pending = Math.max(0, denominator - answered - dismissed)
+  const unexposed = Math.max(0, pending - viewed)
   const responseRate = denominator === 0 ? 0 : Math.round((answered / denominator) * 100)
 
-  return { denominator, answered, dismissed, pending, responseRate }
+  return { denominator, answered, dismissed, viewed, unexposed, pending, responseRate }
 }

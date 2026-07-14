@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서재+물어보기 UI 재검토 — 2026-07-14</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary-50:#F3FAF6; --primary-100:#E3F2EC; --primary-200:#CDE9DB; --primary-300:#8FCBB0;
+    --primary-400:#3E9A78; --primary-500:#127A5A; --primary-600:#0d5c43; --primary-700:#0B4B37; --primary-900:#072A20;
+    --accent-50:#FFF1EC; --accent-500:#F4552A; --accent-600:#D8431C;
+    --n-50:#F9FAFB; --n-100:#F3F4F6; --n-200:#E5E8EB; --n-300:#D1D5DB; --n-400:#B0B8C1;
+    --n-500:#8B95A1; --n-600:#6B7684; --n-800:#1F2937; --n-900:#191F28;
+    --surface-50:#FAFAF8;
+    --radius-md:12px;
+    --serif:'Noto Serif KR',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Pretendard','Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:#EEF0F2;color:var(--n-900);padding:32px 16px 80px;line-height:1.5;-webkit-font-smoothing:antialiased;word-break:keep-all}
+  .head{max-width:1200px;margin:0 auto 28px}
+  .head h1{font-family:var(--serif);font-size:24px;color:var(--primary-900);margin-bottom:6px}
+  .head p{font-size:14px;color:var(--n-600);max-width:760px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--n-600)}
+  .legend b{color:var(--n-800)}
+  .row{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;max-width:1200px;margin:0 auto}
+  .col{width:390px;flex:0 0 auto}
+  .caption{font-size:13px;font-weight:700;color:var(--n-800);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .tag-bad{background:var(--accent-50);color:var(--accent-600)}
+  .tag-good{background:var(--primary-100);color:var(--primary-700)}
+  .tag-neutral{background:var(--n-200);color:var(--n-600)}
+  .sub{font-size:12px;color:var(--n-600);margin-bottom:10px;min-height:32px}
+  .phone{background:#fff;border:1px solid var(--n-200);border-radius:20px;padding:20px 20px 24px;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+
+  /* ---- 공통 마이페이지 조각 ---- */
+  .profile{background:#fff;border:1px solid var(--n-200);border-radius:var(--radius-md);padding:14px}
+  .profile .r{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+  .profile .r span:first-child{color:var(--n-500);width:56px}
+  .profile .r span:last-child{color:var(--n-800);font-weight:600}
+  .profile .name{font-family:var(--serif);font-size:16px;color:var(--primary-900);margin-bottom:8px}
+
+  .h2{font-family:var(--serif);font-size:19px;color:var(--primary-900);letter-spacing:-.01em}
+  .h2row{display:flex;align-items:baseline;gap:8px;margin-top:0}
+  .count{font-size:12px;color:var(--n-600)}
+  .mt8{margin-top:32px}.mt6{margin-top:24px}.mt3{margin-top:12px}.mt2{margin-top:8px}
+
+  /* 물어보기 strip (현행/제안 공용 베이스) */
+  .ask{border:1px solid var(--primary-200);background:var(--primary-50);border-radius:var(--radius-md);padding:12px}
+  .ask-top{display:flex;align-items:flex-start;gap:12px}
+  .ask-ico{width:32px;height:32px;flex:0 0 auto;border:1px solid var(--primary-200);background:#fff;border-radius:9px;color:var(--primary-600);display:flex;align-items:center;justify-content:center}
+  .ask-title{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--primary-700)}
+  .ask-meta{font-size:12px;color:var(--primary-600);margin-top:2px}
+  .x{flex:0 0 auto;color:var(--n-400);cursor:default;line-height:0}
+  .btn-fill{width:100%;background:var(--primary-500);color:#fff;border:none;border-radius:var(--radius-md);padding:9px;font-size:14px;font-weight:600;margin-top:12px;font-family:var(--sans)}
+  .btn-link{color:var(--primary-600);font-size:14px;font-weight:600;cursor:default;display:inline-block}
+
+  /* 소개 strip (현행) */
+  .intro{display:flex;gap:8px;align-items:flex-start;background:var(--surface-50);border:1px solid var(--n-200);border-radius:var(--radius-md);padding:12px}
+  .intro p{font-size:12px;color:var(--n-600);flex:1}
+  .intro b{color:var(--primary-600)}
+
+  /* 빈서재 (현행) */
+  .empty{background:var(--surface-50);border:1px dashed var(--n-300);border-radius:var(--radius-md);padding:16px}
+  .empty p{font-size:13px;color:var(--n-600)}
+  .search{display:flex;gap:8px;margin-top:12px}
+  .search input{flex:1;min-width:0;border:1px solid var(--n-200);border-radius:var(--radius-md);padding:8px 12px;font-size:13px;color:var(--n-400)}
+  .search button{flex:0 0 auto;background:var(--primary-500);color:#fff;border:none;border-radius:var(--radius-md);padding:8px 16px;font-size:13px;font-weight:600}
+
+  /* 서재 그리드 */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .book{}
+  .cover{aspect-ratio:2/3;border-radius:6px;background:linear-gradient(135deg,var(--primary-100),var(--primary-200));display:flex;align-items:flex-end;padding:6px;font-size:9px;color:var(--primary-700);font-weight:700}
+  .done{margin-top:6px;display:inline-flex;gap:3px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;background:var(--n-100);color:var(--n-600)}
+  .done.on{background:var(--primary-50);border:1px solid var(--primary-200);color:var(--primary-700)}
+  .srclabel{font-size:10px;color:var(--n-400);margin-top:2px}
+
+  .callout{background:#fff;border-left:3px solid var(--accent-500);padding:6px 10px;font-size:11px;color:var(--n-600);margin-top:8px;border-radius:0 6px 6px 0}
+  .callout.good{border-left-color:var(--primary-500)}
+  .note{font-size:12px;color:var(--n-600);margin-top:10px}
+  .miniheader{font-size:13px;color:var(--n-500);font-weight:600;margin:40px auto 12px;max-width:1200px;border-top:1px solid var(--n-300);padding-top:16px}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>서재 + 물어보기 UI 재검토</h1>
+  <p>마이페이지(<code>/my</code>)의 서재+물어보기 영역. 왼쪽=현행(문제 시각화), 오른쪽=제안. 잉크그린 토큰 기준. 결정 보류 2건(주 입구 / 소개 strip)은 <span style="color:var(--accent-600);font-weight:700">코랄 라인</span>으로 표시.</p>
+  <div class="legend">
+    <span><b>①</b> 문구 3중 반복</span>
+    <span><b>②</b> 담기 입구 2개</span>
+    <span><b>③</b> 박스 적층</span>
+    <span><b>④</b> X 2개 의미 다름</span>
+    <span><b>⑤</b> 빈상태 검색창 먼저</span>
+  </div>
+</div>
+
+<div class="miniheader">A. 콜드스타트 S1 — 물어보기 있음 · 소개 노출 · 서재 0권 (최악 상태)</div>
+<div class="row">
+
+  <!-- 현행 S1 -->
+  <div class="col">
+    <div class="caption">현행 (as-is) <span class="tag tag-bad">문제 ①②③④⑤ 전부</span></div>
+    <div class="sub">박스 3개가 세로로 적층. "책 담으면 여기 쌓여요"가 세 번 반복되고 담기 입구도 둘.</div>
+    <div class="phone">
+      <div class="profile">
+        <div class="name">단무지</div>
+        <div class="r"><span>전화</span><span>010-8470-8730</span></div>
+        <div class="r"><span>지역</span><span>포항 외 8</span></div>
+      </div>
+
+      <!-- 물어보기 -->
+      <div class="ask mt6">
+        <div class="ask-top">
+          <div class="ask-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div style="flex:1">
+            <div class="ask-title">무슨 책 읽으셨어요?</div>
+            <div class="ask-meta">7월 정기모임 · <b style="color:var(--accent-600)">서재에 기록해두세요</b></div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <button class="btn-fill">책 기록하기</button>
+      </div>
+
+      <!-- 소개 strip -->
+      <div class="intro mt6">
+        <p>새로 생긴 <b>내 서재</b> — 모임에서 읽은 책을 담아두면 <b style="color:var(--accent-600)">여기 쌓여요</b>.</p>
+        <div class="x">✕</div>
+      </div>
+
+      <!-- 내 서재 -->
+      <div class="h2row mt8"><span class="h2">내 서재</span></div>
+      <div class="empty mt3">
+        <p>다녀온 모임 책이 <b style="color:var(--accent-600)">여기 쌓여요</b>. 나중에 "그 책 뭐였지" 할 때 여기서 찾으세요.</p>
+        <div class="search"><input value="책 제목으로 검색" readonly><button>검색</button></div>
+      </div>
+      <div class="callout">① "쌓여요/기록" 3회 · ② [책 기록하기]+검색창 입구 둘 · ⑤ 빈 상태가 raw 검색창</div>
+    </div>
+  </div>
+
+  <!-- 제안 안1 S1 -->
+  <div class="col">
+    <div class="caption">제안 안1 — 소개 strip 제거 <span class="tag tag-good">추천</span></div>
+    <div class="sub">물어보기를 "내 서재" 섹션의 <b>유일한 입구</b>로. 소개는 제목 밑 한 줄로 흡수. 박스 1개.</div>
+    <div class="phone">
+      <div class="profile">
+        <div class="name">단무지</div>
+        <div class="r"><span>전화</span><span>010-8470-8730</span></div>
+        <div class="r"><span>지역</span><span>포항 외 8</span></div>
+      </div>
+
+      <!-- 내 서재 제목 (소개 흡수) -->
+      <div class="h2row mt8"><span class="h2">내 서재</span></div>
+      <div style="font-size:12px;color:var(--n-600);margin-top:4px">모임에서 읽은 책이 여기 쌓여요.</div>
+
+      <!-- 물어보기 = 유일 입구 -->
+      <div class="ask mt3">
+        <div class="ask-top">
+          <div class="ask-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div style="flex:1">
+            <div class="ask-title">7월 정기모임, 무슨 책 읽으셨어요?</div>
+            <div class="ask-meta">담아두면 서재 첫 책이 돼요.</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <button class="btn-fill">책 검색해서 담기</button>
+      </div>
+      <div class="callout good">① 반복 제거(소개=제목 밑 1줄) · ② 입구 1개 · ③ 박스 1개 · ④ X 1개 · ⑤ 검색창은 버튼 눌러야 확장</div>
+      <div class="note">물어보기가 <b>없는</b> 회원(윈도우 밖)은 물어보기 카드 대신 "<span class="btn-link">+ 책 검색해서 담기</span>" 접힌 링크만 노출 → 빈 서재에 raw 검색창 안 뜸.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="miniheader">B. 콜드스타트 S1 — 안2 (소개 strip 유지·문구 차별화) · Q3 비교용</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">제안 안2 — 소개 strip 유지 <span class="tag tag-neutral">비교</span></div>
+    <div class="sub">소개 strip을 남기되 "쌓여요" 반복 대신 <b>위치 안내</b>로 문구를 바꿔 역할 분리. 박스는 다시 2개.</div>
+    <div class="phone">
+      <div class="profile">
+        <div class="name">단무지</div>
+        <div class="r"><span>전화</span><span>010-8470-8730</span></div>
+        <div class="r"><span>지역</span><span>포항 외 8</span></div>
+      </div>
+
+      <!-- 소개 strip (차별화 문구) -->
+      <div class="intro mt6" style="border-color:var(--primary-200);background:var(--primary-50)">
+        <p><b>내 서재</b>가 마이페이지에 새로 생겼어요. 담은 책은 여기서 계속 볼 수 있어요.</p>
+        <div class="x">✕</div>
+      </div>
+
+      <div class="h2row mt6"><span class="h2">내 서재</span></div>
+      <!-- 물어보기 = 입구 -->
+      <div class="ask mt3">
+        <div class="ask-top">
+          <div class="ask-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div style="flex:1">
+            <div class="ask-title">7월 정기모임, 무슨 책 읽으셨어요?</div>
+            <div class="ask-meta">담아두면 서재 첫 책이 돼요.</div>
+          </div>
+          <div class="x">✕</div>
+        </div>
+        <button class="btn-fill">책 검색해서 담기</button>
+      </div>
+      <div class="callout">여전히 박스 2개 + X 2개(④). 소개는 "위치 안내"라 물어보기와 안 겹치나, 콜드스타트가 아직 두 겹.</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="caption">참고 — 안1 vs 안2 한 눈 <span class="tag tag-neutral">판단 재료</span></div>
+    <div class="sub">Q3(소개 strip) 결정용 요약.</div>
+    <div class="phone" style="font-size:13px;color:var(--n-800)">
+      <p style="font-family:var(--serif);color:var(--primary-900);font-size:15px;margin-bottom:10px">안1 · 소개 strip 제거 (추천)</p>
+      <p style="color:var(--n-600)">＋ 콜드스타트 박스 1개, X 1개 — 가장 깔끔<br>＋ "새 기능" 성격은 제목 밑 한 줄로 충분<br>－ "새로 생겼다"는 신설 강조가 약함</p>
+      <p style="font-family:var(--serif);color:var(--primary-900);font-size:15px;margin:16px 0 10px">안2 · 소개 strip 유지</p>
+      <p style="color:var(--n-600)">＋ 기능 신설을 명시적으로 알림(첫 노출 1회)<br>－ 박스 2개 + X 2개 잔존, 콜드스타트가 두 겹<br>※ 유지 시 문구는 반드시 "위치 안내"로(쌓여요 반복 금지)</p>
+      <p class="note" style="border-top:1px solid var(--n-200);padding-top:12px;margin-top:16px">250명 소규모라 소개는 <b>초경량</b>이어야 한다는 원칙(전면모달 금지)에 비추면 안1이 더 부합. 다만 "새로 생김"을 꼭 알리고 싶으면 안2.</p>
+    </div>
+  </div>
+</div>
+
+<div class="miniheader">C. 정상 사용 중 S6 — 물어보기 없음 · 서재 3권 (제안 안1 기준 · 안정 상태)</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">현행 (as-is)</div>
+    <div class="sub">그리드 + "+책 검색해서 담기" details. 이 상태는 큰 문제 없음(참고용).</div>
+    <div class="phone">
+      <div class="h2row"><span class="h2">내 서재</span><span class="count">3권</span></div>
+      <div class="grid mt3">
+        <div class="book"><div class="cover">데미안</div><span class="done on">✓ 완독</span></div>
+        <div class="book"><div class="cover">불안의 책</div><span class="done">완독 표시</span><div class="srclabel">7월 정기모임에서</div></div>
+        <div class="book"><div class="cover">채식주의자</div><span class="done">완독 표시</span><div class="srclabel">6월 정기모임에서</div></div>
+      </div>
+      <div class="mt3"><span class="btn-link">+ 책 검색해서 담기</span></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="caption">제안 안1 <span class="tag tag-good">동일 유지</span></div>
+    <div class="sub">안정 상태는 현행과 거의 같음. 물어보기 없으면 물어보기 카드도 없음(자연스러움).</div>
+    <div class="phone">
+      <div class="h2row"><span class="h2">내 서재</span><span class="count">3권</span></div>
+      <div class="grid mt3">
+        <div class="book"><div class="cover">데미안</div><span class="done on">✓ 완독</span></div>
+        <div class="book"><div class="cover">불안의 책</div><span class="done">완독 표시</span><div class="srclabel">7월 정기모임에서</div></div>
+        <div class="book"><div class="cover">채식주의자</div><span class="done">완독 표시</span><div class="srclabel">6월 정기모임에서</div></div>
+      </div>
+      <div class="mt3"><span class="btn-link">+ 책 검색해서 담기</span></div>
+      <div class="callout good">서재가 채워지면 물어보기/소개는 사라지고 그리드가 주인공. 재구성의 목표 상태.</div>
+    </div>
+  </div>
+</div>
+
+<div class="head" style="margin-top:40px">
+  <p style="font-size:13px"><b>결정 필요:</b> Q2 주 입구(물어보기 카드를 서재 섹션 안으로 넣는 안1 방향에 동의?) · Q3 소개 strip(안1 제거 / 안2 유지). 확정되면 구현 수정 → 상태별 렌더 캡처로 검증합니다.</p>
+</div>
+
+</body>
+</html>
