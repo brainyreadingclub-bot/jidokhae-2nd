@@ -7,6 +7,11 @@ import type { PendingAsk, AskStats } from '@/types/ask'
 // 순수 헬퍼는 client 번들 안전을 위해 asks-pure.ts에 분리(이 파일은 service_role import) — re-export
 export { ASK_WINDOW_DAYS, isAskEligibleMeeting, askSourceLabel } from '@/lib/asks-pure'
 
+// 물어보기 "참여" 판정 status. 모임날 지난 pending_transfer(계좌이체 입금확인 전)도 참여로 본다 —
+// 안 나갈 사람은 미리 취소하므로 모임날까지 남아있다는 것 자체가 참여의 증거(2026-07-15 확정).
+// 앱 전체가 pending_transfer를 confirmed와 동등 취급하는 것과 일관. confirmed만 필터하면 계좌이체 운영 중인 현 서비스에서 대부분 참여자 누락.
+const PARTICIPATED_STATUSES = ['confirmed', 'pending_transfer'] as const
+
 type RegRow = {
   meeting_id: string
   user_id: string
@@ -15,7 +20,7 @@ type RegRow = {
 
 /**
  * 이 회원에게 지금 띄울 물어보기 1건(미해소·최근·정기).
- * confirmed 정기모임 중 자격 통과 & book_asks에 없는 것 → 가장 최근 1건. 없으면 null.
+ * 참여(confirmed·입금대기) 정기모임 중 자격 통과 & book_asks에 없는 것 → 가장 최근 1건. 없으면 null.
  */
 export async function getPendingAsk(userId: string): Promise<PendingAsk | null> {
   const admin = createServiceClient()
@@ -25,7 +30,7 @@ export async function getPendingAsk(userId: string): Promise<PendingAsk | null> 
     .from('registrations')
     .select('meeting_id, user_id, meetings(date, meeting_type, status)')
     .eq('user_id', userId)
-    .eq('status', 'confirmed')
+    .in('status', PARTICIPATED_STATUSES)
 
   const eligible = ((regs ?? []) as unknown as RegRow[])
     .filter((r) => r.meetings && isAskEligibleMeeting(r.meetings, kstToday))
@@ -75,7 +80,7 @@ export async function isAskPendingForMeeting(userId: string, meetingId: string):
 
 /**
  * (user, meeting)이 실제 물어보기 자격이 있는 건인지 서버 재검증(통계 조작 방지).
- * confirmed 등록 존재 + 정기 자격 통과.
+ * 참여(confirmed·입금대기 pending_transfer) 등록 존재 + 정기 자격 통과.
  */
 export async function verifyEligibleParticipation(
   admin: SupabaseClient,
@@ -88,7 +93,7 @@ export async function verifyEligibleParticipation(
     .select('meeting_id, meetings(date, meeting_type, status)')
     .eq('user_id', userId)
     .eq('meeting_id', meetingId)
-    .eq('status', 'confirmed')
+    .in('status', PARTICIPATED_STATUSES)
     .limit(1)
     .maybeSingle()
 
@@ -147,7 +152,7 @@ export async function getAskStats(): Promise<AskStats> {
   const { data: regs } = await admin
     .from('registrations')
     .select('meeting_id, user_id, meetings(date, meeting_type, status)')
-    .eq('status', 'confirmed')
+    .in('status', PARTICIPATED_STATUSES)
 
   const denomSet = new Set<string>()
   for (const r of (regs ?? []) as unknown as RegRow[]) {
