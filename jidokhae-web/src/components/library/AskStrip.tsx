@@ -44,7 +44,11 @@ export default function AskStrip({ meetingId, meetingLabel, entryPoint = 'my' }:
   }
 
   return (
-    <section className="mt-6 rounded-[var(--radius-md)] border border-primary-200 bg-primary-50 p-3">
+    <section
+      className={`mt-6 rounded-[var(--radius-md)] border border-primary-200 bg-primary-50 p-3${
+        entryPoint === 'meeting_detail' ? ' mb-8' : ''
+      }`}
+    >
       <div className="flex items-start gap-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary-200 bg-white text-primary-600">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
