@@ -24,6 +24,7 @@ export const ADMIN_MENU_GROUPS: AdminMenuGroup[] = [
       { label: '모임 관리', href: '/admin/meetings' },
       { label: '정산', href: '/admin/settlements', adminOnly: true },
       { label: '회원 관리', href: '/admin/members' },
+      { label: '서재 응답률', href: '/admin/library' },
     ],
   },
   {

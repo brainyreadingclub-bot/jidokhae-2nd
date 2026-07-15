@@ -3,6 +3,7 @@ import { getMeeting } from '@/lib/meeting'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import MeetingDetailContent from '@/components/meetings/MeetingDetailContent'
 import MeetingDetailSkeleton from '@/components/skeletons/MeetingDetailSkeleton'
+import MeetingAskStripSection from '@/components/library/MeetingAskStripSection'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -58,6 +59,10 @@ export default async function MeetingDetailPage({ params }: Props) {
 
       <Suspense fallback={<MeetingDetailSkeleton />}>
         <MeetingDetailContent id={id} />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <MeetingAskStripSection meetingId={id} />
       </Suspense>
     </div>
   )
