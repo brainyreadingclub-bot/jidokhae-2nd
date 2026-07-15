@@ -10,9 +10,9 @@ const tabs = [
     icon: CalendarIcon,
   },
   {
-    label: '내 신청',
+    label: '마이페이지',
     href: '/my',
-    icon: ClipboardIcon,
+    icon: UserIcon,
   },
 ] as const
 
@@ -77,7 +77,7 @@ function CalendarIcon({ active }: { active: boolean }) {
   )
 }
 
-function ClipboardIcon({ active }: { active: boolean }) {
+function UserIcon({ active }: { active: boolean }) {
   return (
     <svg
       width="24"
@@ -89,10 +89,8 @@ function ClipboardIcon({ active }: { active: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-      <rect x="8" y="2" width="8" height="4" rx="1" />
-      <line x1="9" y1="12" x2="15" y2="12" />
-      <line x1="9" y1="16" x2="13" y2="16" />
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   )
 }
