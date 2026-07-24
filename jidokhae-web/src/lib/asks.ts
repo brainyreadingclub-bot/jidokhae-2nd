@@ -1,6 +1,7 @@
 import { getKSTToday } from '@/lib/kst'
 import { createServiceClient } from '@/lib/supabase/admin'
-import { isAskEligibleMeeting } from '@/lib/asks-pure'
+import { isAskEligibleMeeting, computeAskStats } from '@/lib/asks-pure'
+import type { AskStatsAskRow } from '@/lib/asks-pure'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PendingAsk, AskStats } from '@/types/ask'
 
@@ -142,8 +143,9 @@ export function recordAskDismissed(admin: SupabaseClient, userId: string, meetin
 }
 
 /**
- * admin 미니 카운트. 분모 = 최근 윈도우 정기 참여(중복 (user,meeting) dedupe),
- * 분자 = book_asks answered/dismissed. 250명 규모라 전량 스캔 OK.
+ * admin 미니 카운트. 조회만 하고 계산은 순수 함수 computeAskStats에 위임(단위 테스트 대상).
+ * 분자(answered/dismissed/viewed)는 자격 참여 모수와 교집합 — 60일 윈도우 밖·비자격 건 제외.
+ * 250명 규모라 book_asks 전량 스캔 OK.
  */
 export async function getAskStats(): Promise<AskStats> {
   const admin = createServiceClient()
@@ -154,28 +156,11 @@ export async function getAskStats(): Promise<AskStats> {
     .select('meeting_id, user_id, meetings(date, meeting_type, status)')
     .in('status', PARTICIPATED_STATUSES)
 
-  const denomSet = new Set<string>()
-  for (const r of (regs ?? []) as unknown as RegRow[]) {
-    if (r.meetings && isAskEligibleMeeting(r.meetings, kstToday)) {
-      denomSet.add(`${r.user_id}:${r.meeting_id}`)
-    }
-  }
-  const denominator = denomSet.size
+  const { data: asks } = await admin.from('book_asks').select('user_id, meeting_id, status')
 
-  const { data: asks } = await admin.from('book_asks').select('status')
-  let answered = 0
-  let dismissed = 0
-  let viewed = 0
-  for (const a of asks ?? []) {
-    if (a.status === 'answered') answered += 1
-    else if (a.status === 'dismissed') dismissed += 1
-    else if (a.status === 'viewed') viewed += 1
-  }
-
-  // 미응답 = 노출됐지만 미응답(viewed) + 아직 노출 안 됨(unexposed)
-  const pending = Math.max(0, denominator - answered - dismissed)
-  const unexposed = Math.max(0, pending - viewed)
-  const responseRate = denominator === 0 ? 0 : Math.round((answered / denominator) * 100)
-
-  return { denominator, answered, dismissed, viewed, unexposed, pending, responseRate }
+  return computeAskStats(
+    (regs ?? []) as unknown as RegRow[],
+    (asks ?? []) as AskStatsAskRow[],
+    kstToday,
+  )
 }

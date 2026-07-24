@@ -21,6 +21,7 @@ export default function BookSearchInput({ onAdded, askMeetingId }: Props) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<BookSearchResult[]>([])
   const [searching, setSearching] = useState(false)
+  const [searched, setSearched] = useState(false)
   const [addingKey, setAddingKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,12 +30,14 @@ export default function BookSearchInput({ onAdded, askMeetingId }: Props) {
     const q = query.trim()
     if (!q) return
     setSearching(true)
+    setSearched(false)
     setError(null)
     try {
       const res = await fetch(`/api/books/search?q=${encodeURIComponent(q)}`)
       const json = await res.json()
       if (json.status === 'success') {
         setResults(json.data as BookSearchResult[])
+        setSearched(true)
       } else {
         setError('검색에 실패했어요. 잠시 후 다시 시도해주세요.')
       }
@@ -89,8 +92,11 @@ export default function BookSearchInput({ onAdded, askMeetingId }: Props) {
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="책 제목으로 검색"
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setSearched(false)
+          }}
+          placeholder="책 제목 일부만 넣어도 돼요"
           className="flex-1 min-w-0 rounded-[var(--radius-md)] border border-neutral-200 px-3 py-2 text-sm focus:outline-none focus:border-primary-400"
         />
         <button
@@ -103,6 +109,16 @@ export default function BookSearchInput({ onAdded, askMeetingId }: Props) {
       </form>
 
       {error && <p className="mt-2 text-caption text-accent-500">{error}</p>}
+
+      {!error && !searched && results.length === 0 && (
+        <p className="mt-2 text-[11px] text-neutral-400 break-keep">제목 일부만으로 찾을 수 있어요 (예: 데미안)</p>
+      )}
+
+      {!error && searched && results.length === 0 && (
+        <p className="mt-3 text-caption text-neutral-500 break-keep">
+          찾는 책이 안 보이면 제목을 조금 줄이거나 띄어쓰기를 바꿔 다시 검색해보세요.
+        </p>
+      )}
 
       {results.length > 0 && (
         <ul className="mt-3 flex flex-col gap-2">
