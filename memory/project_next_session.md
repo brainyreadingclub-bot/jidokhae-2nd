@@ -8,6 +8,8 @@ type: project
 
 서재+물어보기 기능은 prod에 배포됐지만 **기능 플래그 OFF라 회원 노출 0**. "물어보기를 회원에게 어떻게 도달·노출할까"를 확정(→ 알림톡 주 진입점)하고, 켜기 전 블로킹이던 계측 버그를 수정해 배포했다. 남은 켜기 게이트는 (1) 알림톡 점검, (2) 회원 콜드스타트 화면 시안 합의.
 
+🚨 **2026-07-28 신규 발견: 알림톡 5종을 "아무도 받은 적 없다"(단무지님 제보).** 코드 추적 결과 계좌이체 운영과 알림 트리거 설계 사이에 구조적 공백이 있음(아래 "알림톡 미수신 조사" 절). **물어보기 알림톡(6번째)의 전제조건이 무너진 상태라 이게 최우선.**
+
 ## 현재 상태
 
 **브랜치:** `main` (origin과 동기화). 최신 커밋 `1f9ffaa` (2026-07-24)
@@ -39,17 +41,61 @@ type: project
 
 **인앱 진입점은 손댈 것 없음** — 이미 조용한 스트립 2곳(`AskStripSection` 홈, `MeetingAskStripSection` 모임 상세)뿐. 종 컴포넌트는 존재하지 않고, `LibraryToast`는 "담기/빼기 → 6.5초 실행취소" 피드백용일 뿐 진입점이 아님.
 
+## 알림톡 미수신 조사 (2026-07-28, 코드 추적까지 완료 / DB 확인 미완)
+
+**증상:** 알림톡 5종을 회원 누구도 받은 적 없음.
+
+**사실 정정:** 알림톡(정보성)은 **카카오채널 친구 추가 여부와 무관**하게 휴대폰 번호 기준 발송됨. 친구 추가가 필요한 건 친구톡/브랜드메시지. → "채널 수락 안 해서 못 받았다"는 원인이 아님.
+
+**유력 가설 — 계좌이체 운영 × 트리거 설계의 구조적 공백:**
+
+| 알림 | 실제 트리거 지점 | 계좌이체 운영 시 |
+|---|---|---|
+| 신청 확인 | `registrations/confirm`, `webhooks/portone` — **카드결제 성공 경로에만** | 발송 0 |
+| 대기 확인 | 동일 | 발송 0 |
+| 대기 승격 | `waitlist.ts:43` (확정자 취소 시) | 대기자 있어야 발생 |
+| 미승격 환불 | `cron/waitlist-refund` | 대기자 있어야 발생 |
+| 모임 리마인드 | `cron/meeting-remind/route.ts:64` — **`.eq('status','confirmed')`** | **대상 0명 가능** |
+
+- 계좌이체 신청 라우트(`registrations/transfer`)에는 알림 호출이 **아예 없음**. 입금 확인(`confirm-transfer`)은 정책상 발송 금지(운영자 월말 일괄 처리).
+- 리마인드는 모임 전날 KST 19:00에 도는데, 운영자가 입금 확인을 월말에 몰아 하므로 그 시점엔 대부분 `pending_transfer` → 조회 0명.
+- **방증:** 커밋 `ad9741d`(7/15)가 *"confirmed만 필터하던 3곳을 `PARTICIPATED_STATUSES`로 통일 — 계좌이체 운영 중 대부분 참여자가 누락되던 문제 해소"* 로 물어보기 쪽 동일 버그를 고쳤는데, **리마인드 크론은 그 통일에서 빠짐.**
+
+**확인 절차 (내일 여기서 시작):**
+
+1단계 — Supabase SQL Editor (`ycqqzzvyixvtdorjxkrn`). ⚠️ Claude는 prod SQL 실행이 권한 정책으로 차단됨 → 단무지님이 실행 후 결과 공유:
+```sql
+select type, status, count(*), max(created_at) as last_at
+from notifications group by 1,2 order by 3 desc;
+
+select status, payment_method, count(*) from registrations group by 1,2;
+select key, value from site_settings where key = 'payment_mode';
+```
+읽는 법:
+- 행 0건 → 코드가 호출 자체를 안 함 = 위 구조적 공백 확정
+- `failed` 다수 → `select error_message, count(*) from notifications where status='failed' group by 1;` (템플릿 ID·채널 미승인·env 누락)
+- `skipped` + "전화번호 없음" → 프로필 전화번호 누락
+- `sent`인데 미수신 → 코드 정상, Solapi/카카오 구간 문제 → 2단계
+
+2단계 — Solapi 콘솔(console.solapi.com → 메시지 → 발송 내역): 발송 요청 자체가 없었는지 vs 실패했는지. **템플릿 5종 검수 상태(승인/반려)** 도 확인(반려면 전부 실패).
+
+3단계 — Vercel → jidokhae-2nd → Cron Jobs: 마지막 실행 시각·결과. ⚠️ 런타임 로그 보존 짧음(7일 조회 시 보존 초과 확인됨) → 실시간으로 볼 것.
+
+**원인 확정 후 수정 후보:** ① `cron/meeting-remind`를 `PARTICIPATED_STATUSES`(confirmed + pending_transfer)로 통일, ② 계좌이체 신청 시점 신청 확인 알림 발송 여부 결정(현 "입금 확인 알림 금지" 정책과 별개 사안 — 신청 접수 시점이라 월말 일괄 처리와 충돌 없음), ③ 채널 친구 현황은 카카오톡 채널 관리자센터(center-pf.kakao.com) 통계 / 회원별은 `plusfriends` 동의항목 + 채널 관계 REST API(단, 재동의 시점부터 집계라 250명 전수엔 부적합)
+
 ## 다음 할 일 (우선순위 순)
 
-1. **[단무지님 몫 · 현재 보류]** 현재 알림톡 5종 실작동 점검 — 도달·심사·발송 로그 확인. "따로 점검하고 나중에 도입"으로 순서 확정됨. 정상 확인 후에야 2번 착수.
+0. **[최우선 · 단무지님 1단계 SQL → Claude 수정]** 위 "알림톡 미수신 조사" 확인 절차. 알림톡이 실제로 안 나가는 상태면 6번째 템플릿을 추가해도 같은 이유로 안 나감.
+1. **[단무지님 몫]** 알림톡 5종 실작동 점검 — 0번과 통합됨. 도달·심사·발송 로그 확인.
 2. **알림톡 6번째 템플릿**(모임 다음날 오전 cron) — confirmed 참여자에게 1회, answered/dismissed는 dedup skip, 딥링크로 물어보기. 재사용 기반: `getPendingAsk`/`verifyEligibleParticipation`(`asks.ts`), 알림톡 5종 패턴(`notification.ts`·`solapi.ts`), `cron/meeting-remind`(KST 19:00) 구조. **1번 완료가 선행.**
 3. **[켜기 전 게이트] 회원 콜드스타트 화면 시안 → 합의 → 검증** — 냅다 디자인 금지. 상태 전수(빈 서재/책 있음/물어보기 strip/소개 strip/겹침) → 흐름 서술 → HTML 목업 + 렌더 스크린샷 인라인 → 합의 → 구현 → 상태별 캡처. ⚠️ **일반 회원(빈 서재) 첫 노출 아직 미검증** (지금까지 등록 최다 계정으로만 확인).
 4. 위 게이트 통과 → `site_settings.library_enabled='on'` 토글(배포 불필요) → 실제 전환율 측정 시작.
 
 ## 미결 / 주의
 
-- **미커밋 문서 5건 대기** — `docs/expert-panel/2026-07-15-library-and-roadmap-review.md`, `docs/expert-panel/2026-07-16-ask-entry-alimtalk-pivot.md`, `docs/superpowers/mockups/` 3건(벤치마킹·홈카드-콜드스타트·토스트). 코드 PR을 깔끔히 하려 제외함 → 커밋 여부 미정.
-- **스테일 브랜치 2개** — `feat/discussion-slice1`(PR #42 머지 완료), `fix/ask-stats-metric`(PR #43 머지 완료). 로컬·원격 모두 잔존. 삭제 여부 미확정.
+- ~~미커밋 문서 5건~~ → **2026-07-28 커밋·push 완료** (`ec8c1a8`, main 직접 push)
+- ~~스테일 브랜치 2개~~ → **2026-07-28 정리 완료** (`feat/discussion-slice1` 원격+로컬 삭제, `fix/ask-stats-metric`은 이미 원격에서 삭제돼 있어 prune으로 정리)
+- **콜드스타트 시안 미착수** — 7/28 세션에서 착수 승인까지 받았으나, 알림톡 미수신 발견으로 우선순위가 밀림. 내일 알림톡 원인 확정과 병렬 진행 가능.
 - **문서 스테일** — 루트 `CLAUDE.md`와 `jidokhae-web/CLAUDE.md`에 서재·물어보기·`meeting_type` 아키텍처가 미반영(7/12 기준). 새 세션이 코드 구조를 CLAUDE.md만으로 파악하면 누락됨.
 - **계측 해석** — 이제 전환율이 북극성. 노출 30건 미만이면 관리자 화면이 "유보" 표시 — 1~2건 요동을 판단으로 오인하지 말 것.
 - **인프라** — prod Supabase `ycqqzzvyixvtdorjxkrn`(MCP는 dead project라 SQL 실행 금지). Vercel Preview는 prod Supabase 직결(카드 결제 테스트 금지). gh 활성 계정은 push 전 `brainyreadingclub-bot`인지 확인(2026-07-28 시점 이미 활성이나, 계정 3개 병존이라 매번 확인).
