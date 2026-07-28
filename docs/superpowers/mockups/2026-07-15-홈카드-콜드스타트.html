@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홈 카드 콜드스타트 — 2026-07-15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary-50:#F3FAF6; --primary-100:#E3F2EC; --primary-200:#CDE9DB; --primary-300:#8FCBB0;
+    --primary-400:#3E9A78; --primary-500:#127A5A; --primary-600:#0d5c43; --primary-700:#0B4B37; --primary-900:#072A20;
+    --accent-500:#F4552A;
+    --lime:#C6FF3A; --lime-ink:#0B4B37;
+    --n-50:#F9FAFB; --n-100:#F3F4F6; --n-200:#E5E8EB; --n-300:#D1D5DB; --n-400:#B0B8C1;
+    --n-500:#8B95A1; --n-600:#6B7684; --n-800:#1F2937; --n-900:#191F28;
+    --radius-md:12px; --radius-lg:16px;
+    --serif:'Noto Serif KR',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Pretendard','Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:#EEF0F2;color:var(--n-900);padding:32px 16px 80px;line-height:1.5;-webkit-font-smoothing:antialiased;word-break:keep-all}
+  .head{max-width:1280px;margin:0 auto 28px}
+  .head h1{font-family:var(--serif);font-size:24px;color:var(--primary-900);margin-bottom:6px}
+  .head p{font-size:14px;color:var(--n-600);max-width:860px}
+  .decis{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .chip{font-size:12px;padding:5px 11px;border-radius:999px;background:#fff;border:1px solid var(--n-200);color:var(--n-800)}
+  .chip b{color:var(--primary-600)}
+  .swatch{display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--lime);vertical-align:middle;margin-right:4px;border:1px solid rgba(0,0,0,.1)}
+  .row{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;max-width:1280px;margin:0 auto}
+  .col{width:392px;flex:0 0 auto}
+  .caption{font-size:13px;font-weight:700;color:var(--n-800);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .tag-good{background:var(--primary-100);color:var(--primary-700)}
+  .tag-lime{background:var(--lime);color:var(--lime-ink)}
+  .tag-neutral{background:var(--n-200);color:var(--n-600)}
+  .sub{font-size:12px;color:var(--n-600);margin-bottom:10px;min-height:32px}
+  .phone{position:relative;background:#fff;border:1px solid var(--n-200);border-radius:22px;padding:0;box-shadow:0 6px 24px rgba(0,0,0,.06);overflow:hidden;height:720px}
+  .statusbar{height:34px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--n-500);font-weight:600}
+  .appbar{padding:6px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--n-100)}
+  .wordmark{font-family:var(--serif);font-size:18px;color:var(--primary-700)}
+  .appbar .ico{width:22px;height:22px;color:var(--n-500)}
+  .screen{padding:16px 18px;overflow:hidden;height:calc(100% - 34px - 44px)}
+
+  /* 홈 카드 (물어보기 트리거) */
+  .hcard{background:var(--primary-900);border-radius:var(--radius-lg);padding:16px;color:#fff;position:relative;overflow:hidden}
+  .hcard::after{content:"";position:absolute;right:-30px;bottom:-30px;width:120px;height:120px;border-radius:50%;background:rgba(198,255,58,.10)}
+  .hcard .kick{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--lime);text-transform:none}
+  .hcard .q{font-family:var(--serif);font-size:20px;margin-top:6px;line-height:1.35}
+  .hcard .meta{font-size:12px;color:rgba(255,255,255,.62);margin-top:6px}
+  .hcard-actions{display:flex;align-items:center;gap:10px;margin-top:14px;position:relative;z-index:2}
+  .btn-lime{background:var(--lime);color:var(--lime-ink);border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:700;font-family:var(--sans);flex:0 0 auto}
+  .btn-ghost{color:rgba(255,255,255,.66);font-size:13px;font-weight:600;cursor:default}
+  .yearpill{position:absolute;top:14px;right:14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.9);background:rgba(255,255,255,.10);border-radius:999px;padding:3px 9px}
+
+  .sectlabel{font-size:12px;color:var(--n-500);font-weight:700;margin:22px 2px 10px}
+  .mtitle{font-family:var(--serif);font-size:16px;color:var(--primary-900)}
+
+  /* 홈 일정 카드(맥락용 더미) */
+  .mrow{border:1px solid var(--n-200);border-radius:var(--radius-md);padding:12px;display:flex;gap:12px;align-items:center;margin-top:8px}
+  .mrow .d{width:44px;text-align:center;flex:0 0 auto}
+  .mrow .d b{display:block;font-family:var(--serif);font-size:18px;color:var(--primary-700);line-height:1}
+  .mrow .d span{font-size:10px;color:var(--n-500)}
+  .mrow .t{font-size:13px;font-weight:600;color:var(--n-800)}
+  .mrow .t span{display:block;font-size:11px;color:var(--n-500);font-weight:400;margin-top:2px}
+
+  /* 검색 바텀시트 */
+  .dim{position:absolute;inset:0;background:rgba(10,20,15,.42);z-index:5}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:8px 18px 24px;z-index:6;box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+  .grabber{width:38px;height:4px;border-radius:99px;background:var(--n-300);margin:6px auto 14px}
+  .sheet h3{font-family:var(--serif);font-size:17px;color:var(--primary-900)}
+  .sheet .hint{font-size:12px;color:var(--n-500);margin-top:3px}
+  .searchbar{display:flex;align-items:center;gap:8px;border:1.5px solid var(--primary-300);border-radius:12px;padding:11px 13px;margin-top:14px;background:var(--primary-50)}
+  .searchbar .si{color:var(--primary-500);flex:0 0 auto}
+  .searchbar input{border:none;background:none;outline:none;font-size:15px;font-family:var(--sans);color:var(--n-900);width:100%}
+  .searchbar .cursor{color:var(--n-900)}
+  .result{display:flex;gap:11px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--n-100)}
+  .result .cv{width:38px;height:54px;border-radius:4px;background:linear-gradient(135deg,var(--primary-100),var(--primary-200));flex:0 0 auto;display:flex;align-items:flex-end;padding:4px;font-size:8px;color:var(--primary-700);font-weight:700}
+  .result .info{flex:1}
+  .result .bt{font-size:14px;font-weight:600;color:var(--n-800)}
+  .result .ba{font-size:11px;color:var(--n-500);margin-top:2px}
+  .result .add{font-size:12px;font-weight:700;color:var(--primary-600);border:1px solid var(--primary-200);border-radius:8px;padding:5px 12px;flex:0 0 auto}
+  .fallback{margin-top:16px;text-align:center;padding:20px 0}
+  .fallback .fi{font-size:26px}
+  .fallback .fm{font-size:14px;color:var(--n-600);margin-top:8px}
+  .fallback .fl{font-size:14px;font-weight:700;color:var(--primary-600);margin-top:10px;display:inline-flex;gap:5px;align-items:center}
+
+  /* 완료 결과 */
+  .done-wrap{text-align:center;padding:36px 0 8px}
+  .done-cover{width:96px;height:140px;border-radius:8px;margin:0 auto;background:linear-gradient(135deg,var(--primary-200),var(--primary-300));display:flex;align-items:flex-end;padding:8px;font-size:12px;color:var(--primary-800);font-weight:700;box-shadow:0 10px 30px rgba(18,122,90,.22);position:relative}
+  .done-check{position:absolute;top:-12px;right:-12px;width:34px;height:34px;border-radius:50%;background:var(--lime);color:var(--lime-ink);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+  .done-msg{font-family:var(--serif);font-size:18px;color:var(--primary-900);margin-top:22px}
+  .done-sub{font-size:13px;color:var(--n-500);margin-top:6px}
+  .done-cta{margin-top:22px;display:inline-block;font-size:14px;font-weight:700;color:var(--primary-600);border:1px solid var(--primary-200);border-radius:10px;padding:9px 20px}
+
+  /* 서재 그리드 */
+  .h2row{display:flex;align-items:baseline;gap:8px}
+  .h2{font-family:var(--serif);font-size:19px;color:var(--primary-900)}
+  .count{font-size:12px;color:var(--n-600)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .book{position:relative}
+  .cover{aspect-ratio:2/3;border-radius:6px;background:linear-gradient(135deg,var(--primary-100),var(--primary-200));display:flex;align-items:flex-end;padding:6px;font-size:9px;color:var(--primary-700);font-weight:700}
+  .kebab{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,.85);border:1px solid var(--n-200);color:var(--n-600);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;line-height:0}
+  .chipstate{margin-top:6px;display:inline-flex;gap:3px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px}
+  .chipstate.reading{background:var(--n-100);color:var(--n-600)}
+  .chipstate.done{background:var(--primary-50);border:1px solid var(--primary-200);color:var(--primary-700)}
+  .srclabel{font-size:10px;color:var(--n-400);margin-top:2px}
+  .emptybox{border:1px dashed var(--n-300);border-radius:var(--radius-md);padding:26px 16px;text-align:center;margin-top:14px}
+  .emptybox .ei{font-size:24px;opacity:.5}
+  .emptybox .et{font-size:13px;color:var(--n-600);margin-top:8px}
+
+  .callout{background:var(--n-50);border-left:3px solid var(--primary-500);padding:7px 11px;font-size:11px;color:var(--n-600);margin-top:12px;border-radius:0 6px 6px 0}
+  .miniheader{font-size:13px;color:var(--n-500);font-weight:600;margin:40px auto 12px;max-width:1280px;border-top:1px solid var(--n-300);padding-top:16px}
+  .miniheader b{color:var(--primary-700)}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>홈 카드 콜드스타트 · 물어보기 트리거 이동</h1>
+  <p>4단계 리뷰(PM·그로스·디자이너·UX라이터) 결론 반영. 트리거를 마이페이지 → <b>홈 상단 카드(앱 여는 순간)</b>로 이동. 액션 컬러 <span class="swatch"></span>#C6FF3A는 홈 카드 주 CTA <b>한 곳</b>만. 톤은 이 기능에만 드라이·위트. 왼→오 흐름.</p>
+  <div class="decis">
+    <span class="chip"><b>트리거</b> 홈 상단 카드(첫 화면)</span>
+    <span class="chip"><span class="swatch"></span><b>라임 CTA</b> "책 고르기" 1곳만</span>
+    <span class="chip"><b>검색</b> 집중형 바텀시트</span>
+    <span class="chip"><b>완료</b> "올해 N권째" 변신</span>
+    <span class="chip"><b>서재</b> 읽는 중 ↔ ✓ 완독 유지</span>
+    <span class="chip"><b>회원 프레이밍</b> 개인 기록 (투표 암시 0)</span>
+  </div>
+</div>
+
+<div class="miniheader">① <b>홈 진입</b> — 앱 여는 순간 상단 카드로 물어봄 (다녀온 회원 · 60일 내)</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">홈 / · 물어볼 게 있을 때 <span class="tag tag-lime">주 트리거</span></div>
+    <div class="sub">마이페이지까지 안 들어가도 첫 화면에서 툭. 진한 잉크 카드 위 라임 버튼 하나가 "새 행동"을 표시.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      </div>
+      <div class="screen">
+        <div class="hcard">
+          <span class="yearpill">올해 2권</span>
+          <div class="kick">📖 지난 모임</div>
+          <div class="q">무슨 책 읽으셨어요?</div>
+          <div class="meta">7월 정기모임 · 지금 안 남기면 까먹어요</div>
+          <div class="hcard-actions">
+            <button class="btn-lime">책 고르기</button>
+            <span class="btn-ghost">나중에</span>
+          </div>
+        </div>
+
+        <div class="sectlabel">다가오는 모임</div>
+        <div class="mrow"><div class="d"><b>19</b><span>토</span></div><div class="t">8월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="mrow"><div class="d"><b>02</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 공간지그시</span></div></div>
+
+        <div class="callout">라임은 이 버튼 1곳만. "나중에"=dismiss soft(다음날 다시). yearpill=사회증명 대신 자기기록.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="caption">홈 / · 물어볼 게 없을 때 <span class="tag tag-neutral">평상시</span></div>
+    <div class="sub">윈도우 밖·미참여면 카드 없음. 억지 노출 0. 서재는 마이페이지에 조용히 존재.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      </div>
+      <div class="screen">
+        <div class="sectlabel" style="margin-top:4px">다가오는 모임</div>
+        <div class="mrow"><div class="d"><b>19</b><span>토</span></div><div class="t">8월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="mrow"><div class="d"><b>02</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 공간지그시</span></div></div>
+        <div class="mrow"><div class="d"><b>16</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="callout">트리거 없을 땐 홈이 원래 모습 그대로. "앱 안 열면 못 잡는" 한계는 알림톡(2조각 이후)까지 감수.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="miniheader">② <b>검색 바텀시트</b> — "책 고르기" 탭 시 · 집중 모드 (결과 / 실패 fallback)</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">검색 · 결과 <span class="tag tag-good">3탭 안에</span></div>
+    <div class="sub">전체 화면 이동 대신 바텀시트. 제목만 쳐도 카카오 도서 API 결과. 담기 = 우측 버튼 1탭.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="grabber"></div>
+        <h3>어떤 책이었어요?</h3>
+        <div class="hint">제목만 쳐도 나와요.</div>
+        <div class="searchbar"><svg class="si" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg><span class="cursor">소년이 온다</span></div>
+        <div style="margin-top:10px">
+          <div class="result"><div class="cv">소년이<br>온다</div><div class="info"><div class="bt">소년이 온다</div><div class="ba">한강 · 창비</div></div><span class="add">담기</span></div>
+          <div class="result"><div class="cv">소년</div><div class="info"><div class="bt">소년</div><div class="ba">호연 · 사계절</div></div><span class="add">담기</span></div>
+          <div class="result"><div class="cv">우리<br>소년</div><div class="info"><div class="bt">우리들의 소년</div><div class="ba">…</div></div><span class="add">담기</span></div>
+        </div>
+        <div class="callout" style="margin-top:14px">서버 프록시(<code>/api/books/search</code>)로 REST 키 은닉. 표지는 참조만(재호스팅 X).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="caption">검색 · 안 나올 때 fallback <span class="tag tag-neutral">막다른 길 방지</span></div>
+    <div class="sub">API 0건/오탈자여도 손 제목 직접 입력으로 빠져나감. 실패해도 담기가 멈추지 않음.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="grabber"></div>
+        <h3>어떤 책이었어요?</h3>
+        <div class="hint">제목만 쳐도 나와요.</div>
+        <div class="searchbar"><svg class="si" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg><span class="cursor">그때그책ㅁ</span></div>
+        <div class="fallback">
+          <div class="fi">🔍</div>
+          <div class="fm">안 나오네요.</div>
+          <div class="fl">제목 직접 넣을게요 →</div>
+        </div>
+        <div class="callout">API 실패(네트워크)면 문구 다름: "잠깐 삐끗했어요. 한 번 더요." 카카오 다운 시에도 담기 경로 확보.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="miniheader">③ <b>완료 순간</b> — 담긴 뒤 "올해 N권째" 변신 · ④ <b>내 서재</b> (빈 상태 / 채워진 상태)</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">담김 완료 <span class="tag tag-lime">보상 순간</span></div>
+    <div class="sub">표지 안착 + 라임 체크 튐 + "올해 N권째" 카운트. 노력 대비 과한 보상감이 재방문을 만듦.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span></div>
+      <div class="screen">
+        <div class="done-wrap">
+          <div class="done-cover">소년이<br>온다<div class="done-check">✓</div></div>
+          <div class="done-msg">한 권 추가. 올해 3권째네요.</div>
+          <div class="done-sub">서재에 담았어요.</div>
+          <div class="done-cta">내 서재 보기</div>
+        </div>
+        <div class="callout">체크만 라임(홈 CTA와 짝). "올해 N권째"=자기 성취(사회증명 아님). 애니 후 서재로.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="caption">내 서재 · 빈 상태 → 채워짐 <span class="tag tag-good">읽는 중/완독 유지</span></div>
+    <div class="sub">빈 상태는 담달래지 않고 기다림. 채워지면 그리드가 주인공. 상태 칩·출처 라벨 그대로.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span></div>
+      <div class="screen">
+        <div class="h2row"><span class="h2">내 서재</span><span class="count">3권</span></div>
+        <div class="grid">
+          <div class="book"><div class="cover">소년이 온다</div><div class="kebab">⋯</div><span class="chipstate reading">읽는 중</span><div class="srclabel">7월 모임에서</div></div>
+          <div class="book"><div class="cover">데미안</div><div class="kebab">⋯</div><span class="chipstate done">✓ 완독</span><div class="srclabel">직접 담음</div></div>
+          <div class="book"><div class="cover">불안의 책</div><div class="kebab">⋯</div><span class="chipstate reading">읽는 중</span><div class="srclabel">6월 모임에서</div></div>
+        </div>
+        <div class="emptybox" style="margin-top:18px">
+          <div class="ei">📚</div>
+          <div class="et">아직 비었을 땐 —<br>“아직 비었어요. 모임 다녀오면 여기서 물어볼게요.”</div>
+        </div>
+        <div class="callout">출처 라벨 이제 <b>직접 검색 책에도</b> 표기("직접 담음") — QA 지적 해소. pill 문구 무신사 톤이어도 상태 라벨은 "읽는 중/완독" 유지.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="head" style="margin-top:40px">
+  <p style="font-size:13px"><b>켜기 전 게이트(비가시 포함):</b> ① <code>getAskStats</code> 응답률 60일 윈도우 버그 수정 + 회귀 테스트 · ② 직접검색 책 출처 라벨 추가 · ③ 홈 카드 트리거 신설(<code>entry_point=home</code>) + dismiss soft(하루) · ④ 빈서재 신규회원 + 카카오 검색 실패 케이스 검증 · ⑤ 폐기선을 "4주 30%"→표본(n≥30) 기반 + 이중지표(응답률 ∧ 카탈로그 절대량). 회원 프레이밍은 끝까지 "개인 기록"만.</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>물어보기 토스트 안 — 2026-07-16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary-50:#F3FAF6; --primary-100:#E3F2EC; --primary-200:#CDE9DB; --primary-300:#8FCBB0;
+    --primary-400:#3E9A78; --primary-500:#127A5A; --primary-600:#0d5c43; --primary-700:#0B4B37; --primary-900:#072A20;
+    --accent-500:#F4552A; --accent-600:#D8431C;
+    --n-50:#F9FAFB; --n-100:#F3F4F6; --n-200:#E5E8EB; --n-300:#D1D5DB; --n-400:#B0B8C1;
+    --n-500:#8B95A1; --n-600:#6B7684; --n-800:#1F2937; --n-900:#191F28;
+    --radius-md:12px;
+    --serif:'Noto Serif KR',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Pretendard','Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:#EEF0F2;color:var(--n-900);padding:32px 16px 80px;line-height:1.5;-webkit-font-smoothing:antialiased;word-break:keep-all}
+  .head{max-width:1280px;margin:0 auto 24px}
+  .head h1{font-family:var(--serif);font-size:24px;color:var(--primary-900);margin-bottom:6px}
+  .head p{font-size:14px;color:var(--n-600);max-width:900px}
+  .miniheader{font-size:13px;color:var(--n-500);font-weight:600;margin:38px auto 14px;max-width:1280px;border-top:1px solid var(--n-300);padding-top:16px}
+  .miniheader b{color:var(--primary-700)}
+  .row{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;max-width:1280px;margin:0 auto}
+  .col{width:392px;flex:0 0 auto}
+  .caption{font-size:13px;font-weight:700;color:var(--n-800);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .tag-good{background:var(--primary-100);color:var(--primary-700)}
+  .tag-neutral{background:var(--n-200);color:var(--n-600)}
+  .sub{font-size:12px;color:var(--n-600);margin-bottom:10px;min-height:32px}
+  .phone{position:relative;background:#fff;border:1px solid var(--n-200);border-radius:22px;overflow:hidden;height:640px;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+  .statusbar{height:34px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--n-500);font-weight:600}
+  .appbar{padding:6px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--n-100)}
+  .wordmark{font-family:var(--serif);font-size:18px;color:var(--primary-700)}
+  .bellwrap{position:relative;width:24px;height:24px;color:var(--n-600)}
+  .bellwrap .dot2{position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--accent-500);border:1.5px solid #fff}
+  .screen{padding:16px 18px;height:calc(100% - 34px - 45px);overflow:hidden;position:relative}
+  .sectlabel{font-size:12px;color:var(--n-500);font-weight:700;margin:4px 2px 10px}
+  .mrow{border:1px solid var(--n-200);border-radius:var(--radius-md);padding:12px;display:flex;gap:12px;align-items:center;margin-top:8px}
+  .mrow .d{width:44px;text-align:center;flex:0 0 auto}
+  .mrow .d b{display:block;font-family:var(--serif);font-size:18px;color:var(--primary-700);line-height:1}
+  .mrow .d span{font-size:10px;color:var(--n-500)}
+  .mrow .t{font-size:13px;font-weight:600;color:var(--n-800)}
+  .mrow .t span{display:block;font-size:11px;color:var(--n-500);font-weight:400;margin-top:2px}
+
+  /* 토스트 (지속형 스낵바) */
+  .toast{position:absolute;left:14px;right:14px;bottom:16px;background:var(--n-900);color:#fff;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:11px;box-shadow:0 12px 34px rgba(0,0,0,.28);z-index:4}
+  .toast .ti{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff}
+  .toast .tb{flex:1;min-width:0}
+  .toast .tt{font-size:14px;font-weight:700}
+  .toast .tm{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px}
+  .toast .tgo{font-size:13px;font-weight:700;color:var(--primary-300);flex:0 0 auto;padding:6px 12px;border:1px solid rgba(255,255,255,.16);border-radius:9px}
+  .toast .tx{color:rgba(255,255,255,.45);flex:0 0 auto;font-size:13px;padding-left:2px}
+  .slidehint{position:absolute;left:50%;transform:translateX(-50%);bottom:66px;font-size:10px;color:var(--n-400);z-index:4}
+  .arrowup{display:block;text-align:center;color:var(--n-300);font-size:14px;margin-bottom:2px}
+
+  .callout{background:var(--n-50);border-left:3px solid var(--primary-500);padding:7px 11px;font-size:11px;color:var(--n-600);margin-top:12px;border-radius:0 6px 6px 0}
+  .pro{font-size:11px;color:var(--primary-700);margin-top:6px}
+  .con{font-size:11px;color:var(--accent-600);margin-top:3px}
+  .flow{max-width:1280px;margin:6px auto 0;font-size:12px;color:var(--n-600)}
+  .flow b{color:var(--primary-700)}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>물어보기 · 토스트 안 (지속형 스낵바 + 종 안전망)</h1>
+  <p>앱 켜면 아래에서 토스트가 쓱 올라옴("메세지 왔다" 느낌). 단 <b>저절로 안 사라짐</b> — 담기/X로만 닫힘. 놓쳐도 <b>종 점으로 남아</b> 응답을 잃지 않음. 잉크그린 기본 톤(라임·무신사 없음).</p>
+  <div class="flow"><b>흐름:</b> 앱 열기 → 토스트 올라옴 → ①담기 탭 = 검색 바텀시트 / ②X 닫기 = 종 점으로 이동 / ③무시하고 딴 거 = 토스트 유지(안 사라짐)</div>
+</div>
+
+<div class="miniheader">① <b>앱 진입</b> — 토스트가 아래에서 올라옴 (자동 소멸 X)</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">홈 · 토스트 떴을 때 <span class="tag tag-good">"메세지 왔다" 느낌</span></div>
+    <div class="sub">홈 일정은 그대로 보이고, 하단에 진한 토스트 1개. 담기/X 있어서 손이 안 닿으면 그냥 머무름.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <div class="bellwrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+      </div>
+      <div class="screen">
+        <div class="sectlabel">다가오는 모임</div>
+        <div class="mrow"><div class="d"><b>19</b><span>토</span></div><div class="t">8월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="mrow"><div class="d"><b>02</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 공간지그시</span></div></div>
+        <div class="mrow"><div class="d"><b>16</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+
+        <div class="toast">
+          <div class="ti"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div class="tb"><div class="tt">무슨 책 읽으셨어요?</div><div class="tm">7월 정기모임 · 서재에 담아두세요</div></div>
+          <span class="tgo">담기</span><span class="tx">✕</span>
+        </div>
+      </div>
+    </div>
+    <div class="pro">＋ 토스트의 가벼운 "떴다" 느낌 유지 · 홈 레이아웃 무변경 · 담기 1탭</div>
+    <div class="con">－ 하단 고정이라 손가락 영역 근처(스크롤 방해 최소화 위해 담기/X만)</div>
+  </div>
+
+  <div class="col">
+    <div class="caption">X로 닫은 뒤 <span class="tag tag-good">응답 안 잃음</span></div>
+    <div class="sub">토스트를 닫아도 종에 점이 남음. 나중에 생각나면 종 → 알림 목록에서 다시 담기. 이게 자동소멸 토스트와의 결정적 차이.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <div class="bellwrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="dot2"></span></div>
+      </div>
+      <div class="screen">
+        <span class="arrowup">↑ 여기 점으로 남음</span>
+        <div class="sectlabel" style="margin-top:2px">다가오는 모임</div>
+        <div class="mrow"><div class="d"><b>19</b><span>토</span></div><div class="t">8월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="mrow"><div class="d"><b>02</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 공간지그시</span></div></div>
+        <div class="mrow"><div class="d"><b>16</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="callout">토스트 = 순간 노출, 종 점 = 지속 보관. 순수 자동소멸 토스트의 "놓치면 끝" 문제를 종이 받쳐줌.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="head" style="margin-top:36px">
+  <p style="font-size:13px"><b>순수 자동소멸 토스트 vs 이 안:</b> 자동소멸은 3~5초 뒤 사라져 놓치면 재호출 불가 → 응답률(북극성) 손해. 이 안은 "떴다" 느낌은 살리되 <b>담기/X로만 닫히고 놓쳐도 종에 남음.</b> 이후 검색·완료·서재 흐름은 확정안 그대로. 회원 프레이밍은 "개인 기록"만.</p>
+</div>
+
+</body>
+</html>

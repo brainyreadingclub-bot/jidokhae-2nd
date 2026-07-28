@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>물어보기 진입 벤치마킹 — 2026-07-15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary-50:#F3FAF6; --primary-100:#E3F2EC; --primary-200:#CDE9DB; --primary-300:#8FCBB0;
+    --primary-400:#3E9A78; --primary-500:#127A5A; --primary-600:#0d5c43; --primary-700:#0B4B37; --primary-900:#072A20;
+    --accent-50:#FFF1EC; --accent-500:#F4552A; --accent-600:#D8431C;
+    --n-50:#F9FAFB; --n-100:#F3F4F6; --n-200:#E5E8EB; --n-300:#D1D5DB; --n-400:#B0B8C1;
+    --n-500:#8B95A1; --n-600:#6B7684; --n-800:#1F2937; --n-900:#191F28;
+    --radius-md:12px; --radius-lg:16px;
+    --serif:'Noto Serif KR',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Pretendard','Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:#EEF0F2;color:var(--n-900);padding:32px 16px 80px;line-height:1.5;-webkit-font-smoothing:antialiased;word-break:keep-all}
+  .head{max-width:1280px;margin:0 auto 24px}
+  .head h1{font-family:var(--serif);font-size:24px;color:var(--primary-900);margin-bottom:6px}
+  .head p{font-size:14px;color:var(--n-600);max-width:900px}
+  .miniheader{font-size:13px;color:var(--n-500);font-weight:600;margin:38px auto 14px;max-width:1280px;border-top:1px solid var(--n-300);padding-top:16px}
+  .miniheader b{color:var(--primary-700)}
+  .row{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;max-width:1280px;margin:0 auto}
+
+  /* 벤치마크 레퍼런스 카드 */
+  .bench{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:1280px;margin:0 auto}
+  .bcard{width:232px;background:#fff;border:1px solid var(--n-200);border-radius:14px;padding:14px;flex:0 0 auto}
+  .bname{font-size:13px;font-weight:700;color:var(--n-900)}
+  .bpat{font-size:11px;color:var(--primary-600);font-weight:700;margin-top:2px}
+  .bdesc{font-size:12px;color:var(--n-600);margin-top:8px}
+  .bmini{margin-top:10px;height:56px;border-radius:9px;background:var(--n-50);border:1px solid var(--n-100);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--accent-500);top:11px;right:11px;border:1.5px solid #fff}
+  .bell{color:var(--n-500)}
+  .fakecard{background:#fff;border:1px solid var(--n-200);border-radius:8px;width:80%;height:30px;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+  .msgline{display:flex;align-items:center;gap:7px;width:84%}
+  .msgline .av{width:22px;height:22px;border-radius:6px;background:var(--primary-200);flex:0 0 auto}
+  .msgline .ln{flex:1}.msgline .ln i{display:block;height:5px;border-radius:3px;background:var(--n-200)}
+  .msgline .ln i:first-child{width:70%;margin-bottom:4px;background:var(--n-300)}
+
+  /* 폰 */
+  .col{width:392px;flex:0 0 auto}
+  .caption{font-size:13px;font-weight:700;color:var(--n-800);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .tag-good{background:var(--primary-100);color:var(--primary-700)}
+  .tag-neutral{background:var(--n-200);color:var(--n-600)}
+  .sub{font-size:12px;color:var(--n-600);margin-bottom:10px;min-height:32px}
+  .phone{position:relative;background:#fff;border:1px solid var(--n-200);border-radius:22px;overflow:hidden;height:660px;box-shadow:0 6px 24px rgba(0,0,0,.06)}
+  .statusbar{height:34px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--n-500);font-weight:600}
+  .appbar{padding:6px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--n-100)}
+  .wordmark{font-family:var(--serif);font-size:18px;color:var(--primary-700)}
+  .bellwrap{position:relative;width:24px;height:24px;color:var(--n-600)}
+  .bellwrap .dot2{position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--accent-500);border:1.5px solid #fff}
+  .screen{padding:16px 18px;height:calc(100% - 34px - 45px);overflow:hidden}
+  .sectlabel{font-size:12px;color:var(--n-500);font-weight:700;margin:4px 2px 10px}
+  .mrow{border:1px solid var(--n-200);border-radius:var(--radius-md);padding:12px;display:flex;gap:12px;align-items:center;margin-top:8px}
+  .mrow .d{width:44px;text-align:center;flex:0 0 auto}
+  .mrow .d b{display:block;font-family:var(--serif);font-size:18px;color:var(--primary-700);line-height:1}
+  .mrow .d span{font-size:10px;color:var(--n-500)}
+  .mrow .t{font-size:13px;font-weight:600;color:var(--n-800)}
+  .mrow .t span{display:block;font-size:11px;color:var(--n-500);font-weight:400;margin-top:2px}
+
+  /* 알림 목록 (드롭다운 시트) */
+  .notif-sheet{position:absolute;top:78px;left:12px;right:12px;background:#fff;border:1px solid var(--n-200);border-radius:14px;box-shadow:0 12px 36px rgba(0,0,0,.16);overflow:hidden;z-index:6}
+  .notif-sheet .nh{padding:12px 14px;font-size:13px;font-weight:700;color:var(--n-800);border-bottom:1px solid var(--n-100)}
+  .nitem{display:flex;gap:11px;padding:12px 14px;border-bottom:1px solid var(--n-100)}
+  .nitem.unread{background:var(--primary-50)}
+  .nitem .nico{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:var(--primary-100);color:var(--primary-600)}
+  .nitem .nbody{flex:1}
+  .nitem .ntitle{font-size:13px;font-weight:600;color:var(--n-900)}
+  .nitem .ntitle b{font-weight:700}
+  .nitem .nmeta{font-size:11px;color:var(--n-500);margin-top:2px}
+  .nitem .nact{font-size:12px;font-weight:700;color:var(--primary-600);margin-top:7px;display:inline-block}
+  .nitem .ndot{width:7px;height:7px;border-radius:50%;background:var(--accent-500);flex:0 0 auto;align-self:center}
+  .dim{position:absolute;inset:0;background:rgba(10,20,15,.28);z-index:5}
+
+  /* 조용한 홈 카드 (당근/토스형) */
+  .quiet{border:1px solid var(--primary-200);background:var(--primary-50);border-radius:var(--radius-md);padding:12px 13px;display:flex;align-items:center;gap:11px;margin-bottom:8px}
+  .quiet .qi{width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--primary-200);color:var(--primary-600);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .quiet .qb{flex:1}
+  .quiet .qt{font-size:13px;font-weight:700;color:var(--primary-700)}
+  .quiet .qm{font-size:11px;color:var(--primary-600);margin-top:1px}
+  .quiet .qgo{font-size:12px;font-weight:700;color:var(--primary-600);flex:0 0 auto}
+  .quiet .qx{color:var(--n-400);flex:0 0 auto;font-size:12px;padding-left:4px}
+
+  .callout{background:var(--n-50);border-left:3px solid var(--primary-500);padding:7px 11px;font-size:11px;color:var(--n-600);margin-top:12px;border-radius:0 6px 6px 0}
+  .pro{font-size:11px;color:var(--primary-700);margin-top:6px}
+  .con{font-size:11px;color:var(--accent-600);margin-top:3px}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>물어보기 진입 · 벤치마킹 → 후보 2안</h1>
+  <p>"메세지가 날라온 것처럼" 을 실제 서비스들이 어떻게 푸는지 참고. 공통점 = <b>홈을 안 가리고, 신호는 조용히, 급하지 않으면 무시 가능.</b> 라임·무신사 톤 철회, 잉크그린 기본 톤. 아래 레퍼런스 → 지독해 적용 2안.</p>
+</div>
+
+<div class="miniheader">벤치마크 레퍼런스 — 다녀온 뒤 조용히 기록 요청하는 실제 패턴</div>
+<div class="bench">
+  <div class="bcard">
+    <div class="bname">카카오톡 · 인스타그램</div>
+    <div class="bpat">🔔 빨간 점 인디케이터</div>
+    <div class="bdesc">화면은 그대로, 종 아이콘에 점 하나로 "볼 거 있음" 신호. "메세지 날라온 것처럼"의 원형.</div>
+    <div class="bmini"><svg class="bell" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="dot"></span></div>
+  </div>
+  <div class="bcard">
+    <div class="bname">토스</div>
+    <div class="bpat">조용한 카드 피드 + 알림 점</div>
+    <div class="bdesc">홈이 광고 배너가 아니라 둥근 카드들의 세로 흐름. 하나가 튀지 않고 카드 단위로 얹힘.</div>
+    <div class="bmini"><div class="fakecard"></div><span class="dot"></span></div>
+  </div>
+  <div class="bcard">
+    <div class="bname">왓챠피디아</div>
+    <div class="bpat">"평가하기" 경량 모드 + 카운트</div>
+    <div class="bdesc">본 작품에 별점 남기는 전용 흐름 + 누적 개수. <b>본 것을 기록</b>이라 우리 물어보기와 가장 유사.</div>
+    <div class="bmini"><div class="msgline"><div class="av" style="border-radius:4px;width:20px;height:28px"></div><div class="ln"><i></i><i></i></div><span style="color:var(--accent-500);font-size:14px">★★★☆☆</span></div></div>
+  </div>
+  <div class="bcard">
+    <div class="bname">구글 지도</div>
+    <div class="bpat">다녀온 장소 리뷰 요청</div>
+    <div class="bdesc">방문 후 "리뷰 남겨주세요" — 알림 + 기여 탭. 홈 지도는 안 가림. 방문 직후가 트리거.</div>
+    <div class="bmini"><div class="msgline"><div class="av"></div><div class="ln"><i></i><i></i></div></div></div>
+  </div>
+  <div class="bcard">
+    <div class="bname">당근마켓</div>
+    <div class="bpat">거래 후 후기 카드 (dismiss)</div>
+    <div class="bdesc">거래 직후 "매너 후기" 맥락 카드. 조용하고 X로 닫힘. 억지 팝업 아님.</div>
+    <div class="bmini"><div class="fakecard" style="height:36px;display:flex;align-items:center;padding:0 8px"><div class="msgline" style="width:100%"><div class="av" style="width:16px;height:16px"></div><div class="ln"><i></i></div><span style="color:var(--n-400);font-size:11px">✕</span></div></div></div>
+  </div>
+</div>
+
+<div class="miniheader"><b>후보 A</b> — 🔔 알림 인디케이터 (카톡·인스타·토스 벤치) · 당신 표현 "메세지 날라온 것처럼"에 가장 충실</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">홈 · 종에 빨간 점만 <span class="tag tag-good">홈 0 침범</span></div>
+    <div class="sub">홈은 원래 모습 그대로. 우상단 종에 점 하나. 급하지 않으면 그냥 넘어감. "볼 게 있다"만 조용히 알림.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <div class="bellwrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="dot2"></span></div>
+      </div>
+      <div class="screen">
+        <div class="sectlabel">다가오는 모임</div>
+        <div class="mrow"><div class="d"><b>19</b><span>토</span></div><div class="t">8월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="mrow"><div class="d"><b>02</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 공간지그시</span></div></div>
+        <div class="mrow"><div class="d"><b>16</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="callout">홈 레이아웃 무변경. 점 = accent-500(기존 "필수" 색, 새 색 안 씀). 안 급하면 무시 → 성가심 최소.</div>
+        <div class="pro">＋ 브랜드 안 깨짐 · 안 여는 사람도 안 성가심 · 표준 패턴(학습 불필요)</div>
+        <div class="con">－ 점이 약해 지나칠 수 있음(도달은 결국 알림톡=2조각이 해결)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="caption">종 탭 → 알림 목록 <span class="tag tag-good">메세지처럼</span></div>
+    <div class="sub">탭하면 알림 목록이 카톡 메세지처럼 뜸. 물어보기가 맨 위 안읽음 항목. "책 담기" 한 번이면 검색으로.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <div class="bellwrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+      </div>
+      <div class="dim"></div>
+      <div class="notif-sheet">
+        <div class="nh">알림</div>
+        <div class="nitem unread">
+          <div class="nico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div class="nbody">
+            <div class="ntitle"><b>무슨 책 읽으셨어요?</b></div>
+            <div class="nmeta">7월 정기모임 · 서재에 담아두세요</div>
+            <span class="nact">책 담기 →</span>
+          </div>
+          <div class="ndot"></div>
+        </div>
+        <div class="nitem">
+          <div class="nico" style="background:var(--n-100);color:var(--n-500)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="nbody">
+            <div class="ntitle">8월 정기모임 신청이 확정됐어요</div>
+            <div class="nmeta">3일 전</div>
+          </div>
+        </div>
+        <div class="nitem">
+          <div class="nico" style="background:var(--n-100);color:var(--n-500)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <div class="nbody">
+            <div class="ntitle">모임 하루 전이에요</div>
+            <div class="nmeta">지난주</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="miniheader"><b>후보 B</b> — 홈 조용한 카드 (토스·당근 벤치) · 내가 처음 그린 검은 배너와 다른, 얇고 조용한 카드 1개</div>
+<div class="row">
+  <div class="col">
+    <div class="caption">홈 · 일정 위 조용한 한 카드 <span class="tag tag-neutral">눈엔 더 잘 띔</span></div>
+    <div class="sub">검은 히어로가 아니라 primary-50 얇은 카드 1개. 아이콘+한 줄+"담기"+X. 당근 거래후기 톤. 눈엔 A보다 잘 들어오지만 홈을 살짝 얹음.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <div class="bellwrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+      </div>
+      <div class="screen">
+        <div class="quiet">
+          <div class="qi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <div class="qb"><div class="qt">무슨 책 읽으셨어요?</div><div class="qm">7월 정기모임</div></div>
+          <span class="qgo">담기</span><span class="qx">✕</span>
+        </div>
+        <div class="sectlabel" style="margin-top:16px">다가오는 모임</div>
+        <div class="mrow"><div class="d"><b>19</b><span>토</span></div><div class="t">8월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="mrow"><div class="d"><b>02</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 공간지그시</span></div></div>
+        <div class="callout">얇은 카드 1개 · 배경 primary-50 · 검은 배너/네온 없음. X로 닫으면 하루 뒤 다시(soft).</div>
+        <div class="pro">＋ A보다 눈에 잘 띔 → 응답률 유리 · 여전히 조용함(면 아님)</div>
+        <div class="con">－ 홈에 카드 1개 얹힘(완전 무침범은 아님)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="caption">닫은 뒤 / 물어볼 것 없을 때 <span class="tag tag-neutral">평상시</span></div>
+    <div class="sub">X로 닫거나 대상 아니면 카드 사라짐 → 홈 원형. 억지로 안 붙듦.</div>
+    <div class="phone">
+      <div class="statusbar">9:41</div>
+      <div class="appbar"><span class="wordmark">지독해</span>
+        <div class="bellwrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+      </div>
+      <div class="screen">
+        <div class="sectlabel" style="margin-top:4px">다가오는 모임</div>
+        <div class="mrow"><div class="d"><b>19</b><span>토</span></div><div class="t">8월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="mrow"><div class="d"><b>02</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 공간지그시</span></div></div>
+        <div class="mrow"><div class="d"><b>16</b><span>토</span></div><div class="t">9월 정기모임 · 각자의 책<span>오후 3시 · 우연히책방</span></div></div>
+        <div class="callout">두 후보 공통: 검색·완료·서재 이후 흐름은 이전 확정안 그대로(바텀시트→담김→서재).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="head" style="margin-top:38px">
+  <p style="font-size:13px"><b>내 추천:</b> 브랜드·성가심 최소는 <b>A(종 알림)</b>, 응답률만 보면 <b>B(조용한 카드)</b>. 둘은 배타적이지 않음 — <b>A를 기본으로 깔고, 켜서 응답률이 바닥이면 B로 승격</b>하는 순서가 안전. 도달의 진짜 해결(알림톡)은 2조각. 회원 프레이밍은 끝까지 "개인 기록"만.</p>
+</div>
+
+</body>
+</html>

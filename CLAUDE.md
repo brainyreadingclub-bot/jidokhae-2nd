@@ -93,6 +93,14 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 **Current status:** M1–M6 MVP **completed**. Phase 2 확장 완료 — 알림톡(Phase 2-1) ✅, 대기 신청(Phase 2-2) ✅, 백오피스(Phase 2-3) ✅. **Phase 3 (진행 중)** — M7 Step 1 (안정 기반) ✅, M7 Step 2 (운영자 개편) ✅, M7 Step 2.5 (풀스캔 후속 보정) ✅, M7 Step 2.6 (계좌이체 환불 토글) ✅. M7 Step 3 (회원 홈) 예정.
 
+**Current status (2026-07-28 갱신):** M7 Step 3 이후 로드맵보다 **토론모임 개편 + 2535 리디자인**이 먼저 진행됨.
+- 2535 잉크그린 리디자인 ✅ (PR #39, prod 배포)
+- 토론모임 0조각 — `meetings.meeting_type` 정기/토론 구분 ✅ (PR #41, 회원 화면 영향 0)
+- 토론모임 1조각 — **서재 + 물어보기(책 담기) + 응답률 측정** ✅ 배포 (PR #42, `dcc61d5`). **단 `site_settings.library_enabled` 플래그 OFF → 회원 노출 0**
+- 물어보기 응답률 계측 버그 수정 + 지표 재정의 ✅ (PR #43, `1f9ffaa`, 7/24 prod)
+- **플래그 켜기 게이트 2건 남음**: (1) 알림톡 5종 실작동 점검(단무지님) → 6번째 템플릿 신설, (2) 회원 콜드스타트 화면 시안 합의. 상세는 `memory/project_next_session.md`
+- ⚠️ 아래 문서의 라우트·컴포넌트·스키마 목록에는 서재/물어보기(`library_entries`, `books`, `book_asks`, `src/lib/asks*.ts`, `src/lib/library.ts`, `src/components/library/*`, `/admin/library`)가 **아직 미반영**
+
 ---
 
 ## MVP + Phase 2 Scope
