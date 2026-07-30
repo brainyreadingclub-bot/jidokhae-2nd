@@ -6,12 +6,17 @@
  * Phase 3 M7 Step 2.5: Promise.allSettled 병렬 발송으로 전환.
  *   직렬 await 루프는 신청자 10명 이상 모임에서 Vercel 10초 타임아웃을
  *   초과할 위험이 있었다. waitlist-refund cron과 동일한 패턴으로 통일.
+ *
+ * 2026-07-30: 대상자 필터를 confirmed 단독 → PARTICIPATED_STATUSES로 교정.
+ *   운영자가 입금 확인을 월말에 몰아 처리하므로 모임 전날 시점엔 계좌이체 신청자가
+ *   대부분 pending_transfer로 남아 리마인드를 못 받고 있었다(당시 27명).
  */
 
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getTomorrowKST, formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import { sendNotification } from '@/lib/notification'
+import { PARTICIPATED_STATUSES } from '@/lib/registration-status'
 import type { Meeting } from '@/types/meeting'
 
 type RemindTask = {
@@ -61,7 +66,7 @@ export async function GET(request: NextRequest) {
       .from('registrations')
       .select('id, user_id, paid_amount, profiles(phone, real_name, nickname)')
       .eq('meeting_id', meeting.id)
-      .eq('status', 'confirmed')
+      .in('status', PARTICIPATED_STATUSES)
 
     if (!registrations) continue
 

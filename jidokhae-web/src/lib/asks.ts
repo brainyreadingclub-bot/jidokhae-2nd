@@ -1,17 +1,14 @@
 import { getKSTToday } from '@/lib/kst'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { isAskEligibleMeeting, computeAskStats } from '@/lib/asks-pure'
+// 물어보기 "참여" 판정 status — 리마인드 크론 등과 공유(근거는 상수 정의에)
+import { PARTICIPATED_STATUSES } from '@/lib/registration-status'
 import type { AskStatsAskRow } from '@/lib/asks-pure'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { PendingAsk, AskStats } from '@/types/ask'
 
 // 순수 헬퍼는 client 번들 안전을 위해 asks-pure.ts에 분리(이 파일은 service_role import) — re-export
 export { ASK_WINDOW_DAYS, isAskEligibleMeeting, askSourceLabel } from '@/lib/asks-pure'
-
-// 물어보기 "참여" 판정 status. 모임날 지난 pending_transfer(계좌이체 입금확인 전)도 참여로 본다 —
-// 안 나갈 사람은 미리 취소하므로 모임날까지 남아있다는 것 자체가 참여의 증거(2026-07-15 확정).
-// 앱 전체가 pending_transfer를 confirmed와 동등 취급하는 것과 일관. confirmed만 필터하면 계좌이체 운영 중인 현 서비스에서 대부분 참여자 누락.
-const PARTICIPATED_STATUSES = ['confirmed', 'pending_transfer'] as const
 
 type RegRow = {
   meeting_id: string

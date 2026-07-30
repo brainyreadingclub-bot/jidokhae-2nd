@@ -113,7 +113,9 @@ select key, value from site_settings where key = 'payment_mode';
 
 0. ~~알림톡 5종 실작동 점검~~ → **2026-07-30 완료. 정상 확인, 게이트 ① 통과.**
 1. **운영자 알림 발송 이력 페이지** — 단무지님 요청(2026-07-30). 전문가 패널로 먼저 기획 예정. 정당성: 3~6월 123건 실패를 넉 달간 아무도 몰랐음. 최소 요건 후보 = 발송 실패의 능동적 노출, `sent`(접수)와 실제 전달의 구분, 종류·기간별 조회. 라우트 위치는 `adminMenu.ts`에 항목 추가(시스템 그룹 유력).
-2. **리마인드 크론 `pending_transfer` 누락 수정** — `cron/meeting-remind/route.ts:64`가 `.eq('status','confirmed')`라 현재 `pending_transfer` **27명**이 모임 전날 리마인드를 못 받음. 커밋 `ad9741d`가 물어보기 쪽 동일 버그를 `PARTICIPATED_STATUSES`로 고칠 때 이 크론은 누락됨. 알림톡 인프라는 정상이므로 고치면 즉시 효과.
+2. ~~리마인드 크론 `pending_transfer` 누락 수정~~ → **2026-07-30 구현 완료** (브랜치 `fix/remind-pending-transfer`, 배포 미결). `PARTICIPATED_STATUSES`를 `src/lib/registration-status.ts`로 추출해 `asks.ts`와 리마인드 크론이 공유. prelaunch 통과(테스트 134개). **회원 영향 있음** — 다음 모임 전날부터 `pending_transfer` 27명이 리마인드를 받기 시작.
+3. **회원 콜드스타트 화면 시안** — 플래그 켜기 전 마지막 게이트. 아래 "미결" 참조.
+4. **알림톡 문구 개선 (나중)** — 단무지님 요청(2026-07-30). 현재 5종 문구를 손보고 싶다는 의향. ⚠️ 알림톡 템플릿 수정은 **카카오 재심사** 대상이라 리드타임이 있고, 승인 전까지 기존 템플릿으로 발송됨. 관련 맥락: 리마인드는 `#{참가비}` 금액만 표시하고 결제 완료를 단정하지 않아 미입금자(`pending_transfer`)에게 보내도 어색하지 않으나, **미입금자에게는 입금 안내를 덧붙이는 분기**가 있으면 더 좋다는 논의가 있었음(현재 템플릿은 단일). 6번째(물어보기) 템플릿 신설과 함께 묶어서 심사 올리면 리드타임 절약 가능.
 2. **알림톡 6번째 템플릿**(모임 다음날 오전 cron) — confirmed 참여자에게 1회, answered/dismissed는 dedup skip, 딥링크로 물어보기. 재사용 기반: `getPendingAsk`/`verifyEligibleParticipation`(`asks.ts`), 알림톡 5종 패턴(`notification.ts`·`solapi.ts`), `cron/meeting-remind`(KST 19:00) 구조. **1번 완료가 선행.**
 3. **[켜기 전 게이트] 회원 콜드스타트 화면 시안 → 합의 → 검증** — 냅다 디자인 금지. 상태 전수(빈 서재/책 있음/물어보기 strip/소개 strip/겹침) → 흐름 서술 → HTML 목업 + 렌더 스크린샷 인라인 → 합의 → 구현 → 상태별 캡처. ⚠️ **일반 회원(빈 서재) 첫 노출 아직 미검증** (지금까지 등록 최다 계정으로만 확인).
 4. 위 게이트 통과 → `site_settings.library_enabled='on'` 토글(배포 불필요) → 실제 전환율 측정 시작.
