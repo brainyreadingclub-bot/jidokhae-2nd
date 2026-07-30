@@ -94,11 +94,14 @@ export async function GET(request: NextRequest) {
         await sendWaitlistRefundedNotification(
           reg.user_id,
           reg.id,
+          reg.meeting_id,
           meetingData.title,
           reg.paid_amount ?? 0,
         )
-      } catch {
-        // ignore
+      } catch (error) {
+        // 환불은 이미 완료 — 알림 실패는 흐름을 막지 않는다(설계).
+        // 단 조용히 삼키면 관측이 불가능하므로 로그는 남긴다.
+        console.error('[waitlist-refund] 알림톡 발송 실패:', reg.id, error)
       }
     }),
   )
