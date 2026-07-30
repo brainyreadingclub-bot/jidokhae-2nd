@@ -22,7 +22,8 @@ type SendNotificationParams = {
   type: NotificationType
   recipientId: string
   recipientPhone: string | null
-  meetingId: string
+  /** 모임 연결. 연결할 모임이 없으면 null(빈 문자열 금지 — uuid 컬럼) */
+  meetingId: string | null
   registrationId?: string
   templateCode: string
   variables: Record<string, string>
@@ -57,7 +58,10 @@ export async function sendNotification(params: SendNotificationParams) {
       type: params.type,
       recipient_id: params.recipientId,
       recipient_phone: '',
-      meeting_id: params.meetingId,
+      // 빈 문자열은 uuid 캐스팅이 깨져 INSERT 자체가 실패한다(22P02) — null로 정규화.
+      // 실제 사고: sendWaitlistRefundedNotification이 ''를 넘겨 미승격 환불 알림이
+      // 한 번도 발송되지 않고 이력 행조차 남지 않았다(2026-07-30 발견).
+      meeting_id: params.meetingId || null,
       registration_id: params.registrationId ?? null,
       template_code: params.templateCode,
       status: 'skipped',
@@ -73,7 +77,10 @@ export async function sendNotification(params: SendNotificationParams) {
       type: params.type,
       recipient_id: params.recipientId,
       recipient_phone: params.recipientPhone,
-      meeting_id: params.meetingId,
+      // 빈 문자열은 uuid 캐스팅이 깨져 INSERT 자체가 실패한다(22P02) — null로 정규화.
+      // 실제 사고: sendWaitlistRefundedNotification이 ''를 넘겨 미승격 환불 알림이
+      // 한 번도 발송되지 않고 이력 행조차 남지 않았다(2026-07-30 발견).
+      meeting_id: params.meetingId || null,
       registration_id: params.registrationId ?? null,
       template_code: params.templateCode,
       status: 'pending',
@@ -269,6 +276,7 @@ export async function sendWaitlistPromotedNotification(
 export async function sendWaitlistRefundedNotification(
   userId: string,
   registrationId: string,
+  meetingId: string,
   meetingTitle: string,
   refundedAmount: number,
 ) {
@@ -279,7 +287,7 @@ export async function sendWaitlistRefundedNotification(
     type: 'waitlist_refunded',
     recipientId: userId,
     recipientPhone: profile.phone,
-    meetingId: '',
+    meetingId,
     registrationId,
     templateCode: process.env.SOLAPI_TEMPLATE_WAITLIST_REFUNDED!,
     variables: {
