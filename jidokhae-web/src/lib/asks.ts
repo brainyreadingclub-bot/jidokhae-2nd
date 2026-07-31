@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getKSTToday } from '@/lib/kst'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { isAskEligibleMeeting, computeAskStats } from '@/lib/asks-pure'
@@ -20,7 +21,7 @@ type RegRow = {
  * 이 회원에게 지금 띄울 물어보기 1건(미해소·최근·정기).
  * 참여(confirmed·입금대기) 정기모임 중 자격 통과 & book_asks에 없는 것 → 가장 최근 1건. 없으면 null.
  */
-export async function getPendingAsk(userId: string): Promise<PendingAsk | null> {
+export const getPendingAsk = cache(async (userId: string): Promise<PendingAsk | null> => {
   const admin = createServiceClient()
   const kstToday = getKSTToday()
 
@@ -54,7 +55,7 @@ export async function getPendingAsk(userId: string): Promise<PendingAsk | null> 
   const top = open[0]
   if (!top || !top.meetings) return null
   return { meetingId: top.meeting_id, meetingDate: top.meetings.date }
-}
+})
 
 /**
  * 이 회원이 특정 모임에 대해 아직 물어보기가 열려 있는지(모임 상세 진입점용).
