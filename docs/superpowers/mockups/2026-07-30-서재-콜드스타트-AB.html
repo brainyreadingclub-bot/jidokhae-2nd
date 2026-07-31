@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 서재 콜드스타트 — 현재 / A안 / B안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  /* ── 지독해 실제 토큰 (globals.css @theme inline에서 그대로 가져옴) ── */
+  :root{
+    --primary-50:#F3FAF6; --primary-100:#E3F2EC; --primary-200:#CDE9DB;
+    --primary-400:#3E9A78; --primary-500:#127A5A; --primary-600:#0d5c43; --primary-700:#0B4B37;
+    --neutral-50:#F9FAFB; --neutral-100:#F0F2F5; --neutral-200:#E5E8EB;
+    --neutral-400:#B0B8C1; --neutral-500:#8B95A1; --neutral-600:#6B7684;
+    --neutral-700:#5A6B7A; --neutral-800:#333D48; --neutral-900:#191F28;
+    --surface-50:#FFFFFF; --surface-100:#F9FAFB;
+    --radius-md:12px; --radius-lg:16px;
+    --font-display:'Noto Serif KR',Georgia,serif;
+    --font-sans:'Pretendard Variable','Pretendard','Malgun Gothic',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--font-sans);
+    background:#EDEEF0;
+    color:var(--neutral-900);
+    padding:40px 28px 64px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ── 리뷰 문서 chrome (제품 UI 아님 — 의도적으로 구분) ── */
+  .doc{max-width:1360px;margin:0 auto}
+  .doc-head{border-bottom:1.5px solid var(--neutral-800);padding-bottom:14px;margin-bottom:8px}
+  .doc-head h1{font-family:var(--font-display);font-weight:700;font-size:23px;letter-spacing:-.02em}
+  .doc-head .sub{margin-top:5px;font-size:12.5px;color:var(--neutral-600);line-height:1.6}
+  .doc-note{font-size:12px;color:var(--neutral-600);margin:14px 0 26px;line-height:1.7;max-width:900px}
+  .doc-note b{color:var(--neutral-800)}
+
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+  .col{min-width:0}
+  .col-head{display:flex;align-items:baseline;gap:8px;margin-bottom:5px}
+  .tag{
+    font-size:10.5px;font-weight:700;letter-spacing:.09em;
+    padding:3px 7px;border-radius:4px;background:var(--neutral-800);color:#fff;
+  }
+  .tag.now{background:var(--neutral-400);color:var(--neutral-900)}
+  .col-title{font-family:var(--font-display);font-weight:600;font-size:14.5px;color:var(--neutral-800)}
+  .col-desc{font-size:11.5px;color:var(--neutral-600);line-height:1.65;min-height:50px;margin-bottom:11px}
+
+  /* 폰 프레임 */
+  .phone{
+    background:var(--surface-100);
+    border:1px solid #D6DAE0;border-radius:20px;
+    padding:0;overflow:hidden;
+    box-shadow:0 1px 2px rgba(25,31,40,.05),0 10px 26px -12px rgba(25,31,40,.18);
+  }
+  .phone-bar{
+    height:26px;background:#fff;border-bottom:1px solid var(--neutral-200);
+    display:flex;align-items:center;padding:0 12px;
+    font-family:var(--font-display);font-weight:700;font-size:11.5px;color:var(--primary-500);
+  }
+  .screen{padding:20px 20px 22px}      /* 실제: px-5 pt-6 */
+  .phone + .phone{margin-top:14px}
+
+  /* ── 여기서부터 실제 제품 UI 재현 ── */
+  .h1-sec{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--neutral-800);letter-spacing:-.02em}
+  .h2-sec{font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--neutral-800);letter-spacing:-.02em}
+  .mt1{margin-top:4px} .mt3{margin-top:12px} .mt6{margin-top:24px} .mt8{margin-top:32px}
+  .t-sm{font-size:14px;line-height:1.55} .t-cap{font-size:13px;line-height:1.5} .t-11{font-size:11px;line-height:1.5}
+  .c-600{color:var(--neutral-600)} .c-400{color:var(--neutral-400)} .c-800{color:var(--neutral-800)}
+  .bold{font-weight:700} .semi{font-weight:600}
+
+  /* 내 정보 (ProfileSection 보기 모드) */
+  .card{background:#fff;border:1px solid var(--neutral-200);border-radius:var(--radius-md);padding:14px}
+  .row{display:flex;justify-content:space-between;align-items:center}
+  .row + .row{margin-top:9px;padding-top:9px;border-top:1px solid var(--neutral-100)}
+  .label{font-size:12.5px;color:var(--neutral-600)}
+  .value{font-size:13.5px;color:var(--neutral-800);font-weight:600}
+  .link{font-size:13px;color:var(--primary-600);font-weight:600}
+
+  /* 물어보기 strip (AskStrip) */
+  .ask{margin-top:24px;border:1px solid var(--primary-200);background:var(--primary-50);border-radius:var(--radius-md);padding:12px}
+  .ask-top{display:flex;align-items:flex-start;gap:12px}
+  .ask-ico{width:32px;height:32px;flex:0 0 32px;border:1px solid var(--primary-200);background:#fff;border-radius:8px;color:var(--primary-600);display:flex;align-items:center;justify-content:center}
+  .ask-t{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--primary-700)}
+  .ask-s{margin-top:2px;font-size:13px;color:var(--primary-600)}
+  .ask-x{flex:0 0 auto;color:var(--neutral-400);line-height:0}
+  .btn-fill{margin-top:12px;width:100%;background:var(--primary-500);color:#fff;border:none;border-radius:var(--radius-md);padding:9px 0;font-size:14px;font-weight:600;font-family:var(--font-sans);cursor:pointer}
+
+  /* 검색 (BookSearchInput) */
+  .search{display:flex;gap:8px}
+  .search input{flex:1;min-width:0;border:1px solid var(--neutral-200);border-radius:var(--radius-md);padding:9px 12px;font-size:14px;font-family:var(--font-sans);background:#fff;color:var(--neutral-900)}
+  .search input::placeholder{color:var(--neutral-400)}
+  .search button{flex:0 0 auto;background:var(--primary-500);color:#fff;border:none;border-radius:var(--radius-md);padding:9px 16px;font-size:14px;font-weight:600;font-family:var(--font-sans);cursor:pointer}
+  .hint{margin-top:8px;font-size:11px;color:var(--neutral-400)}
+  .details{margin-top:12px;font-size:14px;font-weight:600;color:var(--primary-600);cursor:pointer}
+
+  /* 내 신청 (RegistrationCard 축약) */
+  .reg{background:#fff;border:1px solid var(--neutral-200);border-radius:var(--radius-md);padding:13px;margin-top:12px}
+  .reg-t{font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--neutral-800)}
+  .reg-m{margin-top:4px;font-size:12.5px;color:var(--neutral-600)}
+  .pill{display:inline-block;margin-top:9px;font-size:11.5px;font-weight:600;color:var(--primary-600);background:var(--primary-50);border:1px solid var(--primary-200);border-radius:999px;padding:3px 9px}
+
+  /* 주석 (문서 chrome) */
+  .anno{
+    margin-top:10px;font-size:11.5px;line-height:1.7;color:var(--neutral-700);
+    border-left:2px solid var(--neutral-400);padding:2px 0 2px 10px;
+  }
+  .anno b{color:var(--neutral-900)}
+  .gap-note{
+    margin-top:14px;border:1px dashed #C4C9D0;border-radius:10px;padding:12px 13px;
+    font-size:11.5px;line-height:1.7;color:var(--neutral-700);background:rgba(255,255,255,.55)
+  }
+  .gap-note .k{font-family:var(--font-display);font-weight:700;color:var(--neutral-900);font-size:12.5px;display:block;margin-bottom:3px}
+  .sub-frame-label{margin:16px 0 6px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--neutral-600)}
+  @media (max-width:1100px){.cols{grid-template-columns:1fr;max-width:430px;margin:0 auto}.col-desc{min-height:0}}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-head">
+    <h1>내 서재 — 콜드스타트 상태 비교</h1>
+    <div class="sub">대상: <b>책 0권 + 물어보기 strip 없음</b>인 회원이 마이페이지(/my)에서 보는 화면 · 2026-07-30 · 의사결정용</div>
+  </div>
+
+  <p class="doc-note">
+    이 상태의 회원은 60일 내 정기모임 참여가 없거나, 물어보기에 이미 응답·닫은 사람이다.
+    현재는 제목 한 줄 + 설명 한 줄 + <b>접힌</b> 검색 CTA만 남아 무엇을 해야 하는지 알 수 없다.
+    아래 세 화면은 모두 같은 회원, 같은 페이지다. <b>회색 테두리 안쪽이 실제 제품 UI</b>이고 왼쪽 세로선 주석은 리뷰용 표시다.
+  </p>
+
+  <div class="cols">
+
+    <!-- ══════════ 현재 ══════════ -->
+    <div class="col">
+      <div class="col-head"><span class="tag now">현재</span><span class="col-title">as-is</span></div>
+      <div class="col-desc">지금 배포돼 있는 상태(플래그 OFF라 아직 회원에게 안 보임).</div>
+
+      <div class="phone">
+        <div class="phone-bar">지독해</div>
+        <div class="screen">
+          <div class="h2-sec">내 정보</div>
+          <div class="card mt3">
+            <div class="row"><span class="label">닉네임</span><span class="value">초록고래</span></div>
+            <div class="row"><span class="label">지역</span><span class="value">경주</span></div>
+            <div class="row"><span class="label">연락처</span><span class="link">수정</span></div>
+          </div>
+
+          <div class="mt8">
+            <div class="h2-sec">내 서재</div>
+            <p class="t-sm c-600 mt1">모임에서 읽은 책이 여기 쌓여요.</p>
+            <div class="details">▸ + 책 검색해서 담기</div>
+          </div>
+
+          <div class="mt8">
+            <div class="h1-sec">내 신청</div>
+            <div class="reg">
+              <div class="reg-t">8월 정기모임</div>
+              <div class="reg-m">8월 12일 (수) 오후 7:00 · 우연히 책방</div>
+              <span class="pill">신청 완료</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anno">
+        행동 경로가 <b>접혀 있다</b>. 눌러야 검색창이 나온다는 걸 모르면 그대로 이탈.
+        설명은 "무엇이 쌓이는지"만 말하고 "지금 무엇을 하면 되는지"는 말하지 않는다.
+      </div>
+    </div>
+
+    <!-- ══════════ A안 ══════════ -->
+    <div class="col">
+      <div class="col-head"><span class="tag">A안</span><span class="col-title">초대로 바꾼다</span></div>
+      <div class="col-desc">서재를 노출하되, 빈 상태에서는 검색창을 펼쳐두고 문구를 행동 지향으로 바꾼다. 책이 1권 이상이면 현재 구조 그대로.</div>
+
+      <div class="phone">
+        <div class="phone-bar">지독해</div>
+        <div class="screen">
+          <div class="h2-sec">내 정보</div>
+          <div class="card mt3">
+            <div class="row"><span class="label">닉네임</span><span class="value">초록고래</span></div>
+            <div class="row"><span class="label">지역</span><span class="value">경주</span></div>
+            <div class="row"><span class="label">연락처</span><span class="link">수정</span></div>
+          </div>
+
+          <div class="mt8">
+            <div class="h2-sec">내 서재</div>
+            <p class="t-sm c-600 mt1">모임에서 읽은 책을 검색해 담아보세요.</p>
+            <div class="mt3">
+              <div class="search">
+                <input placeholder="책 제목 일부만 넣어도 돼요" readonly>
+                <button>검색</button>
+              </div>
+              <p class="hint">제목 일부만으로 찾을 수 있어요 (예: 데미안)</p>
+            </div>
+          </div>
+
+          <div class="mt8">
+            <div class="h1-sec">내 신청</div>
+            <div class="reg">
+              <div class="reg-t">8월 정기모임</div>
+              <div class="reg-m">8월 12일 (수) 오후 7:00 · 우연히 책방</div>
+              <span class="pill">신청 완료</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anno">
+        새 UI 요소는 <b>0개</b>. 접힌 것을 펼치고 문구 한 줄을 바꿨을 뿐이다.
+        회원이 계기 없이도 스스로 책을 담을 수 있고, 서재가 독립적인 가치로 자란다.
+      </div>
+      <div class="gap-note">
+        <span class="k">대가</span>
+        담을 계기가 없는 회원에게도 화면을 차지한다. 자발적 담기가 물어보기 응답과 섞여
+        <b>전환율(북극성) 해석이 흐려질 수 있다</b> — 출처는 <code>source='manual'</code>로 구분되지만 지표 분리는 별도 작업.
+      </div>
+    </div>
+
+    <!-- ══════════ B안 ══════════ -->
+    <div class="col">
+      <div class="col-head"><span class="tag">B안</span><span class="col-title">계기가 있을 때만</span></div>
+      <div class="col-desc">이 상태에서는 서재 섹션을 아예 렌더하지 않는다. 물어보기가 뜨는 날 서재가 처음 등장한다.</div>
+
+      <div class="phone">
+        <div class="phone-bar">지독해</div>
+        <div class="screen">
+          <div class="h2-sec">내 정보</div>
+          <div class="card mt3">
+            <div class="row"><span class="label">닉네임</span><span class="value">초록고래</span></div>
+            <div class="row"><span class="label">지역</span><span class="value">경주</span></div>
+            <div class="row"><span class="label">연락처</span><span class="link">수정</span></div>
+          </div>
+
+          <div class="mt8">
+            <div class="h1-sec">내 신청</div>
+            <div class="reg">
+              <div class="reg-t">8월 정기모임</div>
+              <div class="reg-m">8월 12일 (수) 오후 7:00 · 우연히 책방</div>
+              <span class="pill">신청 완료</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anno">
+        서재가 <b>없다</b>. 회원은 이 기능의 존재를 모른 채 기존 화면 그대로를 본다.
+      </div>
+
+      <div class="sub-frame-label">▼ 모임 다녀온 다음 날 (물어보기 발생 시)</div>
+      <div class="phone">
+        <div class="phone-bar">지독해</div>
+        <div class="screen">
+          <div class="h2-sec">내 정보</div>
+          <div class="card mt3">
+            <div class="row"><span class="label">닉네임</span><span class="value">초록고래</span></div>
+            <div class="row"><span class="label">지역</span><span class="value">경주</span></div>
+          </div>
+
+          <div class="ask">
+            <div class="ask-top">
+              <div class="ask-ico">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+              </div>
+              <div style="min-width:0;flex:1">
+                <p class="ask-t">무슨 책 읽으셨어요?</p>
+                <p class="ask-s">7월 정기모임 · 서재에 담아두세요</p>
+              </div>
+              <span class="ask-x">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                  <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                </svg>
+              </span>
+            </div>
+            <button class="btn-fill">책 담기</button>
+          </div>
+
+          <div class="mt8">
+            <div class="h2-sec">내 서재</div>
+            <p class="t-sm c-600 mt1">모임에서 읽은 책이 여기 쌓여요.</p>
+            <div class="details">▸ + 책 검색해서 담기</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="anno">
+        strip이 맥락을 만들고, 바로 아래 서재가 "담으면 여기 쌓인다"의 목적지로 등장한다.
+        <b>빈 서재를 처음 보는 순간에 이미 이유가 있다.</b>
+      </div>
+      <div class="gap-note">
+        <span class="k">대가</span>
+        물어보기가 한 번도 안 뜨는 회원(60일 내 정기모임 미참여)은 <b>서재를 영원히 못 본다</b>.
+        서재를 독립 기능으로 키울 여지가 닫히고, 물어보기 도달에 100% 의존하게 된다.
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
