@@ -107,7 +107,11 @@ export default function LibraryGrid({ entries }: Props) {
     <div>
       <div
         className={
-          expanded
+          // hasMore를 함께 보는 이유: 7권에서 1권을 빼면 hasMore가 false로 떨어져
+          // 접기 버튼이 사라지는데(아래 조건부 렌더), expanded는 true로 남아
+          // 높이 클램프 + 내부 스크롤만 갇힌 채 되돌릴 수단이 없어진다.
+          // hasMore=false면 전량이 이미 보이므로 클램프 자체가 불필요하다.
+          expanded && hasMore
             ? 'max-h-[420px] overflow-y-auto pr-1 grid grid-cols-3 gap-3'
             : 'grid grid-cols-3 gap-3'
         }
