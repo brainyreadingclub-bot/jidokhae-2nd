@@ -6,15 +6,22 @@ type: project
 
 ## 한 줄 요약 (2026-07-31 기준)
 
-서재+물어보기 기능은 prod에 배포됐지만 **기능 플래그 OFF라 회원 노출 0**. 켜기 전 게이트 2건 중 ① 알림톡 점검은 7/30 통과(정상 작동 확인), ② 회원 콜드스타트 화면은 7/31에 **B안 확정 + 구현 완료(PR #46)** — Preview 육안 검증만 남았다. 검증 통과 시 `library_enabled='on'` 토글로 전환율 측정 시작.
+**켜기 전 게이트 2건이 모두 통과됐다.** ① 알림톡 점검(7/30, 정상 확인) ② 회원 콜드스타트 화면(7/31, B안 확정·구현·Preview 검증·머지, PR #46). 이제 남은 건 **`site_settings.library_enabled='on'` 토글 결정 하나**뿐 — 배포 불필요, 켜는 순간 전환율 측정 시작.
 
 ## 현재 상태
 
-**브랜치:** `feat/library-coldstart-b` (PR #46 열림, preview READY). `main`은 origin과 동기화, 최신 `b2b9cb1`
-**prod 배포:** Vercel `dpl_BZUXUSQJJ8Tws62zcsMSj6DLqr6Z` — target=production, state=READY, sha=`b2b9cb1` (확인: 2026-07-31)
-**Preview:** `https://jidokhae-2nd-git-feat-library-coldstart-b-flashchecks-projects.vercel.app` (Vercel SSO 보호 — 로그인된 브라우저에서만 접근)
+**브랜치:** `main` (origin과 동기화). 최신 커밋 `7c71804` (PR #46 머지)
+**prod 배포:** Vercel `dpl_GjnFJomn7ng6pfm8MHLbezU9q72y` — target=production, state=READY, sha=`7c71804` (확인: 2026-07-31). 플래그 OFF라 **회원 노출 여전히 0**
+
+**플래그 토글 방법** — admin UI 없음(`/admin/settings`는 다른 키만 관리). Supabase 대시보드 SQL Editor(`ycqqzzvyixvtdorjxkrn`)에서 직접:
+```sql
+INSERT INTO public.site_settings (key, value) VALUES ('library_enabled', 'on')
+ON CONFLICT (key) DO UPDATE SET value = 'on', updated_at = now();
+```
+끄기는 `'off'`로 같은 쿼리. `getSiteSettings()`가 React `cache()`라 요청 단위 캐시 — 반영은 즉시.
 
 **최근 머지 이력:**
+- `7c71804` (7/31, PR #46) — feat(library): 서재 콜드스타트 B안 (게이트 ② 통과)
 - `110ed16` (7/30, PR #45) — fix(notification): 미승격 환불 알림톡 미발송 (meetingId 빈 문자열 → 22P02)
 - `4723d34` (7/30, PR #44) — fix(remind): 리마인드 대상에 `pending_transfer` 포함 (27명, 다음 모임 전날부터 회원 영향)
 - `1f9ffaa` (7/24, PR #43 squash) — fix(library): 물어보기 응답률 계측 버그 수정 + 지표 재정의
@@ -116,7 +123,11 @@ select key, value from site_settings where key = 'payment_mode';
 0. ~~리마인드 크론 `pending_transfer` 누락 수정~~ → **2026-07-30 머지·배포 완료** (PR #44). `PARTICIPATED_STATUSES`를 `src/lib/registration-status.ts`로 추출해 `asks.ts`와 공유.
 0. ~~미승격 환불 알림톡 미발송 수정~~ → **2026-07-30 머지·배포 완료** (PR #45).
 
-1. **[진행 중, 게이트 ②] 서재 콜드스타트 B안 Preview 검증** — 구현·PR까지 완료(PR #46, `d618377`), **육안 검증만 남음**. 카카오 로그인이 필요해 Claude가 대신 못 하는 단계.
+0. ~~서재 콜드스타트 B안~~(게이트 ②) → **2026-07-31 머지·배포 완료** (PR #46). Preview에서 단무지님 계정으로 검증 — 책을 전부 뺀 뒤 "내 서재" 섹션이 통째로 사라지고 "내 정보" 바로 아래가 "내 신청"이 되는 것 확인.
+   - ⚠️ **부수 효과 실측**: 단무지님 계정은 지금 책 0권 + 물어보기 없음이라 **서재로 들어갈 UI 경로가 아예 없다**. 검증 중 뺀 책(HOW TO 게임이론…)은 prod DB에서 실제로 삭제됐고 UI로는 되돌릴 수 없다(Preview는 prod Supabase 직결). B안이 감수한 대가의 구체적 발현 — 필요하면 SQL로 복구.
+   - 확정 근거·시안·검증 절차는 아래 상세 참조.
+
+1. ~~[게이트 ②] 서재 콜드스타트 B안 Preview 검증~~ — 완료(위 0번). 아래는 결정 기록으로 보존.
    - 확정: **B안(계기가 있을 때만)** — 책 0권 + 물어보기 없음이면 서재 섹션 미렌더. A안(빈 상태에서 검색창 펼치기)은 담을 계기 없는 회원에게도 화면을 차지하고, 자발적 담기가 물어보기 응답과 섞여 전환율(북극성) 해석을 흐린다는 이유로 탈락. 시안: `docs/superpowers/mockups/2026-07-30-서재-콜드스타트-AB.html`
    - 함께 결정: `/my`의 `LibrarySection` Suspense fallback을 **`null`**로. 조건부 섹션에 스켈레톤을 두면 안 나올 서재를 예고했다 사라져 B안이 없애려던 노이즈가 그대로 남는다(`AskStripSection`과 동일 처리). 미사용이 된 `LibrarySkeleton` 삭제.
    - 검증 절차: Preview URL → 카카오 로그인 → `/my`에서 (1) 책 있음 → 서재 정상, (2) 책 전부 빼기 → 물어보기 없으면 서재 사라짐 / 물어보기 있으면 빈 서재 유지. 상태별 캡처 남길 것.
