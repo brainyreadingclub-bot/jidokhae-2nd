@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 서재 — 책 표지 비주얼 비교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  /* ── 지독해 실제 토큰 (globals.css @theme inline) ── */
+  :root{
+    --primary-50:#F3FAF6; --primary-200:#CDE9DB; --primary-500:#127A5A;
+    --primary-600:#0d5c43; --primary-700:#0B4B37;
+    --neutral-50:#F9FAFB; --neutral-100:#F0F2F5; --neutral-200:#E5E8EB;
+    --neutral-400:#B0B8C1; --neutral-500:#8B95A1; --neutral-600:#6B7684;
+    --neutral-700:#5A6B7A; --neutral-800:#333D48; --neutral-900:#191F28;
+    --radius-md:12px;
+    --font-display:'Noto Serif KR',Georgia,serif;
+    --font-sans:'Pretendard Variable','Pretendard','Malgun Gothic',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-sans);background:#EDEEF0;color:var(--neutral-900);
+       padding:36px 26px 60px;-webkit-font-smoothing:antialiased}
+
+  /* ── 리뷰 문서 chrome (제품 UI 아님) ── */
+  .doc{max-width:1280px;margin:0 auto}
+  .doc-head{border-bottom:1.5px solid var(--neutral-800);padding-bottom:13px}
+  .doc-head h1{font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:-.02em}
+  .doc-head .sub{margin-top:5px;font-size:12.5px;color:var(--neutral-600);line-height:1.6}
+  .doc-note{font-size:12px;color:var(--neutral-700);margin:14px 0 24px;line-height:1.75;max-width:960px}
+  .doc-note b{color:var(--neutral-900)}
+  .doc-note code{font-size:11px;background:rgba(255,255,255,.7);padding:1px 4px;border-radius:3px}
+
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:start}
+  .col-head{display:flex;align-items:baseline;gap:8px;margin-bottom:5px}
+  .tag{font-size:10.5px;font-weight:700;letter-spacing:.09em;padding:3px 7px;border-radius:4px;
+       background:var(--neutral-800);color:#fff}
+  .tag.now{background:var(--neutral-400);color:var(--neutral-900)}
+  .col-title{font-family:var(--font-display);font-weight:600;font-size:14.5px;color:var(--neutral-800)}
+  .col-desc{font-size:11.5px;color:var(--neutral-600);line-height:1.65;min-height:62px;margin-bottom:10px}
+
+  .phone{background:var(--neutral-50);border:1px solid #D6DAE0;border-radius:20px;overflow:hidden;
+         box-shadow:0 1px 2px rgba(25,31,40,.05),0 10px 26px -12px rgba(25,31,40,.18)}
+  .phone-bar{height:26px;background:#fff;border-bottom:1px solid var(--neutral-200);display:flex;
+             align-items:center;padding:0 12px;font-family:var(--font-display);font-weight:700;
+             font-size:11.5px;color:var(--primary-500)}
+  .screen{padding:18px 20px 22px}
+
+  .sec-h{display:flex;align-items:baseline;gap:8px}
+  .sec-h h2{font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--neutral-800);letter-spacing:-.02em}
+  .sec-h span{font-size:13px;color:var(--neutral-600)}
+  .add{margin-top:12px;font-size:14px;font-weight:600;color:var(--primary-600)}
+
+  /* ══ 공통 그리드 ══ */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+
+  /* ══ 현재 ══ */
+  .now-cover{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;
+             border:1px solid var(--neutral-200);box-shadow:0 1px 2px rgba(0,0,0,.05);display:block}
+
+  /* ══ A안 — 해상도만 교체 (틀·잘림 그대로) ══ */
+  .a-cover{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;
+           border:1px solid var(--neutral-200);box-shadow:0 1px 2px rgba(0,0,0,.05);display:block}
+
+  /* ══ B안 — 책장: 자연 비율 + 바닥 정렬 + 선반선 ══ */
+  .shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:end;
+         padding-bottom:9px;border-bottom:1px solid var(--neutral-200)}
+  .shelf + .shelf{margin-top:14px}
+  .shelf:first-of-type{margin-top:14px}
+  .b-cover{width:100%;height:auto;display:block;border-radius:2px;
+           box-shadow:0 0 0 1px rgba(25,31,40,.08), 0 6px 10px -6px rgba(25,31,40,.35),
+                      0 1px 2px rgba(25,31,40,.12)}
+
+  /* 완독/읽는 중 pill (실제 컴포넌트 재현) */
+  .pill{display:inline-flex;align-items:center;gap:3px;margin-top:6px;border-radius:5px;
+        padding:2px 5px;font-size:10px;font-weight:700;background:var(--neutral-100);color:var(--neutral-600)}
+  .pill.done{background:var(--primary-50);border:1px solid var(--primary-200);color:var(--primary-700)}
+  .src{margin-top:2px;font-size:10px;color:var(--neutral-400);line-height:1.3}
+
+  /* 표지 없음 fallback */
+  .fb-now{width:100%;aspect-ratio:2/3;border-radius:6px;border:1px solid var(--neutral-200);
+          background:var(--neutral-100);display:flex;align-items:flex-end;padding:6px}
+  .fb-now span{font-family:var(--font-display);font-weight:700;font-size:10.5px;
+               color:var(--neutral-600);line-height:1.25}
+  .fb-b{width:100%;aspect-ratio:1/1.47;border-radius:2px;background:#fff;
+        box-shadow:0 0 0 1px rgba(25,31,40,.08), 0 6px 10px -6px rgba(25,31,40,.35);
+        display:flex;flex-direction:column;justify-content:center;padding:10px 9px;
+        border-left:3px solid var(--primary-500)}
+  .fb-b .t{font-family:var(--font-display);font-weight:700;font-size:11px;color:var(--neutral-800);line-height:1.3}
+  .fb-b .a{margin-top:4px;font-size:9.5px;color:var(--neutral-500)}
+
+  .anno{margin-top:11px;font-size:11.5px;line-height:1.7;color:var(--neutral-700);
+        border-left:2px solid var(--neutral-400);padding:2px 0 2px 10px}
+  .anno b{color:var(--neutral-900)}
+  .cost{margin-top:12px;border:1px dashed #C4C9D0;border-radius:10px;padding:11px 12px;
+        font-size:11.5px;line-height:1.7;color:var(--neutral-700);background:rgba(255,255,255,.55)}
+  .cost .k{font-family:var(--font-display);font-weight:700;color:var(--neutral-900);
+           font-size:12.5px;display:block;margin-bottom:3px}
+  @media (max-width:1080px){.cols{grid-template-columns:1fr;max-width:430px;margin:0 auto}.col-desc{min-height:0}}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="doc-head">
+    <h1>내 서재 — 책 표지 비주얼</h1>
+    <div class="sub">/my 마이페이지 · 2026-07-31 · 의사결정용 · 회색 테두리 안쪽이 실제 제품 UI</div>
+  </div>
+
+  <p class="doc-note">
+    실측: 카카오가 주는 <code>thumbnail</code>은 <b>120×174</b>인데 3열 그리드 한 칸이 CSS 110px,
+    3배 밀도 폰에서는 330px가 필요하다 — <b>2.75배 확대라 뭉개진다</b>.
+    같은 URL의 <code>fname</code> 파라미터를 풀면 원본 <b>458×670</b>(3.8배)에 바로 닿는다.
+    임의 리사이즈 규격(R240·R360 등)은 403으로 막혀 있어 원본 경로가 유일한 해법이다.<br>
+    또 하나 — 표지 비율은 책마다 다르다(18권 실측 <b>1:1.41 ~ 1:1.69</b>, 중앙값 1:1.467).
+    지금은 2:3 고정틀에 <code>object-cover</code>라 <b>대부분의 책이 어딘가 잘려 있다</b>(세로 최대 11%, 가로 최대 6%).
+  </p>
+
+  <div class="cols">
+
+    <!-- ═════════ 현재 ═════════ -->
+    <div>
+      <div class="col-head"><span class="tag now">현재</span><span class="col-title">as-is</span></div>
+      <div class="col-desc">120×174 썸네일을 2:3 틀에 잘라 넣음. 배포돼 있는 상태.</div>
+
+      <div class="phone">
+        <div class="phone-bar">지독해</div>
+        <div class="screen">
+          <div class="sec-h"><h2>내 서재</h2><span>6권</span></div>
+          <div class="grid">
+            <div><img class="now-cover" src="https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F540810%3Ftimestamp%3D20260528110944" alt="데미안"><span class="pill done">✓ 완독</span><p class="src">7월 정기모임에서</p></div>
+            <div><img class="now-cover" src="https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6346070%3Ftimestamp%3D20260108152003" alt="총 균 쇠"><span class="pill">읽는 중</span></div>
+            <div><img class="now-cover" src="https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F532683%3Ftimestamp%3D20260728110737" alt="소년이 온다"><span class="pill done">✓ 완독</span><p class="src">6월 정기모임에서</p></div>
+            <div><img class="now-cover" src="https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F532619%3Ftimestamp%3D20231124191358" alt="아몬드"><span class="pill">읽는 중</span></div>
+            <div><img class="now-cover" src="https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F5643183%3Ftimestamp%3D20260716120249" alt="불편한 편의점"><span class="pill">읽는 중</span></div>
+            <div><div class="fb-now"><span>표지 없는 책</span></div><span class="pill">읽는 중</span></div>
+          </div>
+          <p class="add">+ 책 검색해서 담기</p>
+        </div>
+      </div>
+
+      <div class="anno">
+        표지 글자가 <b>번져 읽히지 않는다</b>. 얇은 회색 테두리 때문에 책이 아니라
+        <b>카드 6장</b>으로 보이고, 잘림 때문에 표지 프레임이 어중간하게 잘려 있다.
+      </div>
+    </div>
+
+    <!-- ═════════ A안 ═════════ -->
+    <div>
+      <div class="col-head"><span class="tag">A안</span><span class="col-title">해상도만 고친다</span></div>
+      <div class="col-desc">원본 458×670을 쓰되 2:3 고정틀·테두리·잘림은 그대로. 코드 변경은 URL 변환 한 줄.</div>
+
+      <div class="phone">
+        <div class="phone-bar">지독해</div>
+        <div class="screen">
+          <div class="sec-h"><h2>내 서재</h2><span>6권</span></div>
+          <div class="grid">
+            <div><img class="a-cover" src="https://t1.daumcdn.net/lbook/image/540810?timestamp=20260528110944" alt="데미안"><span class="pill done">✓ 완독</span><p class="src">7월 정기모임에서</p></div>
+            <div><img class="a-cover" src="https://t1.daumcdn.net/lbook/image/6346070?timestamp=20260108152003" alt="총 균 쇠"><span class="pill">읽는 중</span></div>
+            <div><img class="a-cover" src="https://t1.daumcdn.net/lbook/image/532683?timestamp=20260728110737" alt="소년이 온다"><span class="pill done">✓ 완독</span><p class="src">6월 정기모임에서</p></div>
+            <div><img class="a-cover" src="https://t1.daumcdn.net/lbook/image/532619?timestamp=20231124191358" alt="아몬드"><span class="pill">읽는 중</span></div>
+            <div><img class="a-cover" src="https://t1.daumcdn.net/lbook/image/5643183?timestamp=20260716120249" alt="불편한 편의점"><span class="pill">읽는 중</span></div>
+            <div><div class="fb-now"><span>표지 없는 책</span></div><span class="pill">읽는 중</span></div>
+          </div>
+          <p class="add">+ 책 검색해서 담기</p>
+        </div>
+      </div>
+
+      <div class="anno">
+        글자가 <b>또렷해진다</b>. 이것만으로 체감의 8할이 해결된다.
+        다만 카드처럼 보이는 것과 잘림은 남는다.
+      </div>
+      <div class="cost">
+        <span class="k">대가</span>
+        없음. 변환 실패 시 기존 URL로 폴백하면 되고, 이미 담긴 책도 렌더 시점에 적용돼 DB 손댈 일이 없다.
+      </div>
+    </div>
+
+    <!-- ═════════ B안 ═════════ -->
+    <div>
+      <div class="col-head"><span class="tag">B안</span><span class="col-title">책장으로 만든다</span></div>
+      <div class="col-desc">해상도 교체 + 표지를 자르지 않고 제 비율대로, 바닥에 나란히 세우고 선반선을 깐다.</div>
+
+      <div class="phone">
+        <div class="phone-bar">지독해</div>
+        <div class="screen">
+          <div class="sec-h"><h2>내 서재</h2><span>6권</span></div>
+
+          <div class="shelf">
+            <div><img class="b-cover" src="https://t1.daumcdn.net/lbook/image/540810?timestamp=20260528110944" alt="데미안"><span class="pill done">✓ 완독</span><p class="src">7월 정기모임에서</p></div>
+            <div><img class="b-cover" src="https://t1.daumcdn.net/lbook/image/6346070?timestamp=20260108152003" alt="총 균 쇠"><span class="pill">읽는 중</span></div>
+            <div><img class="b-cover" src="https://t1.daumcdn.net/lbook/image/532683?timestamp=20260728110737" alt="소년이 온다"><span class="pill done">✓ 완독</span><p class="src">6월 정기모임에서</p></div>
+          </div>
+
+          <div class="shelf">
+            <div><img class="b-cover" src="https://t1.daumcdn.net/lbook/image/532619?timestamp=20231124191358" alt="아몬드"><span class="pill">읽는 중</span></div>
+            <div><img class="b-cover" src="https://t1.daumcdn.net/lbook/image/5643183?timestamp=20260716120249" alt="불편한 편의점"><span class="pill">읽는 중</span></div>
+            <div><div class="fb-b"><p class="t">표지 없는 책</p><p class="a">지은이</p></div><span class="pill">읽는 중</span></div>
+          </div>
+
+          <p class="add">+ 책 검색해서 담기</p>
+        </div>
+      </div>
+
+      <div class="anno">
+        잘림 <b>0</b>. 높이가 제각각인 게 오히려 <b>진짜 책장</b>처럼 읽힌다.
+        테두리를 빼고 그림자를 아래로 깔아 책이 <b>서 있는</b> 느낌을 만들었다.
+        표지 없는 책도 회색 빈 칸이 아니라 <b>민무늬 양장본</b>처럼 보이게 바꿨다.
+      </div>
+      <div class="cost">
+        <span class="k">대가</span>
+        높이가 들쭉날쭉해 그리드 정렬감이 약해진다(책장 은유를 사면 따라오는 값).
+        행 단위로 3권씩 묶어야 해서 <code>LibraryGrid</code>에 청크 로직이 붙는다 —
+        6권 초과 시 더보기 토글과 맞물리는 부분을 손봐야 한다.
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
