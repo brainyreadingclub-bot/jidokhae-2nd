@@ -21,6 +21,10 @@ export default function LoginClient({ settings, memberCount }: Props) {
     setIsLoading(true)
     setErrorMessage('')
 
+    // 딥링크 목적지는 미들웨어가 심은 쿠키(jdkh_next)로 콜백까지 전달된다.
+    // redirectTo에 쿼리를 붙이지 않는 이유: Supabase Redirect URL 허용목록이
+    // 쿼리 붙은 URL을 거부하면 전 회원 로그인이 깨진다. 인증 경로는 외부 설정에
+    // 의존하지 않는 편이 안전하다.
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
