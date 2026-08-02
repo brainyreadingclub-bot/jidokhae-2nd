@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import {
   safeNextPath,
   toNextParam,
+  shouldRememberPath,
   NEXT_COOKIE,
   NEXT_COOKIE_MAX_AGE,
 } from '@/lib/next-path'
@@ -65,12 +66,14 @@ export async function middleware(request: NextRequest) {
       const url = request.nextUrl.clone()
       // 이미 로그인된 회원이 딥링크를 눌러 로그인 화면에 도달한 경우
       // (직전 요청에서 쿠키가 심겼다) 홈이 아니라 목적지로 보낸다
-      const target = safeNextPath(request.cookies.get(NEXT_COOKIE)?.value)
+      const rawNext = request.cookies.get(NEXT_COOKIE)?.value
+      const target = safeNextPath(rawNext)
       const qIndex = target.indexOf('?')
       url.pathname = qIndex === -1 ? target : target.slice(0, qIndex)
       url.search = qIndex === -1 ? '' : target.slice(qIndex)
       const redirectResponse = NextResponse.redirect(url)
-      if (target !== '/') redirectResponse.cookies.delete(NEXT_COOKIE)
+      // 값이 있으면 무조건 지운다 — 검증에서 걸러진 값도 남겨두면 10분간 재평가된다
+      if (rawNext) redirectResponse.cookies.delete(NEXT_COOKIE)
       supabaseResponse.cookies.getAll().forEach((cookie) => {
         redirectResponse.cookies.set(cookie)
       })
@@ -91,7 +94,15 @@ export async function middleware(request: NextRequest) {
     const redirectResponse = NextResponse.redirect(url)
     // 목적지는 쿠키로 넘긴다(이유는 next-path.ts의 NEXT_COOKIE 주석 참조).
     // 홈이 목적지면 굳이 심지 않는다 — 기본 동작과 같다.
-    if (next !== '/') {
+    // shouldRememberPath: API 요청·prefetch는 "회원이 보려던 화면"이 아니다.
+    const remember =
+      next !== '/' &&
+      shouldRememberPath(
+        request.method,
+        pathname,
+        request.headers.get('next-router-prefetch') !== null,
+      )
+    if (remember) {
       redirectResponse.cookies.set(NEXT_COOKIE, next, {
         path: '/',
         maxAge: NEXT_COOKIE_MAX_AGE,

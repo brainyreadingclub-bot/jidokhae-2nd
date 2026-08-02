@@ -37,3 +37,24 @@ export const NEXT_COOKIE = 'jdkh_next'
 
 /** 딥링크 쿠키 수명(초). 로그인 왕복에 필요한 만큼만 — 오래 남으면 엉뚱한 이동이 된다. */
 export const NEXT_COOKIE_MAX_AGE = 600
+
+/**
+ * 이 요청을 "회원이 보려던 화면"으로 기억해도 되는가.
+ *
+ * 미들웨어 matcher는 /api/* 를 통과시키므로, 세션 만료 시점에 나간 백그라운드 fetch
+ * (예: AskStrip의 POST /api/library/ask)도 미인증으로 잡혀 목적지로 기억될 수 있다.
+ * 그러면 로그인 직후 JSON 라우트로 GET 리다이렉트되어 405 에러 화면을 보게 된다.
+ * 로그인했더니 에러가 뜨는 형태라 회원 입장에서 원인을 짐작할 수 없다.
+ *
+ * prefetch도 제외한다 — 회원이 누른 적 없는 링크가 로그인 후 목적지가 되면 안 된다.
+ */
+export function shouldRememberPath(
+  method: string,
+  pathname: string,
+  isPrefetch = false,
+): boolean {
+  if (method !== 'GET') return false
+  if (isPrefetch) return false
+  if (pathname.startsWith('/api/')) return false
+  return true
+}
