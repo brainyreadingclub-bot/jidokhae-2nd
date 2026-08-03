@@ -10,6 +10,7 @@
 - `feedback_2026-04-07_operator-workflow-first.md` — 기술 설계 전 운영자 워크플로우 먼저 파악
 - `feedback_2026-04-07_subagent-api-crosscheck.md` — 서브에이전트 API 연동 필드 크로스체크
 - `feedback_2026-04-27_post-state-leftovers.md` — 운영자 UI 변경 시 사후 잔재 케이스(모임 삭제 후/회원 잠수/토글 누락/회원 후속) 사전 점검
+- `feedback_2026-08-03_guard-noop.md` — 가드를 추가했으면 그 조건이 참이 되는 경로를 실측할 것 (단위 테스트는 입력 도달을 증명하지 못함)
 
 ## project (프로젝트 상태)
 - `project_next_session.md` — 다음 세션 핸드오프 (매 회고마다 갱신)
