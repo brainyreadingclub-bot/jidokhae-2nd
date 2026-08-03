@@ -58,3 +58,22 @@ export function shouldRememberPath(
   if (pathname.startsWith('/api/')) return false
   return true
 }
+
+/**
+ * prefetch 요청인가. `sec-purpose`(표준) 또는 `purpose`(구 크롬) 헤더로 판별한다.
+ *
+ * ⚠️ `next-router-prefetch`를 쓰면 안 된다 — Next.js가 `RSC`와 함께 **미들웨어에 닿기 전에
+ * 제거**한다(2026-08-03 로컬 실측: 미들웨어가 받는 헤더 목록에 없음). 그걸로 판별하면
+ * 조건이 영원히 거짓이라 가드가 조용한 no-op이 된다.
+ *
+ * 한계: 위 이유로 **Next.js Link의 라우터 prefetch는 이 방법으로도 감지되지 않는다.**
+ * 브라우저가 보내는 speculation rules prefetch만 걸린다. 다만 비로그인 회원에게는
+ * 보호 라우트 링크가 렌더되지 않으므로 실제 노출 면적은 좁다.
+ */
+export function isPrefetchRequest(
+  secPurpose: string | null,
+  purpose: string | null,
+): boolean {
+  const value = secPurpose ?? purpose ?? ''
+  return value.toLowerCase().includes('prefetch')
+}

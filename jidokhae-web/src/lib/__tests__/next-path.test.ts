@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { safeNextPath, toNextParam, shouldRememberPath } from '@/lib/next-path'
+import {
+  safeNextPath,
+  toNextParam,
+  shouldRememberPath,
+  isPrefetchRequest,
+} from '@/lib/next-path'
 
 describe('safeNextPath', () => {
   it('내부 절대경로는 그대로 통과시킨다', () => {
@@ -85,5 +90,27 @@ describe('shouldRememberPath', () => {
   it('prefetch는 기억하지 않는다', () => {
     // 회원이 누른 적 없는 링크가 로그인 후 목적지가 되면 안 된다
     expect(shouldRememberPath('GET', '/meetings/abc', true)).toBe(false)
+  })
+})
+
+describe('isPrefetchRequest', () => {
+  // 2026-08-03 로컬 실측: Next.js가 next-router-prefetch·RSC를 미들웨어 전에 제거한다.
+  // 실제로 도달하는 헤더는 sec-purpose / purpose 둘뿐이다.
+  it('sec-purpose 표준 헤더를 인식한다', () => {
+    expect(isPrefetchRequest('prefetch', null)).toBe(true)
+    expect(isPrefetchRequest('prefetch;prerender', null)).toBe(true)
+  })
+
+  it('purpose 구 크롬 헤더를 인식한다', () => {
+    expect(isPrefetchRequest(null, 'prefetch')).toBe(true)
+  })
+
+  it('대소문자를 가리지 않는다', () => {
+    expect(isPrefetchRequest('Prefetch', null)).toBe(true)
+  })
+
+  it('일반 요청은 false', () => {
+    expect(isPrefetchRequest(null, null)).toBe(false)
+    expect(isPrefetchRequest('', '')).toBe(false)
   })
 })

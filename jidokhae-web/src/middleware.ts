@@ -4,6 +4,7 @@ import {
   safeNextPath,
   toNextParam,
   shouldRememberPath,
+  isPrefetchRequest,
   NEXT_COOKIE,
   NEXT_COOKIE_MAX_AGE,
 } from '@/lib/next-path'
@@ -100,7 +101,10 @@ export async function middleware(request: NextRequest) {
       shouldRememberPath(
         request.method,
         pathname,
-        request.headers.get('next-router-prefetch') !== null,
+        isPrefetchRequest(
+          request.headers.get('sec-purpose'),
+          request.headers.get('purpose'),
+        ),
       )
     if (remember) {
       redirectResponse.cookies.set(NEXT_COOKIE, next, {
