@@ -10,6 +10,13 @@
  * 2026-07-30: 대상자 필터를 confirmed 단독 → PARTICIPATED_STATUSES로 교정.
  *   운영자가 입금 확인을 월말에 몰아 처리하므로 모임 전날 시점엔 계좌이체 신청자가
  *   대부분 pending_transfer로 남아 리마인드를 못 받고 있었다(당시 27명).
+ *
+ * 2026-08-11: `#{결제상태}` 변수 추가.
+ *   위 교정으로 pending_transfer 신청자가 리마인드를 받게 됐는데, 템플릿 본문의
+ *   `(결제완료)`가 고정 문구라 아직 입금하지 않은 회원에게도 "결제완료"라고
+ *   단언하고 있었다. 상태에 따라 갈리도록 변수로 뺀다.
+ *   ⚠️ 이 코드는 MEETING_REMIND_V2 템플릿이 승인된 뒤에 배포해야 한다.
+ *      구 템플릿에는 `#{결제상태}` 변수가 없어 치환 오류로 발송이 막힌다.
  */
 
 import { NextResponse, type NextRequest } from 'next/server'
@@ -24,11 +31,21 @@ type RemindTask = {
   registrationId: string
   userId: string
   paidAmount: number | null
+  /** 알림톡 `#{결제상태}` 치환용. confirmed면 결제완료, pending_transfer면 입금 확인 중 */
+  registrationStatus: string
   profile: {
     phone: string | null
     real_name: string | null
     nickname: string
   }
+}
+
+/**
+ * 결제 상태 라벨. `pending_transfer`를 "미입금"으로 부르지 않는다 —
+ * 운영자가 월말에 몰아 확인하므로 이 상태의 회원은 대부분 이미 입금했다.
+ */
+function paymentStatusLabel(status: string): string {
+  return status === 'pending_transfer' ? '입금 확인 중' : '결제완료'
 }
 
 export async function GET(request: NextRequest) {
@@ -64,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     const { data: registrations } = await supabase
       .from('registrations')
-      .select('id, user_id, paid_amount, profiles(phone, real_name, nickname)')
+      .select('id, user_id, paid_amount, status, profiles(phone, real_name, nickname)')
       .eq('meeting_id', meeting.id)
       .in('status', PARTICIPATED_STATUSES)
 
@@ -85,6 +102,7 @@ export async function GET(request: NextRequest) {
         registrationId: reg.id,
         userId: reg.user_id,
         paidAmount: reg.paid_amount,
+        registrationStatus: reg.status,
         profile: profileData,
       })
     }
@@ -92,7 +110,7 @@ export async function GET(request: NextRequest) {
 
   // 병렬 발송 (Vercel 10s 타임아웃 대응 — Promise.allSettled로 부분 실패 허용)
   const results = await Promise.allSettled(
-    tasks.map(({ meeting, registrationId, userId, paidAmount, profile }) => {
+    tasks.map(({ meeting, registrationId, userId, paidAmount, registrationStatus, profile }) => {
       const displayName = profile.real_name || profile.nickname
       return sendNotification({
         type: 'meeting_remind',
@@ -107,6 +125,7 @@ export async function GET(request: NextRequest) {
           '#{모임일시}': `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)}`,
           '#{장소}': meeting.location,
           '#{참가비}': formatFee(paidAmount ?? meeting.fee),
+          '#{결제상태}': paymentStatusLabel(registrationStatus),
           '#{모임ID}': meeting.id,
         },
       })
