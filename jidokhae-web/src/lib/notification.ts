@@ -17,6 +17,7 @@ type NotificationType =
   | 'waitlist_confirm'
   | 'waitlist_promoted'
   | 'waitlist_refunded'
+  | 'book_ask'
 
 type SendNotificationParams = {
   type: NotificationType
@@ -294,6 +295,39 @@ export async function sendWaitlistRefundedNotification(
       '#{회원명}': displayName,
       '#{모임명}': meetingTitle,
       '#{결제금액}': formatFee(refundedAmount),
+    },
+  })
+}
+
+// ─── 물어보기 (모임에서 읽은 책 담기) 알림 ───
+
+/**
+ * 모임 다음날, 참여자에게 "읽으신 책 담아보세요"를 1회 보낸다.
+ *
+ * 중복 차단은 notifications의 부분 UNIQUE INDEX가 맡는다
+ * (recipient_id, meeting_id) WHERE type = 'book_ask'.
+ * INSERT 단계에서 23505로 걸리므로 Solapi 발송 전에 차단된다.
+ *
+ * registrationId를 넘기지 않는 이유 — 이 알림은 "신청 건"이 아니라
+ * "그 모임에 참여한 사람"에게 가는 것이라 회원+모임이 단위다.
+ */
+export async function sendBookAskNotification(
+  userId: string,
+  meetingId: string,
+  meetingDate: string,
+) {
+  const profile = await getProfileForNotification(userId)
+  const displayName = profile.real_name || profile.nickname
+
+  return sendNotification({
+    type: 'book_ask',
+    recipientId: userId,
+    recipientPhone: profile.phone,
+    meetingId,
+    templateCode: process.env.SOLAPI_TEMPLATE_BOOK_ASK!,
+    variables: {
+      '#{회원명}': displayName,
+      '#{모임일}': formatKoreanDate(meetingDate),
     },
   })
 }

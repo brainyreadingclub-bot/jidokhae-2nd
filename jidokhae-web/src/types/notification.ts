@@ -1,6 +1,14 @@
+export type NotificationType =
+  | 'meeting_remind'
+  | 'registration_confirm'
+  | 'waitlist_confirm'
+  | 'waitlist_promoted'
+  | 'waitlist_refunded'
+  | 'book_ask'
+
 export type Notification = {
   id: string
-  type: 'meeting_remind' | 'registration_confirm'
+  type: NotificationType
   recipient_id: string
   recipient_phone: string
   meeting_id: string | null
