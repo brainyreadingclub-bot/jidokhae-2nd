@@ -14,16 +14,33 @@ type: project
 **딥링크 복귀(PR #48):** 머지 완료 — main `32f7b76`
 **알림톡 템플릿 7건:** Solapi 반영 완료, **검수 요청 대기(전부 PENDING)**
 
-**열린 PR — 둘 다 draft, 승인 전 머지 금지**
-- [#49](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/49) `feat/book-ask-cron` — 물어보기 크론 + 마이그레이션 SQL
-- [#50](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/50) `fix/remind-payment-status` — 결제상태 단언 제거 + 누락 변수 보정 + 변수 대조표
-- 둘 다 `notification.ts`를 건드리지만 `merge-tree`로 **충돌 없음 확인**
-- (#40 `docs/redesign-claude-md`는 7/12부터 방치 — 정리 필요)
+**열린 PR 5건 — 머지 순서가 정해져 있다**
 
-**이번에 잡은 결함 3건**
-- 🔴 book-ask 크론이 **저장소 루트** `vercel.json`에 등록돼 있었다. Vercel Root Directory는 `jidokhae-web`이라 그 파일은 읽히지 않는다 — 배포해도 크론이 영영 안 떴을 것
+| PR | 브랜치 | 지금 머지 가능? |
+|---|---|---|
+| [#51](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/51) | `docs/alimtalk-runbook` | ✅ 문서만. 코드 변경 0 |
+| [#52](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/52) | `feat/admin-notification-log` | ✅ 의존성 없음. preview 육안 확인만 하면 됨 |
+| [#49](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/49) | `feat/book-ask-cron` | ⏳ draft — 승인 + env 필요 |
+| [#53](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/53) | `feat/welcome-alimtalk` | ⏳ draft — **base가 #49다.** #49 머지 후 자동으로 main으로 전환됨 |
+| [#50](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/50) | `fix/remind-payment-status` | ⏳ draft — 승인 + env 교체와 **동시** |
+
+**머지 순서: #51·#52 (아무 때나) → #49 → #53 → #50**
+
+브랜치 4쌍 전부 `merge-tree`로 **충돌 없음 확인**(2026-08-13). #53만 #49 위에 올려둬서 충돌이 이미 해소된 상태다.
+
+(#40 `docs/redesign-claude-md`는 7/12부터 방치 — 정리 필요)
+
+**이번에 잡은 결함 4건**
+- 🔴 book-ask 크론이 **저장소 루트** `vercel.json`에 등록돼 있었다. Vercel Root Directory는 `jidokhae-web`이라(API로 확인) 그 파일은 읽히지 않는다 — 배포해도 크론이 영영 안 떴을 것
 - 대기 승격 알림이 미입금 회원에게 `(결제완료)` 단언 — RPC가 `payment_method='transfer'`면 `pending_transfer`로 승격시킨다
 - 미승격 환불 알림이 시안 §5의 `■ 일시`를 렌더할 수 없었다 (코드가 모임일시를 안 보냄)
+- 알림 종류 union이 `lib/notification.ts`와 `types/notification.ts` 양쪽에 중복 — 종류가 늘 때마다 한쪽만 갱신돼 어긋났다. **types 하나로 통합**해서 구조적으로 재발 불가하게 만들었다(#53)
+
+**새로 만든 것 — 알림톡 발송 이력 페이지 (#52)**
+
+`notifications`를 읽는 화면이 아예 없어서 3~6월 123건 실패를 넉 달간 몰랐다. `/admin/notifications`(adminOnly)에 최근 30일 요약 + 종류별 + 실패/최근 2탭을 붙였다. 경고는 **최근 30일 실패에만** 켠다 — 누적 수로 켜면 이미 끝난 사고 때문에 배너가 영원히 남고, 상시 점등된 경고는 아무도 안 본다.
+
+⚠️ **알아둘 것(원래 성질, 이번에 만든 게 아님)**: 발송이 실패해도 이력 행이 남고 중복 방지 인덱스가 그 자리를 차지해 **재시도가 영영 안 된다.** 기존 5종 전부 같은 구조고, 123건이 한 번도 재시도되지 않은 이유가 이것이다. #52는 보이게만 할 뿐 고치지 않는다. **재발송 버튼은 별도 작업으로 남아 있다.**
 
 **작성한 문서**
 - `검토문서/2026-08-13-알림톡-변수-대조표-및-배포-순서.md` — **다음 세션은 여기부터 읽을 것.** 템플릿별 코드가 보내는 변수 토큰 + 배포 6단계
@@ -32,16 +49,17 @@ type: project
 
 ## 다음 할 일 (우선순위 순)
 
-1. **[단무지님] Solapi 검수 요청** — 7건 PENDING. 카카오 심사가 외부 대기시간이라 가장 긴 경로다. 이것부터 큐에 넣어야 나머지가 굴러간다
+1. ~~Solapi 검수 요청~~ — ✅ 완료. **카카오 승인 대기 중.** 이게 크리티컬 패스다
 2. ~~`migration-book-ask.sql` 실행~~ — ✅ **2026-08-13 완료** (Claude가 MCP로 prod 실행, 재조회 확인)
-3. ~~Vercel 크론 상한 확인~~ — ✅ **확인 완료, 문제 없음.** Hobby 상한은 2개가 아니라 **100개**다(2026-07-15 문서). 대신 **실행 정밀도 ±59분** — book-ask는 KST 10:00~10:59 사이 뜬다
-4. **[단무지님] 승인 후 env 교체 + 머지** — V2 ID 6개 + `SOLAPI_TEMPLATE_BOOK_ASK` 신규. env와 머지는 **동시에** 나가야 한다. 순서 전체는 위 대조표 문서 참조
-5. **[결정 필요] 인앱 `pending_transfer` 라벨 3종** — 홈 `신청 접수됨` / 상세 `신청 접수됨` / 마이페이지 `입금 대기`. 알림톡은 이제 `입금 확인 중`이라 채널 간 표현이 갈린다. **안심(신청 접수됨) vs 사실 고지(입금 확인 중)** 중 어느 쪽인지가 회원 체감을 바꾸는 판단이라 Claude가 임의로 정하지 않았다. `VOICE.md` 근거표가 사라진 상태라 다시 정해야 한다
-6. **[결정 필요] `NEW_MEMBER_WELCOME_V2` 발송 시점** — 템플릿만 있고 발송 코드가 없다. 알림톡은 전화번호가 필요한데 가입 직후엔 모른다(프로필 설정에서 받음) → **발송 시점은 사실상 "프로필 설정 완료 순간" 하나뿐.** 확정만 해주면 붙일 수 있다
-7. **🔴 호칭 채널 통일** — 인앱은 닉네임, 알림톡은 실명 우선. 같은 사람이 앱에서 "초록고래님", 카톡에서 "김철수님"
-8. **운영자 알림 발송 이력 페이지** — 3~6월 123건 실패를 넉 달간 몰랐던 사고 대응. 알림톡이 주 진입점이 되면 "전환율 낮음"과 "노출 0"을 구분할 수단이 된다
-9. **플래그 ON** — `site_settings.library_enabled='on'`. **맨 마지막.** env보다 먼저 켜면 물어보기 알림톡이 실패한다
-10. `VOICE.md` R1·R4·R5·R8을 `prelaunch`에 grep lint로 추가
+3. ~~Vercel 크론 상한 확인~~ — ✅ **문제 없음.** Hobby 상한은 2개가 아니라 **100개**다(2026-07-15 문서). 대신 **실행 정밀도 ±59분** — book-ask는 KST 10:00~10:59 사이 뜬다
+4. **[단무지님] #51·#52 머지** — 승인과 무관하게 지금 가능. #52는 admin 화면이라 preview 육안 확인 후
+5. **[단무지님] `migration-welcome-notification.sql` 실행** — #53 코드 배포보다 **먼저**. Claude가 MCP로 실행 가능하니 말만 해주면 됨
+6. **[단무지님] 승인 후 env 교체 + 머지** — V2 ID 6개 + `SOLAPI_TEMPLATE_BOOK_ASK` + `SOLAPI_TEMPLATE_WELCOME` 신규 2개. env와 머지는 **동시에** 나가야 한다. 순서 전체는 위 대조표 문서 참조
+7. **[결정 필요] 인앱 `pending_transfer` 라벨 3종** — 홈 `신청 접수됨` / 상세 `신청 접수됨` / 마이페이지 `입금 대기`. 알림톡은 이제 `입금 확인 중`이라 채널 간 표현이 갈린다. **안심(신청 접수됨) vs 사실 고지(입금 확인 중)** 중 어느 쪽인지가 회원 체감을 바꾸는 판단이라 Claude가 임의로 정하지 않았다. `VOICE.md` 근거표가 사라진 상태라 다시 정해야 한다. 회원 250명이 보는 문구라 **시안 먼저**
+8. **🔴 호칭 채널 통일** — 인앱은 닉네임, 알림톡은 실명 우선. 같은 사람이 앱에서 "초록고래님", 카톡에서 "김철수님"
+9. **알림톡 재발송 버튼** — 실패 건이 영영 재시도되지 않는 구조(위 ⚠️). #52로 실패가 보이게 됐으니 다음은 고치는 것
+10. **플래그 ON** — `site_settings.library_enabled='on'`. **맨 마지막.** env보다 먼저 켜면 물어보기 알림톡이 실패한다
+11. `VOICE.md` R1·R4·R5·R8을 `prelaunch`에 grep lint로 추가
 
 ## 나중에 할 일 (언젠가 반드시 — 잊지 말 것)
 
