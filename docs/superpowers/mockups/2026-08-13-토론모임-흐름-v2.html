@@ -1,0 +1,525 @@
+<title>토론모임 노출 흐름 시안 v2</title>
+<style>
+  :root{
+    --ink-50:#F3FAF6; --ink-100:#E3F2EC; --ink-200:#CDE9DB; --ink-300:#8FCBB0;
+    --ink-400:#3E9A78; --ink-500:#127A5A; --ink-600:#0d5c43; --ink-700:#0B4B37;
+    --ink-800:#0A3A2B; --ink-900:#072A20;
+    --cor-50:#FFF1EC; --cor-100:#FADFD5; --cor-200:#FBC3B0; --cor-500:#F4552A; --cor-600:#D8431C; --cor-700:#B23516;
+    --n-50:#F9FAFB; --n-100:#F0F2F5; --n-200:#E5E8EB; --n-300:#D4D8DE; --n-400:#B0B8C1;
+    --n-500:#8B95A1; --n-600:#6B7684; --n-700:#5A6B7A; --n-800:#333D48; --n-900:#191F28;
+
+    /* 문서 껍데기 — 뷰어 테마를 따른다 */
+    --page-bg:#E9EDF0;
+    --page-fg:#191F28;
+    --page-muted:#5A6B7A;
+    --page-rule:#D2D9DE;
+    --page-chip-bg:#ffffff;
+
+    --serif:Georgia,'Nanum Myeongjo','AppleMyungjo','Noto Serif KR',Batang,serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --page-bg:#12171C; --page-fg:#E8EDF1; --page-muted:#9AA7B2; --page-rule:#2A333B; --page-chip-bg:#1B2229; }
+  }
+  :root[data-theme="dark"]{ --page-bg:#12171C; --page-fg:#E8EDF1; --page-muted:#9AA7B2; --page-rule:#2A333B; --page-chip-bg:#1B2229; }
+  :root[data-theme="light"]{ --page-bg:#E9EDF0; --page-fg:#191F28; --page-muted:#5A6B7A; --page-rule:#D2D9DE; --page-chip-bg:#ffffff; }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page-bg);color:var(--page-fg);font-family:var(--sans);
+    line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;
+    padding:28px 16px 72px}
+  .wrap{max-width:430px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+
+  /* ── 문서 헤더 ── */
+  header .eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--ink-500);text-transform:uppercase}
+  header h1{font-family:var(--serif);font-size:27px;line-height:1.25;margin:8px 0 0;font-weight:700;text-wrap:balance;letter-spacing:-.01em}
+  header p{font-size:13.5px;color:var(--page-muted);margin:10px 0 0}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .chips span{font-size:11.5px;padding:5px 10px;border-radius:999px;background:var(--page-chip-bg);border:1px solid var(--page-rule);color:var(--page-muted)}
+  .newbox{margin-top:16px;padding:13px 14px;border-radius:10px;border:1px solid var(--ink-300);background:var(--ink-50);color:var(--ink-800);font-size:12.5px}
+  .newbox b{color:var(--ink-700)}
+  .newbox ul{margin:7px 0 0;padding-left:17px}
+  .newbox li{margin-top:4px}
+
+  /* ── 프레임 ── */
+  .step{display:flex;flex-direction:column;gap:9px}
+  .cap{display:flex;gap:9px;align-items:baseline}
+  .cap .no{flex:0 0 auto;width:20px;height:20px;border-radius:999px;background:var(--ink-500);color:#fff;
+    font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;transform:translateY(3px)}
+  .cap h2{font-size:15px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .why{font-size:12.5px;color:var(--page-muted);margin:0 0 0 29px}
+  .why b{color:var(--ink-500)}
+
+  /* ── 앱 화면 (라이트 고정 — 실제 앱이 라이트 전용) ── */
+  .app{background:var(--n-50);border:1px solid var(--page-rule);border-radius:16px;overflow:hidden;
+    box-shadow:0 4px 16px rgba(15,23,30,.10);color:var(--n-900)}
+  .bar{height:44px;display:flex;align-items:center;padding:0 18px;background:#fff;border-bottom:1px solid var(--n-200)}
+  .bar b{font-family:var(--serif);font-size:15.5px;color:var(--ink-600);font-weight:700}
+  .scr{padding:17px 18px 20px}
+  .h1{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--ink-900);line-height:1.3;margin:0;letter-spacing:-.01em}
+  .h1s{font-size:12px;color:var(--n-600);margin:4px 0 0}
+
+  .cal{display:flex;gap:4px;margin:15px 0 0}
+  .cal i{flex:1;font-style:normal;text-align:center;padding:6px 0 7px;border-radius:8px;background:#fff;border:1px solid var(--n-200)}
+  .cal u{display:block;font-size:9px;color:var(--n-500);text-decoration:none}
+  .cal s{display:block;font-size:12.5px;font-weight:600;color:var(--n-800);text-decoration:none;margin-top:2px}
+  .cal em{display:block;width:4px;height:4px;border-radius:9px;background:var(--ink-400);margin:4px auto 0}
+  .cal .bk{display:block;width:10px;height:14px;margin:2px auto 0;border-radius:1.5px;background:linear-gradient(160deg,#33566b,#16252f)}
+  .cal .sp{display:block;height:4px;margin-top:4px}
+  .cal i.sel{border-color:var(--ink-300);background:var(--ink-50)}
+
+  .shd{display:flex;align-items:center;gap:7px;margin:20px 0 9px}
+  .shd h3{font-size:12.5px;margin:0;font-weight:700;color:var(--n-700)}
+  .shd span{font-size:11.5px;color:var(--n-500)}
+  .tick{width:15px;height:15px;border-radius:9px;background:var(--ink-500);color:#fff;font-size:8.5px;display:flex;align-items:center;justify-content:center}
+
+  /* 오프너 */
+  .opener{margin:22px 0;padding:20px 0;border-top:1px solid var(--n-200);border-bottom:1px solid var(--n-200);display:flex;gap:15px}
+  .cv{flex:0 0 auto;width:92px;height:134px;border-radius:3px;position:relative;padding:12px 10px;
+    background:linear-gradient(158deg,#33566b,#22384a 55%,#16252f);box-shadow:0 3px 10px rgba(15,23,30,.22);
+    display:flex;flex-direction:column;justify-content:space-between}
+  .cv::after{content:"";position:absolute;inset:0;border:1px solid rgba(255,255,255,.14);border-radius:3px}
+  .cv .t{font-family:var(--serif);font-size:15px;font-weight:700;color:#fff;line-height:1.25}
+  .cv .a{font-size:8.5px;color:rgba(255,255,255,.72)}
+  .ob{flex:1;min-width:0}
+  .ob .eb{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--n-500)}
+  .ob .bt{font-family:var(--serif);font-size:20px;font-weight:700;line-height:1.28;margin:5px 0 0;letter-spacing:-.01em}
+  .ob .mt{font-size:11.5px;color:var(--n-600);margin:6px 0 0}
+  .ob .host{font-size:11.5px;color:var(--n-700);margin:7px 0 0}
+  .ob .host b{color:var(--ink-600);font-weight:600}
+  .ob .q{margin:9px 0 0;padding-left:9px;border-left:1px solid var(--n-300);font-family:var(--serif);font-size:12.5px;color:var(--n-700);line-height:1.5}
+
+  /* 카드 */
+  .card{background:#fff;border:1px solid var(--n-200);border-left:3px solid var(--ink-500);border-radius:12px;
+    padding:13px 14px;box-shadow:0 1px 3px rgba(18,122,90,.06)}
+  .card + .card{margin-top:9px}
+  .rw{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}
+  .card h4{font-size:14.5px;margin:0;font-weight:600;line-height:1.35}
+  .card h4.bk{font-family:var(--serif);font-size:15.5px;font-weight:700}
+  .card .mt{font-size:11.5px;color:var(--n-600);margin:5px 0 0}
+  .card .fee{font-size:12px;color:var(--n-700);margin:3px 0 0;font-variant-numeric:tabular-nums}
+  .dd{flex:0 0 auto;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--ink-100);color:var(--ink-700);white-space:nowrap}
+  .dd.u{background:var(--cor-500);color:#fff}
+  .dd.r{background:var(--n-100);color:var(--n-700);font-weight:500}
+  .wc{display:flex;gap:10px}
+  .mc{flex:0 0 auto;width:36px;height:52px;border-radius:2px;background:linear-gradient(158deg,#33566b,#16252f);box-shadow:0 1px 4px rgba(15,23,30,.2)}
+
+  /* 상세 */
+  .dh{display:flex;gap:15px;padding-bottom:16px;border-bottom:1px solid var(--n-200)}
+  .cvl{flex:0 0 auto;width:112px;height:163px;border-radius:3px;position:relative;padding:14px 11px;
+    background:linear-gradient(158deg,#33566b,#22384a 55%,#16252f);box-shadow:0 4px 14px rgba(15,23,30,.24);
+    display:flex;flex-direction:column;justify-content:space-between}
+  .cvl::after{content:"";position:absolute;inset:0;border:1px solid rgba(255,255,255,.14);border-radius:3px}
+  .cvl .t{font-family:var(--serif);font-size:17px;font-weight:700;color:#fff;line-height:1.25}
+  .cvl .a{font-size:9px;color:rgba(255,255,255,.72)}
+  .dt{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--n-500)}
+  .dn{font-family:var(--serif);font-size:21px;font-weight:700;line-height:1.26;margin:5px 0 0;letter-spacing:-.01em}
+  .da{font-size:11.5px;color:var(--n-600);margin:4px 0 0}
+  /* 선정 이유 + 책 소개 */
+  .pick{margin:14px 0 0;font-size:12.5px;color:var(--n-800);line-height:1.6}
+  .pick b{color:var(--ink-600);font-weight:600}
+  .about{margin:13px 0 0;padding:12px 13px;border-radius:12px;background:#fff;border:1px solid var(--n-200)}
+  .about .lbl{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--n-500)}
+  .about p{margin:6px 0 0;font-size:12.5px;color:var(--n-700);line-height:1.65;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .about .more{display:inline-block;margin-top:7px;font-size:11.5px;font-weight:600;color:var(--ink-600)}
+  .about .src{font-size:10.5px;color:var(--n-400);margin-top:8px}
+  .kv{margin:14px 0 0}
+  .kv div{display:flex;gap:9px;padding:6px 0;font-size:12.5px;border-bottom:1px solid var(--n-100)}
+  .kv dt{flex:0 0 46px;color:var(--n-500);font-size:12px}
+  .kv dd{margin:0;color:var(--n-800);font-variant-numeric:tabular-nums}
+
+  .btn{display:block;width:100%;text-align:center;padding:13px;border-radius:12px;font-size:14.5px;font-weight:600;
+    border:none;font-family:inherit;cursor:default}
+  .btn.p{background:var(--ink-500);color:#fff}
+  .btn.g{background:#fff;color:var(--ink-600);border:1px solid var(--ink-200)}
+
+  .box{padding:12px 13px;border-radius:12px;font-size:12px;line-height:1.6;background:#fff;border:1px solid var(--n-200);color:var(--n-700)}
+  .box b{color:var(--n-900)}
+  .box.warn{background:var(--cor-50);border-color:var(--cor-200);color:var(--cor-700)}
+  .box.warn b{color:var(--cor-700)}
+  .lock{padding:15px;border-radius:12px;background:#fff;border:1px solid var(--n-200)}
+  .lock p{margin:0;font-size:12.5px;color:var(--n-700);line-height:1.55}
+  .lock p b{color:var(--n-900)}
+  .lock .btn{margin-top:11px;padding:11px;font-size:13.5px}
+
+  /* 체크리스트 */
+  .ck{list-style:none;margin:12px 0 0;padding:0}
+  .ck li{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid var(--n-200)}
+  .ck li:last-child{border-bottom:none}
+  .ck .n{flex:0 0 auto;width:20px;height:20px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700}
+  .ck .n.on{background:var(--ink-500);color:#fff}
+  .ck .n.now{background:#fff;border:1.5px solid var(--n-300);color:var(--n-600)}
+  .ck .n.later{background:var(--n-100);color:var(--n-500)}
+  .ck h5{margin:0;font-size:13px;font-weight:600}
+  .ck p{margin:3px 0 0;font-size:11.5px;color:var(--n-600);line-height:1.55}
+  .ck .dis{margin-top:6px;padding:7px 8px;border-radius:6px;background:var(--n-100);font-size:11px;color:var(--n-700)}
+  .lk{display:inline-block;margin-top:7px;font-size:12px;font-weight:600;color:var(--ink-600);border-bottom:1px solid var(--ink-200)}
+
+  /* 내 모임 strip */
+  .strip{background:var(--ink-50);border:1px solid var(--ink-200);border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:center}
+  .strip .mc{width:30px;height:43px}
+  .strip .t{font-family:var(--serif);font-size:13.5px;font-weight:700;color:var(--ink-900);line-height:1.3}
+  .strip .s{font-size:11px;color:var(--ink-700);margin-top:2px}
+  .strip .go{margin-left:auto;font-size:11px;font-weight:600;color:var(--ink-600);white-space:nowrap}
+
+  /* 발제문 */
+  .ql{list-style:none;counter-reset:q;margin:12px 0 0;padding:0}
+  .ql li{counter-increment:q;display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--n-100)}
+  .ql li::before{content:counter(q);font-family:var(--serif);font-size:12.5px;font-weight:700;color:var(--ink-400);flex:0 0 13px}
+  .ql p{margin:0;font-family:var(--serif);font-size:13.5px;color:var(--n-800);line-height:1.6}
+  .by{font-size:11px;color:var(--n-500);margin:12px 0 0}
+
+  /* 지난 토론 */
+  .past{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;margin-top:9px}
+  .past a{flex:0 0 auto;width:150px;background:#fff;border:1px solid var(--n-200);border-radius:10px;padding:10px 11px;text-decoration:none;color:inherit}
+  .past .mc{width:26px;height:37px;margin-bottom:7px}
+  .past .t{font-family:var(--serif);font-size:12.5px;font-weight:700;line-height:1.3}
+  .past .s{font-size:10.5px;color:var(--n-500);margin-top:3px}
+
+  /* 축하 */
+  .cg{background:linear-gradient(180deg,var(--ink-50),#fff);border:1px solid var(--ink-200);border-radius:12px;padding:16px 15px;position:relative}
+  .cg .x{position:absolute;top:11px;right:12px;font-size:14px;color:var(--n-400)}
+  .cg .em{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink-800);line-height:1.35;margin:0}
+  .cg .sb{font-size:12px;color:var(--n-700);margin:6px 0 0;line-height:1.6}
+  .cg .rec{margin-top:12px;padding-top:12px;border-top:1px solid var(--ink-200);display:flex;gap:10px;align-items:center}
+  .cg .rec .mc{width:32px;height:46px}
+  .cg .rt{font-family:var(--serif);font-size:13px;font-weight:700}
+  .cg .rs{font-size:11px;color:var(--n-600);margin-top:2px}
+  .cg .go{margin-left:auto;font-size:11px;font-weight:600;color:var(--ink-600);white-space:nowrap}
+
+  footer{border-top:1px solid var(--page-rule);padding-top:18px;font-size:12px;color:var(--page-muted)}
+  footer b{color:var(--page-fg)}
+  footer ul{margin:8px 0 0;padding-left:17px}
+  footer li{margin-top:5px}
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">지독해 · 시안 v2</div>
+  <h1>토론모임이 회원에게 보이는 흐름</h1>
+  <p>발견 → 판단 → 신청 → 신청 이후. 11개 상태를 전부 그렸다. 색으로 구별하지 않는다 — 그린은 점이고 코럴은 긴급 전용이라, 정기모임과의 구별은 <b>형태(책 표지)</b>가 맡는다.</p>
+  <div class="chips">
+    <span>참가비 25,000</span><span>환불 14 / 7일</span><span>월 1회 · 지역 번갈아</span><span>평균 참석 3~4명</span>
+  </div>
+  <div class="newbox">
+    <b>v1에서 바뀐 것</b>
+    <ul>
+      <li><b>진행자를 넣었다.</b> 트레바리는 클럽 카드 대문이 책이 아니라 클럽장 얼굴이다 — 사람이 신청 요인인데 우리 설계엔 진행자가 어디에도 없었다</li>
+      <li><b>토론모임 없는 달에 “지난 토론”을 넣었다.</b> v1에서 그 화면이 텅 비어 있었다</li>
+      <li>환불 안내를 코럴 → 무채색으로. 상시 노출에 코럴을 쓰면 마감임박 코럴이 죽는다</li>
+      <li>“책을 함께 주문해서”라는 <b>환불 사유 문구를 삭제</b>했다. 사실이 아니었다 (책은 각자 사도 된다)</li>
+    </ul>
+  </div>
+</header>
+
+<!-- 1 -->
+<section class="step">
+  <div class="cap"><span class="no">1</span><h2>홈 — 토론모임 있음 (자격 있음)</h2></div>
+  <p class="why">오프너가 <b>일정 목록 위</b>에 한 번. 테두리·배경 없이 위아래 hairline과 여백으로만 끊는다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <p class="h1">지독하게, 함께 읽어요</p>
+      <p class="h1s">경주 · 포항에서 매주 만나요</p>
+      <div class="cal">
+        <i><u>월</u><s>8</s><em class="sp"></em></i><i><u>화</u><s>9</s><em class="sp"></em></i>
+        <i class="sel"><u>수</u><s>10</s><em></em></i><i><u>목</u><s>11</s><em class="sp"></em></i>
+        <i><u>금</u><s>12</s><em class="sp"></em></i><i><u>토</u><s>13</s><em class="bk"></em></i>
+        <i><u>일</u><s>14</s><em class="sp"></em></i>
+      </div>
+      <div class="opener">
+        <div class="cv"><div class="t">아몬드</div><div class="a">손원평</div></div>
+        <div class="ob">
+          <div class="eb">이달의 토론 · 9월</div>
+          <p class="bt">아몬드</p>
+          <p class="mt">9월 13일 (토) 오후 2:00 · 경주 우연히 책방</p>
+          <p class="host"><b>초록고래</b>님이 고르고 진행해요</p>
+          <p class="q">“무언가를 느끼지 못하는 것과, 느끼고도 모른 척하는 것 중 무엇이 더 나쁠까요?”</p>
+        </div>
+      </div>
+      <div class="shd"><h3>정기모임 일정</h3><span>2건</span></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">우연히 책방 · 6/14명</p><p class="fee">12,000</p></div><span class="dd">D-3</span></div></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">공간 지그시 · 2/14명</p><p class="fee">12,000</p></div><span class="dd">D-10</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="step">
+  <div class="cap"><span class="no">2</span><h2>홈 — 자격 없음 (정기모임 미참여)</h2></div>
+  <p class="why">숨기지 않는다. <b>웹 가입 135명 중 68명</b>이 여기 해당한다. 안 보이면 올라올 사다리가 없다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <p class="h1">지독하게, 함께 읽어요</p>
+      <p class="h1s">경주 · 포항에서 매주 만나요</p>
+      <div class="cal">
+        <i><u>월</u><s>8</s><em class="sp"></em></i><i><u>화</u><s>9</s><em class="sp"></em></i>
+        <i class="sel"><u>수</u><s>10</s><em></em></i><i><u>목</u><s>11</s><em class="sp"></em></i>
+        <i><u>금</u><s>12</s><em class="sp"></em></i><i><u>토</u><s>13</s><em class="bk"></em></i>
+        <i><u>일</u><s>14</s><em class="sp"></em></i>
+      </div>
+      <div class="opener">
+        <div class="cv"><div class="t">아몬드</div><div class="a">손원평</div></div>
+        <div class="ob">
+          <div class="eb">이달의 토론 · 9월</div>
+          <p class="bt">아몬드</p>
+          <p class="mt">9월 13일 (토) 오후 2:00 · 경주 우연히 책방</p>
+          <p class="host"><b>초록고래</b>님이 고르고 진행해요</p>
+          <p class="q">“무언가를 느끼지 못하는 것과, 느끼고도 모른 척하는 것 중 무엇이 더 나쁠까요?”</p>
+        </div>
+      </div>
+      <div class="lock">
+        <p><b>정기모임에 한 번 다녀오시면</b> 토론모임을 신청할 수 있어요.</p>
+        <div class="btn g">다가오는 정기모임 보기</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="step">
+  <div class="cap"><span class="no">3</span><h2>홈 — 토론모임 없는 달</h2></div>
+  <p class="why">오프너는 <b>렌더하지 않는다</b>. 대신 <b>지난 토론</b>을 둔다 — v1에선 이 화면이 텅 비어 있었다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <p class="h1">지독하게, 함께 읽어요</p>
+      <p class="h1s">경주 · 포항에서 매주 만나요</p>
+      <div class="shd"><h3>정기모임 일정</h3><span>3건</span></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">우연히 책방 · 6/14명</p><p class="fee">12,000</p></div><span class="dd">D-3</span></div></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">공간 지그시 · 2/14명</p><p class="fee">12,000</p></div><span class="dd">D-10</span></div></div>
+      <div class="shd"><h3>지난 토론</h3><span>발제문 다시 보기</span></div>
+      <div class="past">
+        <a><div class="mc"></div><div class="t">파친코</div><div class="s">8월 · 질문 5개</div></a>
+        <a><div class="mc"></div><div class="t">불편한 편의점</div><div class="s">7월 · 질문 4개</div></a>
+        <a><div class="mc"></div><div class="t">달러구트 꿈 백화점</div><div class="s">6월 · 질문 6개</div></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="step">
+  <div class="cap"><span class="no">4</span><h2>캘린더 날짜 필터 — 두 카드 비교</h2></div>
+  <p class="why">골격은 같고 <b>강조만 다르다</b>. 토론모임은 책 제목이 크고, 인원이 없고, D-Day가 “읽을 시간”이다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <div class="cal">
+        <i><u>목</u><s>11</s><em class="sp"></em></i><i><u>금</u><s>12</s><em class="sp"></em></i>
+        <i class="sel"><u>토</u><s>13</s><em class="bk"></em></i><i><u>일</u><s>14</s><em class="sp"></em></i>
+        <i><u>월</u><s>15</s><em class="sp"></em></i><i><u>화</u><s>16</s><em class="sp"></em></i>
+        <i><u>수</u><s>17</s><em></em></i>
+      </div>
+      <div class="shd"><h3>9월 13일 (토)</h3></div>
+      <div class="card"><div class="wc"><div class="mc"></div><div style="flex:1;min-width:0">
+        <div class="rw"><div><h4 class="bk">아몬드</h4><p class="mt">손원평 · 오후 2:00 · 우연히 책방</p><p class="fee">25,000</p></div><span class="dd r">읽을 시간 12일</span></div>
+      </div></div></div>
+      <div class="shd"><h3>9월 17일 (수)</h3></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">우연히 책방 · 6/14명</p><p class="fee">12,000</p></div><span class="dd">D-4</span></div></div>
+      <div class="shd"><h3>9월 20일 (토)</h3></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">공간 지그시 · 12/14명</p><p class="fee">12,000</p></div><span class="dd u">D-2</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="step">
+  <div class="cap"><span class="no">5</span><h2>모임 상세 — 신청 가능</h2></div>
+  <p class="why">리스트에서 본 표지 실루엣이 그대로 확대된다. <b>진행자</b>가 정보 항목으로 들어간다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <div class="dh">
+        <div class="cvl"><div class="t">아몬드</div><div class="a">손원평</div></div>
+        <div style="flex:1;min-width:0">
+          <div class="dt">토론모임 · 9월</div>
+          <p class="dn">아몬드</p>
+          <p class="da">손원평 · 창비</p>
+        </div>
+      </div>
+      <p class="pick"><b>초록고래</b>님이 고른 책 · 감정을 못 느끼는 아이를 보며 나를 봤어요</p>
+      <div class="about">
+        <div class="lbl">책 소개</div>
+        <p>편도체가 남들보다 작아 분노도 공포도 느끼지 못하는 소년 윤재. 자신을 지켜주던 할멈과 엄마를 한순간에 잃고 홀로 남겨진 그 앞에, 또 다른 상처를 지닌 소년 곤이가 나타난다. 감정을 배우지 못한 아이와 감정에 짓눌린 아이가 서로를 통과하며 자라나는 이야기.</p>
+        <span class="more">더 보기</span>
+        <div class="src">카카오 도서 정보</div>
+      </div>
+      <dl class="kv">
+        <div><dt>일시</dt><dd>9월 13일 (토) 오후 2:00</dd></div>
+        <div><dt>장소</dt><dd>경주 우연히 책방</dd></div>
+        <div><dt>진행</dt><dd>초록고래님</dd></div>
+        <div><dt>참가비</dt><dd>25,000</dd></div>
+      </dl>
+      <div class="box" style="margin-top:14px">
+        토론모임은 <b>14일 전까지 전액 환불</b>돼요. 이후 7일 전까지는 절반, 그 뒤로는 환불이 어려워요.
+      </div>
+      <div class="btn p" style="margin-top:14px">신청하기</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="step">
+  <div class="cap"><span class="no">6</span><h2>모임 상세 — 자격 잠김</h2></div>
+  <p class="why">내용은 다 보여준다. 비활성 버튼을 따로 두지 않는다 — 잠김 안내 하나로 충분하다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <div class="dh">
+        <div class="cvl"><div class="t">아몬드</div><div class="a">손원평</div></div>
+        <div style="flex:1;min-width:0">
+          <div class="dt">토론모임 · 9월</div>
+          <p class="dn">아몬드</p>
+          <p class="da">손원평 · 창비</p>
+        </div>
+      </div>
+      <p class="pick"><b>초록고래</b>님이 고른 책 · 감정을 못 느끼는 아이를 보며 나를 봤어요</p>
+      <div class="about">
+        <div class="lbl">책 소개</div>
+        <p>편도체가 남들보다 작아 분노도 공포도 느끼지 못하는 소년 윤재. 자신을 지켜주던 할멈과 엄마를 한순간에 잃고 홀로 남겨진 그 앞에, 또 다른 상처를 지닌 소년 곤이가 나타난다. 감정을 배우지 못한 아이와 감정에 짓눌린 아이가 서로를 통과하며 자라나는 이야기.</p>
+        <span class="more">더 보기</span>
+        <div class="src">카카오 도서 정보</div>
+      </div>
+      <dl class="kv">
+        <div><dt>일시</dt><dd>9월 13일 (토) 오후 2:00</dd></div>
+        <div><dt>장소</dt><dd>경주 우연히 책방</dd></div>
+        <div><dt>진행</dt><dd>초록고래님</dd></div>
+        <div><dt>참가비</dt><dd>25,000</dd></div>
+      </dl>
+      <div class="lock" style="margin-top:16px">
+        <p><b>정기모임에 한 번 다녀오시면</b> 신청할 수 있어요.<br>같은 책을 미리 읽고 오는 자리라, 먼저 얼굴을 익히시는 편이 편해요.</p>
+        <div class="btn g">다가오는 정기모임 보기</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="step">
+  <div class="cap"><span class="no">7</span><h2>결제 직전 확인</h2></div>
+  <p class="why">회원 79%가 <b>이미 절반 환불 구간</b>에서 신청한다. 그 사실만 숫자로 알린다 — 이유는 아직 모르므로 쓰지 않는다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <div class="dt">신청 확인</div>
+      <p class="dn" style="font-size:19px">아몬드</p>
+      <dl class="kv">
+        <div><dt>일시</dt><dd>9월 13일 (토) 오후 2:00</dd></div>
+        <div><dt>장소</dt><dd>경주 우연히 책방</dd></div>
+        <div><dt>참가비</dt><dd>25,000</dd></div>
+      </dl>
+      <div class="box warn" style="margin-top:14px">
+        토론모임은 <b>14일 전까지 전액 환불</b>돼요.<br>오늘 신청하시면 <b>지금부터 절반 환불</b> 구간이에요. (모임 12일 전)
+      </div>
+      <div class="box" style="margin-top:9px">책은 각자 준비해요. 신청 후 안내해 드릴게요.</div>
+      <div class="btn p" style="margin-top:14px">25,000원 결제하기</div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="step">
+  <div class="cap"><span class="no">8</span><h2>신청 완료 — 3단계 체크리스트</h2></div>
+  <p class="why">결제 직후가 행동 확률이 가장 높다. 책 주문 링크를 <b>여기</b> 둔다. 대행하지 않는다는 사실도 같이.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <div class="dt">신청 완료</div>
+      <p class="dn" style="font-size:19px">자리 하나 맡아뒀어요</p>
+      <p class="da">9월 13일 (토) · 아몬드</p>
+      <ul class="ck">
+        <li><span class="n on">✓</span><div><h5>참가비 결제 완료</h5><p>25,000 · 카카오페이</p></div></li>
+        <li><span class="n now">2</span><div>
+          <h5>책 준비하기</h5>
+          <p>직접 사셔도 되고, 우와님께 부탁하셔도 돼요. <b>주문 마감 8월 30일</b></p>
+          <div class="dis">책 주문은 지독해가 대행하지 않아요. 우와님이 개인적으로 도와주시는 거예요.</div>
+          <span class="lk">우와님께 카톡으로 부탁하기 →</span>
+        </div></li>
+        <li><span class="n later">3</span><div><h5>발제문 읽어보기</h5><p>모임 전에 올라와요. 올라오면 홈에서 보여드릴게요.</p></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="step">
+  <div class="cap"><span class="no">9</span><h2>신청 이후 — 홈에 2주 내내</h2></div>
+  <p class="why">사고는 목록이 아니라 <b>신청 후 2주</b>에 난다. 책 안 사고 빈손으로 온다. 할 일이 계속 눈에 있어야 한다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <p class="h1">지독하게, 함께 읽어요</p>
+      <div class="shd"><span class="tick">✓</span><h3>우제님이 신청한 모임</h3><span>2건</span></div>
+      <div class="strip">
+        <div class="mc"></div>
+        <div style="min-width:0"><div class="t">아몬드</div><div class="s">읽는 중 · 9월 13일 (토)</div></div>
+        <span class="go">발제문 보기 →</span>
+      </div>
+      <div class="card" style="margin-top:9px"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">우연히 책방 · 오후 7:00</p></div><span class="dd">D-3</span></div></div>
+      <div class="shd"><h3>정기모임 일정</h3><span>2건</span></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">공간 지그시 · 2/14명</p><p class="fee">12,000</p></div><span class="dd">D-10</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="step">
+  <div class="cap"><span class="no">10</span><h2>발제문 — 로그인 회원 전체 공개</h2></div>
+  <p class="why">미자격 68명에게 “여기서 이런 이야기를 하는구나”를 보여주는 <b>유일한 콘텐츠 자산</b>이다.</p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <div class="dt">발제문 · 9월 토론모임</div>
+      <p class="dn" style="font-size:19px">아몬드</p>
+      <p class="da">초록고래님이 진행해요</p>
+      <ol class="ql">
+        <li><p>무언가를 느끼지 못하는 것과, 느끼고도 모른 척하는 것 중 무엇이 더 나쁠까요?</p></li>
+        <li><p>윤재의 엄마는 아이를 “고치려” 했습니다. 이 선택을 사랑이라고 부를 수 있을까요?</p></li>
+        <li><p>곤이를 이해하게 된 순간이 있었다면 어디였나요? 없었다면 왜 끝까지 어려웠을까요?</p></li>
+        <li><p>내 감정을 설명할 말이 없어서 곤란했던 경험이 있나요?</p></li>
+      </ol>
+      <p class="by">초록고래님이 썼어요 · 9월 6일</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="step">
+  <div class="cap"><span class="no">11</span><h2>자격 획득 축하 (첫 정기모임 다녀온 다음)</h2></div>
+  <p class="why">알림톡 아님 — 그날 아침 물어보기가 이미 나간다. <b>축하가 먼저, 추천은 곁들이기.</b></p>
+  <div class="app">
+    <div class="bar"><b>지독해</b></div>
+    <div class="scr">
+      <p class="h1">지독하게, 함께 읽어요</p>
+      <div class="cg" style="margin-top:15px">
+        <span class="x">✕</span>
+        <p class="em">첫 모임 다녀오셨네요</p>
+        <p class="sb">이제 토론모임도 신청하실 수 있어요.<br>한 권을 같이 읽고 이야기하는 자리예요.</p>
+        <div class="rec">
+          <div class="mc"></div>
+          <div style="min-width:0"><div class="rt">아몬드</div><div class="rs">9월 13일 (토) · 경주</div></div>
+          <span class="go">보러 가기 →</span>
+        </div>
+      </div>
+      <div class="shd"><h3>정기모임 일정</h3><span>2건</span></div>
+      <div class="card"><div class="rw"><div><h4>매주 수요일 정기모임</h4><p class="mt">우연히 책방 · 6/14명</p><p class="fee">12,000</p></div><span class="dd">D-3</span></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <b>보면서 정해주실 것</b>
+  <ul>
+    <li><b>14일 / 7일 환불 기준의 근거</b> — 실제 제약이면 그 이유를 결제 화면에 한 줄 밝히고, 관행이면 회원 습관(중앙값 8일 전)에 맞춰 당기는 선택지가 열린다</li>
+    <li><b>진행자 표기</b> — “고르고 진행해요”가 맞는지. 지금은 발제자가 선정·발제·진행을 다 맡는 구조라 한 사람으로 적었다</li>
+    <li>토론모임 정원</li>
+    <li>책 주문 마감일이 D-14와 같은 날인지</li>
+  </ul>
+  <p style="margin-top:14px">표지는 카카오 도서 API 이미지가 들어갈 자리다. 여기서는 대체 렌더이고, 실제로는 실물 표지가 들어간다. 서체도 기기 기본값으로 대체돼 실제 앱(Noto Serif KR · Pretendard)과 다르게 보일 수 있다.</p>
+</footer>
+
+</div>
