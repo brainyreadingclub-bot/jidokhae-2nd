@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { VALID_REGIONS } from '@/lib/regions'
+import { sendNewMemberWelcomeNotification } from '@/lib/notification'
 
 export async function POST(request: NextRequest) {
   const supabase = createServerClient(
@@ -80,6 +81,18 @@ export async function POST(request: NextRequest) {
 
   const admin = createServiceClient()
 
+  // 환영 알림톡은 "처음 프로필을 마친 순간"에만 보낸다.
+  // update 이후에는 profile_completed_at이 항상 채워져 있어 구분할 수 없으므로
+  // 갱신 전에 읽어둔다. (부분 UNIQUE INDEX가 최종 방어선이지만, 애초에
+  // 재저장 때 발송을 시도하지 않는 편이 낫다)
+  const { data: before } = await admin
+    .from('profiles')
+    .select('profile_completed_at')
+    .eq('id', user.id)
+    .single()
+
+  const isFirstCompletion = !before?.profile_completed_at
+
   // 닉네임 중복 체크 (자기 자신 제외, 빈 문자열 제외)
   const { data: existing } = await admin
     .from('profiles')
@@ -113,6 +126,15 @@ export async function POST(request: NextRequest) {
       { status: 'error', message: '프로필 저장에 실패했습니다' },
       { status: 500 },
     )
+  }
+
+  // 환영 알림톡 — 실패해도 프로필 저장 응답에 영향 없음
+  if (isFirstCompletion) {
+    try {
+      await sendNewMemberWelcomeNotification(user.id)
+    } catch (error) {
+      console.error('[profile/setup] 가입 환영 알림톡 발송 실패:', error)
+    }
   }
 
   return NextResponse.json({ status: 'success' })
