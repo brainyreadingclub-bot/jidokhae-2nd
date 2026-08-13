@@ -4,53 +4,44 @@ description: 세션 간 연속성을 위한 현재 상태 + 다음 할 일 + 블
 type: project
 ---
 
-## 한 줄 요약 (2026-08-03 기준)
+## 한 줄 요약 (2026-08-13 기준)
 
-서재 켜기 게이트 2건은 모두 통과했고, 이제 **알림톡 6번째 템플릿(물어보기)** 이 주 작업이다. 그 선행 조건인 **딥링크 복귀(PR #48)가 열려 있고 카카오 로그인 검증만 남았다.** 문안 초안과 서비스 전반 보이스 가이드(`VOICE.md`)는 작성 완료.
+물어보기 알림톡 코드는 **다 짜여서 PR 2개로 올라가 있고**, 남은 건 전부 **카카오 심사 승인 + 단무지님 콘솔 작업**이다. 승인이 크리티컬 패스다. 승인 전에는 머지하면 안 되므로 두 PR 모두 **draft**로 뒀다.
 
 ## 현재 상태
 
-**브랜치:** `main` (origin 동기화). 최신 `b35e2a0`
-**prod 배포:** sha `9c49191` 이후 문서 커밋만 있었으므로 코드 기준 최신이 배포돼 있음. 서재 플래그 OFF라 **회원 노출 0**
-**열린 PR:** [#48](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/48) `fix/deeplink-return-path` — 커밋 3개, 체크 통과, **미머지**
+**prod:** 서재 플래그 OFF — **회원 노출 0** 유지. Vercel 프로젝트 `jidokhae-2nd` (팀 `flashchecks-projects`), 도메인 `www.brainy-club.com`
+**딥링크 복귀(PR #48):** 머지 완료 — main `32f7b76`
+**알림톡 템플릿 7건:** Solapi 반영 완료, **검수 요청 대기(전부 PENDING)**
 
-**이번 세션 머지분**
-- PR #46 — 서재 콜드스타트 B안 (책 0권 + 물어보기 없으면 서재 섹션 미렌더). 게이트 ② 통과
-- PR #47 — 표지 원본 해상도(120×174 → 458×670) + SW 이미지 캐시 `CacheFirst` 전환 + `expanded && !hasMore` 스크롤 감옥 수정
+**열린 PR — 둘 다 draft, 승인 전 머지 금지**
+- [#49](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/49) `feat/book-ask-cron` — 물어보기 크론 + 마이그레이션 SQL
+- [#50](https://github.com/brainyreadingclub-bot/jidokhae-2nd/pull/50) `fix/remind-payment-status` — 결제상태 단언 제거 + 누락 변수 보정 + 변수 대조표
+- 둘 다 `notification.ts`를 건드리지만 `merge-tree`로 **충돌 없음 확인**
+- (#40 `docs/redesign-claude-md`는 7/12부터 방치 — 정리 필요)
+
+**이번에 잡은 결함 3건**
+- 🔴 book-ask 크론이 **저장소 루트** `vercel.json`에 등록돼 있었다. Vercel Root Directory는 `jidokhae-web`이라 그 파일은 읽히지 않는다 — 배포해도 크론이 영영 안 떴을 것
+- 대기 승격 알림이 미입금 회원에게 `(결제완료)` 단언 — RPC가 `payment_method='transfer'`면 `pending_transfer`로 승격시킨다
+- 미승격 환불 알림이 시안 §5의 `■ 일시`를 렌더할 수 없었다 (코드가 모임일시를 안 보냄)
 
 **작성한 문서**
-- `검토문서/2026-08-02-알림톡-6번째-템플릿-문안.md` — 최종안 + 친근한 대안 + 발송 조건·변수·구현 항목
-- `jidokhae-web/VOICE.md` — 서비스 전반 보이스&톤 가이드 (레드라인 8 / 판정 규칙 8 / 친근함 좌표 / 상태 라벨 고정표)
-- `docs/expert-panel/2026-08-03-voice-tone-behavioral.md` — 행동심리 패널 4인 기록
-- `docs/expert-panel/2026-07-31-21-30-library-cover-shelf-layout.md` — 표지 책장형 B안 보류 결정
-- `docs/superpowers/mockups/2026-07-31-서재-표지-비주얼.html` — ⚠️ B안에 조판 결함 있음(경고 배너 삽입됨). 그대로 구현 금지
+- `검토문서/2026-08-13-알림톡-변수-대조표-및-배포-순서.md` — **다음 세션은 여기부터 읽을 것.** 템플릿별 코드가 보내는 변수 토큰 + 배포 6단계
+- `검토문서/2026-08-11-알림톡-전체-시안.md` — 7건 최종 문안 (제출본)
+- `jidokhae-web/VOICE.md` v0.5 — ⚠️ **상태 라벨 고정표는 v0.4→v0.5 개정 때 빠졌다.** 아래 4번 항목의 근거 문서가 지금은 없다
 
 ## 다음 할 일 (우선순위 순)
 
-1. **PR #48 Preview 검증 후 머지** — 카카오 로그인이 필요해 Claude가 못 하는 단계. 3케이스:
-   - 로그아웃 → `/my` 직접 접근 → 카카오 로그인 → **`/my`로 복귀**하는가
-   - 로그아웃 → `/meetings/{id}` → 로그인 → **그 모임 상세로 복귀**하는가
-   - 딥링크 없이 그냥 로그인 → 홈으로 (기존 동작 유지)
-   > 미들웨어 층은 이미 로컬 curl 6케이스로 검증 완료. 남은 건 OAuth 왕복 한 바퀴뿐.
-
-2. **알림톡 6번째 템플릿 심사 제출** — 카카오 심사가 외부 대기시간이라 먼저 큐에 넣어야 한다.
-   - 단무지님: 톤 확정(최종안 / 친근한 대안 — **심사 리스크는 동일**, 취향 문제) → Solapi 콘솔에서 제출
-   - ⚠️ 제출 전 문안의 동사를 **`담다`로 통일**할 것(`VOICE.md` §3). 현재 문안은 "기록해 두실 수 있습니다"인데 인앱은 "담기"다. 심사 재제출 비용 때문에 제출 **전에** 고쳐야 한다
-   - 기존 5종 문구 개선을 함께 올리려면 Solapi 콘솔에서 본문 복사 필요(코드엔 변수만 있음)
-
-3. **알림톡 6번째 구현** (심사 대기 중 병행 가능)
-   - `SOLAPI_TEMPLATE_BOOK_ASK` env (Vercel Production + Preview)
-   - `notifications.type` CHECK에 `'book_ask'` 추가 + 부분 UNIQUE INDEX `(recipient_id, meeting_id) WHERE type='book_ask'`
-   - `GET /api/cron/book-ask` + `vercel.json` 크론 (UTC `0 1 * * *` = KST 10:00)
-   - `sendBookAskNotification()` — `notification.ts` 기존 래퍼 패턴
-   - 재사용: `getPendingAsk`/`isAskEligibleMeeting`(`asks.ts`), `PARTICIPATED_STATUSES`
-   - 마이그레이션 SQL은 **코드 확정 후** 전달(프로젝트 규칙)
-
-4. **🔴 `pending_transfer` 라벨 3종 통일** — 회원이 같은 상태를 "신청 접수됨 / 입금 대기 / 입금대기"로 만나 세 상태로 오해할 수 있다. `VOICE.md` §4대로 **`입금 확인 중`** 단일화 + `STATUS_LABEL` 상수 도입
-5. **🔴 호칭 채널 통일** — 인앱은 닉네임, 알림톡은 실명 우선(`notification.ts:164`). 같은 사람이 앱에서 "초록고래님", 카톡에서 "김철수님"
-6. **운영자 알림 발송 이력 페이지** — 3~6월 123건 실패를 넉 달간 몰랐던 사고 대응. 알림톡이 주 진입점이 되면 "전환율 낮음"과 "노출 0"을 구분할 수단이 된다
-7. **게이트 통과 후 플래그 ON** — `site_settings.library_enabled='on'`. 배포 불필요
-8. `VOICE.md` R1·R4·R5·R8을 `prelaunch`에 grep lint로 추가
+1. **[단무지님] Solapi 검수 요청** — 7건 PENDING. 카카오 심사가 외부 대기시간이라 가장 긴 경로다. 이것부터 큐에 넣어야 나머지가 굴러간다
+2. **[단무지님] `migration-book-ask.sql` 실행** — Supabase `ycqqzzvyixvtdorjxkrn`. 코드보다 **먼저** (안 그러면 INSERT가 CHECK 위반 23514)
+3. **[단무지님] Vercel 크론 상한 확인** — 2개 → 3개가 된다. **Hobby면 상한 2개라 배포가 실패한다.** Settings → Billing
+4. **[단무지님] 승인 후 env 교체 + 머지** — V2 ID 6개 + `SOLAPI_TEMPLATE_BOOK_ASK` 신규. env와 머지는 **동시에** 나가야 한다. 순서 전체는 위 대조표 문서 참조
+5. **[결정 필요] 인앱 `pending_transfer` 라벨 3종** — 홈 `신청 접수됨` / 상세 `신청 접수됨` / 마이페이지 `입금 대기`. 알림톡은 이제 `입금 확인 중`이라 채널 간 표현이 갈린다. **안심(신청 접수됨) vs 사실 고지(입금 확인 중)** 중 어느 쪽인지가 회원 체감을 바꾸는 판단이라 Claude가 임의로 정하지 않았다. `VOICE.md` 근거표가 사라진 상태라 다시 정해야 한다
+6. **[결정 필요] `NEW_MEMBER_WELCOME_V2` 발송 시점** — 템플릿만 있고 발송 코드가 없다. 알림톡은 전화번호가 필요한데 가입 직후엔 모른다(프로필 설정에서 받음) → **발송 시점은 사실상 "프로필 설정 완료 순간" 하나뿐.** 확정만 해주면 붙일 수 있다
+7. **🔴 호칭 채널 통일** — 인앱은 닉네임, 알림톡은 실명 우선. 같은 사람이 앱에서 "초록고래님", 카톡에서 "김철수님"
+8. **운영자 알림 발송 이력 페이지** — 3~6월 123건 실패를 넉 달간 몰랐던 사고 대응. 알림톡이 주 진입점이 되면 "전환율 낮음"과 "노출 0"을 구분할 수단이 된다
+9. **플래그 ON** — `site_settings.library_enabled='on'`. **맨 마지막.** env보다 먼저 켜면 물어보기 알림톡이 실패한다
+10. `VOICE.md` R1·R4·R5·R8을 `prelaunch`에 grep lint로 추가
 
 ## 나중에 할 일 (언젠가 반드시 — 잊지 말 것)
 
@@ -92,6 +83,8 @@ type: project
 - **미들웨어 prefetch 판별은 `sec-purpose`/`purpose`로.** `next-router-prefetch`·`RSC`는 미들웨어에 도달하지 않는다
 - 단무지님 서재는 검증 중 비워져 0권이고, B안 때문에 지금은 서재 진입 UI 경로가 없다. 플래그를 켜면 다음 모임 다음날 물어보기가 뜨며 복구된다
 - gh 활성 계정이 `brainyreadingclub-bot`인지 push 전 확인(계정 3개 병존)
+- **크론을 추가할 땐 `jidokhae-web/vercel.json`에.** 저장소 루트에 만들면 읽히지 않는다 — Vercel Root Directory가 `jidokhae-web`이다(루트엔 `package.json`이 없다). 2026-08-13에 실제로 이 실수가 있었다
+- **알림톡 변수 토큰은 문안 문서로 검증할 수 없다.** 시안이 값을 대입한 형태라 `■ 참가비:`가 `#{참가비}`인지 `#{결제금액}`인지 안 보인다. 실제로 신청완료는 `#{결제금액}`, 리마인드는 `#{참가비}`로 서로 다르다. 대조는 `검토문서/2026-08-13-알림톡-변수-대조표...`로
 
 ## 확정된 정책 (반복 확인용)
 
