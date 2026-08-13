@@ -33,8 +33,8 @@ type: project
 ## 다음 할 일 (우선순위 순)
 
 1. **[단무지님] Solapi 검수 요청** — 7건 PENDING. 카카오 심사가 외부 대기시간이라 가장 긴 경로다. 이것부터 큐에 넣어야 나머지가 굴러간다
-2. **[단무지님] `migration-book-ask.sql` 실행** — Supabase `ycqqzzvyixvtdorjxkrn`. 코드보다 **먼저** (안 그러면 INSERT가 CHECK 위반 23514)
-3. **[단무지님] Vercel 크론 상한 확인** — 2개 → 3개가 된다. **Hobby면 상한 2개라 배포가 실패한다.** Settings → Billing
+2. ~~`migration-book-ask.sql` 실행~~ — ✅ **2026-08-13 완료** (Claude가 MCP로 prod 실행, 재조회 확인)
+3. ~~Vercel 크론 상한 확인~~ — ✅ **확인 완료, 문제 없음.** Hobby 상한은 2개가 아니라 **100개**다(2026-07-15 문서). 대신 **실행 정밀도 ±59분** — book-ask는 KST 10:00~10:59 사이 뜬다
 4. **[단무지님] 승인 후 env 교체 + 머지** — V2 ID 6개 + `SOLAPI_TEMPLATE_BOOK_ASK` 신규. env와 머지는 **동시에** 나가야 한다. 순서 전체는 위 대조표 문서 참조
 5. **[결정 필요] 인앱 `pending_transfer` 라벨 3종** — 홈 `신청 접수됨` / 상세 `신청 접수됨` / 마이페이지 `입금 대기`. 알림톡은 이제 `입금 확인 중`이라 채널 간 표현이 갈린다. **안심(신청 접수됨) vs 사실 고지(입금 확인 중)** 중 어느 쪽인지가 회원 체감을 바꾸는 판단이라 Claude가 임의로 정하지 않았다. `VOICE.md` 근거표가 사라진 상태라 다시 정해야 한다
 6. **[결정 필요] `NEW_MEMBER_WELCOME_V2` 발송 시점** — 템플릿만 있고 발송 코드가 없다. 알림톡은 전화번호가 필요한데 가입 직후엔 모른다(프로필 설정에서 받음) → **발송 시점은 사실상 "프로필 설정 완료 순간" 하나뿐.** 확정만 해주면 붙일 수 있다
@@ -83,7 +83,9 @@ type: project
 - **미들웨어 prefetch 판별은 `sec-purpose`/`purpose`로.** `next-router-prefetch`·`RSC`는 미들웨어에 도달하지 않는다
 - 단무지님 서재는 검증 중 비워져 0권이고, B안 때문에 지금은 서재 진입 UI 경로가 없다. 플래그를 켜면 다음 모임 다음날 물어보기가 뜨며 복구된다
 - gh 활성 계정이 `brainyreadingclub-bot`인지 push 전 확인(계정 3개 병존)
-- **크론을 추가할 땐 `jidokhae-web/vercel.json`에.** 저장소 루트에 만들면 읽히지 않는다 — Vercel Root Directory가 `jidokhae-web`이다(루트엔 `package.json`이 없다). 2026-08-13에 실제로 이 실수가 있었다
+- **크론을 추가할 땐 `jidokhae-web/vercel.json`에.** 저장소 루트에 만들면 읽히지 않는다 — Vercel Root Directory가 `jidokhae-web`이다(API로 확인). 2026-08-13에 실제로 이 실수가 있었다
+- **Supabase MCP는 이제 prod(`ycqqzzvyixvtdorjxkrn`)를 가리킨다.** `project_supabase_mcp_warning.md`의 "dead project" 경고는 낡았다 — 2026-08-13 `list_projects`로 확인. 단 쓰기 전에는 항상 ref를 `.env.local`과 대조할 것
+- **Vercel 크론 정밀도 ±59분** (Hobby). 크론 개수 상한은 100개라 여유 있다. 정확한 시각이 필요한 로직을 크론 순서에 의존시키지 말 것
 - **알림톡 변수 토큰은 문안 문서로 검증할 수 없다.** 시안이 값을 대입한 형태라 `■ 참가비:`가 `#{참가비}`인지 `#{결제금액}`인지 안 보인다. 실제로 신청완료는 `#{결제금액}`, 리마인드는 `#{참가비}`로 서로 다르다. 대조는 `검토문서/2026-08-13-알림톡-변수-대조표...`로
 
 ## 확정된 정책 (반복 확인용)
