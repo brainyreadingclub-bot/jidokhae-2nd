@@ -284,6 +284,8 @@ export async function sendWaitlistRefundedNotification(
   meetingId: string,
   meetingTitle: string,
   refundedAmount: number,
+  meetingDate: string,
+  meetingTime: string,
 ) {
   const profile = await getProfileForNotification(userId)
   const displayName = profile.real_name || profile.nickname
@@ -298,6 +300,7 @@ export async function sendWaitlistRefundedNotification(
     variables: {
       '#{회원명}': displayName,
       '#{모임명}': meetingTitle,
+      '#{모임일시}': `${formatKoreanDate(meetingDate)} ${formatKoreanTime(meetingTime)}`,
       '#{결제금액}': formatFee(refundedAmount),
     },
   })
