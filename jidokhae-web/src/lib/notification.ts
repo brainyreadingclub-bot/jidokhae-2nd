@@ -9,6 +9,7 @@
 import { sendAlimtalk } from '@/lib/solapi'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { paymentStatusLabel } from '@/lib/registration-status'
 import type { Meeting } from '@/types/meeting'
 
 type NotificationType =
@@ -242,9 +243,12 @@ export async function sendWaitlistPromotedNotification(
 
   if (!meeting) return
 
+  // status도 함께 읽는다 — 계좌이체로 대기 신청한 회원은 승격 시 RPC가
+  // `pending_transfer`로 분기시키므로 "결제완료"라고 단언하면 틀린 말이 된다
+  // (promote_next_waitlisted, migration-bank-transfer-functions.sql).
   const { data: registration } = await supabase
     .from('registrations')
-    .select('paid_amount')
+    .select('paid_amount, status')
     .eq('id', registrationId)
     .single()
 
@@ -266,6 +270,7 @@ export async function sendWaitlistPromotedNotification(
       '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
       '#{장소}': (meeting as Meeting).location,
       '#{결제금액}': formatFee(paidAmount),
+      '#{결제상태}': paymentStatusLabel(registration?.status ?? 'confirmed'),
       '#{모임ID}': (meeting as Meeting).id,
     },
   })

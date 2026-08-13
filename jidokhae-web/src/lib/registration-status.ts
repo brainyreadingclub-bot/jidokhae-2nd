@@ -16,3 +16,18 @@
  * 이 상수를 쓸 것.
  */
 export const PARTICIPATED_STATUSES = ['confirmed', 'pending_transfer'] as const
+
+/**
+ * 알림톡 `#{결제상태}` 치환용 라벨.
+ *
+ * `pending_transfer`를 **"미입금"으로 부르지 않는다** — 운영자가 입금 확인을 월말에
+ * 몰아서 처리하므로 이 상태의 회원은 대부분 이미 돈을 냈다. 낸 사람에게 "미입금"이라고
+ * 하면 틀린 말이다. (`VOICE.md` §4 · `feedback_2026-04-07_operator-workflow-first.md`)
+ *
+ * 두 곳에서 쓴다 — 모임 전날 리마인드, 대기 승격 확정. 둘 다 계좌이체 회원이
+ * 입금 확인 전 상태로 도달할 수 있는 지점이다(승격은 RPC가 `payment_method='transfer'`면
+ * `pending_transfer`로 분기시킨다).
+ */
+export function paymentStatusLabel(status: string): string {
+  return status === 'pending_transfer' ? '입금 확인 중' : '결제완료'
+}

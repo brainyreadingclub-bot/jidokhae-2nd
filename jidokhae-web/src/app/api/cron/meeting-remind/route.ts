@@ -23,7 +23,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getTomorrowKST, formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import { sendNotification } from '@/lib/notification'
-import { PARTICIPATED_STATUSES } from '@/lib/registration-status'
+import { PARTICIPATED_STATUSES, paymentStatusLabel } from '@/lib/registration-status'
 import type { Meeting } from '@/types/meeting'
 
 type RemindTask = {
@@ -38,14 +38,6 @@ type RemindTask = {
     real_name: string | null
     nickname: string
   }
-}
-
-/**
- * 결제 상태 라벨. `pending_transfer`를 "미입금"으로 부르지 않는다 —
- * 운영자가 월말에 몰아 확인하므로 이 상태의 회원은 대부분 이미 입금했다.
- */
-function paymentStatusLabel(status: string): string {
-  return status === 'pending_transfer' ? '입금 확인 중' : '결제완료'
 }
 
 export async function GET(request: NextRequest) {
