@@ -38,6 +38,8 @@ export const ADMIN_MENU_GROUPS: AdminMenuGroup[] = [
   {
     label: '시스템',
     items: [
+      // 회원 연락처·실명이 보이므로 admin 전용
+      { label: '알림톡 이력', href: '/admin/notifications', adminOnly: true },
       { label: '설정', href: '/admin/settings', adminOnly: true },
     ],
   },
