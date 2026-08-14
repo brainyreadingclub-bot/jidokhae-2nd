@@ -84,10 +84,10 @@
   .ob{flex:1;min-width:0}
   .ob .eb{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--n-500)}
   .ob .bt{font-family:var(--serif);font-size:20px;font-weight:700;line-height:1.28;margin:5px 0 0;letter-spacing:-.01em}
-  .ob .mt{font-size:11.5px;color:var(--n-600);margin:6px 0 0}
+  .ob .au{font-size:11.5px;color:var(--n-600);margin:4px 0 0}
+  .ob .mt{font-size:11.5px;color:var(--n-600);margin:7px 0 0}
   .ob .host{font-size:11.5px;color:var(--n-700);margin:7px 0 0}
   .ob .host b{color:var(--ink-600);font-weight:600}
-  .ob .q{margin:9px 0 0;padding-left:9px;border-left:1px solid var(--n-300);font-family:var(--serif);font-size:12.5px;color:var(--n-700);line-height:1.5}
 
   /* 카드 */
   .card{background:#fff;border:1px solid var(--n-200);border-left:3px solid var(--ink-500);border-radius:12px;
@@ -100,7 +100,6 @@
   .card .fee{font-size:12px;color:var(--n-700);margin:3px 0 0;font-variant-numeric:tabular-nums}
   .dd{flex:0 0 auto;font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--ink-100);color:var(--ink-700);white-space:nowrap}
   .dd.u{background:var(--cor-500);color:#fff}
-  .dd.r{background:var(--n-100);color:var(--n-700);font-weight:500}
   .wc{display:flex;gap:10px}
   .mc{flex:0 0 auto;width:36px;height:52px;border-radius:2px;background:linear-gradient(158deg,#33566b,#16252f);box-shadow:0 1px 4px rgba(15,23,30,.2)}
 
@@ -119,7 +118,7 @@
   .pick{margin:14px 0 0;font-size:12.5px;color:var(--n-800);line-height:1.6}
   .pick b{color:var(--ink-600);font-weight:600}
   .about{margin:13px 0 0;padding:12px 13px;border-radius:12px;background:#fff;border:1px solid var(--n-200)}
-  .about .lbl{font-size:10.5px;font-weight:600;letter-spacing:.08em;color:var(--n-500)}
+  .about .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--n-700)}
   .about p{margin:6px 0 0;font-size:12.5px;color:var(--n-700);line-height:1.65;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .about .more{display:inline-block;margin-top:7px;font-size:11.5px;font-weight:600;color:var(--ink-600)}
@@ -153,6 +152,7 @@
   .ck .n.later{background:var(--n-100);color:var(--n-500)}
   .ck h5{margin:0;font-size:13px;font-weight:600}
   .ck p{margin:3px 0 0;font-size:11.5px;color:var(--n-600);line-height:1.55}
+  .ck .hl{color:var(--ink-700);background:var(--ink-50);font-weight:600;padding:1px 5px;border-radius:4px}
   .ck .dis{margin-top:6px;padding:7px 8px;border-radius:6px;background:var(--n-100);font-size:11px;color:var(--n-700)}
   .lk{display:inline-block;margin-top:7px;font-size:12px;font-weight:600;color:var(--ink-600);border-bottom:1px solid var(--ink-200)}
 
@@ -201,16 +201,18 @@
   <h1>토론모임이 회원에게 보이는 흐름</h1>
   <p>발견 → 판단 → 신청 → 신청 이후. 11개 상태를 전부 그렸다. 색으로 구별하지 않는다 — 그린은 점이고 코럴은 긴급 전용이라, 정기모임과의 구별은 <b>형태(책 표지)</b>가 맡는다.</p>
   <div class="chips">
-    <span>참가비 25,000</span><span>환불 7 / 3일</span><span>월 1회 · 지역 번갈아</span><span>평균 참석 3~4명</span>
+    <span>참가비 25,000</span><span>환불 7 / 3일</span><span>정원 10명</span><span>월 1회 · 지역 번갈아</span><span>평균 참석 3~4명</span>
   </div>
   <div class="newbox">
-    <b>v1에서 바뀐 것</b>
+    <b>확정된 것</b>
     <ul>
-      <li><b>진행자를 넣었다.</b> 트레바리는 클럽 카드 대문이 책이 아니라 클럽장 얼굴이다 — 사람이 신청 요인인데 우리 설계엔 진행자가 어디에도 없었다</li>
-      <li><b>토론모임 없는 달에 “지난 토론”을 넣었다.</b> v1에서 그 화면이 텅 비어 있었다</li>
-      <li><b>환불 기한을 14일 → 7일로 열었다.</b> 정기모임 취소 33건을 보니 66%가 엿새 안쪽이고, 0원 환불인데도 36%가 이틀 전에 취소한다 — 마감을 앞당겨도 조기 취소를 못 만든다. 대신 신청 중앙값(8일 전)에 전액 환불 구간이 걸치도록 열었다</li>
-      <li>환불 안내를 코럴 → 무채색으로. 상시 노출에 코럴을 쓰면 마감임박 코럴이 죽는다</li>
-      <li>“책을 함께 주문해서”라는 <b>환불 사유 문구를 삭제</b>했다. 사실이 아니었다 (책은 각자 사도 된다)</li>
+      <li><b>환불 7일 / 3일.</b> 정기모임 취소 33건 중 66%가 엿새 안쪽이고, 0원 환불인데도 36%가 이틀 전에 취소한다 — 마감을 앞당겨도 조기 취소를 못 만든다. 신청 중앙값(8일 전)에 전액 환불 구간이 걸치도록 열었다</li>
+      <li><b>정원 10명.</b> 인원은 평소 숨기고 <b>마감일 때만</b> 표시한다 (평균 참석 3~4명이라 <code>3/10명</code>은 신청을 말린다)</li>
+      <li><b>책은 우와님께 부탁하면 10% 싸다.</b> 받는 곳이 정기모임 장소와 같다 — 신청 완료 화면에서 강조</li>
+      <li><b>완독을 재촉하지 않는다.</b> “읽을 시간 N일” “읽는 중” 같은 표현을 전부 뺐다. 안 읽어도 오는 게 낫다는 게 이 클럽 입장이다</li>
+      <li><b>진행자를 넣었다.</b> 트레바리 클럽 카드 대문이 책이 아니라 클럽장 얼굴이더라 — 사람이 신청 요인인데 설계에 빠져 있었다</li>
+      <li>토론 질문 1개 필드는 <b>삭제</b>. 발제 형식을 코드가 규정하게 된다</li>
+      <li>후기 5,000 환급은 <b>폐기</b> (지독해 포인트로 대체 예정)</li>
     </ul>
   </div>
 </header>
@@ -235,9 +237,9 @@
         <div class="ob">
           <div class="eb">이달의 토론 · 9월</div>
           <p class="bt">아몬드</p>
+          <p class="au">손원평 · 창비</p>
           <p class="mt">9월 13일 (토) 오후 2:00 · 경주 우연히 책방</p>
           <p class="host"><b>초록고래</b>님이 고르고 진행해요</p>
-          <p class="q">“무언가를 느끼지 못하는 것과, 느끼고도 모른 척하는 것 중 무엇이 더 나쁠까요?”</p>
         </div>
       </div>
       <div class="shd"><h3>정기모임 일정</h3><span>2건</span></div>
@@ -267,9 +269,9 @@
         <div class="ob">
           <div class="eb">이달의 토론 · 9월</div>
           <p class="bt">아몬드</p>
+          <p class="au">손원평 · 창비</p>
           <p class="mt">9월 13일 (토) 오후 2:00 · 경주 우연히 책방</p>
           <p class="host"><b>초록고래</b>님이 고르고 진행해요</p>
-          <p class="q">“무언가를 느끼지 못하는 것과, 느끼고도 모른 척하는 것 중 무엇이 더 나쁠까요?”</p>
         </div>
       </div>
       <div class="lock">
@@ -436,11 +438,13 @@
         <li><span class="n on">✓</span><div><h5>참가비 결제 완료</h5><p>25,000 · 카카오페이</p></div></li>
         <li><span class="n now">2</span><div>
           <h5>책 준비하기</h5>
-          <p>직접 사셔도 되고, 우와님께 부탁하셔도 돼요. <b>주문 마감 8월 30일</b></p>
+          <p><span class="hl">우와님께 부탁하면 정가보다 10% 싸요</span><br>
+          받는 곳은 우연히 책방 · 공간 지그시 — 정기모임 가시는 길에 받으시면 돼요.</p>
+          <p style="margin-top:6px">직접 사셔도 괜찮아요. <b>주문 마감 9월 6일</b> — 환불 기한과 같은 날이에요.</p>
           <div class="dis">책 주문은 지독해가 대행하지 않아요. 우와님이 개인적으로 도와주시는 거예요.</div>
           <span class="lk">우와님께 카톡으로 부탁하기 →</span>
         </div></li>
-        <li><span class="n later">3</span><div><h5>발제문 읽어보기</h5><p>모임 전에 올라와요. 올라오면 홈에서 보여드릴게요.</p></div></li>
+        <li><span class="n later">3</span><div><h5>발제문 읽어보기</h5><p>모임 전에 올라와요. 올라오면 홈에서 보여드릴게요.</p><p style="margin-top:5px">모임 다녀오시면 이 책이 <b>서재에 담겨요.</b></p></div></li>
       </ul>
     </div>
   </div>
@@ -516,8 +520,7 @@
   <b>보면서 정해주실 것</b>
   <ul>
     <li><b>진행자 표기</b> — “고르고 진행해요”가 맞는지. 지금은 발제자가 선정·발제·진행을 다 맡는 구조라 한 사람으로 적었다</li>
-    <li>토론모임 정원</li>
-    <li>책 주문 마감일이 D-14와 같은 날인지</li>
+    <li><b>선정 이유를 누가 쓰나</b> — 지금은 책을 고른 운영진. 2조각에서 투표로 바뀌면 “고른 사람”이 회원 다수가 된다</li>
   </ul>
   <p style="margin-top:14px">표지는 카카오 도서 API 이미지가 들어갈 자리다. 여기서는 대체 렌더이고, 실제로는 실물 표지가 들어간다. 서체도 기기 기본값으로 대체돼 실제 앱(Noto Serif KR · Pretendard)과 다르게 보일 수 있다.</p>
 </footer>
