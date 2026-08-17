@@ -98,7 +98,8 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - 토론모임 0조각 — `meetings.meeting_type` 정기/토론 구분 ✅ (PR #41, 회원 화면 영향 0)
 - 토론모임 1조각 — **서재 + 물어보기(책 담기) + 응답률 측정** ✅ 배포 (PR #42, `dcc61d5`). **단 `site_settings.library_enabled` 플래그 OFF → 회원 노출 0**
 - 물어보기 응답률 계측 버그 수정 + 지표 재정의 ✅ (PR #43, `1f9ffaa`, 7/24 prod)
-- **플래그 켜기 게이트 2건 남음**: (1) 알림톡 5종 실작동 점검(단무지님) → 6번째 템플릿 신설, (2) 회원 콜드스타트 화면 시안 합의. 상세는 `memory/project_next_session.md`
+- **전면개편 1단계 (5탭 next_ui × 토스 스킨 + 발제 스레드)** ✅ 머지 (2026-08-17, PR #54 `b57aee0` + #55 `42ae701`). **`next_ui` 플래그 OFF — 회원 노출 0.** prod SQL 실행 완료(발제 5테이블 + 스텝할인 토론 제외 RPC 가드). 스텝 할인 = 정기모임 한정 확정. 알림톡 V2 6종 승인, BOOK_ASK 재심사 중
+- **플래그 켜기 게이트**: BOOK_ASK 재심사 승인 + Vercel env 템플릿 ID 6개 V2 교체 + `next_ui`·`library_enabled` 동시 켜기 (우와님 동의 ✅ 확보). 상세는 `memory/project_next_session.md`
 - ⚠️ 아래 문서의 라우트·컴포넌트·스키마 목록에는 서재/물어보기(`library_entries`, `books`, `book_asks`, `src/lib/asks*.ts`, `src/lib/library.ts`, `src/components/library/*`, `/admin/library`)가 **아직 미반영**
 
 ---
