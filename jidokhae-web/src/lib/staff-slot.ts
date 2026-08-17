@@ -14,6 +14,7 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import {
   STAFF_DISCOUNT_MAX_PER_MEETING,
   calculateFee,
+  isStaffDiscountableMeetingType,
   isStaffEligible,
 } from '@/lib/pricing'
 
@@ -42,7 +43,13 @@ export async function getDisplayFee(
   meetingId: string,
   profile: { role: string; is_staff: boolean | null } | null,
   meetingFee: number,
+  meetingType: string,
 ): Promise<{ fee: number; isDiscounted: boolean }> {
+  // 스텝 할인은 정기모임 한정 (2026-08-17 결정) — 토론모임 등은 정가
+  if (!isStaffDiscountableMeetingType(meetingType)) {
+    return { fee: meetingFee, isDiscounted: false }
+  }
+
   // 자격 없으면 정가
   if (!profile || !isStaffEligible(profile)) {
     return { fee: meetingFee, isDiscounted: false }
