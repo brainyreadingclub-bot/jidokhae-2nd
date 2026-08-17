@@ -59,3 +59,44 @@ export function calculateRefund(
     daysRemaining,
   }
 }
+
+// ─── 토론모임 전용 ───
+// 2026-08-14 확정(7/3), 2026-08-17 D-7 신청 마감과 통일.
+// calculateRefund와 같은 날짜 단위 계산 방식을 그대로 사용한다 (KST 경계 일관성).
+
+export const DISCUSSION_REFUND_RULES = [
+  { daysBeforeMeeting: 7, rate: 100, label: '모임 7일 전까지', rateLabel: '참가비 100% 환불' },
+  { daysBeforeMeeting: 3, rate: 50, label: '모임 3일 전까지', rateLabel: '참가비 50% 환불' },
+] as const
+
+export const DISCUSSION_REFUND_DEFAULT = {
+  rate: 0,
+  label: '모임 2일 전부터',
+  rateLabel: '환불 없음 (취소는 가능)',
+} as const
+
+export function calculateDiscussionRefund(
+  meetingDate: string, // "YYYY-MM-DD"
+  paidAmount: number,
+  kstToday?: string, // 주입 가능 (테스트용)
+): RefundInfo {
+  const today = kstToday ?? getKSTToday()
+
+  const meetingMs = new Date(meetingDate + 'T00:00:00').getTime()
+  const todayMs = new Date(today + 'T00:00:00').getTime()
+  const daysRemaining = Math.floor((meetingMs - todayMs) / (1000 * 60 * 60 * 24))
+
+  let refundRate: number = DISCUSSION_REFUND_DEFAULT.rate
+  for (const rule of DISCUSSION_REFUND_RULES) {
+    if (daysRemaining >= rule.daysBeforeMeeting) {
+      refundRate = rule.rate
+      break
+    }
+  }
+
+  return {
+    refundRate,
+    refundAmount: Math.floor((paidAmount * refundRate) / 100),
+    daysRemaining,
+  }
+}
