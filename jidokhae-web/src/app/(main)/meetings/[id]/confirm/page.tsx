@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/auth'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import { getSiteSettings } from '@/lib/site-settings'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
@@ -29,18 +30,35 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
   // Fetch bank info for pending_transfer
   const settings = isPendingTransfer ? await getSiteSettings() : null
 
-  // Fetch registration info if paymentId provided
+  // Fetch registration info — 카드결제는 paymentId로, 계좌이체는 본인 pending_transfer 행으로
+  // (이체 흐름은 paymentId가 없어 정가로 폴백되던 표시 버그 수정 — 스텝 할인가도 정확히 표시)
   let paidAmount: number | null = null
   if (paymentId) {
     const { data: reg } = await supabase
       .from('registrations')
       .select('paid_amount')
       .eq('payment_id', paymentId)
-      .eq('status', 'confirmed')
+      .in('status', ['confirmed', 'waitlisted'])
       .limit(1)
 
     if (reg && reg.length > 0) {
       paidAmount = reg[0].paid_amount
+    }
+  } else if (isPendingTransfer) {
+    const user = await getUser()
+    if (user) {
+      const { data: reg } = await supabase
+        .from('registrations')
+        .select('paid_amount')
+        .eq('meeting_id', id)
+        .eq('user_id', user.id)
+        .eq('status', 'pending_transfer')
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (reg && reg.length > 0) {
+        paidAmount = reg[0].paid_amount
+      }
     }
   }
 
