@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, after, type NextRequest } from 'next/server'
 import { getRouteUser } from '@/lib/api-auth'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { upsertReactionNotification } from '@/lib/app-notifications'
@@ -63,11 +63,14 @@ export async function POST(
         .from('answer_reactions')
         .select('user_id', { count: 'exact', head: true })
         .eq('answer_id', answerId)
-      void upsertReactionNotification(answer.user_id, {
-        answer_id: answerId,
-        actor_nickname: me?.nickname ?? '회원',
-        total_count: count ?? 1,
-      })
+      // after(): 서버리스에서 응답 후에도 실행 보장 — void fire-and-forget은 람다 freeze로 유실
+      after(
+        upsertReactionNotification(answer.user_id, {
+          answer_id: answerId,
+          actor_nickname: me?.nickname ?? '회원',
+          total_count: count ?? 1,
+        }),
+      )
     }
     return NextResponse.json({ status: 'success', data: { reacted: true } })
   } catch {

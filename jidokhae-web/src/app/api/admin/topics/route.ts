@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, after, type NextRequest } from 'next/server'
 import { getRouteUser } from '@/lib/api-auth'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { isCurator } from '@/lib/curator'
@@ -76,8 +76,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 신청자(confirmed·pending_transfer) 전원에게 인앱 알림 — 실패해도 등록은 성공
-    void (async () => {
+    // 신청자(confirmed·pending_transfer) 전원에게 인앱 알림 — 실패해도 등록은 성공.
+    // after(): 서버리스에서 응답 후에도 실행 보장 — void fire-and-forget은 람다 freeze로 유실
+    after(async () => {
       const { data: regs } = await ctx.admin
         .from('registrations')
         .select('user_id, status')
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
           title,
         })
       }
-    })()
+    })
 
     return NextResponse.json({ status: 'success', data: { id: data.id } })
   } catch {

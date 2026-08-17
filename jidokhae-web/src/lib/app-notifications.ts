@@ -4,7 +4,8 @@ import type { AppNotification, AppNotificationType } from '@/types/app-notificat
 /**
  * 인앱 알림. 알림톡과 역할 분담(전면개편 스펙 §4-2):
  * 알림톡 = 시간 민감(리마인드·승격·환불·물어보기) / 인앱 = 누적(답글·공감·발제 등록·새 번개·신청 확정).
- * 알림은 부가 기능 — 실패해도 본 흐름을 막지 않는다. 호출부는 void로 fire-and-forget.
+ * 알림은 부가 기능 — 실패해도 본 흐름을 막지 않는다.
+ * 호출부는 next/server의 after()로 감싼다 — void fire-and-forget은 Vercel 람다 freeze로 유실된다 (2026-08-17 Preview 실측).
  */
 export async function createAppNotification(
   userId: string,

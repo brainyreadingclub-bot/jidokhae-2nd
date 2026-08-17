@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, after, type NextRequest } from 'next/server'
 import { getRouteUser } from '@/lib/api-auth'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { createAppNotification } from '@/lib/app-notifications'
@@ -77,12 +77,15 @@ export async function POST(
 
     if (answer.user_id !== user.id) {
       const me = await getProfile(user.id)
-      void createAppNotification(answer.user_id, 'answer_reply', {
-        answer_id: answerId,
-        topic_id: answer.topic_id,
-        actor_nickname: me?.nickname ?? '회원',
-        preview: body.trim().slice(0, 60),
-      })
+      // after(): 서버리스에서 응답 후에도 실행 보장 — void fire-and-forget은 람다 freeze로 유실
+      after(
+        createAppNotification(answer.user_id, 'answer_reply', {
+          answer_id: answerId,
+          topic_id: answer.topic_id,
+          actor_nickname: me?.nickname ?? '회원',
+          preview: body.trim().slice(0, 60),
+        }),
+      )
     }
     return NextResponse.json({ status: 'success' })
   } catch {
