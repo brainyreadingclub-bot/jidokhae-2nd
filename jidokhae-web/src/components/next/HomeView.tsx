@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec, BoxWhite, RowItem, Chevron } from '@/components/next/TossUI'
 import { formatKoreanDate, formatKoreanTime } from '@/lib/kst'
 
@@ -56,9 +57,11 @@ export default function HomeView({ data }: { data: HomeData }) {
         )}
       </h1>
 
-      {/* 반응 카드 */}
+      {/* 반응 카드 — 홈이 발제 스레드로 사람을 보내는지 측정 */}
       {reply && (
-        <Link
+        <TrackedLink
+          eventName="home_card_click"
+          eventParams={{ card: 'reply' }}
           href={`/talk/topics/${reply.topicId}`}
           className="mt-4 block rounded-[18px] bg-brand-bg p-4"
         >
@@ -69,7 +72,7 @@ export default function HomeView({ data }: { data: HomeData }) {
           <span className="mt-2.5 inline-flex min-h-[36px] items-center rounded-[10px] bg-white px-3.5 text-xs font-bold text-brand-deep shadow-sm">
             답글 보러 가기
           </span>
-        </Link>
+        </TrackedLink>
       )}
 
       {/* 다음 모임 — 토스식 큰 숫자 */}
@@ -98,7 +101,12 @@ export default function HomeView({ data }: { data: HomeData }) {
       {/* 토론 홍보 — 버튼은 "발제문 먼저 읽어보기" (신청 강요 금지) */}
       {promo && (
         <BoxWhite>
-          <Link href="/talk" className="flex items-center gap-3.5">
+          <TrackedLink
+            eventName="home_card_click"
+            eventParams={{ card: 'promo', open: promo.open }}
+            href="/talk"
+            className="flex items-center gap-3.5"
+          >
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] font-extrabold text-brand">
                 {promo.open ? '토론모임 · 신청 열림' : '토론모임 · 발제 이야기가 한창이에요'}
@@ -113,7 +121,7 @@ export default function HomeView({ data }: { data: HomeData }) {
             <span className="flex-none rounded-full bg-brand-bg px-3.5 py-2 text-xs font-bold text-brand-deep">
               발제문 먼저 읽어보기
             </span>
-          </Link>
+          </TrackedLink>
         </BoxWhite>
       )}
 
