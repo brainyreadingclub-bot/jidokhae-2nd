@@ -22,6 +22,10 @@ const FIELDS = [
   { section: '문의', fields: [
     { key: 'support_contact', label: '문의 안내 문구', type: 'text' as const, placeholder: '카카오톡 \'단무지\'에게 1:1 채팅으로 연락해 주세요.' },
   ]},
+  { section: '홈 공지 스트립', fields: [
+    // 비워두면 회원 홈에 안 보임. 문구를 바꾸면 닫았던 회원에게도 다시 보임
+    { key: 'notice_text', label: '공지 문구 (비우면 숨김)', type: 'text' as const, placeholder: '9월 1일, 지독해가 새 옷을 입어요 — 홈이 5개 탭으로 새로워집니다' },
+  ]},
 ]
 
 const inputClassName =

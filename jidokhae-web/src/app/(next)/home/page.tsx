@@ -6,6 +6,7 @@ import { listAppNotifications } from '@/lib/app-notifications'
 import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
 import HomeView, { type HomeData } from '@/components/next/HomeView'
+import WhatsNewSheet from '@/components/next/WhatsNewSheet'
 import type { Meeting } from '@/types/meeting'
 
 export default async function NextHomePage() {
@@ -93,5 +94,10 @@ export default async function NextHomePage() {
     }
   }
 
-  return <HomeView data={{ nickname, reply, nextMeeting, promo, todo }} />
+  return (
+    <>
+      <WhatsNewSheet />
+      <HomeView data={{ nickname, reply, nextMeeting, promo, todo }} />
+    </>
+  )
 }
