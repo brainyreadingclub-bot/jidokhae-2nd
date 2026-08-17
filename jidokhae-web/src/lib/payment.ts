@@ -8,7 +8,7 @@
 
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getPayment, cancelPayment } from '@/lib/portone'
-import { calculateFee } from '@/lib/pricing'
+import { calculateFee, isStaffDiscountableMeetingType } from '@/lib/pricing'
 
 export type ConfirmResult =
   | { status: 'success'; registrationId: string }
@@ -51,7 +51,7 @@ export async function processPaymentConfirmation(
   // Verify meeting exists and is active
   const { data: meeting } = await supabase
     .from('meetings')
-    .select('fee, status')
+    .select('fee, status, meeting_type')
     .eq('id', meetingId)
     .single()
 
@@ -72,8 +72,11 @@ export async function processPaymentConfirmation(
   }
 
   // 결제 금액 검증 — 정가 또는 스텝 할인가(50%)만 허용.
+  // 스텝 할인은 정기모임 한정 (2026-08-17 결정) — 그 외 유형은 정가만.
   // 자격·슬롯 검증은 RPC가 FOR UPDATE 락 안에서 처리 (race 안전망).
-  const allowedAmounts = [meeting.fee, calculateFee(meeting.fee, true)]
+  const allowedAmounts = isStaffDiscountableMeetingType(meeting.meeting_type)
+    ? [meeting.fee, calculateFee(meeting.fee, true)]
+    : [meeting.fee]
   if (!allowedAmounts.includes(payment.totalAmount)) {
     await safeCancel(paymentId, '결제 금액 불일치')
     return { status: 'error', message: '결제 정보가 일치하지 않습니다' }

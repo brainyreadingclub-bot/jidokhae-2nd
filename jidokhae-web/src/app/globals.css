@@ -102,6 +102,28 @@
   --shadow-card: 0 1px 3px rgba(18, 122, 90, 0.06), 0 1px 2px rgba(18, 122, 90, 0.04);
   --shadow-card-hover: 0 8px 24px rgba(18, 122, 90, 0.08), 0 2px 6px rgba(18, 122, 90, 0.04);
   --shadow-elevated: 0 12px 32px rgba(18, 122, 90, 0.12), 0 4px 8px rgba(18, 122, 90, 0.06);
+
+  /* ═══════════════════════════════════════════════════════════
+     next_ui 토스 스킨 토큰 (2026-08-16 확정 — 전면개편 스펙 §3)
+     TDS 그레이 10단계 + 브랜드 그린. (next) 라우트 그룹 전용.
+     규칙: 테두리 0, 14px 미만 보조 텍스트는 tg-600 이상.
+     ═══════════════════════════════════════════════════════════ */
+  --color-tg-50: #F9FAFB;
+  --color-tg-100: #F2F4F6;
+  --color-tg-200: #E5E8EB;
+  --color-tg-300: #D1D6DB;
+  --color-tg-400: #B0B8C1;
+  --color-tg-500: #8B95A1;
+  --color-tg-600: #6B7684;
+  --color-tg-700: #4E5968;
+  --color-tg-800: #333D4B;
+  --color-tg-900: #191F28;
+  --color-brand: #0FA873;
+  --color-brand-deep: #0C8A5F;
+  --color-brand-bg: #E8F7F1;
+  --color-warnx: #FF6B3D;
+  --color-warnx-bg: #FFF0EA;
+  --shadow-toss-card: 0 2px 12px rgba(25, 31, 40, 0.07);
 }
 
 /* ─── Semantic Spacing (CSS custom properties) ─── */

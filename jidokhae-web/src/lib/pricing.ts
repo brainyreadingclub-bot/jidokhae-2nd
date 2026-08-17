@@ -5,6 +5,7 @@
  *   - 자격: role IN ('admin', 'editor') OR is_staff = true
  *   - 할인율: 50%
  *   - 모임당 슬롯: 2명
+ *   - 대상: 정기모임(meeting_type = 'regular')만 — 토론모임 제외 (2026-08-17 결정)
  *
  * SQL 매핑
  *   - 자격/슬롯 검증: confirm_registration / register_transfer RPC 내부
@@ -31,6 +32,16 @@ type StaffEligibilityInput = {
 export function isStaffEligible(profile: StaffEligibilityInput): boolean {
   if (profile.role === 'admin' || profile.role === 'editor') return true
   return profile.is_staff === true
+}
+
+/**
+ * 스텝 할인이 적용되는 모임 유형인지.
+ * 정기모임 한정 (2026-08-17 결정 — 토론모임 25,000은 정가).
+ * SQL 매핑: confirm_registration / register_transfer의 meeting_type <> 'regular' 가드
+ * (migration-staff-discount-discussion-guard.sql)와 동기 필수.
+ */
+export function isStaffDiscountableMeetingType(meetingType: string): boolean {
+  return meetingType === 'regular'
 }
 
 /**

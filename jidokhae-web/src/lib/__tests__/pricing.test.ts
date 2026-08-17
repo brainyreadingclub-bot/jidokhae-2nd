@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   isStaffEligible,
+  isStaffDiscountableMeetingType,
   calculateFee,
   STAFF_DISCOUNT_RATE,
   STAFF_DISCOUNT_MAX_PER_MEETING,
@@ -48,6 +49,20 @@ describe('calculateFee', () => {
 
   it('fee=0 edge case', () => {
     expect(calculateFee(0, true)).toBe(0)
+  })
+})
+
+describe('isStaffDiscountableMeetingType (2026-08-17 결정 — 정기모임 한정)', () => {
+  it('정기모임(regular) → 할인 대상', () => {
+    expect(isStaffDiscountableMeetingType('regular')).toBe(true)
+  })
+
+  it('토론모임(discussion) → 할인 제외', () => {
+    expect(isStaffDiscountableMeetingType('discussion')).toBe(false)
+  })
+
+  it('미래의 새 유형(예: flash) → 기본 할인 제외', () => {
+    expect(isStaffDiscountableMeetingType('flash')).toBe(false)
   })
 })
 

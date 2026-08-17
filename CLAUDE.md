@@ -211,6 +211,10 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **Core documents are authoritative:** `/core` documents define the spec. When implementing, always cross-reference these specs — do not rely on memory or summaries alone.
 - **Roadmap documents track execution:** `/roadmap` is maintained by Claude. When a WP is completed, update `milestones.md` status and mark completed scenarios in `scenarios.md`.
 - **Review flow:** `/검토문서` captures post-hoc analysis. When reviews identify issues, create a 수정 계획 (modification plan) listing exact edit locations before modifying core/roadmap docs.
+- **결정은 `검토문서/DECISIONS.md`에 남긴다 (2026-08-13 신설):** 결정의 근거는 `docs/expert-panel/`·`검토문서/`에 그대로 두고, **무엇이 정해졌고 코드에 반영됐는지만** 이 파일에 한 줄로 모은다. 새 결정이 나오면 **그 세션 안에** 추가한다.
+  - 배경 — 기록은 원래도 남고 있었는데 **작업할 때 아무도 다시 안 읽는 것**이 문제였다. 실제 사고: 2026-08-07에 "호칭은 전 채널 닉네임"으로 정해놓고 그 결정이 패널 문서 안에 묻혀, 8-13에 "결정이 필요한 일"로 되살아났다. 같은 시점 `VOICE.md`는 "미정"이라고 적혀 있었다 — 한 사안에 세 문서가 다른 말을 했다.
+  - 찾아 읽으라는 규칙은 지켜지지 않으므로 **SessionStart 훅**(`.claude/hooks/inject-decisions.mjs`)이 세션 시작 시 이 파일을 컨텍스트에 넣는다. 훅이 꺼져 있어도 규칙은 이 줄로 남는다.
+  - **상태를 반드시 채운다.** `🔨 미적용`은 "정해졌지만 코드에 없다"는 뜻이다 — 대부분의 사고가 정한 것과 적용한 것 사이에서 난다.
 - **Version awareness:** Core documents carry version numbers (e.g., v1.6, v1.3). Note the version when referencing specific sections.
 - **Cross-repo workflow:** The implementation repo lives at `jidokhae-web/`. The `prompts` file contains a template for starting WP implementation — substitute `--단계` with the target WP (e.g., `WP1-1`) when using it.
 - **지시서의 enum/선택지 목록은 구현 전에 확인:** 지시서에 고정 목록(예: 지역 3개)이 있어도 실제 서비스 맥락에서 충분한지 사용자에게 먼저 물어볼 것. 구현 후 목록이 바뀌면 DB CHECK 제약까지 연쇄 수정 필요.

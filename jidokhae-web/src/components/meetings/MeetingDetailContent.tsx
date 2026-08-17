@@ -120,6 +120,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     typedMeeting.id,
     { role: profile.role, is_staff: profile.is_staff },
     typedMeeting.fee,
+    typedMeeting.meeting_type,
   )
 
   const hasStickyButton =

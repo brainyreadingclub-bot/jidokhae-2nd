@@ -88,6 +88,14 @@ export default async function AdminMeetingDetailPage({ params }: Props) {
         <span>· 정원 {meeting.capacity}명</span>
         <span>· 참가비 {formatFee(meeting.fee)}원</span>
       </div>
+      {meeting.meeting_type === 'discussion' && (
+        <Link
+          href={`/admin/meetings/${id}/topics`}
+          className="mb-2 inline-flex items-center gap-1 rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700"
+        >
+          발제문 관리 →
+        </Link>
+      )}
       <div className="mb-6 text-xs text-primary-500/80">
         회원 페이지에서 보기 ·{' '}
         <Link href={`/meetings/${id}`} className="underline hover:text-primary-700">

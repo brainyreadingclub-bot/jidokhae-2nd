@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   // 모임 정보 조회 (참가비 확인)
   const { data: meeting, error: meetingError } = await admin
     .from('meetings')
-    .select('fee, status')
+    .select('fee, status, meeting_type')
     .eq('id', meetingId)
     .single()
 
@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     meetingId,
     profile as { role: string; is_staff: boolean | null } | null,
     meeting.fee,
+    meeting.meeting_type,
   )
 
   // 계좌이체 신청 RPC 호출

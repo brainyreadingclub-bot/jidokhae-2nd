@@ -9,5 +9,19 @@
     "skill-creator@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true
   },
-  "autoUpdatesChannel": "latest"
+  "autoUpdatesChannel": "latest",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/inject-decisions.mjs\"",
+            "timeout": 10,
+            "statusMessage": "결정 기록 불러오는 중"
+          }
+        ]
+      }
+    ]
+  }
 }
