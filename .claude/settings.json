@@ -34,6 +34,18 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/teammate-log-guard.mjs\"",
+            "timeout": 10,
+            "statusMessage": "부서 로그 확인 중"
+          }
+        ]
+      }
     ]
   }
 }

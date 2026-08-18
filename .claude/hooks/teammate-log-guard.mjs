@@ -1,16 +1,24 @@
 /**
- * TeammateIdle 훅 — 로그를 안 쓴 팀원을 되돌려보낸다.
+ * 로그 가드 — 로그를 안 쓴 부서를 되돌려보낸다.
+ *
+ * 두 이벤트에 같이 걸린다
+ *   TeammateIdle  — 팀원이 유휴로 넘어가려 할 때 (teammate_type / teammate_id)
+ *   SubagentStop  — 서브에이전트가 끝나려 할 때  (agent_type / agent_id)
+ *
+ *   부서는 둘 중 어느 쪽으로도 불릴 수 있다. 짧게 끝나는 일은 서브에이전트로,
+ *   주고받아야 하는 일은 팀원으로 부른다. 한쪽에만 걸면 다른 쪽으로 부를 때
+ *   기록이 조용히 사라진다.
  *
  * 왜 필요한가
- *   에이전트 팀은 세션이 끝나면 팀원도 메일함도 사라진다. 재개해도 in-process
- *   팀원은 복원되지 않는다. 그래서 파일에 남지 않은 작업은 존재하지 않은 것과
- *   같다. 공통규약은 "로그를 안 쓰면 미완료"라고 정해뒀지만, 규칙은 글자일 뿐이다.
+ *   세션이 끝나면 팀원도 메일함도 사라진다. 재개해도 in-process 팀원은 복원되지
+ *   않는다. 서브에이전트는 애초에 결과만 남기고 사라진다. 그래서 파일에 남지
+ *   않은 작업은 존재하지 않은 것과 같다.
  *
- *   TeammateIdle 훅이 exit 2를 반환하면 팀원이 유휴 상태로 못 들어가고 계속
- *   일하게 된다. 규칙을 장치로 바꾸는 유일한 지점이다.
+ *   공통규약은 "로그를 안 쓰면 미완료"라고 정해뒀지만 규칙은 글자일 뿐이다.
+ *   두 이벤트 모두 exit 2로 멈춤을 막을 수 있다 — 규칙을 장치로 바꾸는 지점이다.
  *
  * 동작
- *   1. stdin으로 들어온 JSON에서 teammate_type을 읽어 부서를 식별한다.
+ *   1. stdin JSON에서 부서 이름을 읽는다 (이벤트에 따라 필드명이 다르다).
  *   2. 그 부서의 로그 파일이 최근에 갱신됐는지 본다.
  *   3. 안 됐으면 exit 2 + stderr로 무엇을 써야 하는지 알려준다.
  *
@@ -70,7 +78,10 @@ function main() {
   const input = readStdin()
   if (!input) process.exit(0)
 
-  const { teammate_type: type, teammate_id: id, cwd } = input
+  // TeammateIdle은 teammate_*, SubagentStop은 agent_* 로 같은 것을 부른다
+  const type = input.teammate_type ?? input.agent_type
+  const id = input.teammate_id ?? input.agent_id
+  const cwd = input.cwd
   if (!type || !id || !cwd) process.exit(0)
 
   const dept = DEPARTMENTS[type]
@@ -91,9 +102,10 @@ function main() {
     process.exit(0)
   }
 
+  const 시점 = input.hook_event_name === 'SubagentStop' ? '작업을 끝내기' : '유휴로 들어가기'
   process.stderr.write(
     `[로그 가드] 아직 작업 로그를 쓰지 않았습니다.\n\n` +
-      `유휴로 들어가기 전에 다음 파일에 이번 작업을 기록하세요:\n` +
+      `${시점} 전에 다음 파일에 이번 작업을 기록하세요:\n` +
       `  ${logPath}\n\n` +
       `양식은 docs/agent-team/공통규약.md §4에 있습니다. ` +
       `한 일 / 왜 / 안 한 것과 이유 / 주고받은 메시지 / 다음 — 다섯 항목입니다.\n\n` +
