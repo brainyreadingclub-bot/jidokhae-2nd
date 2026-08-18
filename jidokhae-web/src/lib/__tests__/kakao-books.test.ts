@@ -23,7 +23,17 @@ describe('mapKakaoDocument', () => {
       authors: '이현우',
       publisher: '마음산책',
       thumbnail: 'https://search1.kakaocdn.net/thumb/cover.jpg',
+      description: '요약...',
     })
+  })
+
+  it('contents 빈 문자열은 description null로 바꾼다', () => {
+    const doc = {
+      title: '소개없음', authors: [], publisher: '', translators: [],
+      thumbnail: '', isbn: '9788900000009', contents: '', url: '',
+      datetime: '', price: 0, sale_price: 0, status: '정상판매',
+    }
+    expect(mapKakaoDocument(doc).description).toBeNull()
   })
 
   it('저자가 여러 명이면 ", "로 결합한다', () => {

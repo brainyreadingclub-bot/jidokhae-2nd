@@ -12,7 +12,7 @@ export default async function EditMeetingPage({ params }: Props) {
   const supabase = await createClient()
 
   const [meetingResult, countsResult, venuesResult] = await Promise.all([
-    supabase.from('meetings').select('*').eq('id', id).single(),
+    supabase.from('meetings').select('*, books(id, title, authors, thumbnail)').eq('id', id).single(),
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase.from('venues').select('id, name').eq('status', 'active').order('name'),
   ])
@@ -21,7 +21,9 @@ export default async function EditMeetingPage({ params }: Props) {
     throw new Error(`모임 조회 실패: ${meetingResult.error.message}`)
   }
 
-  const typed = meetingResult.data as Meeting | null
+  const typed = meetingResult.data as
+    | (Meeting & { books: { id: string; title: string; authors: string | null; thumbnail: string | null } | null })
+    | null
   if (!typed || typed.status === 'deleted') {
     notFound()
   }
@@ -54,7 +56,9 @@ export default async function EditMeetingPage({ params }: Props) {
           region: typed.region,
           is_featured: typed.is_featured,
           meeting_type: typed.meeting_type,
+          selection_reason: typed.selection_reason ?? '',
         }}
+        initialBook={typed.books}
       />
     </div>
   )
