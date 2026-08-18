@@ -16,15 +16,17 @@ export default async function NextHomePage() {
   const kstToday = getKSTToday()
   const supabase = await createClient()
 
-  // 다가오는 모임 전체 (정기+토론)
+  // 다가오는 모임 전체 (정기+토론) — 토론 홍보 카드용 책 표지 join
   const { data: meetings } = await supabase
     .from('meetings')
-    .select('*')
+    .select('*, books(thumbnail, authors)')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })
     .order('time', { ascending: true })
-  const upcoming = (meetings ?? []) as Meeting[]
+  const upcoming = (meetings ?? []) as (Meeting & {
+    books: { thumbnail: string | null; authors: string | null } | null
+  })[]
 
   // 내 신청 (confirmed·pending_transfer)
   const meetingIds = upcoming.map((m) => m.id)
@@ -74,8 +76,11 @@ export default async function NextHomePage() {
           meetingId: discussion.id,
           title: discussion.title,
           date: discussion.date,
+          time: discussion.time,
           venueName: discussion.location ?? '',
           open: isDiscussionApplyOpen(discussion.date, kstToday),
+          thumbnail: discussion.books?.thumbnail ?? null,
+          authors: discussion.books?.authors ?? null,
         }
       : null
 

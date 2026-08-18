@@ -28,8 +28,12 @@ export type HomeData = {
     meetingId: string
     title: string
     date: string
+    time: string
     venueName: string
     open: boolean
+    /** 연결된 책 표지 (2026-08-18 표지 배치 — 홈은 중형 60×90 절제) */
+    thumbnail: string | null
+    authors: string | null
   } | null
   /** 답 안 한 발제 (신청한 토론이 있을 때) */
   todo: { meetingId: string; unanswered: number; answeredLine: string } | null
@@ -98,7 +102,7 @@ export default function HomeView({ data }: { data: HomeData }) {
         </BoxWhite>
       )}
 
-      {/* 토론 홍보 — 버튼은 "발제문 먼저 읽어보기" (신청 강요 금지) */}
+      {/* 토론 홍보 — 표지 중형(60×90), 버튼은 "발제문 먼저 읽어보기" (신청 강요 금지) */}
       {promo && (
         <BoxWhite>
           <TrackedLink
@@ -107,28 +111,38 @@ export default function HomeView({ data }: { data: HomeData }) {
             href="/talk"
             className="flex items-center gap-3.5"
           >
+            {promo.thumbnail && (
+              <img
+                src={promo.thumbnail}
+                alt={promo.title}
+                width={60}
+                height={90}
+                className="h-[90px] w-[60px] flex-none rounded-[5px] object-cover"
+                style={{ boxShadow: '0 0 0 1px rgba(0,0,0,.06), 0 5px 12px rgba(25,31,40,.18)' }}
+              />
+            )}
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] font-extrabold text-brand">
                 {promo.open ? '토론모임 · 신청 열림' : '토론모임 · 발제 이야기가 한창이에요'}
               </span>
-              <span className="mt-0.5 block truncate text-[15px] font-extrabold tracking-tight">
+              <span className="mt-0.5 block truncate text-[16px] font-extrabold tracking-tight">
                 {promo.title}
               </span>
               <span className="mt-0.5 block truncate text-xs text-tg-600">
-                {formatKoreanDate(promo.date)} · {promo.venueName}
+                {formatKoreanDate(promo.date)} {formatKoreanTime(promo.time)} · {promo.venueName}
               </span>
-            </span>
-            <span className="flex-none rounded-full bg-brand-bg px-3.5 py-2 text-xs font-bold text-brand-deep">
-              발제문 먼저 읽어보기
+              <span className="mt-2 inline-flex rounded-[9px] bg-brand-bg px-3 py-1.5 text-[11px] font-bold text-brand-deep">
+                발제문 먼저 읽어보기
+              </span>
             </span>
           </TrackedLink>
         </BoxWhite>
       )}
 
-      {/* 할 일 */}
+      {/* 할 일 — "이번 주" 제거 (2026-08-18: 발제 마감은 주 단위가 아님) */}
       {todo && todo.unanswered > 0 && (
         <>
-          <Sec>이번 주 할 일</Sec>
+          <Sec>할 일</Sec>
           <RowItem
             emoji="✍️"
             tone="orange"

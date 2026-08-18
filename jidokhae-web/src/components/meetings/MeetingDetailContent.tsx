@@ -13,6 +13,7 @@ import BankInfoCard from '@/components/meetings/BankInfoCard'
 import RegistrationStatusBadge from '@/components/meetings/RegistrationStatusBadge'
 import RegistrationHero from '@/components/meetings/RegistrationHero'
 import ParticipantsList from '@/components/meetings/ParticipantsList'
+import BookSection from '@/components/meetings/BookSection'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 
 export default async function MeetingDetailContent({ id }: { id: string }) {
@@ -26,6 +27,16 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   if (!typedMeeting || typedMeeting.status === 'deleted') {
     notFound()
   }
+
+  // 토론모임 + 책 연결 시 표지·선정 이유·책 소개 (2026-08-18 표지 배치)
+  const { data: bookRow } =
+    typedMeeting.meeting_type === 'discussion' && typedMeeting.book_id
+      ? await supabase
+          .from('books')
+          .select('title, authors, publisher, thumbnail, description')
+          .eq('id', typedMeeting.book_id)
+          .maybeSingle()
+      : { data: null }
 
   const [countsResult, myRegResult, myWaitlistResult, pendingResult, participantsResult, settings] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
@@ -148,6 +159,9 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         />
       )}
       <RegistrationStatusBadge status={registrationStatus} />
+      {bookRow && (
+        <BookSection book={bookRow} selectionReason={typedMeeting.selection_reason} />
+      )}
       <MeetingDetailInfo
         meeting={typedMeeting}
         confirmedCount={confirmedCount}

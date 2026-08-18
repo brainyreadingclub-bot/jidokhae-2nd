@@ -27,6 +27,9 @@ export type MeetData = {
     time: string
     venueName: string
     open: boolean
+    /** 연결된 책 (2026-08-18 표지 배치 — 토론은 표지가 얼굴, 56×84) */
+    thumbnail: string | null
+    authors: string | null
   } | null
 }
 
@@ -117,6 +120,16 @@ export default function MeetView({ data }: { data: MeetData }) {
       {discussion ? (
         <BoxWhite>
           <Link href="/talk" className="flex items-center gap-3.5">
+            {discussion.thumbnail && (
+              <img
+                src={discussion.thumbnail}
+                alt={discussion.title}
+                width={56}
+                height={84}
+                className="h-[84px] w-[56px] flex-none rounded-[5px] object-cover"
+                style={{ boxShadow: '0 0 0 1px rgba(0,0,0,.06), 0 4px 10px rgba(25,31,40,.16)' }}
+              />
+            )}
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] font-extrabold text-brand">
                 {formatKoreanDate(discussion.date)} {formatKoreanTime(discussion.time)}
@@ -126,7 +139,7 @@ export default function MeetView({ data }: { data: MeetData }) {
                 {discussion.title}
               </span>
               <span className="mt-0.5 block truncate text-xs text-tg-600">
-                {discussion.venueName}
+                {[discussion.authors, discussion.venueName].filter(Boolean).join(' · ')}
               </span>
             </span>
             <Chevron />

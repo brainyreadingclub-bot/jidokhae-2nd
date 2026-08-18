@@ -12,11 +12,11 @@ export default async function NextTalkPage() {
   const kstToday = getKSTToday()
   const supabase = await createClient()
 
-  // 다가오는 토론 1건 + 지난 토론 6건
+  // 다가오는 토론 1건 + 지난 토론 6건 (책 표지 join)
   const [{ data: upcomingRows }, { data: pastRows }] = await Promise.all([
     supabase
       .from('meetings')
-      .select('*')
+      .select('*, books(thumbnail, authors)')
       .eq('status', 'active')
       .eq('meeting_type', 'discussion')
       .gte('date', kstToday)
@@ -24,14 +24,17 @@ export default async function NextTalkPage() {
       .limit(1),
     supabase
       .from('meetings')
-      .select('id, title, date')
+      .select('id, title, date, books(thumbnail)')
       .eq('meeting_type', 'discussion')
+      .neq('status', 'deleted')
       .lt('date', kstToday)
       .order('date', { ascending: false })
       .limit(6),
   ])
 
-  const d = (upcomingRows ?? [])[0] as Meeting | undefined
+  const d = (upcomingRows ?? [])[0] as
+    | (Meeting & { books: { thumbnail: string | null; authors: string | null } | null })
+    | undefined
   let discussion: TalkData['discussion'] = null
   let topics: TalkData['topics'] = []
 
@@ -80,17 +83,70 @@ export default async function NextTalkPage() {
       open: isDiscussionApplyOpen(d.date, kstToday),
       applied: canWriteAnswer(myStatus),
       isToday: d.date === kstToday,
+      thumbnail: d.books?.thumbnail ?? null,
+      authors: d.books?.authors ?? null,
       progress,
     }
   }
 
-  const past: TalkData['past'] = ((pastRows ?? []) as Pick<Meeting, 'id' | 'title' | 'date'>[]).map(
-    (p) => ({
+  // 지난 토론 — 공동 기록: 순번(전체 히스토리 기준) + 참여·발제·답변 흔적
+  type PastRow = { id: string; title: string; date: string; books: { thumbnail: string | null } | null }
+  const pastMeetings = (pastRows ?? []) as unknown as PastRow[]
+  let past: TalkData['past'] = []
+
+  if (pastMeetings.length > 0) {
+    const admin = createServiceClient()
+    const pastIds = pastMeetings.map((p) => p.id)
+
+    const [{ count: totalPastCount }, { data: pastTopics }, { data: confirmedCounts }] =
+      await Promise.all([
+        // 가장 최신 지난 토론의 순번 = 그 날짜까지의 토론 총수
+        admin
+          .from('meetings')
+          .select('id', { count: 'exact', head: true })
+          .eq('meeting_type', 'discussion')
+          .neq('status', 'deleted')
+          .lte('date', pastMeetings[0].date),
+        admin.from('discussion_topics').select('id, meeting_id').in('meeting_id', pastIds),
+        admin.rpc('get_confirmed_counts', { meeting_ids: pastIds }),
+      ])
+
+    const topicIds = (pastTopics ?? []).map((t) => t.id)
+    const { data: pastAnswers } =
+      topicIds.length > 0
+        ? await admin.from('topic_answers').select('id, topic_id').in('topic_id', topicIds)
+        : { data: [] as { id: string; topic_id: string }[] }
+
+    const topicMeetingMap = new Map((pastTopics ?? []).map((t) => [t.id, t.meeting_id]))
+    const topicCountMap = new Map<string, number>()
+    for (const t of pastTopics ?? []) {
+      topicCountMap.set(t.meeting_id, (topicCountMap.get(t.meeting_id) ?? 0) + 1)
+    }
+    const answerCountMap = new Map<string, number>()
+    for (const a of pastAnswers ?? []) {
+      const mid = topicMeetingMap.get(a.topic_id)
+      if (mid) answerCountMap.set(mid, (answerCountMap.get(mid) ?? 0) + 1)
+    }
+    const participantMap = new Map(
+      ((confirmedCounts ?? []) as { meeting_id: string; confirmed_count: number }[]).map((c) => [
+        c.meeting_id,
+        c.confirmed_count,
+      ]),
+    )
+
+    // pastMeetings는 최신순 — 최신 책의 순번에서 역순으로 부여
+    const newestOrdinal = totalPastCount ?? pastMeetings.length
+    past = pastMeetings.map((p, i) => ({
       id: p.id,
       title: p.title,
       monthLabel: `${Number(p.date.slice(5, 7))}월`,
-    }),
-  )
+      thumbnail: p.books?.thumbnail ?? null,
+      ordinal: Math.max(1, newestOrdinal - i),
+      participantCount: participantMap.get(p.id) ?? 0,
+      topicCount: topicCountMap.get(p.id) ?? 0,
+      answerCount: answerCountMap.get(p.id) ?? 0,
+    }))
+  }
 
   return <TalkView data={{ discussion, topics, past }} />
 }

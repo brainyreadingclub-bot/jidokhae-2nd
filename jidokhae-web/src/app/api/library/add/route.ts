@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       authors: body.authors ?? null,
       publisher: body.publisher ?? null,
       thumbnail: body.thumbnail ?? null,
+      description: body.description ?? null,
     },
     'manual',
     null,

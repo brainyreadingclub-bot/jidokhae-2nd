@@ -16,12 +16,14 @@ export default async function NextMeetPage() {
 
   const { data: meetings } = await supabase
     .from('meetings')
-    .select('*')
+    .select('*, books(thumbnail, authors)')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })
     .order('time', { ascending: true })
-  const upcoming = (meetings ?? []) as Meeting[]
+  const upcoming = (meetings ?? []) as (Meeting & {
+    books: { thumbnail: string | null; authors: string | null } | null
+  })[]
   const meetingIds = upcoming.map((m) => m.id)
 
   const [{ data: counts }, { data: myRegs }] = await Promise.all([
@@ -84,6 +86,8 @@ export default async function NextMeetPage() {
         time: d.time,
         venueName: d.location,
         open: isDiscussionApplyOpen(d.date, kstToday),
+        thumbnail: d.books?.thumbnail ?? null,
+        authors: d.books?.authors ?? null,
       }
     : null
 
