@@ -33,6 +33,8 @@ export const ADMIN_MENU_GROUPS: AdminMenuGroup[] = [
       // 배너/한줄 모두 editor도 관리 (2026-04-23 확정, 검토문서 §3.1)
       { label: '배너 관리', href: '/admin/banners' },
       { label: '한 줄 관리', href: '/admin/quotes' },
+      // 전 회원 발송은 회수 불가라 admin 전용 (2026-08-17)
+      { label: '공지 보내기', href: '/admin/notices', adminOnly: true },
     ],
   },
   {
