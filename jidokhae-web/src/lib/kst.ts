@@ -151,6 +151,8 @@ export type ButtonState =
   | { type: 'join_waitlist' }
   | { type: 'waitlist_cancel' }
   | { type: 'pending_transfer' }
+  // 토론모임 D-7 신청 마감 (2026-08-17 결정) — 마감 후 신청·대기 모두 차단
+  | { type: 'apply_closed' }
 
 /** Computes the action button state for a meeting detail page (PRD §6-2 + Phase 2-2 대기 + 계좌이체 브릿지) */
 export function getButtonState(

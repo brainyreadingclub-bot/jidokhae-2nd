@@ -21,6 +21,8 @@ export type TalkData = {
     fee: number
     open: boolean
     applied: boolean
+    /** 본인이 대기 중 — CTA 대신 대기 안내 (자리 확정 아님) */
+    waitlisted: boolean
     isToday: boolean
     /** 연결된 책 (없으면 제목 텍스트 폴백) */
     thumbnail: string | null
@@ -121,11 +123,21 @@ export default function TalkView({ data }: { data: TalkData }) {
             </div>
           )}
 
-          {/* 신청 CTA — 열림 + 미신청일 때만. 구경로 재사용 */}
-          {discussion.open && !discussion.applied && (
+          {/* 신청 CTA — 열림 + 미신청 + 대기 아님일 때만. 구경로 재사용 */}
+          {discussion.open && !discussion.applied && !discussion.waitlisted && (
             <BtnSoft href={`/meetings/${discussion.id}`}>
               신청하기 · {formatFee(discussion.fee)}
             </BtnSoft>
+          )}
+
+          {/* 대기 중 안내 — 신청 버튼 재노출 방지 */}
+          {discussion.waitlisted && (
+            <Link
+              href={`/meetings/${discussion.id}`}
+              className="mt-3 block rounded-[15px] bg-tg-50 px-4 py-3 text-center text-xs font-bold text-tg-700"
+            >
+              대기 중이에요 — 자리가 나면 자동으로 확정돼요
+            </Link>
           )}
 
           {/* 당일 라이브 배너 */}

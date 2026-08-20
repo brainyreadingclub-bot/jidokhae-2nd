@@ -5,11 +5,18 @@ import NoticeStrip from '@/components/home/NoticeStrip'
 import MeetingListSkeleton from '@/components/skeletons/MeetingListSkeleton'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { getSiteSettings } from '@/lib/site-settings'
+import { getUser } from '@/lib/auth'
+import { getProfile } from '@/lib/profile'
+import { isOnboarded } from '@/lib/onboarding'
 
 export default async function HomePage() {
-  // 전면개편 플래그 ON이면 새 홈으로. 그 외 구경로(meetings/[id], /my 등)는
-  // 그대로 동작 — 알림톡 딥링크·나 탭의 관리 링크 보존 (스펙 §6·§10)
-  if (await isNextUiEnabled()) redirect('/home')
+  // 전면개편 플래그 ON이면 새 홈으로 — 단, 온보딩(웰컴·프로필) 완료자만.
+  // 미완성 회원은 이 페이지의 HomeContent 이중 게이트가 관문을 렌더한다.
+  // 그 외 구경로(meetings/[id], /my 등)는 그대로 동작 (스펙 §6·§10)
+  if (await isNextUiEnabled()) {
+    const user = await getUser()
+    if (user && isOnboarded(await getProfile(user.id))) redirect('/home')
+  }
   const settings = await getSiteSettings()
   const noticeText = (settings['notice_text'] ?? '').trim()
   return (

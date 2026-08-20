@@ -40,11 +40,11 @@ export default async function MePage() {
     <div className="pt-2">
       <div className="mt-4 flex items-center gap-3">
         <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[17px] bg-brand-bg text-lg font-extrabold text-brand-deep">
-          {(profile?.nickname ?? '회').slice(0, 1)}
+          {(profile?.nickname || '회').slice(0, 1)}
         </span>
         <div className="min-w-0">
           <p className="truncate text-base font-extrabold tracking-tight">
-            {profile?.nickname ?? '회원'}
+            {profile?.nickname || '회원'}
           </p>
           <p className="truncate text-[11px] text-tg-600">
             {joined}

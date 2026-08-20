@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getDisplayFee } from '@/lib/staff-slot'
+import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
   // 모임 정보 조회 (참가비 확인)
   const { data: meeting, error: meetingError } = await admin
     .from('meetings')
-    .select('fee, status, meeting_type')
+    .select('fee, status, meeting_type, date')
     .eq('id', meetingId)
     .single()
 
@@ -66,6 +67,14 @@ export async function POST(request: NextRequest) {
   if (meeting.status !== 'active') {
     return NextResponse.json(
       { status: 'error', message: '신청할 수 없는 모임입니다' },
+      { status: 400 },
+    )
+  }
+
+  // 토론모임 D-7 신청 마감 강제 (2026-08-17 결정) — 딥링크·공유 URL 경로 차단
+  if (meeting.meeting_type === 'discussion' && !isDiscussionApplyOpen(meeting.date)) {
+    return NextResponse.json(
+      { status: 'error', message: '신청이 마감된 모임입니다' },
       { status: 400 },
     )
   }

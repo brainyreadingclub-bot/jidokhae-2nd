@@ -53,6 +53,20 @@ export default async function NextTalkPage() {
       ? ((regs ?? []).find((r) => r.user_id === user.id)?.status ?? null)
       : null
 
+    // 대기 중인 본인에게 "신청하기" CTA를 다시 보여주지 않기 위한 별도 조회
+    // (regs는 진행률 분모 유지를 위해 confirmed·pending_transfer만 조회)
+    let waitlisted = false
+    if (user && myStatus === null) {
+      const { data: wl } = await admin
+        .from('registrations')
+        .select('id')
+        .eq('meeting_id', d.id)
+        .eq('user_id', user.id)
+        .eq('status', 'waitlisted')
+        .limit(1)
+      waitlisted = (wl ?? []).length > 0
+    }
+
     let progress: NonNullable<TalkData['discussion']>['progress'] = null
     if (topics.length > 0 && applicants.length > 0) {
       const topicIds = topics.map((t) => t.id)
@@ -82,6 +96,7 @@ export default async function NextTalkPage() {
       fee: d.fee,
       open: isDiscussionApplyOpen(d.date, kstToday),
       applied: canWriteAnswer(myStatus),
+      waitlisted,
       isToday: d.date === kstToday,
       thumbnail: d.books?.thumbnail ?? null,
       authors: d.books?.authors ?? null,

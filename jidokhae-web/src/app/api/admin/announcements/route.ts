@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
   }
   const text = (body.body ?? '').trim()
   const href = (body.href ?? '').trim()
-  if (href && !href.startsWith('/')) {
+  // '//host'는 프로토콜 상대 URL, '/\'는 일부 브라우저에서 '//'로 해석 — 외부 이탈 차단
+  if (href && (!href.startsWith('/') || href.startsWith('//') || href.startsWith('/\\'))) {
     return NextResponse.json(
       { status: 'error', message: '링크는 /로 시작하는 내부 경로만 가능해요' },
       { status: 400 },

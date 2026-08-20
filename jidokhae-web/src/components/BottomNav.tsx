@@ -28,7 +28,7 @@ export default function BottomNav() {
         {tabs.map((tab) => {
           const isActive = tab.href === '/'
             ? pathname === '/'
-            : pathname.startsWith(tab.href)
+            : pathname === tab.href || pathname.startsWith(tab.href + '/')
 
           return (
             <Link
