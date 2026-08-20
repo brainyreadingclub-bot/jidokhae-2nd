@@ -24,7 +24,8 @@ export default async function LibrarySection() {
   if (entries.length === 0 && !(await getPendingAsk(user.id))) return null
 
   return (
-    <section className="mt-8">
+    // id: 서재 탭 "책 담기·관리" 버튼이 /my#library로 바로 붙는다 (개인정보 섹션 건너뛰기)
+    <section id="library" className="mt-8 scroll-mt-4">
       <div className="flex items-baseline gap-2">
         <h2
           className="text-lg font-extrabold text-neutral-800 tracking-tight"
