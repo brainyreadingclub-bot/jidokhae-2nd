@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
         authors: body.book.authors ?? null,
         publisher: body.book.publisher ?? null,
         thumbnail: body.book.thumbnail ?? null,
+        description: body.book.description ?? null,
       },
       'ask',
       body.meetingId,

@@ -16,12 +16,14 @@ export default async function NextMeetPage() {
 
   const { data: meetings } = await supabase
     .from('meetings')
-    .select('*')
+    .select('*, books(thumbnail, authors)')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })
     .order('time', { ascending: true })
-  const upcoming = (meetings ?? []) as Meeting[]
+  const upcoming = (meetings ?? []) as (Meeting & {
+    books: { thumbnail: string | null; authors: string | null } | null
+  })[]
   const meetingIds = upcoming.map((m) => m.id)
 
   const [{ data: counts }, { data: myRegs }] = await Promise.all([
@@ -45,8 +47,11 @@ export default async function NextMeetPage() {
     ]),
   )
   const myIds = new Set((myRegs ?? []).map((r) => r.meeting_id))
+  const myWaitlistedIds = new Set(
+    (myRegs ?? []).filter((r) => r.status === 'waitlisted').map((r) => r.meeting_id),
+  )
 
-  // 내 신청 스트립 — 가장 가까운 것 하나
+  // 내 신청 스트립 — 가장 가까운 것 하나. 대기 중이면 "대기 중"으로 구분 표시
   const mineMeeting = upcoming.find((m) => myIds.has(m.id))
   const mine: MeetData['mine'] = mineMeeting
     ? {
@@ -54,6 +59,7 @@ export default async function NextMeetPage() {
         title: mineMeeting.title,
         date: mineMeeting.date,
         daysLeft: getDaysUntil(mineMeeting.date, kstToday),
+        waitlisted: myWaitlistedIds.has(mineMeeting.id),
       }
     : null
 
@@ -84,6 +90,8 @@ export default async function NextMeetPage() {
         time: d.time,
         venueName: d.location,
         open: isDiscussionApplyOpen(d.date, kstToday),
+        thumbnail: d.books?.thumbnail ?? null,
+        authors: d.books?.authors ?? null,
       }
     : null
 

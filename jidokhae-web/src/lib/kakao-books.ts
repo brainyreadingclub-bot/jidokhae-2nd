@@ -30,6 +30,7 @@ export function mapKakaoDocument(doc: KakaoBookDocument): BookSearchResult {
     authors: doc.authors.length > 0 ? doc.authors.join(', ') : null,
     publisher: doc.publisher || null,
     thumbnail: doc.thumbnail || null,
+    description: doc.contents || null,
   }
 }
 

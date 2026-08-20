@@ -267,6 +267,7 @@ export default function MeetingActionButton({
   const showStickyButton =
     (buttonState.type === 'register') ||
     (buttonState.type === 'full') ||
+    (buttonState.type === 'apply_closed') ||
     (buttonState.type === 'cancel' && cancelPhase === 'idle') ||
     (buttonState.type === 'join_waitlist') ||
     (buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle') ||
@@ -301,6 +302,15 @@ export default function MeetingActionButton({
               className="w-full rounded-[var(--radius-lg)] bg-neutral-100 py-4 text-sm font-bold text-neutral-400 cursor-not-allowed"
             >
               마감
+            </button>
+          )}
+
+          {buttonState.type === 'apply_closed' && (
+            <button
+              disabled
+              className="w-full rounded-[var(--radius-lg)] bg-neutral-100 py-4 text-sm font-bold text-neutral-400 cursor-not-allowed"
+            >
+              신청 마감 · 모임 7일 전까지 신청할 수 있어요
             </button>
           )}
 

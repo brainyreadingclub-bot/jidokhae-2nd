@@ -5,6 +5,7 @@ export type AppNotificationType =
   | 'flash_opened'
   | 'flash_cancelled'
   | 'registration_confirmed'
+  | 'announcement'
 
 export type AppNotification = {
   id: string

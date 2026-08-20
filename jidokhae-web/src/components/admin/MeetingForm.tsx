@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { VALID_REGIONS } from '@/lib/regions'
+import BookPicker, { type PickedBook } from '@/components/admin/BookPicker'
 
 type MeetingValues = {
   title: string
@@ -17,6 +18,7 @@ type MeetingValues = {
   region: string
   is_featured: boolean
   meeting_type: 'regular' | 'discussion'
+  selection_reason: string
 }
 
 type VenueOption = {
@@ -30,6 +32,8 @@ type Props = {
   initialValues?: Partial<MeetingValues>
   confirmedCount?: number
   venues?: VenueOption[]
+  /** 수정 모드에서 이미 연결된 책 (토론모임) */
+  initialBook?: PickedBook | null
 }
 
 function formatNumberInput(value: string): string {
@@ -54,14 +58,16 @@ const defaultValues: MeetingValues = {
   region: '경주',
   is_featured: false,
   meeting_type: 'regular',
+  selection_reason: '',
 }
 
-export default function MeetingForm({ mode, meetingId, initialValues, confirmedCount = 0, venues = [] }: Props) {
+export default function MeetingForm({ mode, meetingId, initialValues, confirmedCount = 0, venues = [], initialBook = null }: Props) {
   const router = useRouter()
   const [values, setValues] = useState<MeetingValues>({
     ...defaultValues,
     ...initialValues,
   })
+  const [book, setBook] = useState<PickedBook | null>(initialBook)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -120,6 +126,12 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
       region: values.region,
       is_featured: values.is_featured,
       meeting_type: values.meeting_type,
+      // 책 연결은 토론모임 전용 — 유형을 정기로 바꾸면 함께 해제
+      book_id: values.meeting_type === 'discussion' ? (book?.id ?? null) : null,
+      selection_reason:
+        values.meeting_type === 'discussion'
+          ? values.selection_reason.trim() || null
+          : null,
     }
 
     if (mode === 'create') {
@@ -212,6 +224,28 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
           })}
         </div>
       </Field>
+
+      {values.meeting_type === 'discussion' && (
+        <>
+          <Field label="토론 책">
+            <BookPicker selected={book} onSelect={setBook} onClear={() => setBook(null)} />
+            <p className="mt-1.5 text-xs text-primary-500/80">
+              책을 연결하면 회원 화면에 표지가 보여요 (홈 · 이야기 탭 · 신청 화면)
+            </p>
+          </Field>
+          <Field label="이 책을 고른 이유">
+            <textarea
+              value={values.selection_reason}
+              onChange={(e) => handleChange('selection_reason', e.target.value)}
+              placeholder="회원에게 보여줄 한마디 (선택) — 신청 화면에 표지 아래 실려요"
+              maxLength={300}
+              rows={2}
+              className={`${inputClassName} resize-none`}
+              style={inputStyle}
+            />
+          </Field>
+        </>
+      )}
 
       <Field label="모임 소개">
         <textarea

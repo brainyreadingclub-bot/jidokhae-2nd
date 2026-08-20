@@ -22,7 +22,9 @@ export default function NextNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-tg-100 bg-white">
       <div className="mx-auto flex h-14 max-w-screen-sm items-center justify-around px-2">
         {tabs.map((tab) => {
-          const isActive = pathname.startsWith(tab.href)
+          // 정확 일치 또는 하위 경로만 — 단순 startsWith는 /meet가 /me에 걸린다
+          const isActive =
+            pathname === tab.href || pathname.startsWith(tab.href + '/')
           return (
             <Link
               key={tab.href}

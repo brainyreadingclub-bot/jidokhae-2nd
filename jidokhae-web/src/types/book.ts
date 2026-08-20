@@ -5,6 +5,8 @@ export type Book = {
   authors: string | null
   publisher: string | null
   thumbnail: string | null
+  // 책 소개 (카카오 contents) — 토론모임 신청 상세에서 3줄 접기로 노출
+  description: string | null
   created_at: string
 }
 
@@ -31,4 +33,5 @@ export type BookSearchResult = {
   authors: string | null
   publisher: string | null
   thumbnail: string | null
+  description: string | null
 }

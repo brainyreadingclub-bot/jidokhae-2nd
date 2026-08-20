@@ -5,10 +5,13 @@ import ProfileSection from '@/components/my/ProfileSection'
 import ProfileSkeleton from '@/components/skeletons/ProfileSkeleton'
 import LibrarySection from '@/components/library/LibrarySection'
 import AskStripSection from '@/components/library/AskStripSection'
+import HashScroller from '@/components/my/HashScroller'
 
 export default function MyPage() {
   return (
     <div className="px-5 pt-6">
+      {/* 섹션이 Suspense로 늦게 도착해 기본 앵커가 안 먹는다 — 클라이언트에서 보정 */}
+      <HashScroller />
       <Suspense fallback={<ProfileSkeleton />}>
         <ProfileSection />
       </Suspense>

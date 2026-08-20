@@ -17,8 +17,20 @@ export type Meeting = {
   chat_link: string | null
   reading_link: string | null
   detail_address: string | null
+  // 토론모임 ↔ 책 연결 (2026-08-18 표지 배치 확정)
+  book_id: string | null
+  selection_reason: string | null
   created_at: string
   updated_at: string
+}
+
+/** meetings에서 books를 nested select한 형태 (`.select('*, books(...)')`) */
+export type MeetingBookJoin = {
+  title: string
+  authors: string | null
+  publisher: string | null
+  thumbnail: string | null
+  description: string | null
 }
 
 export type MeetingWithCount = Meeting & {

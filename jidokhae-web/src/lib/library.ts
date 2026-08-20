@@ -45,6 +45,44 @@ export const getMyLibrary = cache(async (userId: string): Promise<LibraryEntryWi
 })
 
 /**
+ * 책 upsert(isbn13 기준) — 있으면 재사용, 없으면 생성. 반환: book id 또는 null(실패).
+ * 기존 책에 description이 비어 있고 새 검색 결과에 있으면 채워 넣는다 (구버전 데이터 보강).
+ */
+export async function upsertBook(
+  admin: SupabaseClient,
+  book: BookSearchResult,
+): Promise<string | null> {
+  if (book.isbn13) {
+    const { data: existing } = await admin
+      .from('books')
+      .select('id, description')
+      .eq('isbn13', book.isbn13)
+      .maybeSingle()
+    if (existing) {
+      if (!existing.description && book.description) {
+        await admin.from('books').update({ description: book.description }).eq('id', existing.id)
+      }
+      return existing.id
+    }
+  }
+
+  const { data: inserted, error } = await admin
+    .from('books')
+    .insert({
+      isbn13: book.isbn13,
+      title: book.title,
+      authors: book.authors,
+      publisher: book.publisher,
+      thumbnail: book.thumbnail,
+      description: book.description ?? null,
+    })
+    .select('id')
+    .single()
+  if (error || !inserted) return null
+  return inserted.id
+}
+
+/**
  * 책 upsert(isbn13 기준) + 서재 항목 insert.
  * isbn13이 있으면 기존 책 재사용, 없으면(희귀본) 매번 새 book 생성.
  * 이미 담은 책(user+book UNIQUE)이면 조용히 무시.
@@ -58,32 +96,8 @@ export async function upsertBookAndEntry(
   sourceMeetingId: string | null,
 ): Promise<'added' | 'already' | 'error'> {
   // 1. 책 확보
-  let bookId: string | null = null
-
-  if (book.isbn13) {
-    const { data: existing } = await admin
-      .from('books')
-      .select('id')
-      .eq('isbn13', book.isbn13)
-      .maybeSingle()
-    if (existing) bookId = existing.id
-  }
-
-  if (!bookId) {
-    const { data: inserted, error: bookErr } = await admin
-      .from('books')
-      .insert({
-        isbn13: book.isbn13,
-        title: book.title,
-        authors: book.authors,
-        publisher: book.publisher,
-        thumbnail: book.thumbnail,
-      })
-      .select('id')
-      .single()
-    if (bookErr || !inserted) return 'error'
-    bookId = inserted.id
-  }
+  const bookId = await upsertBook(admin, book)
+  if (!bookId) return 'error'
 
   // 2. 서재 항목 insert (중복이면 23505 → already)
   const { error: entryErr } = await admin.from('library_entries').insert({

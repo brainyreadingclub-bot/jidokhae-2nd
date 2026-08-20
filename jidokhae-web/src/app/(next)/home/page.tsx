@@ -6,33 +6,36 @@ import { listAppNotifications } from '@/lib/app-notifications'
 import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
 import HomeView, { type HomeData } from '@/components/next/HomeView'
+import WhatsNewSheet from '@/components/next/WhatsNewSheet'
 import type { Meeting } from '@/types/meeting'
 
 export default async function NextHomePage() {
   const user = await getUser()
   const profile = user ? await getProfile(user.id) : null
-  const nickname = profile?.nickname ?? '회원'
+  const nickname = profile?.nickname || '회원'
   const kstToday = getKSTToday()
   const supabase = await createClient()
 
-  // 다가오는 모임 전체 (정기+토론)
+  // 다가오는 모임 전체 (정기+토론) — 토론 홍보 카드용 책 표지 join
   const { data: meetings } = await supabase
     .from('meetings')
-    .select('*')
+    .select('*, books(thumbnail, authors)')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })
     .order('time', { ascending: true })
-  const upcoming = (meetings ?? []) as Meeting[]
+  const upcoming = (meetings ?? []) as (Meeting & {
+    books: { thumbnail: string | null; authors: string | null } | null
+  })[]
 
-  // 내 신청 (confirmed·pending_transfer)
+  // 내 신청 — waitlisted 포함 (홍보 카드에서 대기자에게 "신청하세요" 노출 방지)
   const meetingIds = upcoming.map((m) => m.id)
   const { data: myRegs } = user && meetingIds.length > 0
     ? await supabase
         .from('registrations')
         .select('meeting_id, status')
         .eq('user_id', user.id)
-        .in('status', ['confirmed', 'pending_transfer'])
+        .in('status', ['confirmed', 'pending_transfer', 'waitlisted'])
         .in('meeting_id', meetingIds)
     : { data: [] as { meeting_id: string; status: string }[] }
   const myRegMap = new Map((myRegs ?? []).map((r) => [r.meeting_id, r.status]))
@@ -51,8 +54,11 @@ export default async function NextHomePage() {
     }
   }
 
-  // ② 내가 신청한 다음 모임
-  const mine = upcoming.find((m) => myRegMap.has(m.id))
+  // ② 내가 신청한 다음 모임 — 확정·입금대기만 (waitlisted는 자리 확정이 아니라 제외)
+  const mine = upcoming.find((m) => {
+    const s = myRegMap.get(m.id)
+    return s === 'confirmed' || s === 'pending_transfer'
+  })
   const nextMeeting: HomeData['nextMeeting'] = mine
     ? {
         id: mine.id,
@@ -73,8 +79,11 @@ export default async function NextHomePage() {
           meetingId: discussion.id,
           title: discussion.title,
           date: discussion.date,
+          time: discussion.time,
           venueName: discussion.location ?? '',
           open: isDiscussionApplyOpen(discussion.date, kstToday),
+          thumbnail: discussion.books?.thumbnail ?? null,
+          authors: discussion.books?.authors ?? null,
         }
       : null
 
@@ -93,5 +102,10 @@ export default async function NextHomePage() {
     }
   }
 
-  return <HomeView data={{ nickname, reply, nextMeeting, promo, todo }} />
+  return (
+    <>
+      <WhatsNewSheet />
+      <HomeView data={{ nickname, reply, nextMeeting, promo, todo }} />
+    </>
+  )
 }

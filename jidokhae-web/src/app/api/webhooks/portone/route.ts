@@ -50,8 +50,10 @@ export async function POST(request: NextRequest) {
   const { paymentId } = webhook.data
 
   // paymentId 형식 검증: jdkh-{meetingId8}-{userId8}-{timestamp}
+  // prefix는 UUID 앞 8자 = 16진수만 허용 — LIKE 와일드카드(%·_) 주입 차단 (2026-08-20 스윕)
   const parts = paymentId.split('-')
-  if (parts.length < 4 || parts[0] !== 'jdkh') {
+  const HEX8 = /^[0-9a-f]{8}$/
+  if (parts.length < 4 || parts[0] !== 'jdkh' || !HEX8.test(parts[1]) || !HEX8.test(parts[2])) {
     console.error(`[portone-webhook] paymentId 형식 오류: ${paymentId}`)
     return NextResponse.json({ status: 'ignored' }, { status: 200 })
   }

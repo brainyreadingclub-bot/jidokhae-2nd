@@ -107,6 +107,13 @@ function renderNotification(
       return { emoji: '⚡', title: '참여한 번개가 취소됐어요' }
     case 'registration_confirmed':
       return { emoji: '✓', title: '모임 신청이 확정됐어요', href: '/meet' }
+    case 'announcement':
+      return {
+        emoji: '📢',
+        title: String(p.title ?? '공지'),
+        sub: p.body ? String(p.body) : undefined,
+        href: p.href ? String(p.href) : undefined,
+      }
   }
 }
 

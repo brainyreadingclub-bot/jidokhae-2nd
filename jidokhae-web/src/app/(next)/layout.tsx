@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { getUser } from '@/lib/auth'
+import { getProfile } from '@/lib/profile'
+import { isOnboarded } from '@/lib/onboarding'
 import NextNav from '@/components/next/NextNav'
 import NotificationBell from '@/components/next/NotificationBell'
 
@@ -16,6 +18,13 @@ export default async function NextLayout({
 }) {
   if (!(await isNextUiEnabled())) redirect('/')
   const user = await getUser()
+
+  // 온보딩(웰컴·프로필) 미완성 회원은 관문(/)으로 — 전화·실명 없이 결제까지 가는 우회 차단.
+  // /는 미완성자에겐 리다이렉트하지 않으므로(page.tsx) 루프 없음.
+  if (user) {
+    const profile = await getProfile(user.id)
+    if (!isOnboarded(profile)) redirect('/')
+  }
 
   return (
     <div className="min-h-dvh bg-white text-tg-900">
