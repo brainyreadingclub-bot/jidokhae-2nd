@@ -34,7 +34,14 @@ export default async function MePage() {
   const joined = joinedAt
     ? `${new Date(joinedAt).getFullYear()}년 ${new Date(joinedAt).getMonth() + 1}월부터`
     : ''
-  const regionLabel = profile?.region?.length ? profile.region.join(' · ') : ''
+  // 지역은 다중 선택 — 전부 나열하면 줄이 깨지므로 2개 + "외 N곳"으로 제한
+  const regions = profile?.region ?? []
+  const regionLabel =
+    regions.length === 0
+      ? ''
+      : regions.length <= 2
+        ? regions.join(' · ')
+        : `${regions.slice(0, 2).join(' · ')} 외 ${regions.length - 2}곳`
 
   return (
     <div className="pt-2">
