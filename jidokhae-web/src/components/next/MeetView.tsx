@@ -10,8 +10,8 @@ import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
  */
 
 export type MeetData = {
-  /** 내가 신청한 가장 가까운 모임 (스트립) */
-  mine: { id: string; title: string; date: string; daysLeft: number } | null
+  /** 내가 신청한 가장 가까운 모임 (스트립). waitlisted = 대기 중 (확정 아님) */
+  mine: { id: string; title: string; date: string; daysLeft: number; waitlisted: boolean } | null
   regular: {
     id: string
     date: string
@@ -55,17 +55,21 @@ export default function MeetView({ data }: { data: MeetData }) {
       {mine && (
         <Link
           href={`/meetings/${mine.id}`}
-          className="mt-4 flex min-h-[46px] items-center gap-2.5 rounded-[12px] bg-brand-bg px-3.5 py-2.5"
+          className={`mt-4 flex min-h-[46px] items-center gap-2.5 rounded-[12px] px-3.5 py-2.5 ${mine.waitlisted ? 'bg-tg-50' : 'bg-brand-bg'}`}
         >
-          <span className="flex h-4.5 w-4.5 flex-none items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white">
-            ✓
+          <span
+            className={`flex h-4.5 w-4.5 flex-none items-center justify-center rounded-full text-[9px] font-bold text-white ${mine.waitlisted ? 'bg-tg-400' : 'bg-brand'}`}
+          >
+            {mine.waitlisted ? '…' : '✓'}
           </span>
           <span className="min-w-0 flex-1 truncate text-xs text-tg-700">
-            <b className="font-bold text-brand-deep">신청한 모임</b>{' '}
+            <b className={`font-bold ${mine.waitlisted ? 'text-tg-700' : 'text-brand-deep'}`}>
+              {mine.waitlisted ? '대기 중인 모임' : '신청한 모임'}
+            </b>{' '}
             {formatKoreanDate(mine.date)} · {mine.title}
           </span>
-          <span className="flex-none text-[11px] font-bold text-brand-deep">
-            D-{mine.daysLeft}
+          <span className={`flex-none text-[11px] font-bold ${mine.waitlisted ? 'text-tg-500' : 'text-brand-deep'}`}>
+            {mine.waitlisted ? '대기 중' : mine.daysLeft === 0 ? '오늘' : `D-${mine.daysLeft}`}
           </span>
           <Chevron />
         </Link>

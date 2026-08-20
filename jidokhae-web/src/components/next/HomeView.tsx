@@ -84,8 +84,14 @@ export default function HomeView({ data }: { data: HomeData }) {
         <BoxWhite>
           <Link href={`/meetings/${nextMeeting.id}`} className="flex items-center gap-3.5">
             <span className="text-[31px] font-extrabold tracking-[-0.04em] text-tg-900 tabular-nums">
-              {nextMeeting.daysLeft}
-              <i className="not-italic text-[15px] font-bold text-tg-400">일</i>
+              {nextMeeting.daysLeft === 0 ? (
+                <i className="not-italic text-[23px]">오늘</i>
+              ) : (
+                <>
+                  {nextMeeting.daysLeft}
+                  <i className="not-italic text-[15px] font-bold text-tg-400">일</i>
+                </>
+              )}
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold tracking-tight">

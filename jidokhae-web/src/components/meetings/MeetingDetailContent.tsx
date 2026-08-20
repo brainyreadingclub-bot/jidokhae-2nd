@@ -4,6 +4,7 @@ import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { getMeeting } from '@/lib/meeting'
 import { getKSTToday, getButtonState } from '@/lib/kst'
+import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
 import { getDisplayFee } from '@/lib/staff-slot'
 import Link from 'next/link'
@@ -117,7 +118,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
   }
 
   const kstToday = getKSTToday()
-  const buttonState = getButtonState(
+  let buttonState = getButtonState(
     typedMeeting.date,
     kstToday,
     hasConfirmed,
@@ -134,13 +135,26 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
     typedMeeting.meeting_type,
   )
 
+  // 토론모임 D-7 신청 마감 (2026-08-17 결정) — 신규 신청·대기 진입만 차단.
+  // 이미 신청한 사람의 취소/입금 버튼은 그대로 둔다 (환불 7/3 규칙은 별도 동작).
+  if (
+    typedMeeting.meeting_type === 'discussion' &&
+    !isDiscussionApplyOpen(typedMeeting.date, kstToday) &&
+    (buttonState.type === 'register' ||
+      buttonState.type === 'join_waitlist' ||
+      buttonState.type === 'full')
+  ) {
+    buttonState = { type: 'apply_closed' }
+  }
+
   const hasStickyButton =
     buttonState.type === 'register' ||
     buttonState.type === 'full' ||
     buttonState.type === 'cancel' ||
     buttonState.type === 'join_waitlist' ||
     buttonState.type === 'waitlist_cancel' ||
-    buttonState.type === 'pending_transfer'
+    buttonState.type === 'pending_transfer' ||
+    buttonState.type === 'apply_closed'
 
   return (
     <div style={{ paddingBottom: hasStickyButton ? 'calc(9rem + env(safe-area-inset-bottom, 0px))' : '1.5rem' }}>

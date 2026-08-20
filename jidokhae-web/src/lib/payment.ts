@@ -9,6 +9,7 @@
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getPayment, cancelPayment } from '@/lib/portone'
 import { calculateFee, isStaffDiscountableMeetingType } from '@/lib/pricing'
+import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 
 export type ConfirmResult =
   | { status: 'success'; registrationId: string }
@@ -51,12 +52,19 @@ export async function processPaymentConfirmation(
   // Verify meeting exists and is active
   const { data: meeting } = await supabase
     .from('meetings')
-    .select('fee, status, meeting_type')
+    .select('fee, status, meeting_type, date')
     .eq('id', meetingId)
     .single()
 
   if (!meeting || meeting.status !== 'active') {
     return { status: 'error', message: '신청할 수 없는 모임입니다' }
+  }
+
+  // 토론모임 D-7 신청 마감 강제 (2026-08-17 결정) — 마감 후 결제는 취소 후 거절.
+  // 화면 버튼은 이미 막지만, 딥링크·공유 URL·마감 직전 결제창 체류 경로를 서버에서 차단.
+  if (meeting.meeting_type === 'discussion' && !isDiscussionApplyOpen(meeting.date)) {
+    await safeCancel(paymentId, '토론모임 신청 마감(D-7) 이후 결제')
+    return { status: 'error', message: '신청이 마감된 모임입니다. 결제는 자동 취소됩니다' }
   }
 
   // 포트원에서 결제 검증 (이미 결제 완료 상태여야 함)
@@ -86,13 +94,16 @@ export async function processPaymentConfirmation(
   // paymentId 형식: jdkh-{meetingId8}-{userId8}-{timestamp}
   // 공격자가 다른 모임의 paymentId를 이 요청의 meetingId와 섞어 제출한 경우 차단.
   const meetingId8 = meetingId.replace(/-/g, '').slice(0, 8)
+  const userId8 = userId.replace(/-/g, '').slice(0, 8)
   const paymentParts = paymentId.split('-')
   if (
     paymentParts.length < 4 ||
     paymentParts[0] !== 'jdkh' ||
-    paymentParts[1] !== meetingId8
+    paymentParts[1] !== meetingId8 ||
+    // userId8도 교차 검증 — 타인 prefix를 박은 paymentId로 남의 명의 등록 차단 (2026-08-20 스윕)
+    paymentParts[2] !== userId8
   ) {
-    await safeCancel(paymentId, 'paymentId meetingId prefix 불일치')
+    await safeCancel(paymentId, 'paymentId prefix 불일치 (meeting/user)')
     return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
   }
 
