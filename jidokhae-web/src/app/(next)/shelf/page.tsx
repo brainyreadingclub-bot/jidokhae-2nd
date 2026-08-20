@@ -102,7 +102,7 @@ export default async function ShelfPage() {
       )}
 
       <Link
-        href="/my"
+        href="/my#library"
         className="mt-6 flex min-h-[48px] items-center justify-center rounded-[14px] bg-tg-100 text-sm font-bold text-tg-700"
       >
         책 담기 · 관리는 마이페이지에서
