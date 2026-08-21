@@ -80,6 +80,16 @@ export async function POST(request: NextRequest) {
 
   const admin = createServiceClient()
 
+  // 최초 완료 여부 — 마케팅 sign_up 전환을 1인 1회만 잡기 위해 필요.
+  // 이 값이 이미 있으면 재호출이므로 전환으로 세지 않고, 최초 가입 시각도 덮어쓰지 않는다.
+  const { data: before } = await admin
+    .from('profiles')
+    .select('profile_completed_at')
+    .eq('id', user.id)
+    .single()
+
+  const isFirstCompletion = !before?.profile_completed_at
+
   // 닉네임 중복 체크 (자기 자신 제외, 빈 문자열 제외)
   const { data: existing } = await admin
     .from('profiles')
@@ -104,7 +114,7 @@ export async function POST(request: NextRequest) {
       phone,
       region,
       email: email || null,
-      profile_completed_at: new Date().toISOString(),
+      ...(isFirstCompletion ? { profile_completed_at: new Date().toISOString() } : {}),
     })
     .eq('id', user.id)
 
@@ -115,5 +125,5 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  return NextResponse.json({ status: 'success' })
+  return NextResponse.json({ status: 'success', data: { isFirstCompletion } })
 }

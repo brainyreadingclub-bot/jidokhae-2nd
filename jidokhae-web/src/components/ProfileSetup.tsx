@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import RegionPicker from '@/components/RegionPicker'
+import { trackEvent } from '@/lib/analytics'
 
 type Props = {
   nickname: string
@@ -91,11 +92,21 @@ export default function ProfileSetup({ nickname, email, phone, region, realName 
         }),
       })
 
+      const data = await res.json().catch(() => null)
+
       if (!res.ok) {
-        const data = await res.json()
-        setApiError(data.message || '프로필 저장에 실패했습니다')
+        setApiError(data?.message || '프로필 저장에 실패했습니다')
         setIsSubmitting(false)
         return
+      }
+
+      // 가입 전환 — 카카오 로그인 시점이 아니라 여기서 잡는다.
+      // 카카오 콜백은 서버 라우트라 클라이언트 이벤트를 못 쏘고, 무엇보다
+      // 로그인만 하고 이탈한 사람까지 '가입'으로 세면 전환율이 부풀려진다.
+      // 실명·연락처·지역까지 넣어야 실제로 모임에 신청할 수 있는 회원이 된다.
+      // 서버가 isFirstCompletion을 판정하므로 재제출로 중복 집계되지 않는다.
+      if (data?.data?.isFirstCompletion) {
+        trackEvent('sign_up', { method: 'kakao' })
       }
 
       router.refresh()
