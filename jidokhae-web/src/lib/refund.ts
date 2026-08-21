@@ -28,6 +28,15 @@ export function getRefundRuleText(): string {
     .join(' · ')
 }
 
+/** 취소 모달용 한 줄 요약 — 모임 유형 분기 (토론모임 7/3, 그 외 3/2) */
+export function getRefundRuleTextByType(meetingType: string | null | undefined): string {
+  if (meetingType !== 'discussion') return getRefundRuleText()
+  return DISCUSSION_REFUND_RULES
+    .map(r => `${r.daysBeforeMeeting}일 전: ${r.rate}%`)
+    .concat([`2일 전부터: ${DISCUSSION_REFUND_DEFAULT.rate}%`])
+    .join(' · ')
+}
+
 export type RefundInfo = {
   refundRate: number // 0 | 50 | 100
   refundAmount: number // 실제 환불 금액
@@ -99,4 +108,21 @@ export function calculateDiscussionRefund(
     refundAmount: Math.floor((paidAmount * refundRate) / 100),
     daysRemaining,
   }
+}
+
+/**
+ * 모임 유형 분기 환불 계산 — 단일 진입점.
+ * 토론모임(discussion)은 7일 100% / 3일 50%, 그 외(정기 등)는 3일 100% / 2일 50%.
+ * 실환불(cancel.ts)·권장액(mark-refunded)·화면 표시가 전부 이 함수를 거쳐야
+ * 유형별 규칙이 어긋나지 않는다 (2026-08-21 배선).
+ */
+export function calculateRefundByType(
+  meetingType: string | null | undefined,
+  meetingDate: string,
+  paidAmount: number,
+  kstToday?: string,
+): RefundInfo {
+  return meetingType === 'discussion'
+    ? calculateDiscussionRefund(meetingDate, paidAmount, kstToday)
+    : calculateRefund(meetingDate, paidAmount, kstToday)
 }

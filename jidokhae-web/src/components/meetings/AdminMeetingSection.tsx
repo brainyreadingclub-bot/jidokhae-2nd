@@ -3,7 +3,7 @@ import DeleteMeetingButton from './DeleteMeetingButton'
 import DepositToggle from '@/components/admin/DepositToggle'
 import RefundToggle from '@/components/admin/RefundToggle'
 import { getKSTToday, formatFee, toKSTDate } from '@/lib/kst'
-import { calculateRefund } from '@/lib/refund'
+import { calculateRefundByType } from '@/lib/refund'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
   registrations: RegistrationWithProfile[]
   role: string
   meetingDate: string
+  meetingType: string | null
 }
 
 const CANCEL_TYPE_LABELS: Record<string, string> = {
@@ -36,6 +37,7 @@ export default function AdminMeetingSection({
   registrations,
   role,
   meetingDate,
+  meetingType,
 }: Props) {
   const confirmedRegs = registrations.filter((r) => r.status === 'confirmed' || r.status === 'cancelled' || r.status === 'pending_transfer')
   const waitlistedRegs = registrations
@@ -137,7 +139,8 @@ export default function AdminMeetingSection({
       const cancelDate = reg.cancelled_at
         ? toKSTDate(new Date(reg.cancelled_at))
         : getKSTToday()
-      const { refundAmount } = calculateRefund(
+      const { refundAmount } = calculateRefundByType(
+        meetingType,
         meetingDate,
         reg.paid_amount ?? 0,
         cancelDate,
