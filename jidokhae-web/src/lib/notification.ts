@@ -346,7 +346,8 @@ export async function sendBookAskNotification(
  */
 export async function sendNewMemberWelcomeNotification(userId: string) {
   const profile = await getProfileForNotification(userId)
-  const displayName = profile.real_name || profile.nickname
+  // 호칭은 닉네임 우선 (2026-08-07 결정, VOICE.md §6). 기존 6곳은 PR #50·#49가 함께 뒤집는다
+  const displayName = profile.nickname || profile.real_name || ''
 
   return sendNotification({
     type: 'new_member_welcome',
