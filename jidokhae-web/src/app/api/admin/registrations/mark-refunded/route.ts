@@ -13,7 +13,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
-import { calculateRefund } from '@/lib/refund'
+import { calculateRefundByType } from '@/lib/refund'
 import { toKSTDate, getKSTToday } from '@/lib/kst'
 
 export async function POST(request: NextRequest) {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   // 대상 registration + 모임 날짜 조회 (권장 환불액 계산용)
   const { data: reg, error: fetchError } = await admin
     .from('registrations')
-    .select('paid_amount, status, payment_method, refunded_amount, cancelled_at, meetings(date)')
+    .select('paid_amount, status, payment_method, refunded_amount, cancelled_at, meetings(date, meeting_type)')
     .eq('id', registrationId)
     .single()
 
@@ -111,9 +111,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 권장 환불액 = calculateRefund(meeting.date, paid_amount, cancelled_at)
-    // 토글 누른 시점이 아니라 취소 시점 기준으로 계산 (회원 입장 일관성).
-    const meetingData = reg.meetings as unknown as { date: string } | null
+    // 권장 환불액 — 토글 누른 시점이 아니라 취소 시점 기준으로 계산 (회원 입장 일관성).
+    // 토론모임은 7/3 규칙 (calculateRefundByType이 분기).
+    const meetingData = reg.meetings as unknown as { date: string; meeting_type: string | null } | null
     if (!meetingData) {
       return NextResponse.json(
         { status: 'error', message: '연결된 모임을 찾을 수 없습니다' },
@@ -123,7 +123,8 @@ export async function POST(request: NextRequest) {
     const cancelDate = reg.cancelled_at
       ? toKSTDate(new Date(reg.cancelled_at))
       : getKSTToday()
-    const { refundAmount } = calculateRefund(
+    const { refundAmount } = calculateRefundByType(
+      meetingData.meeting_type,
       meetingData.date,
       reg.paid_amount ?? 0,
       cancelDate,

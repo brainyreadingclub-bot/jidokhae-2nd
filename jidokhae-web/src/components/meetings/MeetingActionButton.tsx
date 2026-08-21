@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import * as PortOne from '@portone/browser-sdk/v2'
 import type { ButtonState } from '@/lib/kst'
 import { formatFee } from '@/lib/kst'
-import { calculateRefund, getRefundRuleText } from '@/lib/refund'
+import { calculateRefundByType, getRefundRuleTextByType } from '@/lib/refund'
 import ModalOverlay from '@/components/ui/ModalOverlay'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
@@ -21,6 +21,8 @@ type Props = {
   /** 스텝 할인이 적용되는 신청인지 여부. 모달에서 영수증 패턴 노출에 사용. */
   isStaffDiscount?: boolean
   meetingDate: string
+  /** 환불 규칙 분기용 (discussion = 7/3, 그 외 3/2) */
+  meetingType?: string | null
   userId: string
   registrationId?: string
   paidAmount?: number | null
@@ -50,6 +52,7 @@ export default function MeetingActionButton({
   displayFee,
   isStaffDiscount = false,
   meetingDate,
+  meetingType = null,
   userId,
   registrationId,
   paidAmount,
@@ -186,7 +189,7 @@ export default function MeetingActionButton({
 
   // --- Cancel flow ---
   const refundInfo = paidAmount
-    ? calculateRefund(meetingDate, paidAmount)
+    ? calculateRefundByType(meetingType, meetingDate, paidAmount)
     : null
 
   async function handleCancelConfirm() {
@@ -554,7 +557,7 @@ export default function MeetingActionButton({
             </p>
           )}
           <div className="mt-4 text-xs text-primary-400 text-center">
-            {getRefundRuleText()}
+            {getRefundRuleTextByType(meetingType)}
           </div>
           {registrationPaymentMethod === 'transfer' && refundInfo.refundAmount > 0 && supportContact && (
             <div

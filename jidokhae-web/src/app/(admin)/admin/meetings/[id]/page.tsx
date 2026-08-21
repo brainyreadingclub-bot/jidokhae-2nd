@@ -110,6 +110,7 @@ export default async function AdminMeetingDetailPage({ params }: Props) {
         registrations={registrations}
         role={profile.role}
         meetingDate={meeting.date}
+        meetingType={meeting.meeting_type ?? null}
       />
     </div>
   )

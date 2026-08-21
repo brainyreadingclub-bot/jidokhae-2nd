@@ -4,7 +4,12 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { calculateDiscussionRefund, DISCUSSION_REFUND_RULES } from '@/lib/refund'
+import {
+  calculateDiscussionRefund,
+  DISCUSSION_REFUND_RULES,
+  calculateRefundByType,
+  getRefundRuleTextByType,
+} from '@/lib/refund'
 
 describe('calculateDiscussionRefund — 7일 100% / 3일 50% / 이후 0%', () => {
   const D = '2026-09-13'
@@ -35,5 +40,35 @@ describe('calculateDiscussionRefund — 7일 100% / 3일 50% / 이후 0%', () =>
   it('규칙 상수 — 7일/100, 3일/50', () => {
     expect(DISCUSSION_REFUND_RULES[0]).toMatchObject({ daysBeforeMeeting: 7, rate: 100 })
     expect(DISCUSSION_REFUND_RULES[1]).toMatchObject({ daysBeforeMeeting: 3, rate: 50 })
+  })
+})
+
+describe('calculateRefundByType — 유형 분기 배선 (2026-08-21)', () => {
+  const D = '2026-09-13'
+
+  it('discussion → 7/3 규칙 (5일 전 = 50%)', () => {
+    const r = calculateRefundByType('discussion', D, 20000, '2026-09-08')
+    expect(r.refundRate).toBe(50)
+    expect(r.refundAmount).toBe(10000)
+  })
+  it('regular → 3/2 규칙 (5일 전 = 100%)', () => {
+    const r = calculateRefundByType('regular', D, 20000, '2026-09-08')
+    expect(r.refundRate).toBe(100)
+  })
+  it('null/undefined(구 데이터) → 정기 규칙 폴백', () => {
+    expect(calculateRefundByType(null, D, 20000, '2026-09-08').refundRate).toBe(100)
+    expect(calculateRefundByType(undefined, D, 20000, '2026-09-08').refundRate).toBe(100)
+  })
+  it('discussion 2일 전 → 0%', () => {
+    expect(calculateRefundByType('discussion', D, 20000, '2026-09-11').refundRate).toBe(0)
+  })
+})
+
+describe('getRefundRuleTextByType — 취소 모달 문구', () => {
+  it('discussion → 7/3 문구', () => {
+    expect(getRefundRuleTextByType('discussion')).toBe('7일 전: 100% · 3일 전: 50% · 2일 전부터: 0%')
+  })
+  it('regular → 기존 정기 문구', () => {
+    expect(getRefundRuleTextByType('regular')).toBe('3일 전: 100% · 2일 전: 50% · 전날/당일: 0%')
   })
 })

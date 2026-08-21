@@ -114,18 +114,26 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - 토론모임 1조각 — **서재 + 물어보기(책 담기) + 응답률 측정** ✅ 배포 (PR #42, `dcc61d5`). **단 `site_settings.library_enabled` 플래그 OFF → 회원 노출 0**
 - 물어보기 응답률 계측 버그 수정 + 지표 재정의 ✅ (PR #43, `1f9ffaa`, 7/24 prod)
 - **전면개편 1단계 (5탭 next_ui × 토스 스킨 + 발제 스레드)** ✅ 머지 (2026-08-17, PR #54 `b57aee0` + #55 `42ae701`). **`next_ui` 플래그 OFF — 회원 노출 0.** prod SQL 실행 완료(발제 5테이블 + 스텝할인 토론 제외 RPC 가드). 스텝 할인 = 정기모임 한정 확정
+- **전면개편 마감 정비 ✅ (2026-08-20~21):** 전 흐름 스윕 크리티컬 5종(PR #61 — 온보딩 게이트·D-7 서버 강제·대기자 신호·웹훅 hex 검증) + 나 탭 지역 라벨 가드(PR #62) + **토론모임 환불 7/3 배선**(PR #64 — `calculateRefundByType` 단일 진입점, 만들어두고 안 부르던 누락을 교차 세션 스캔이 발견). 프리뷰·프로드 클릭 검증 통과
 - **알림톡 심사는 전부 끝났다** — V2 6종 ✅ APPROVED(8/17), **BOOK_ASK도 ✅ APPROVED(8/19)**. 외부 관문은 더 남아 있지 않다
-- **플래그 켜기 게이트 (2026-08-21 재판정)**: 심사가 아니라 **코드·절차 5건**이 남았다. 상세는 `검토문서/2026-08-21-켜는날-코드준비-판정.md`(개발·운영 🟡) + `검토문서/2026-08-18-켜는날-런북.md`
-  1. PR #53의 base가 `main`이 아니다(`feat/book-ask-cron`) — 그대로 머지하면 환영 알림톡이 prod에 안 나간다
-  2. `SOLAPI_TEMPLATE_WELCOME` env가 런북에 없다
-  3. `next_ui`·`library_enabled` **행이 prod `site_settings`에 없다** — "UPSERT"가 아니라 prod SQL INSERT다(admin 화면에도 필드 없음)
-  4. env↔머지 순서가 뒤집혀 있다(env는 재배포 전까지 무효 → **env 먼저 → 머지**)
+- 서재/물어보기·발제 스레드·`(next)` 라우트는 `jidokhae-web/CLAUDE.md`에 반영됨 (2026-08-21)
 
-> ✅ **한 건은 닫혔다** — "토론모임 환불이 정기 규칙으로 돌아간다(`calculateDiscussionRefund` 호출부 0)"는 **PR #64 머지로 해소**(2026-08-21 16:22 KST). `calculateRefundByType`(`refund.ts:113`)가 실환불·권장액·취소 모달·규칙 문구에 배선됐다. `refund.ts`·`cancel.ts`·`MeetingActionButton.tsx` **접근 금지도 함께 풀렸다.**
+### 🔴 켜는 날 게이트 — 사전조건은 충족, **절차 4건이 남았다** (2026-08-21 재판정)
+
+> ⚠️ **이 절은 머지 충돌에서 나왔다.** 한쪽은 *"게이트 전부 충족 — 날짜 결정만 대기"*, 다른 쪽은 *"코드·절차 5건 남음"*이라고 적혀 있었다. **둘 다 맞다** — 사전조건(심사·리뷰·동의)은 전부 충족됐고, 런북에 **안 적힌 절차**가 남아 있다. 아래 4건은 개발·운영이 `gh`·`git merge-tree`·prod DB 조회로 실측한 것이다. 상세: `검토문서/2026-08-21-켜는날-코드준비-판정.md`(🟡) + `검토문서/2026-08-18-켜는날-런북.md`(당일 절차 정본)
+
+| # | 남은 것 | 빠뜨리면 |
+|:--:|---|---|
+| 1 | **PR #53의 base가 `main`이 아니다**(`feat/book-ask-cron`) + `deleteBranchOnMerge=false` | 그대로 머지하면 **환영 알림톡이 prod에 안 나간다** |
+| 2 | **`SOLAPI_TEMPLATE_WELCOME` env가 런북에 없다** | 신규 가입자마다 발송 실패 이력만 쌓인다 |
+| 3 | **`next_ui`·`library_enabled` 행이 prod `site_settings`에 없다** (admin 화면에도 필드 없음) | "UPSERT"가 아니라 **prod SQL INSERT**다. 롤백도 SQL |
+| 4 | **env↔머지 순서가 뒤집혀 있다** (env는 재배포 전까지 무효) | "새 코드 + 구 템플릿 ID" 창이 생긴다 → **env 먼저 → 머지** |
+
+> ✅ **한 건은 닫혔다** — "토론모임 환불이 정기 규칙으로 돌아간다(`calculateDiscussionRefund` 호출부 0)"는 **PR #64 머지로 해소**(16:22 KST). `refund.ts`·`cancel.ts`·`MeetingActionButton.tsx` **접근 금지도 함께 풀렸다.**
 >
-> ⚠️ 이 줄을 남기는 이유 — 관리자가 같은 날 오후 이 세 파일을 "다른 세션 담당, 접근 금지"로 적었고, 그 문장이 **이미 3시간 24분 낡은 상태**였다. 세션에 주입되는 문장이 낡으면 부서 전체가 멈춘다.
+> ⚠️ 관리자가 같은 날 오후 이 세 파일을 "다른 세션 담당, 접근 금지"로 적었고 그 문장이 **이미 3시간 24분 낡아 있었다.** 세션에 주입되는 문장이 낡으면 부서 전체가 멈춘다.
 
-> 🔴 **아래 라우트·컴포넌트·스키마 목록은 실제의 절반 수준이다.** 서재/물어보기뿐 아니라 **`(next)` 라우트 그룹 전체(8 페이지)·발제 스레드 5테이블·`app_notifications`·`/admin/notices`·책 표지 연결**이 미반영이다. 2026-08-21 실측: `src/lib/*.ts` **39개**(문서 17) · API 라우트 **35개**(문서 22) · admin 페이지 **14개**(문서 10) · DB 테이블 **17개**(문서 12). **목록을 신뢰하지 말고 실제 파일을 세라.** 일괄 갱신은 플래그를 켠 뒤 한 번에 한다 — 지금 고치면 "구 화면이 현행"인 상태를 이중으로 설명하게 된다 (`검토문서/2026-08-18-문서정비-계획.md` §3)
+> 🔴 **아래 라우트·컴포넌트·스키마 목록은 실제의 절반 수준이다.** **`(next)` 라우트 그룹 전체(8 페이지)·발제 스레드 5테이블·`app_notifications`·`/admin/notices`·책 표지 연결**이 미반영이다. 2026-08-21 실측: `src/lib/*.ts` **39개**(문서 17) · API 라우트 **35개**(문서 22) · admin 페이지 **14개**(문서 10) · DB 테이블 **17개**(문서 12). **목록을 신뢰하지 말고 실제 파일을 세라.** 코드 상세는 `jidokhae-web/CLAUDE.md`가 최신이다. 일괄 갱신은 플래그를 켠 뒤 한 번에 한다 (`검토문서/2026-08-18-문서정비-계획.md` §3)
 
 ---
 
@@ -209,7 +217,9 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 ## Key Business Rules
 
 - **결제 완료 = 신청 확정** — No payment-less registrations exist
-- **Refund policy:** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
+- **Refund policy (정기모임):** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
+- **Refund policy (토론모임):** 7+ days → 100%, 3+ days → 50%, 이후 0%. `calculateRefundByType(meeting_type, ...)`이 유형 분기 단일 진입점 — 실환불·권장액·모달·정책 페이지 전부 이 함수 경유 (PR #64). `meeting_type` null(구 데이터)은 정기 규칙 폴백
+- **토론모임 신청 마감 = D-7** (신청 마감 = 환불 100% 경계 = 책 주문 마감, 세 날짜 통일). 서버 3중 강제: 상세 버튼 `apply_closed` + 카드 결제 자동취소(payment.ts) + 계좌이체 400(transfer route). `isDiscussionApplyOpen()`(discussion-rules.ts)이 단일 소스
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
 - **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 회원/비로그인에게는 신청자 3명 미만(0·1·2명)일 때 "N명 모집 중" 형식으로 마스킹(`shouldMaskConfirmedCount` 절대 임계 3명, social proof 역효과 방지). 운영자는 0명만 마스킹, 1명+ 정확 노출. 마감 시 항상 정확 노출. **모임 상세에서 본인이 정원에 차지한 회원(confirmed 또는 pending_transfer)에게는 마스킹 해제** — 명단 헤더("함께하는 멤버 N명")와 카운트 정합성 확보 (`MeetingDetailContent`가 `isPrivileged={isEditorOrAdmin || hasConfirmed || hasPendingTransfer}` 전달)
 - **Meeting capacity minimum:** 정원 최소 3명 (Form 단에서 강제, DB CHECK는 두지 않음). 노출 임계(3명)와 정합성을 위해 정원 1·2명 모임 생성 차단. 운영자가 SQL 콘솔로 직접 INSERT하는 우회 경로는 운영 정책상 발생하지 않는다고 가정

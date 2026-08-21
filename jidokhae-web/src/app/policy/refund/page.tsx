@@ -1,5 +1,10 @@
 import type { Metadata } from 'next'
-import { REFUND_RULES, REFUND_DEFAULT } from '@/lib/refund'
+import {
+  REFUND_RULES,
+  REFUND_DEFAULT,
+  DISCUSSION_REFUND_RULES,
+  DISCUSSION_REFUND_DEFAULT,
+} from '@/lib/refund'
 import { getSiteSettings } from '@/lib/site-settings'
 
 export const metadata: Metadata = {
@@ -29,7 +34,7 @@ export default async function RefundPolicyPage() {
           className="text-lg font-bold text-neutral-800"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          환불 기준
+          환불 기준 — 정기모임
         </h2>
 
         <div className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-surface-300">
@@ -50,6 +55,40 @@ export default async function RefundPolicyPage() {
               <tr className="border-t border-surface-300">
                 <td className="px-4 py-3">{REFUND_DEFAULT.label}</td>
                 <td className="px-4 py-3">{REFUND_DEFAULT.rateLabel}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2
+          className="mt-8 text-lg font-bold text-neutral-800"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
+          환불 기준 — 토론모임
+        </h2>
+        <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
+          토론모임은 선정 도서 준비(책 주문) 일정에 맞춰 신청 마감과 환불 경계가 모임
+          7일 전으로 통일되어 있습니다.
+        </p>
+
+        <div className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-surface-300">
+          <table className="w-full text-sm">
+            <thead>
+              <tr style={{ backgroundColor: 'var(--color-surface-100)' }}>
+                <th className="px-4 py-3 text-left font-semibold text-neutral-700">취소 시점</th>
+                <th className="px-4 py-3 text-left font-semibold text-neutral-700">환불 비율</th>
+              </tr>
+            </thead>
+            <tbody className="text-neutral-600">
+              {DISCUSSION_REFUND_RULES.map((rule) => (
+                <tr key={rule.daysBeforeMeeting} className="border-t border-surface-300">
+                  <td className="px-4 py-3">{rule.label}</td>
+                  <td className="px-4 py-3">{rule.rateLabel}</td>
+                </tr>
+              ))}
+              <tr className="border-t border-surface-300">
+                <td className="px-4 py-3">{DISCUSSION_REFUND_DEFAULT.label}</td>
+                <td className="px-4 py-3">{DISCUSSION_REFUND_DEFAULT.rateLabel}</td>
               </tr>
             </tbody>
           </table>

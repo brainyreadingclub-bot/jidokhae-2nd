@@ -6,7 +6,7 @@
 
 import { createServiceClient } from '@/lib/supabase/admin'
 import { cancelPayment, getPayment } from '@/lib/portone'
-import { calculateRefund } from '@/lib/refund'
+import { calculateRefundByType } from '@/lib/refund'
 import { getKSTToday } from '@/lib/kst'
 
 export type CancelResult =
@@ -23,7 +23,7 @@ export async function processUserCancel(
   // 1. Fetch registration + meeting date (ownership check via user_id)
   const { data: reg, error: fetchError } = await supabase
     .from('registrations')
-    .select('id, status, payment_id, paid_amount, meeting_id, payment_method, meetings(date)')
+    .select('id, status, payment_id, paid_amount, meeting_id, payment_method, meetings(date, meeting_type)')
     .eq('id', registrationId)
     .eq('user_id', userId)
     .single()
@@ -42,11 +42,17 @@ export async function processUserCancel(
     return { status: 'error', message: '취소할 수 없는 상태입니다' }
   }
 
-  // 4. Calculate refund amount (KST date-based)
-  const meetingDate = (reg.meetings as unknown as { date: string }).date
+  // 4. Calculate refund amount (KST date-based) — 토론모임은 7/3 규칙
+  const meetingRow = reg.meetings as unknown as { date: string; meeting_type: string | null }
+  const meetingDate = meetingRow.date
   const paidAmount = reg.paid_amount ?? 0
   const kstToday = getKSTToday()
-  const { refundAmount, refundRate } = calculateRefund(meetingDate, paidAmount, kstToday)
+  const { refundAmount, refundRate } = calculateRefundByType(
+    meetingRow.meeting_type,
+    meetingDate,
+    paidAmount,
+    kstToday,
+  )
 
   // 5a. 계좌이체 분기: TossPayments API 호출 없이 DB만 업데이트
   if (reg.payment_method === 'transfer') {
