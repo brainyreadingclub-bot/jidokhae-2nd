@@ -37,6 +37,16 @@ type ProfileForNotification = {
 }
 
 // ─── Profile 조회 (service_role) ───
+//
+// 호칭은 전 채널 닉네임이다 — `#{회원명}`에 넣는 값은 항상
+// `nickname || real_name` 순서다(2026-08-07 결정, VOICE.md §6).
+// 실명은 정산·명단 대조처럼 운영자가 회원을 식별할 때 쓰는 이름이지
+// 회원에게 말을 걸 때 쓰는 이름이 아니다.
+// nickname은 NOT NULL이지만 ''일 수 있어 falsy로 real_name에 넘어간다.
+// 마지막 `|| ''`는 real_name이 null일 때 타입을 string으로 좁히기 위한 것이다
+// (변수 맵이 Record<string, string>). 둘 다 비는 경우는 실무에서 나지 않는다 —
+// 알림톡은 전화번호가 있어야 나가고, 전화번호는 프로필 설정에서만 들어오는데
+// 그 화면이 닉네임·실명을 각각 2~20자 필수로 받는다(api/profile/setup/route.ts).
 
 export async function getProfileForNotification(userId: string): Promise<ProfileForNotification> {
   const supabase = createServiceClient()
@@ -162,7 +172,7 @@ export async function sendRegistrationConfirmNotification(
   const paidAmount = registration?.paid_amount ?? (meeting as Meeting).fee
 
   const profile = await getProfileForNotification(userId)
-  const displayName = profile.real_name || profile.nickname
+  const displayName = profile.nickname || profile.real_name || ''
 
   await sendNotification({
     type: 'registration_confirm',
@@ -207,7 +217,7 @@ export async function sendWaitlistConfirmNotification(
   const paidAmount = registration?.paid_amount ?? (meeting as Meeting).fee
 
   const profile = await getProfileForNotification(userId)
-  const displayName = profile.real_name || profile.nickname
+  const displayName = profile.nickname || profile.real_name || ''
 
   await sendNotification({
     type: 'waitlist_confirm',
@@ -255,7 +265,7 @@ export async function sendWaitlistPromotedNotification(
   const paidAmount = registration?.paid_amount ?? (meeting as Meeting).fee
 
   const profile = await getProfileForNotification(userId)
-  const displayName = profile.real_name || profile.nickname
+  const displayName = profile.nickname || profile.real_name || ''
 
   await sendNotification({
     type: 'waitlist_promoted',
@@ -288,7 +298,7 @@ export async function sendWaitlistRefundedNotification(
   meetingTime: string,
 ) {
   const profile = await getProfileForNotification(userId)
-  const displayName = profile.real_name || profile.nickname
+  const displayName = profile.nickname || profile.real_name || ''
 
   await sendNotification({
     type: 'waitlist_refunded',

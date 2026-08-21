@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
   // 병렬 발송 (Vercel 10s 타임아웃 대응 — Promise.allSettled로 부분 실패 허용)
   const results = await Promise.allSettled(
     tasks.map(({ meeting, registrationId, userId, paidAmount, registrationStatus, profile }) => {
-      const displayName = profile.real_name || profile.nickname
+      const displayName = profile.nickname || profile.real_name || ''
       return sendNotification({
         type: 'meeting_remind',
         recipientId: userId,
