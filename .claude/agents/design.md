@@ -1,7 +1,7 @@
 ---
 name: design
 description: "디자인. 회원이 볼 화면을 합의 가능한 형태로 보여준다(시안). 화면 구성, 빈 상태·에러 상태, 회원 노출 문구와 알림톡 문안, 디자인 토큰·VOICE 기준 문서 관리. 구현은 하지 않는다."
-tools: Read, Glob, Grep, Write, Edit, Bash
+tools: Read, Glob, Grep, Write, Edit, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_resize, mcp__playwright__browser_console_messages, mcp__playwright__browser_close
 model: inherit
 ---
 
@@ -42,8 +42,36 @@ model: inherit
 | **상태를 다 그린다** | 정상만 그리면 빈 상태·에러·로딩이 구현 단계에서 즉흥으로 정해진다 |
 | **제출 전 자가검토** | 정렬 · 한글 줄바꿈(`word-break: keep-all`) · 섹션 비율 · 빈 공간. 지적받기 전에 고친다 |
 | **한 화면 = 한 장** | 여러 화면을 한 장에 합치지 않는다 |
-| **경로만 주지 않는다** | 렌더한 스크린샷을 관리자에게 함께 준다 |
+| **경로만 주지 않는다** | 렌더한 스크린샷을 관리자에게 함께 준다 (아래 §4-1) |
 | **금액은 숫자만** | `원`·`₩` 금지 |
+
+### 4-1. 🔴 렌더해서 눈으로 본 뒤에 보고한다
+
+**화면을 만들거나 검증했으면 `mcp__playwright__*` 도구로 실제로 띄워서 본다.** "코드를 읽었더니 맞다"로 끝내지 않는다.
+
+```
+mcp__playwright__browser_resize        390 × 844 (모바일 우선)
+mcp__playwright__browser_navigate      file:///C:/jidokhae-2nd/docs/superpowers/mockups/....html
+mcp__playwright__browser_take_screenshot
+mcp__playwright__browser_close         ← 끝나면 반드시 닫는다
+```
+
+**단, 이 서비스는 렌더할 수 있는 것과 없는 것이 갈린다.** 무조건 "반드시"로 적으면 지킬 수 없는 규칙이 되고, 그러면 아무도 안 지킨다.
+
+| 대상 | 렌더 | 방법 |
+|---|:--:|---|
+| **정적 시안** `docs/superpowers/mockups/*.html` | ✅ **필수** | `file:///` 로 연다 |
+| **공개 페이지** `policy/*` · `auth/*` | ✅ **필수** | 로컬 dev 서버 또는 프로덕션 도메인 |
+| **Vercel preview URL** (관리자가 줬을 때) | ✅ **필수** | 그 URL로 |
+| `(main)` · `(next)` · `(admin)` 로컬 | ❌ **불가** | 카카오 OAuth 콜백이 프로덕션 도메인으로 간다 — 로컬에선 로그인 화면만 찍힌다 |
+
+**❌ 칸에 해당해서 못 봤으면, 로그에 이렇게 적는다** — *"렌더 불가(OAuth 게이트). 대신 `globals.css` 토큰 대조와 컴포넌트 구조 읽기로 검증했고, 화면 확인은 preview 배포 후 필요하다."*
+
+**못 한 것을 못 했다고 적는 것이 이 규칙의 절반이다.** 확인 안 하고 확인한 것처럼 쓰는 것이 이 프로젝트에서 가장 비싼 실수다.
+
+- 스크린샷은 **화면당 한 장**. 여러 화면을 한 장에 합치지 않는다
+- 모달·바텀시트는 **띄운 상태와 닫힌 상태를 따로** 찍는다
+- 빈 상태·에러 상태도 시안에 있으면 **그 상태로 렌더해서** 찍는다
 
 ## 5. 산출물
 

@@ -1,7 +1,7 @@
 ---
 name: engineering
 description: "개발·운영. 합의된 것을 동작하는 상태로 만들고 안전하게 내보낸다. 구현, 버그 원인 추적, 마이그레이션 작성, 배포·env·크론, prod 이상 징후 확인. 코드를 고칠 수 있는 유일한 부서다."
-tools: Read, Glob, Grep, Write, Edit, Bash
+tools: Read, Glob, Grep, Write, Edit, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_resize, mcp__playwright__browser_close
 model: inherit
 ---
 
@@ -52,6 +52,23 @@ model: inherit
 - 판정만 요청받았으면 코드를 고치지 않고 **판정 + 근거 + 무엇을 고쳐야 하는지**를 낸다
 - 끝나면 **반드시** `docs/agent-team/logs/개발운영.md`에 로그를 쓴다 (양식은 공통규약 §4)
 - 로그를 쓰지 않으면 훅이 되돌려보낸다. 그 작업은 미완료다
+
+### 5-1. 🔴 화면을 건드렸으면 렌더해서 눈으로 본다
+
+`prelaunch` 통과는 **빌드가 됐다는 뜻이지 화면이 맞다는 뜻이 아니다.** 화면·컴포넌트·스타일을 건드렸으면 `mcp__playwright__*`로 띄워서 확인한다. 콘솔 에러와 네트워크 실패도 함께 본다(`browser_console_messages` · `browser_network_requests`).
+
+**단, 이 서비스는 렌더할 수 있는 것과 없는 것이 갈린다.**
+
+| 대상 | 렌더 | 방법 |
+|---|:--:|---|
+| **공개 페이지** `policy/*` · `auth/*` | ✅ **필수** | 로컬 dev 서버 |
+| **Vercel preview URL** (관리자가 줬을 때) | ✅ **필수** | 그 URL로. 회원·운영자 화면은 **이 방법뿐이다** |
+| 정적 시안 `.html` | ✅ | `file:///` |
+| `(main)` · `(next)` · `(admin)` 로컬 | ❌ **불가** | 카카오 OAuth 콜백이 프로덕션 도메인으로 간다 |
+
+**❌ 칸이면 로그에 "렌더 불가(OAuth 게이트) + 대신 무엇으로 검증했는지"를 적는다.** 확인 못 한 것을 확인한 것처럼 쓰지 않는다 — 공통규약 §6.
+
+> ⚠️ **Preview는 prod Supabase에 그대로 붙는다.** 테스트 모임을 만들었으면 즉시 삭제하고, **카드 결제 테스트는 금지**다. 브라우저를 열었으면 `browser_close`로 닫는다.
 
 ## 6. 범위 밖 — 하지 않는다
 

@@ -57,6 +57,63 @@ function readStdin() {
   }
 }
 
+/**
+ * agent_type이 부서가 아닐 때(= general-purpose로 우회 소환됐을 때) 전사 기록에서
+ * 실제 부서를 찾아낸다.
+ *
+ * 왜 필요한가
+ *   `.claude/agents/`는 CLI 프로세스가 뜰 때 한 번만 스캔된다. 세션 도중 만든 정의는
+ *   그 세션 내내 안 보이고 `/clear`로도 안 올라온다. 그래서 `subagent_type`으로 못
+ *   부르고 `general-purpose`로 우회하게 되는데, 그러면 agent_type이 부서명이 아니라서
+ *   **이 훅이 통째로 무력화된다.** 2026-08-21에 7회 실행 내내 한 번도 안 걸렸다.
+ *
+ *   근본 해결은 CLI 재시작이다. 이건 재시작 전까지의 안전망이다.
+ *
+ * 어떻게
+ *   소환 프롬프트가 항상 `.claude/agents/<부서>.md`를 읽으라고 지시하므로, 전사 기록의
+ *   첫 사용자 메시지에서 그 경로를 찾으면 부서가 확정된다. 경로가 없으면 한국어
+ *   부서명으로 한 번 더 시도한다.
+ *
+ * 주의
+ *   전사는 비동기로 쓰인다. 못 읽거나 못 찾으면 null을 돌려주고 훅은 통과시킨다 —
+ *   추측으로 막지 않는다.
+ */
+function inferDeptFromTranscript(transcriptPath) {
+  if (!transcriptPath) return null
+  let text
+  try {
+    text = readFileSync(transcriptPath, 'utf8')
+  } catch {
+    return null
+  }
+
+  // 첫 사용자 메시지(= 소환 프롬프트)만 본다. 뒤쪽 대화에는 다른 부서 이름이 섞인다.
+  let head = text
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue
+    try {
+      const row = JSON.parse(line)
+      const role = row?.message?.role ?? row?.role
+      if (role === 'user') {
+        head = JSON.stringify(row)
+        break
+      }
+    } catch {
+      /* 깨진 줄은 건너뛴다 */
+    }
+  }
+
+  // 1순위 — 정의 파일 경로. 모호함이 없다
+  const byPath = head.match(/\.claude[\\/]{1,2}agents[\\/]{1,2}([a-z0-9_-]+)\.md/)
+  if (byPath && DEPARTMENTS[byPath[1]]) return byPath[1]
+
+  // 2순위 — "너는 <부서> 부서다" 문장의 한국어 부서명
+  for (const [type, ko] of Object.entries(DEPARTMENTS)) {
+    if (head.includes(`${ko} 부서다`) || head.includes(`**${ko}**`)) return type
+  }
+  return null
+}
+
 /** 이미 한 번 막은 팀원인지 기록해 무한 루프를 막는다 */
 function alreadyBlocked(stateDir, teammateId) {
   const marker = join(stateDir, `${teammateId.replace(/[^\w-]/g, '_')}.blocked`)
@@ -84,7 +141,23 @@ function main() {
   const cwd = input.cwd
   if (!type || !id || !cwd) process.exit(0)
 
-  const dept = DEPARTMENTS[type]
+  let dept = DEPARTMENTS[type]
+  let viaFallback = false
+
+  // 정의가 등록 안 돼 general-purpose로 우회 소환된 경우 — 전사에서 부서를 찾는다
+  if (!dept) {
+    const inferred = inferDeptFromTranscript(input.transcript_path)
+    if (inferred) {
+      dept = DEPARTMENTS[inferred]
+      viaFallback = true
+      process.stderr.write(
+        `[로그 가드] agent_type이 '${type}'이라 부서를 못 알아봤으나, ` +
+          `전사에서 '${dept}'로 판정했습니다. ` +
+          `근본 해결은 Claude Code 재시작입니다 — 그래야 .claude/agents/ 정의가 등록됩니다.\n`,
+      )
+    }
+  }
+
   // 우리 부서 체계가 아닌 팀원(임시 조사용 등)은 간섭하지 않는다
   if (!dept) process.exit(0)
 

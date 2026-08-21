@@ -23,6 +23,19 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/manager-write-guard.mjs\"",
+            "timeout": 10,
+            "statusMessage": "소관 확인 중"
+          }
+        ]
+      }
+    ],
     "TeammateIdle": [
       {
         "hooks": [
