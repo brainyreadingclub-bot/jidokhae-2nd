@@ -99,8 +99,9 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - 토론모임 1조각 — **서재 + 물어보기(책 담기) + 응답률 측정** ✅ 배포 (PR #42, `dcc61d5`). **단 `site_settings.library_enabled` 플래그 OFF → 회원 노출 0**
 - 물어보기 응답률 계측 버그 수정 + 지표 재정의 ✅ (PR #43, `1f9ffaa`, 7/24 prod)
 - **전면개편 1단계 (5탭 next_ui × 토스 스킨 + 발제 스레드)** ✅ 머지 (2026-08-17, PR #54 `b57aee0` + #55 `42ae701`). **`next_ui` 플래그 OFF — 회원 노출 0.** prod SQL 실행 완료(발제 5테이블 + 스텝할인 토론 제외 RPC 가드). 스텝 할인 = 정기모임 한정 확정. 알림톡 V2 6종 승인, BOOK_ASK 재심사 중
-- **플래그 켜기 게이트**: BOOK_ASK 재심사 승인 + Vercel env 템플릿 ID 6개 V2 교체 + `next_ui`·`library_enabled` 동시 켜기 (우와님 동의 ✅ 확보). 상세는 `memory/project_next_session.md`
-- ⚠️ 아래 문서의 라우트·컴포넌트·스키마 목록에는 서재/물어보기(`library_entries`, `books`, `book_asks`, `src/lib/asks*.ts`, `src/lib/library.ts`, `src/components/library/*`, `/admin/library`)가 **아직 미반영**
+- **전면개편 마감 정비 ✅ (2026-08-20~21):** 전 흐름 스윕 크리티컬 5종(PR #61 — 온보딩 게이트·D-7 서버 강제·대기자 신호·웹훅 hex 검증) + 나 탭 지역 라벨 가드(PR #62) + **토론모임 환불 7/3 배선**(PR #64 — `calculateRefundByType` 단일 진입점, 만들어두고 안 부르던 누락을 교차 세션 스캔이 발견). 프리뷰·프로드 클릭 검증 통과
+- **켜는 날 게이트 (전부 충족 — 날짜 결정만 대기):** 사전조건 완료(BOOK_ASK 승인 ✅, 알림톡 V2 6종 ✅, PR #50·#49·#53 리뷰 ✅). 당일 실행 순서는 `검토문서/2026-08-18-켜는날-런북.md`가 정본. 상세는 `memory/project_next_session.md`
+- 서재/물어보기·발제 스레드·(next) 라우트는 `jidokhae-web/CLAUDE.md`에 반영됨 (2026-08-21). 이 문서 아래 스키마 목록에는 발제 5테이블·books·library_entries·book_asks·app_notifications가 요약 수준으로만 언급됨
 
 ---
 
@@ -183,7 +184,9 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 ## Key Business Rules
 
 - **결제 완료 = 신청 확정** — No payment-less registrations exist
-- **Refund policy:** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
+- **Refund policy (정기모임):** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
+- **Refund policy (토론모임):** 7+ days → 100%, 3+ days → 50%, 이후 0%. `calculateRefundByType(meeting_type, ...)`이 유형 분기 단일 진입점 — 실환불·권장액·모달·정책 페이지 전부 이 함수 경유 (PR #64). `meeting_type` null(구 데이터)은 정기 규칙 폴백
+- **토론모임 신청 마감 = D-7** (신청 마감 = 환불 100% 경계 = 책 주문 마감, 세 날짜 통일). 서버 3중 강제: 상세 버튼 `apply_closed` + 카드 결제 자동취소(payment.ts) + 계좌이체 400(transfer route). `isDiscussionApplyOpen()`(discussion-rules.ts)이 단일 소스
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
 - **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 회원/비로그인에게는 신청자 3명 미만(0·1·2명)일 때 "N명 모집 중" 형식으로 마스킹(`shouldMaskConfirmedCount` 절대 임계 3명, social proof 역효과 방지). 운영자는 0명만 마스킹, 1명+ 정확 노출. 마감 시 항상 정확 노출. **모임 상세에서 본인이 정원에 차지한 회원(confirmed 또는 pending_transfer)에게는 마스킹 해제** — 명단 헤더("함께하는 멤버 N명")와 카운트 정합성 확보 (`MeetingDetailContent`가 `isPrivileged={isEditorOrAdmin || hasConfirmed || hasPendingTransfer}` 전달)
 - **Meeting capacity minimum:** 정원 최소 3명 (Form 단에서 강제, DB CHECK는 두지 않음). 노출 임계(3명)와 정합성을 위해 정원 1·2명 모임 생성 차단. 운영자가 SQL 콘솔로 직접 INSERT하는 우회 경로는 운영 정책상 발생하지 않는다고 가정
