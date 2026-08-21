@@ -29,6 +29,16 @@ const cases = [
   [0, '오탐 회귀 — git add -A', { tool_name: 'Bash', tool_input: { command: 'git add -A' } }],
   [0, '오탐 회귀 — git show로 소관 파일 읽기', { tool_name: 'Bash', tool_input: { command: 'git show main:검토문서/DECISIONS.md' } }],
   [0, '오탐 회귀 — grep으로 소관 파일 읽기', { tool_name: 'Bash', tool_input: { command: 'grep -n foo 검토문서/DECISIONS.md' } }],
+  // 실전 오탐 2호: 읽기 전용 node -e 스크립트가 막혔다
+  [0, '오탐 회귀 — node -e 로 소관 파일 읽기', { tool_name: 'Bash', tool_input: { command: 'node -e "const t=require(\'fs\').readFileSync(\'검토문서/DECISIONS.md\',\'utf8\'); console.log(t.length)"' } }],
+  [0, '오탐 회귀 — python -c 로 소관 파일 읽기', { tool_name: 'Bash', tool_input: { command: 'python -c "print(len(open(0).read()))" < roadmap/milestones.md' } }],
+  [2, '인터프리터 쓰기 — node 로 소관 파일 덮어쓰기', { tool_name: 'Bash', tool_input: { command: 'node -e "require(\'fs\').writeFileSync(\'검토문서/DECISIONS.md\',\'x\')"' } }],
+  [2, '인터프리터 쓰기 — 히어독', { tool_name: 'Bash', tool_input: { command: "python - <<PY\nio.open('roadmap/milestones.md','w')\nPY" } }],
+  // 실전 오탐 3호: 화살표 함수의 `>`를 리다이렉션으로 읽었다
+  [0, '오탐 회귀 — 화살표 함수가 든 읽기 스크립트', { tool_name: 'Bash', tool_input: { command: 'node -e "const chk=(p,re)=>{const t=require(\'fs\').readFileSync(p);console.log(t.length)};chk(\'검토문서/DECISIONS.md\')"' } }],
+  [0, '오탐 회귀 — 2>&1 은 파일을 만들지 않는다', { tool_name: 'Bash', tool_input: { command: 'grep -n x roadmap/milestones.md 2>&1' } }],
+  [2, '리다이렉션 — 소관 파일로 덮어쓰기', { tool_name: 'Bash', tool_input: { command: 'echo x > roadmap/milestones.md' } }],
+  [2, '리다이렉션 — 소관 파일에 덧쓰기', { tool_name: 'Bash', tool_input: { command: 'echo x >> 검토문서/DECISIONS.md' } }],
 ]
 
 let pass = 0
