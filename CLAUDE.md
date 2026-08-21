@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the **planning and specification repository** for JIDOKHAE 2nd — a rewrite of the reading club web service with a tighter MVP scope. It contains planning documents and the implementation codebase.
 
-**Project:** JIDOKHAE (지독해) — A web service for a reading club in Gyeongju/Pohang, Korea (250 members). Members browse meeting schedules, register with payment, and manage cancellations/refunds.
+**Project:** JIDOKHAE (지독해) — A web service for a reading club in Gyeongju/Pohang, Korea. (회원 수는 계속 변하므로 문서에 숫자를 박지 않는다 — `site_settings.member_count` 또는 `profiles` 테이블을 센다. 공통규약 §7) Members browse meeting schedules, register with payment, and manage cancellations/refunds.
 
 The actual implementation codebase lives at `jidokhae-web/` (nested inside this repo).
 
@@ -29,20 +29,22 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 ├── scenarios-phase3.md                        # Phase 3 BDD 시나리오
 └── phase3-requirements.md                     # Phase 3 요구사항 정의
 
-/검토문서                                        # Specs / Templates / Decisions / Operations 4종 — README.md 인덱스 참조
-├── README.md                                  # 카테고리 인덱스
-├── Phase-2-2-대기신청-설계서.md                  # Spec (대기 신청 B안)
-├── Phase-2-3-백오피스-지시서.md                  # Spec (백오피스 8개 작업, v1.3에 검토의견 흡수)
-├── M6-통합테스트-체크리스트.md                    # Template (M12 재사용)
-├── M6-프로덕션-배포-가이드.md                    # Template (M12 재사용)
-├── 2026-04-23-풀스캔-후속-의사결정.md             # Decision (역할 매트릭스, 법적 면제, 입금 알림 금지)
-└── 2026-04-28-pwa-sw-운영-가이드.md             # Operations (SW 인시던트 대응)
+/검토문서                                        # Specs / Templates / Decisions / Operations
+├── README.md                                  # 🔴 카테고리 인덱스 — 파일 목록은 여기가 정본
+└── DECISIONS.md                               # 🔴 결정 기록 — 착수 전 필독 (SessionStart 훅이 주입)
+    (개별 파일 목록을 여기 복사하지 않는다. 두 곳에 두면 한쪽만 갱신된다 —
+     실제로 이 자리에 7개만 실려 있었고 그 사이 파일은 두 배로 늘었다)
 
-/memory                                        # Session continuity (maintained by Claude)
-├── MEMORY.md                                  # 인덱스 — 항상 자동 로드
-├── project_next_session.md                    # 다음 세션 핸드오프 (회고마다 갱신)
-├── project_*.md                               # 진행 중 작업/외부 의존 상태 (e.g., tosspayments_review)
-└── feedback_*.md                              # 세션 교훈 (lesson 1건 = 파일 1개)
+/memory                                        # ⚠️ 낡은 사본. 정본이 아니다 (아래 주의 참조)
+
+docs/agent-team                                # 에이전트 부서 체계 (2026-08 신설)
+├── 00 읽는 순서.md                              # 표지
+├── 공통규약.md                                  # 전 부서 공통 — 의도 확인·소통·파일 소유권·로그·금지
+├── 부서정의.md                                  # 부서 8개의 목적·범위 밖·기본 동작
+├── 관리자규칙.md                                # 메인 세션(팀장)이 지킬 것
+├── 안내판-라우팅표.md                           # 요청 → 담당 부서
+├── logs/                                       # 부서별 작업 로그 + 관리자 판정
+└── 문서지도/                                    # 문서총괄 점호 결과 (중복·모순 목록)
 
 /docs
 ├── expert-panel/                              # 전문가 패널 토론 결과 (의사결정 배경)
@@ -61,6 +63,15 @@ prompts                                        # WP 구현 시작용 프롬프�
 phase3-preview.html                            # Phase 3 Before/After UI 목업 (전문가 리뷰 대상)
 토스 제출문서/                                  # PG 심사 제출 자료 (이미지)
 ```
+
+> 🔴 **`memory/`가 두 벌이다 — 정본은 저장소가 아니다.** (2026-08-21 확정)
+>
+> | 위치 | 상태 |
+> |---|---|
+> | `C:\Users\<user>\.claude\projects\C--jidokhae-2nd\memory\` | ✅ **정본.** 세션 시작 시 자동 주입되고 계속 갱신된다 |
+> | 저장소 `memory/` | ⚠️ **낡은 사본.** 2026-08-13에서 멈춰 있고 자동 주입되지 않는다 |
+>
+> 저장소 쪽 `project_next_session.md`는 "열린 PR 5건, 머지 순서 #51·#52 → #49 → #53 → #50"이라고 말하는데 그중 둘은 이미 머지됐다. **자동 주입되는 쪽과 문서에 적힌 쪽이 달라서** 어느 게 진짜인지 아무 데도 안 적혀 있었다. 앞으로 핸드오프·교훈·프로젝트 메모는 **`.claude` 쪽에만** 쓴다. 저장소 `memory/`는 지우지 않고 남겨두되(과거 기록) 갱신하지 않는다.
 
 ## Document Hierarchy (when conflicts arise)
 
@@ -91,16 +102,27 @@ Milestone (목표)           → "무엇을 달성할 것인가"
        └─ Scenario (검증)  → "어떻게 확인할 것인가" (1 Scenario = 1 행동 = 1 검증)
 ```
 
-**Current status:** M1–M6 MVP **completed**. Phase 2 확장 완료 — 알림톡(Phase 2-1) ✅, 대기 신청(Phase 2-2) ✅, 백오피스(Phase 2-3) ✅. **Phase 3 (진행 중)** — M7 Step 1 (안정 기반) ✅, M7 Step 2 (운영자 개편) ✅, M7 Step 2.5 (풀스캔 후속 보정) ✅, M7 Step 2.6 (계좌이체 환불 토글) ✅. M7 Step 3 (회원 홈) 예정.
+**Current status (2026-08-21 갱신)**
 
-**Current status (2026-07-28 갱신):** M7 Step 3 이후 로드맵보다 **토론모임 개편 + 2535 리디자인**이 먼저 진행됨.
+> 이전에는 이 자리에 `Current status` 블록이 **두 개** 있었고 앞쪽이 낡은 채로 위에 있었다(M7 Step 3 "예정"). 굵게 표시된 낡은 블록이 위에 있으면 그쪽을 현행으로 읽는다. **블록은 하나만 둔다.**
+
+**완료된 것** — M1–M6 MVP ✅ / Phase 2 전체 ✅(알림톡·대기 신청·백오피스·Analytics) / Phase 3 M7 전체 ✅(Step 1·2·2.5·2.6). M7 Step 3(회원 홈)은 **로드맵 계획 대신 전면개편으로 대체**됐다 — 아래 참조.
+
+**로드맵보다 먼저 진행된 것** — 토론모임 개편 + 2535 리디자인.
 - 2535 잉크그린 리디자인 ✅ (PR #39, prod 배포)
 - 토론모임 0조각 — `meetings.meeting_type` 정기/토론 구분 ✅ (PR #41, 회원 화면 영향 0)
 - 토론모임 1조각 — **서재 + 물어보기(책 담기) + 응답률 측정** ✅ 배포 (PR #42, `dcc61d5`). **단 `site_settings.library_enabled` 플래그 OFF → 회원 노출 0**
 - 물어보기 응답률 계측 버그 수정 + 지표 재정의 ✅ (PR #43, `1f9ffaa`, 7/24 prod)
-- **전면개편 1단계 (5탭 next_ui × 토스 스킨 + 발제 스레드)** ✅ 머지 (2026-08-17, PR #54 `b57aee0` + #55 `42ae701`). **`next_ui` 플래그 OFF — 회원 노출 0.** prod SQL 실행 완료(발제 5테이블 + 스텝할인 토론 제외 RPC 가드). 스텝 할인 = 정기모임 한정 확정. 알림톡 V2 6종 승인, BOOK_ASK 재심사 중
-- **플래그 켜기 게이트**: BOOK_ASK 재심사 승인 + Vercel env 템플릿 ID 6개 V2 교체 + `next_ui`·`library_enabled` 동시 켜기 (우와님 동의 ✅ 확보). 상세는 `memory/project_next_session.md`
-- ⚠️ 아래 문서의 라우트·컴포넌트·스키마 목록에는 서재/물어보기(`library_entries`, `books`, `book_asks`, `src/lib/asks*.ts`, `src/lib/library.ts`, `src/components/library/*`, `/admin/library`)가 **아직 미반영**
+- **전면개편 1단계 (5탭 next_ui × 토스 스킨 + 발제 스레드)** ✅ 머지 (2026-08-17, PR #54 `b57aee0` + #55 `42ae701`). **`next_ui` 플래그 OFF — 회원 노출 0.** prod SQL 실행 완료(발제 5테이블 + 스텝할인 토론 제외 RPC 가드). 스텝 할인 = 정기모임 한정 확정
+- **알림톡 심사는 전부 끝났다** — V2 6종 ✅ APPROVED(8/17), **BOOK_ASK도 ✅ APPROVED(8/19)**. 외부 관문은 더 남아 있지 않다
+- **플래그 켜기 게이트 (2026-08-21 재판정)**: 심사가 아니라 **코드·절차 5건**이 남았다. 상세는 `검토문서/2026-08-21-켜는날-코드준비-판정.md`(개발·운영 🟡) + `검토문서/2026-08-18-켜는날-런북.md`
+  1. PR #53의 base가 `main`이 아니다(`feat/book-ask-cron`) — 그대로 머지하면 환영 알림톡이 prod에 안 나간다
+  2. `SOLAPI_TEMPLATE_WELCOME` env가 런북에 없다
+  3. `next_ui`·`library_enabled` **행이 prod `site_settings`에 없다** — "UPSERT"가 아니라 prod SQL INSERT다(admin 화면에도 필드 없음)
+  4. 토론모임 환불이 정기 규칙으로 돌아간다(`calculateDiscussionRefund` 호출부 0) — **다른 세션 담당, 접근 금지**
+  5. env↔머지 순서가 뒤집혀 있다(env는 재배포 전까지 무효 → **env 먼저 → 머지**)
+
+> 🔴 **아래 라우트·컴포넌트·스키마 목록은 실제의 절반 수준이다.** 서재/물어보기뿐 아니라 **`(next)` 라우트 그룹 전체(8 페이지)·발제 스레드 5테이블·`app_notifications`·`/admin/notices`·책 표지 연결**이 미반영이다. 2026-08-21 실측: `src/lib/*.ts` **39개**(문서 17) · API 라우트 **35개**(문서 22) · admin 페이지 **14개**(문서 10) · DB 테이블 **17개**(문서 12). **목록을 신뢰하지 말고 실제 파일을 세라.** 일괄 갱신은 플래그를 켠 뒤 한 번에 한다 — 지금 고치면 "구 화면이 현행"인 상태를 이중으로 설명하게 된다 (`검토문서/2026-08-18-문서정비-계획.md` §3)
 
 ---
 
@@ -120,14 +142,15 @@ Milestone (목표)           → "무엇을 달성할 것인가"
   - Step 2 (운영자 개편: 사이드바 + 대시보드 허브 + 모임 관리 분리 + 모임 폼 확장) ✅
   - Step 2.5 (풀스캔 후속 보정: meeting-remind 병렬화 + `admin_confirm_transfer` RPC + editor 개인정보 차단 + 대시보드 매출 집계 + "원" 단위 통일 + 비로그인 meetings 컬럼 제한 + 쿠키 안내 + 배너 editor 권한) ✅
   - Step 2.6 (계좌이체 환불 토글: `RefundToggle` 컴포넌트 + `mark-refunded` API 양방향 변환) ✅
-  - Step 3 (회원 홈) 예정
-- M8 관리자 CMS — 배너 + 한 줄 (book_quote). 라우트 placeholder는 M7 Step 2에서 이미 배치
-- M9 회원 홈 콘텐츠 전면 오픈
-- M10 관리자 심화 — 정산 + 회원 생애주기
-- M11 디자인 토큰 통합 + 접근성 정리
+  - ~~Step 3 (회원 홈)~~ — 🚫 **전면개편(5탭)으로 대체.** `(next)/home`이 현행
+- ~~M8 관리자 CMS~~ · ~~M9 회원 홈 콘텐츠 전면 오픈~~ — 🚫 **전면개편(5탭)으로 대체.** 로드맵 3종 상단에도 같은 공지가 있다
+- M10 관리자 심화 — ✅ **정산 완료**(`/admin/settlements`, 2026-07-05). 회원 생애주기는 미착수
+- M11 디자인 토큰 통합 + 접근성 정리 — ⚠️ 토스 스킨 결정과 **정합 재검토 필요**
 - M12 통합 검증 + 배포
 
-**Out of scope (future):** Badges/praise, bean (콩) points, landing page, admin analytics dashboard, AI chatbot, book tracking
+**Out of scope (future):** bean (콩) points, landing page, admin analytics dashboard, AI chatbot
+
+> ⚠️ 이 목록에서 **두 개를 뺐다** (2026-08-21). ~~Badges/praise~~ — `DECISIONS.md` 2026-08-14가 **배지·연속 참석 스트릭 도입**으로 뒤집었다(🔨 미적용). ~~book tracking~~ — 이미 만들어져 있다(`books`·`library_entries`·`book_asks` 3테이블 + `/admin/library` + 완독 표시). 같은 문장이 `core/JIDOKHAE-2nd - 서비스 개요.md`에도 남아 있다 — **코어는 read-only**라 여기서 고치지 않고 `검토문서/2026-08-18-문서정비-계획.md`가 개정 대상으로 들고 있다
 
 ## Milestone Overview
 
@@ -140,10 +163,10 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | M5 취소 + 환불 | 2 | Self-cancel + Batch refund on deletion |
 | M6 통합 검증 + 출시 | 2 | E2E verification + Production deploy |
 | M7 기반 정리 + 레이아웃 전환 | 5 | Admin 사이드바/허브 + 모임 관리 분리 + 회원 홈 개선 (Phase 3) |
-| M8 관리자 CMS | — | 배너 + 한 줄 (book_quote) 운영 (Phase 3) |
-| M9 회원 홈 콘텐츠 전면 오픈 | — | 회원 홈 리뉴얼 (Phase 3) |
-| M10 관리자 심화 | — | 정산 + 회원 생애주기 (Phase 3) |
-| M11 디자인 토큰 통합 + 접근성 | — | 디자인 시스템 정리 (Phase 3) |
+| ~~M8 관리자 CMS~~ | — | 🚫 **전면개편으로 대체.** 배너·한 줄 계획은 5탭 구조가 흡수했다 |
+| ~~M9 회원 홈 콘텐츠 전면 오픈~~ | — | 🚫 **전면개편으로 대체.** 회원 홈은 `(next)/home`이 현행 |
+| M10 관리자 심화 | — | ✅ **완료** — 정산 화면 `/admin/settlements` (2026-07-05) |
+| M11 디자인 토큰 통합 + 접근성 | — | ⚠️ 토스 스킨 결정과 **정합 재검토 필요** (Phase 3) |
 | M12 통합 검증 + 배포 | — | Phase 3 E2E + 배포 (Phase 3) |
 
 > M7~M12 WP/시나리오 상세는 `roadmap/milestones-phase3.md`, `roadmap/work-packages-phase3.md`, `roadmap/scenarios-phase3.md` 참조.
@@ -176,7 +199,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | Waitlist | B안: 대기 시 미리 결제 → 승격 시 자동 확정 → 미승격 시 전날 자동 전액 환불. `confirm_registration()` RPC가 정원 초과 시 `waitlisted` INSERT |
 | Waitlist promotion | `promote_next_waitlisted()` DB 함수 (FOR UPDATE 락). 취소 API에서 동기 호출. 승격 알림톡 자동 발송 |
 | Waitlist refund cron | `/api/cron/waitlist-refund` (KST 18:30) — catch-up 쿼리(`date <= tomorrow`)로 실패 건 자동 재시도 |
-| Alimtalk (알림톡) | Solapi SDK → KakaoTalk 알림톡. 5종: 신청 확인, 모임 리마인드, 대기 확인, 승격 확정, 미승격 환불 |
+| Alimtalk (알림톡) | Solapi SDK → KakaoTalk 알림톡. **7종**: 신청 확인, 모임 리마인드, 대기 확인, 승격 확정, 미승격 환불, **물어보기(`book_ask`)**, **가입 환영(`new_member_welcome`)**. 타입 단일 소스는 `src/lib/notification-log.ts`의 `NOTIFICATION_TYPE_LABELS` |
 | Notification dedup | INSERT(pending) → Solapi 발송 → UPDATE(sent/failed). Partial UNIQUE INDEX로 발송 전 중복 차단 |
 | Cron auth | Vercel Cron sends `Authorization: Bearer CRON_SECRET` header. Middleware excludes `api/cron/` |
 
@@ -202,7 +225,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
   - `editor`(운영진): 모임 CRUD, 회원 조회(이름/닉네임/지역만 — phone/email 미노출), **배너·한줄 관리 포함**
   - `member`(회원): 일반 회원 기능
   - adminOnly 메뉴: 정산, 회원 개인정보, 사이트 설정 (배너·한줄은 editor도 가능)
-- **법적 확인 완료** (2026-04-23): 간이과세자이므로 전자상거래법 시행령 §12 제1항 제2호에 따라 **통신판매업 신고 면제**. GA4 동의 배너는 현 규모(250명, 한국 국내)에서 법적 의무 아님 — privacy 페이지에 쿠키 안내 문구로 갈음. 상세 근거: `검토문서/2026-04-23-풀스캔-후속-의사결정.md`
+- **법적 확인 완료** (2026-04-23): 간이과세자이므로 전자상거래법 시행령 §12 제1항 제2호에 따라 **통신판매업 신고 면제**. GA4 동의 배너는 현 규모(한국 국내 소규모)에서 법적 의무 아님 — privacy 페이지에 쿠키 안내 문구로 갈음. 상세 근거: `검토문서/2026-04-23-풀스캔-후속-의사결정.md`
 
 ---
 
@@ -240,7 +263,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **묶음 기준 3가지**:
   1. **안정성/백엔드/DB** — 사용자 화면 영향 0 (풀스캔, schema, 타입, cron, API 응답 형식, PWA Service Worker 등)
   2. **운영자 개편** — admin UI 변경 (본인이 직접 검증 가능)
-  3. **회원 변화** — 회원 화면 변경 (250명 노출, 가장 신중)
+  3. **회원 변화** — 회원 화면 변경 (**회원 전체가 본다**, 가장 신중)
 - **기본 배포 순서**: 안정성 → 운영자 → 회원 (사용자가 admin 먼저 검증한 뒤 회원 공개)
 - 각 묶음: `main`에서 `feat/phaseN-stepK-<slug>` 브랜치 생성 + `git cherry-pick <commits>` + push + PR
 - 순차 머지 원칙: 한 묶음 머지 + 1~2일 모니터링 후 다음 묶음 착수
@@ -345,7 +368,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **KST date utilities:** Always use `src/lib/kst.ts` functions (`getKSTToday()`, `getTomorrowKST()`, `toKSTDate()`, `formatKoreanDate()`, `formatKoreanDateFull()`, `formatKoreanTime()`, `formatFee()`, `getDaysUntil()`, `getMeetingTiming()`, `getButtonState()`), never `new Date()` directly. `formatFee()` returns number-only string (e.g., `"10,000"`) — no '원' suffix
 - **API routes** (`src/app/api/`): `registrations/confirm` (M4 payment + 알림톡), `registrations/cancel` (M5 cancel + 대기자 자동 승격), `registrations/waitlist-cancel` (대기 취소 전액 환불), `meetings/[id]/delete` (M5 admin delete+refund, confirmed+waitlisted 모두), `webhooks/portone` (M4 backup + 알림톡, `PORTONE_WEBHOOK_SECRET` 서명 검증), `webhooks/tosspayments` (레거시, 미사용), `admin/members/staff` (스텝 자격 `is_staff` 토글, admin 전용), `cron/meeting-remind` (Vercel Cron 리마인드 KST 19:00), `cron/waitlist-refund` (미승격 대기자 자동 환불 KST 18:30), `welcome`, `profile/setup`, `profile/update` (마이페이지 프로필 자가 수정 — 부분 수정, 닉네임 1회 변경 낙관적 락 + 중복 409, 본인 행만), `admin/members/role` (역할 변경), `admin/settings` (site_settings UPSERT), `admin/venues` (공간 CRUD), `admin/venues/[id]` (공간 수정), `admin/venues/settle` (정산 확정), `registrations/transfer` (계좌이체 신청), `admin/registrations/confirm-transfer` (운영자 입금 확인), `admin/registrations/mark-refunded` (운영자 환불 완료). All use service_role Supabase client, cookie-based auth (cron은 CRON_SECRET auth)
 - **API response 표준 포맷:** `{ status: 'success' | 'error', message?, data? }` (Phase 3 M7 Step 1에서 12개 라우트 통일). 신규 API 라우트는 이 포맷을 따를 것. 기존 `{ success: true }` 패턴은 점진적 마이그레이션 중
-- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수 — paid_amount 기반이라 스텝 할인 결제도 비율 환불), `portone.ts` (PortOne V2 server SDK 래퍼 — `getPayment`/`cancelPayment`), `tosspayments.ts` (레거시 TossPayments 래퍼, 미사용 잔존), `pricing.ts` (스텝 할인 가격 계산 단일 진입점 — `isStaffEligible`/`calculateFee` + 상수), `staff-slot.ts` (스텝 슬롯 카운트 + `getDisplayFee()`), `auth.ts` (cached `getUser()` via React `cache()` — safe only after middleware session refresh), `profile.ts` (cached `getProfile()` via React `cache()`), `profile-update.ts` (순수 검증 헬퍼 `resolveProfileUpdate` — 마이페이지 프로필 수정 규칙, Vitest 단위 테스트), `meeting.ts` (cached `getMeeting(id)` via React `cache()`), `notification.ts` (알림톡 5종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
+- **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수 — paid_amount 기반이라 스텝 할인 결제도 비율 환불), `portone.ts` (PortOne V2 server SDK 래퍼 — `getPayment`/`cancelPayment`), `tosspayments.ts` (레거시 TossPayments 래퍼, 미사용 잔존), `pricing.ts` (스텝 할인 가격 계산 단일 진입점 — `isStaffEligible`/`calculateFee` + 상수), `staff-slot.ts` (스텝 슬롯 카운트 + `getDisplayFee()`), `auth.ts` (cached `getUser()` via React `cache()` — safe only after middleware session refresh), `profile.ts` (cached `getProfile()` via React `cache()`), `profile-update.ts` (순수 검증 헬퍼 `resolveProfileUpdate` — 마이페이지 프로필 수정 규칙, Vitest 단위 테스트), `meeting.ts` (cached `getMeeting(id)` via React `cache()`), `notification.ts` (알림톡 7종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
 - **Unit tests:** Vitest with `@/*` path alias and `globals: true`. **단, 테스트 파일에는 `import { describe, it, expect } from 'vitest'`를 명시할 것** — `globals: true`라 `vitest run`은 import 없이도 통과하지만, `prelaunch`의 `npx tsc --noEmit`가 테스트 파일도 타입 검사하므로 import 없으면 TS2304/TS2582로 실패. 검증은 `vitest run`만으로 끝내지 말고 tsc까지 돌릴 것. Tests in `src/lib/__tests__/` (kst, refund, pricing, visibility, profile-update). Run `npm test` or `npx vitest run`
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
@@ -375,7 +398,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Notification Flow (Phase 2-1)
 
-**알림톡 5종:** Solapi SDK (`src/lib/solapi.ts`) → KakaoTalk 알림톡
+**알림톡 7종:** Solapi SDK (`src/lib/solapi.ts`) → KakaoTalk 알림톡 (아래 5종 + `book_ask` 물어보기 + `new_member_welcome` 가입 환영 — 뒤 둘은 draft PR #49·#53에 있어 아직 main에 없다)
 
 1. **신청 완료 확인** (이벤트 기반): 결제 성공 → API Route/웹훅에서 `sendRegistrationConfirmNotification()` 호출 (fire-and-forget, try-catch)
 2. **모임 전날 리마인드** (Vercel Cron): `GET /api/cron/meeting-remind` — 매일 KST 19:00 (UTC `0 10 * * *`). 내일 active 모임의 confirmed 신청자에게 발송
