@@ -58,12 +58,19 @@ export default function PaymentRedirectPage({ params }: Props) {
         const data = await res.json()
 
         if (data.status === 'success') {
-          trackEvent('purchase', {
-            transaction_id: paymentId,
-            currency: 'KRW',
-            meeting_id: meetingId,
-            registration_type: 'confirmed',
-          })
+          // eventId = paymentId — 서버(Conversions API)와 같은 키로 메타가 dedup한다.
+          // 빼면 결제 1건이 클라 1 + 서버 1 = 2건으로 잡힌다 (src/lib/meta-capi.ts)
+          trackEvent(
+            'purchase',
+            {
+              transaction_id: paymentId,
+              currency: 'KRW',
+              value: data.paidAmount ?? undefined,
+              meeting_id: meetingId,
+              registration_type: 'confirmed',
+            },
+            { eventId: paymentId },
+          )
           router.replace(
             `/meetings/${meetingId}/confirm?paymentId=${paymentId}`,
           )
@@ -71,12 +78,19 @@ export default function PaymentRedirectPage({ params }: Props) {
         }
 
         if (data.status === 'waitlisted') {
-          trackEvent('purchase', {
-            transaction_id: paymentId,
-            currency: 'KRW',
-            meeting_id: meetingId,
-            registration_type: 'waitlisted',
-          })
+          // 대기도 결제는 실제로 일어났으므로 Purchase로 잡는다
+          // (미승격 시 전액 환불되지만, 메타 픽셀에 환불 이벤트 표준이 없다)
+          trackEvent(
+            'purchase',
+            {
+              transaction_id: paymentId,
+              currency: 'KRW',
+              value: data.paidAmount ?? undefined,
+              meeting_id: meetingId,
+              registration_type: 'waitlisted',
+            },
+            { eventId: paymentId },
+          )
           router.replace(
             `/meetings/${meetingId}/confirm?type=waitlisted`,
           )

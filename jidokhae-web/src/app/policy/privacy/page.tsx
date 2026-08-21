@@ -45,6 +45,7 @@ export default async function PrivacyPolicyPage() {
           <ul className="mt-2 ml-4 space-y-1">
             <li>- 모임 신청 이력, 결제 이력, 참석 기록, 서비스 이용 일시</li>
             <li>- 서비스 이용 통계 분석을 위한 쿠키 및 익명화된 이용 기록(Google Analytics, Vercel Analytics)</li>
+            <li>- 광고 성과 측정을 위한 쿠키 식별자, IP 주소, 브라우저·기기 정보(Meta 픽셀)</li>
           </ul>
         </div>
       </section>
@@ -160,6 +161,13 @@ export default async function PrivacyPolicyPage() {
                   <td className="border border-neutral-200 px-2 py-1.5">26개월</td>
                 </tr>
                 <tr>
+                  <td className="border border-neutral-200 px-2 py-1.5">Meta Platforms, Inc.</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">미국</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">쿠키 식별자, IP 주소, 브라우저·기기 정보, 광고 전환 기록</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">광고 성과 측정 및 광고 노출 최적화</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">최대 24개월</td>
+                </tr>
+                <tr>
                   <td className="border border-neutral-200 px-2 py-1.5">주식회사 솔라피</td>
                   <td className="border border-neutral-200 px-2 py-1.5">대한민국</td>
                   <td className="border border-neutral-200 px-2 py-1.5">휴대전화 번호, 모임 정보</td>
@@ -185,6 +193,7 @@ export default async function PrivacyPolicyPage() {
             <li>- 개인정보 열람, 정정, 삭제 요청</li>
             <li>- 개인정보 처리 정지 요청</li>
             <li>- 회원 탈퇴 요청</li>
+            <li>- 광고·분석 쿠키 저장 거부(브라우저 설정에서 쿠키를 차단할 수 있습니다. 다만 일부 기능 이용이 제한될 수 있습니다)</li>
           </ul>
           <p className="mt-2">위 요청은 아래 연락처를 통해 할 수 있으며, 회사는 지체 없이 조치합니다.</p>
           <p className="mt-2">회원 탈퇴를 원하시는 경우, 카카오톡 &lsquo;단무지&rsquo;에게 1:1 채팅으로 연락해 주세요. 탈퇴 요청 시 관련 법령에 따라 보존이 필요한 정보를 제외하고 지체 없이 파기합니다.</p>
