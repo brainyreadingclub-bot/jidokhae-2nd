@@ -10,14 +10,9 @@ import { sendAlimtalk } from '@/lib/solapi'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import type { Meeting } from '@/types/meeting'
-
-type NotificationType =
-  | 'meeting_remind'
-  | 'registration_confirm'
-  | 'waitlist_confirm'
-  | 'waitlist_promoted'
-  | 'waitlist_refunded'
-  | 'book_ask'
+// 알림 종류는 types/notification.ts가 유일한 정의다. 여기 따로 적어두면
+// 종류가 늘 때 한쪽만 갱신돼 어긋난다 (실제로 그랬다).
+import type { NotificationType } from '@/types/notification'
 
 type SendNotificationParams = {
   type: NotificationType
@@ -329,6 +324,40 @@ export async function sendBookAskNotification(
     variables: {
       '#{회원명}': displayName,
       '#{모임일}': formatKoreanDate(meetingDate),
+    },
+  })
+}
+
+// ─── 가입 환영 알림 ───
+
+/**
+ * 프로필 설정을 처음 마친 회원에게 환영 인사를 1회 보낸다.
+ *
+ * 왜 가입 시점이 아니라 프로필 설정 시점인가 —
+ * 알림톡은 전화번호가 있어야 나가는데, 카카오 로그인 직후에는 번호를 모른다.
+ * 번호를 처음 알게 되는 순간이 프로필 설정 완료이고, 그래서 발송 시점이
+ * 사실상 여기 하나뿐이다.
+ *
+ * 모임 정보를 넣지 않는다 — 가입 시점과 첫 모임 사이가 비면 틀린 말이 된다
+ * (검토문서/2026-08-11 §6).
+ *
+ * 중복 차단은 notifications의 부분 UNIQUE INDEX가 맡는다
+ * (recipient_id) WHERE type = 'new_member_welcome'.
+ * 회원 1명당 평생 1회이므로 모임이 단위가 아니라 사람이 단위다.
+ */
+export async function sendNewMemberWelcomeNotification(userId: string) {
+  const profile = await getProfileForNotification(userId)
+  // 호칭은 닉네임 우선 (2026-08-07 결정, VOICE.md §6). 기존 6곳은 PR #50·#49가 함께 뒤집는다
+  const displayName = profile.nickname || profile.real_name || ''
+
+  return sendNotification({
+    type: 'new_member_welcome',
+    recipientId: userId,
+    recipientPhone: profile.phone,
+    meetingId: null,
+    templateCode: process.env.SOLAPI_TEMPLATE_WELCOME!,
+    variables: {
+      '#{회원명}': displayName,
     },
   })
 }
