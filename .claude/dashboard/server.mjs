@@ -207,12 +207,14 @@ function readBacklog() {
 
     // 결정문에서 굵게 표시된 첫 구절을 제목으로 쓴다
     const bold = decision.match(/\*\*(.+?)\*\*/)
-    const title = (bold ? bold[1] : decision).replace(/[`~]/g, '').slice(0, 90)
+    const title = (bold ? bold[1] : decision).replace(/[`~]/g, '').slice(0, 110)
 
     items.push({
       date,
       icon,
-      status: status.replace(/\*\*/g, '').slice(0, 60),
+      // 60자에서 자르니 화면에서 "…심사)는 2026-08"처럼 문장 한가운데가 끊겼다.
+      // 화면 쪽에서 2줄로 접으므로 여기서는 넉넉히 넘긴다
+      status: status.replace(/\*\*/g, '').slice(0, 150),
       title,
       ageDays: Math.floor((Date.now() - new Date(`${date}T00:00:00+09:00`)) / 86400000),
       struck: cells[0].includes('~~'),
@@ -270,7 +272,7 @@ function buildState() {
   const verdicts = readVerdicts()
   const backlog = readBacklog()
 
-  // 최근 4시간 안에 파일이 갱신됐고 끝 시각이 없으면 "도는 중"으로 본다
+  // 전사 파일이 최근 3분 안에 갱신됐으면 "도는 중"으로 본다
   const LIVE_MS = 3 * 60 * 1000
   for (const r of runs) r.live = r.mtime != null && Date.now() - r.mtime < LIVE_MS
 
