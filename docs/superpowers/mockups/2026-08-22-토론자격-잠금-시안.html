@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>토론모임 참여 자격 — 잠금 화면 시안 (2026-08-22)</title>
+<style>
+:root{
+  /* (next) 회원 스킨 — 토스 문법 × 지독해 그린. globals.css 대조 2026-08-22 */
+  --tg-50:#F9FAFB; --tg-100:#F2F4F6; --tg-200:#E5E8EB; --tg-300:#D1D6DB; --tg-400:#B0B8C1;
+  --tg-500:#8B95A1; --tg-600:#6B7684; --tg-700:#4E5968; --tg-800:#333D4B; --tg-900:#191F28;
+  --brand:#0FA873; --brand-deep:#0C8A5F; --brand-bg:#E8F7F1;
+  --warnx:#FF6B3D; --warnx-bg:#FFF0EA;
+  --shadow-toss-card:0 2px 12px rgba(25,31,40,.07);
+
+  /* 구 스킨 — 잉크 그린 × 에디토리얼. 모임 상세(/meetings/[id])가 아직 이 스킨이다 */
+  --primary-50:#F3FAF6; --primary-100:#E3F2EC; --primary-200:#CDE9DB; --primary-500:#127A5A; --primary-600:#0d5c43;
+  --neutral-100:#F0F2F5; --neutral-200:#E5E8EB; --neutral-300:#D4D8DE; --neutral-400:#B0B8C1;
+  --neutral-500:#8B95A1; --neutral-600:#6B7684; --neutral-700:#5A6B7A; --neutral-800:#333D48; --neutral-900:#191F28;
+  --surface-100:#F9FAFB;
+
+  --sans:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Pretendard','Malgun Gothic','Noto Sans KR',sans-serif;
+  --serif:Georgia,'Noto Serif KR','Nanum Myeongjo',Batang,serif;
+
+  --page:#E9EDF0; --ink:#1A2026; --muted:#5A6B7A; --rule:#D6DCE1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;word-break:keep-all;line-height:1.5}
+.wrap{max-width:900px;margin:0 auto;padding:48px 24px 96px}
+
+/* ── 문서 헤더 ── */
+.doc-head{border-bottom:1px solid var(--rule);padding-bottom:24px;margin-bottom:8px}
+.doc-eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.1em;color:var(--primary-500)}
+.doc-title{margin-top:10px;font-family:var(--serif);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+.doc-sub{margin-top:12px;font-size:14px;color:var(--muted);max-width:62ch}
+.doc-meta{margin-top:16px;font-size:12px;color:var(--muted)}
+.doc-meta b{color:var(--ink)}
+
+.principle{margin-top:24px;padding:18px 20px;background:#fff;border-left:3px solid var(--primary-500);border-radius:0 10px 10px 0}
+.principle p{font-size:13.5px;color:var(--neutral-800);max-width:66ch}
+.principle p + p{margin-top:8px}
+.principle b{color:var(--primary-500)}
+
+/* ── 화면 블록 ── */
+.screen{margin-top:56px;padding-top:28px;border-top:1px solid var(--rule)}
+.screen:first-of-type{border-top:0}
+.screen-no{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--primary-500)}
+.screen-title{margin-top:6px;font-size:19px;font-weight:800;letter-spacing:-.02em}
+.screen-where{margin-top:6px;font-size:12px;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace}
+.screen-note{margin-top:12px;font-size:13px;color:var(--neutral-700);max-width:64ch}
+.screen-note + .screen-note{margin-top:6px}
+.screen-note b{color:var(--ink)}
+.stage{margin-top:22px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+
+/* ── 폰 ── */
+.phone{width:390px;flex:0 0 390px;background:#fff;border-radius:26px;overflow:hidden;
+  box-shadow:0 12px 36px rgba(25,31,40,.14);position:relative}
+.phone.old{background:var(--surface-100)}
+.pad{padding:0 20px 18px}
+/* (next) 공통 헤더 — 실제 layout.tsx h-12 + 워드마크 */
+.nhead{display:flex;height:48px;align-items:center;justify-content:space-between;padding:0 8px 0 20px}
+.nhead b{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--brand-deep)}
+.nhead i{width:32px;height:32px;border-radius:10px;background:var(--tg-100);display:block}
+.tabbar{display:flex;border-top:1px solid var(--tg-100);background:#fff;padding:8px 0 14px}
+.tabbar div{flex:1;text-align:center;font-size:9.5px;font-weight:700;color:var(--tg-400)}
+.tabbar div.on{color:var(--brand)}
+.tabbar i{display:block;width:18px;height:18px;margin:0 auto 4px;border-radius:6px;background:var(--tg-200)}
+.tabbar div.on i{background:var(--brand)}
+
+/* ── (next) 조각 ── */
+.h1{margin-top:14px;font-size:21px;font-weight:800;line-height:1.3;letter-spacing:-.03em;color:var(--tg-900)}
+.sec{margin:24px 0 4px;display:flex;align-items:baseline;justify-content:space-between}
+.sec h3{font-size:13.5px;font-weight:700;letter-spacing:-.01em;color:var(--tg-600)}
+.sec span{font-size:12px;font-weight:600;color:var(--tg-500)}
+.boxw{margin-top:10px;background:#fff;border-radius:20px;padding:16px;box-shadow:var(--shadow-toss-card)}
+.boxg{margin-top:10px;background:var(--tg-100);border-radius:18px;padding:16px}
+.row{display:flex;align-items:center;gap:12px;min-height:60px;padding:12px 0;border-top:1px solid var(--tg-100)}
+.row:first-child{border-top:0}
+.daycell{width:40px;flex:none;text-align:center}
+.daycell b{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.daycell span{display:block;font-size:9.5px;font-weight:600;color:var(--tg-400)}
+.grow{min-width:0;flex:1}
+.rt{display:block;font-size:14px;font-weight:700;letter-spacing:-.01em;color:var(--tg-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs{display:block;margin-top:2px;font-size:12px;color:var(--tg-600)}
+.fee{flex:none;text-align:right}
+.fee b{display:block;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.fee span{display:block;font-size:10px;color:var(--tg-400)}
+.chev{flex:none;font-size:16px;color:var(--tg-300)}
+.cover{flex:none;border-radius:5px;background:linear-gradient(160deg,#2F4858,#1D2B36);
+  color:#EBF2F0;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-family:var(--serif);letter-spacing:-.01em;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 4px 10px rgba(25,31,40,.16)}
+.cover.c56{width:56px;height:84px;font-size:9px;padding:6px;line-height:1.35}
+.cover.c96{width:96px;height:144px;font-size:12px;padding:10px;line-height:1.4}
+.cover.c132{width:132px;height:198px;font-size:15px;padding:14px;line-height:1.45;
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 24px rgba(25,31,40,.22)}
+.btn-soft{margin-top:12px;display:flex;min-height:48px;align-items:center;justify-content:center;
+  border-radius:14px;background:var(--brand-bg);color:var(--brand-deep);font-size:14px;font-weight:700;letter-spacing:-.01em}
+.btn-primary{margin-top:12px;display:flex;min-height:48px;align-items:center;justify-content:center;
+  border-radius:14px;background:var(--brand);color:#fff;font-size:14px;font-weight:700;letter-spacing:-.01em}
+.locknote{margin-top:12px;padding-top:12px;border-top:1px solid var(--tg-100);font-size:12px;color:var(--tg-600)}
+.ctx{margin-top:14px;border-radius:12px;background:var(--tg-100);padding:11px 14px;font-size:12px;color:var(--tg-700)}
+.empty{margin-top:10px;border-radius:16px;background:var(--tg-50);padding:24px 18px;text-align:center}
+.empty p:first-child{font-size:14px;font-weight:700;color:var(--tg-700)}
+.empty p:nth-child(2){margin-top:5px;font-size:12px;color:var(--tg-600)}
+
+/* ── 구 스킨 조각 (모임 상세) ── */
+.old-head{display:flex;align-items:center;gap:10px;padding:14px 20px;background:#fff;border-bottom:1px solid var(--neutral-200)}
+.old-head span{font-size:18px;color:var(--neutral-600)}
+.old-head b{font-size:13.5px;font-weight:700;color:var(--neutral-700)}
+.old-card{margin-top:14px;background:#fff;border:1px solid var(--neutral-200);border-radius:16px;padding:18px}
+.old-title{font-family:var(--serif);font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.02em;color:var(--neutral-900)}
+.old-eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--primary-500)}
+.old-info{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--neutral-100);font-size:13px;color:var(--neutral-800)}
+.old-info:first-child{border-top:0}
+.old-info b{flex:0 0 68px;white-space:nowrap;font-weight:600;color:var(--neutral-500);font-size:12.5px}
+.sticky{position:sticky;bottom:0;margin-top:22px;background:rgba(255,255,255,.94);
+  border-top:1px solid var(--neutral-200);padding:14px 20px 22px;backdrop-filter:blur(6px)}
+.sticky-note{text-align:center;font-size:12.5px;color:var(--neutral-600)}
+.btn-outline{margin-top:10px;display:flex;width:100%;min-height:52px;align-items:center;justify-content:center;
+  border:1px solid var(--neutral-300);border-radius:16px;background:#fff;font-size:14px;font-weight:700;color:var(--neutral-800)}
+.btn-fill{margin-top:10px;display:flex;width:100%;min-height:52px;align-items:center;justify-content:center;
+  border-radius:16px;background:var(--primary-600);color:#fff;font-size:14px;font-weight:700;
+  box-shadow:0 4px 14px rgba(27,67,50,.25)}
+
+/* ── 설명 카드 ── */
+.side{flex:1;min-width:260px}
+.side h4{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--primary-500)}
+.side ul{margin-top:10px;list-style:none}
+.side li{position:relative;padding-left:14px;margin-top:8px;font-size:13px;color:var(--neutral-800);max-width:46ch}
+.side li:before{content:'';position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--neutral-400)}
+.side li b{color:var(--ink)}
+.flag{margin-top:14px;padding:12px 14px;background:#FFF6E8;border-radius:10px;font-size:12.5px;color:#7A4F14;max-width:46ch}
+
+/* ── 문구표 ── */
+table{width:100%;border-collapse:collapse;margin-top:16px;background:#fff;border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:11px 14px;font-size:13px;border-bottom:1px solid var(--neutral-200);vertical-align:top}
+th{background:var(--neutral-100);font-size:11.5px;font-weight:800;letter-spacing:.05em;color:var(--neutral-600)}
+td:first-child{width:34%;color:var(--muted);font-size:12.5px}
+tr:last-child td{border-bottom:0}
+</style>
+
+<div class="wrap">
+
+<div class="doc-head">
+  <p class="doc-eyebrow">디자인 · 2026-08-22</p>
+  <h1 class="doc-title">토론모임 참여 자격이 잠겼을 때<br>회원이 보는 화면</h1>
+  <p class="doc-sub">참여 자격 = 정기모임 1회 이상(평생 기준). 미자격자에게 블라인드는 하지 않는다 — 보이되 신청만 잠그고 정기모임으로 보낸다. (2026-08-14 결정 · <code>DECISIONS.md</code>)</p>
+  <p class="doc-meta">기준 폭 <b>390px</b> · 회원 신화면은 <b>토스 문법 × 지독해 그린</b>(<code>tg-*</code> · <code>brand*</code>) · 모임 상세만 <b>구 스킨</b>(<code>primary-*</code> · <code>neutral-*</code>, 아직 교체 전인 <code>(main)</code> 라우트라 실제 화면을 그대로 그렸다)</p>
+</div>
+
+<div class="principle">
+  <p>이 화면의 과제는 하나다 — <b>같은 사실을 벽이 아니라 문으로 만드는 것.</b></p>
+  <p>그래서 세 가지를 지켰다. ① <b>자물쇠·빗금·흐리기를 쓰지 않는다.</b> 잠금 신호를 그리면 그 순간 벽이 된다. 카드는 자격자와 똑같이 보이고, 달라지는 것은 <b>맨 아래 한 줄</b>뿐이다. ② <b>지금 할 수 있는 일을 함께 준다.</b> 발제문은 자격과 무관하게 읽을 수 있으므로(설계서 §5-9) 잠금 안내 옆에 그 사실을 둔다. ③ <b>못 한 것을 세지 않는다.</b> "0회 참여" 같은 표기를 두지 않는다 — 잠긴 배지를 폐기하고 누적 카운터로 바꾼 2026-08-14 결정과 같은 원리다.</p>
+</div>
+
+
+<!-- ══════════ 화면 1 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 1</p>
+  <h2 class="screen-title">모임 탭 — 미자격자가 보는 토론모임 카드</h2>
+  <p class="screen-where">/meet · MeetView 토론모임 섹션</p>
+  <p class="screen-note">표지·제목·날짜·저자·장소가 <b>자격자와 똑같이</b> 보인다. 카드를 눌러 이야기 탭으로 들어가는 것도 같다.</p>
+  <div class="stage">
+    <div class="phone" id="s1">
+      <div class="nhead"><b>지독해</b><i></i></div>
+      <div class="pad">
+        <p class="h1">이번 주엔<br>어디서 볼까요</p>
+
+        <div class="sec"><h3>정기모임</h3><span>3건</span></div>
+        <div>
+          <div class="row"><span class="daycell"><b>26</b><span>화</span></span>
+            <span class="grow"><span class="rt">우연히 책방</span><span class="rs">오후 7:30 · 4/8명</span></span>
+            <span class="fee"><b>10,000</b><span>참가비</span></span></div>
+          <div class="row"><span class="daycell"><b>29</b><span>금</span></span>
+            <span class="grow"><span class="rt">공간 지그시</span><span class="rs">오후 7:30 · 3명 모집 중</span></span>
+            <span class="fee"><b>10,000</b><span>참가비</span></span></div>
+          <div class="row"><span class="daycell"><b>2</b><span>화</span></span>
+            <span class="grow"><span class="rt">우연히 책방</span><span class="rs">오후 7:30 · 2명 모집 중</span></span>
+            <span class="fee"><b>10,000</b><span>참가비</span></span></div>
+        </div>
+
+        <div class="sec"><h3>토론모임</h3><span>월 1회</span></div>
+        <div class="boxw">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="cover c56">물고기는<br>존재하지<br>않는다</div>
+            <span class="grow">
+              <span style="display:block;font-size:10.5px;font-weight:800;color:var(--tg-500)">9월 12일 (금) 오후 7:00</span>
+              <span style="display:block;margin-top:2px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--tg-900)">물고기는 존재하지 않는다</span>
+              <span class="rs">룰루 밀러 · 우연히 책방</span>
+            </span>
+            <span class="chev">›</span>
+          </div>
+          <p class="locknote">정기모임에 한 번 다녀오면 신청할 수 있어요</p>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div><i></i>홈</div><div class="on"><i></i>모임</div><div><i></i>이야기</div><div><i></i>서재</div><div><i></i>나</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>자격자와 다른 것</h4>
+      <ul>
+        <li><b>맨 아래 한 줄이 붙는다.</b> 카드 안쪽 구분선 아래 <code>tg-600</code> 12px. 박스도 아이콘도 색도 쓰지 않는다</li>
+        <li><b>날짜 줄의 색이 그린이 아니다.</b> 자격자에게 그린은 "신청이 열려 있다"는 신호다. 미자격자에게 열려 있지 않은 것을 그린으로 칠하지 않는다(<code>tg-500</code>)</li>
+        <li>그 둘 말고는 <b>전부 같다.</b> 표지가 작아지지도, 흐려지지도 않는다</li>
+      </ul>
+      <div class="flag">정기모임 행의 "3명 모집 중"은 기존 마스킹 규칙(신청자 3명 미만)이 그대로 도는 모습이다. 토론모임 정원 노출 규칙은 별건(미적용 C-3).</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 화면 2 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 2 · 대조</p>
+  <h2 class="screen-title">같은 자리 — 자격자가 보는 카드</h2>
+  <p class="screen-where">/meet · 비교용. 이 화면은 새로 만드는 것이 아니라 현재 모습이다</p>
+  <div class="stage">
+    <div class="phone" id="s2">
+      <div class="nhead"><b>지독해</b><i></i></div>
+      <div class="pad">
+        <p class="h1">이번 주엔<br>어디서 볼까요</p>
+        <div class="sec"><h3>토론모임</h3><span>월 1회</span></div>
+        <div class="boxw">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="cover c56">물고기는<br>존재하지<br>않는다</div>
+            <span class="grow">
+              <span style="display:block;font-size:10.5px;font-weight:800;color:var(--brand)">9월 12일 (금) 오후 7:00</span>
+              <span style="display:block;margin-top:2px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--tg-900)">물고기는 존재하지 않는다</span>
+              <span class="rs">룰루 밀러 · 우연히 책방</span>
+            </span>
+            <span class="chev">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div><i></i>홈</div><div class="on"><i></i>모임</div><div><i></i>이야기</div><div><i></i>서재</div><div><i></i>나</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>왜 이렇게 적게 다른가</h4>
+      <ul>
+        <li>차이를 키울수록 <b>"당신 것이 아니다"</b>가 커진다. 사다리는 다음 칸이 <b>같은 크기로</b> 보여야 올라간다</li>
+        <li>미자격자는 지금 회원의 상당수다. 그들에게 이 카드는 <b>거절 통지가 아니라 예고편</b>이어야 한다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 화면 3 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 3</p>
+  <h2 class="screen-title">이야기 탭 — 신청 버튼 자리에 오는 것</h2>
+  <p class="screen-where">/talk · TalkView. 토론모임의 주 진입점(2026-08-15 결정)</p>
+  <p class="screen-note">포스터·책·발제문은 <b>그대로 다 보인다.</b> 자리를 바꾸는 것은 <code>신청하기 · 25,000</code> 버튼 하나뿐이다.</p>
+  <div class="stage">
+    <div class="phone" id="s3">
+      <div class="nhead"><b>지독해</b><i></i></div>
+      <div style="background:linear-gradient(var(--brand-bg),rgba(232,247,241,0) 88%);padding:18px 20px 6px;text-align:center">
+        <p style="font-size:11px;font-weight:800;color:var(--brand)">이달의 토론</p>
+        <div class="cover c132" style="margin:16px auto 0">물고기는<br>존재하지<br>않는다</div>
+        <h2 style="margin-top:16px;font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--tg-900)">물고기는 존재하지 않는다</h2>
+        <p style="margin-top:2px;font-size:12px;color:var(--tg-600)">룰루 밀러</p>
+        <p style="margin-top:6px;font-size:12px;color:var(--tg-600)">9월 12일 (금) 오후 7:00 · 우연히 책방</p>
+      </div>
+      <div class="pad">
+        <div style="margin-top:22px;text-align:center">
+          <p style="font-size:13.5px;font-weight:700;color:var(--tg-800)">정기모임에 한 번 다녀오면 신청할 수 있어요</p>
+          <p style="margin-top:4px;font-size:12px;color:var(--tg-600)">발제문은 지금도 읽을 수 있어요</p>
+        </div>
+        <div class="btn-soft">다가오는 정기모임 보기</div>
+
+        <div class="sec"><h3>발제문</h3></div>
+        <div>
+          <div class="row" style="min-height:56px">
+            <span style="flex:none;width:28px;height:28px;border-radius:9px;background:var(--tg-100);color:var(--tg-700);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">1</span>
+            <span class="grow"><span class="rt" style="font-size:13.5px">이름을 붙인다는 것</span><span class="rs">당신이 세상을 나누는 기준은 무엇인가요?</span></span>
+            <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--brand)">답변 5</span>
+          </div>
+          <div class="row" style="min-height:56px">
+            <span style="flex:none;width:28px;height:28px;border-radius:9px;background:var(--tg-100);color:var(--tg-700);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">2</span>
+            <span class="grow"><span class="rt" style="font-size:13.5px">무질서를 견디는 법</span><span class="rs">계획이 무너졌을 때 무엇을 붙잡았나요?</span></span>
+            <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--brand)">답변 3</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div><i></i>홈</div><div><i></i>모임</div><div class="on"><i></i>이야기</div><div><i></i>서재</div><div><i></i>나</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>이 카드가 하는 일</h4>
+      <ul>
+        <li><b>두 번째 줄이 막다른 길을 막는다.</b> 발제문 읽기는 자격과 무관하게 열려 있다(<code>canWriteAnswer</code>는 쓰기만 막는다) — 그래서 이건 약속이 아니라 사실이다</li>
+        <li><b>버튼은 살아 있다.</b> 비활성 회색 버튼을 두면 벽이 되고, 갈 곳이 있는 버튼을 두면 문이 된다</li>
+        <li><b>"N명 중 M명이 답했어요" 진행 줄은 미자격자에게 그리지 않는다.</b> 그건 신청자에게 주는 부담 장치(2026-08-14 결정)인데, 참여할 수 없는 사람에게 보이면 부담이 아니라 소외가 된다</li>
+      </ul>
+      <div class="flag"><b>외피를 하나 걷어냈다.</b> 처음에는 두 줄과 버튼을 회색 면(<code>tg-100</code>)에 담았는데, 렌더해 보니 <b>회색 면 위에 연그린 버튼</b>이 얹혀 면이 두 겹이 됐다. 두 줄은 배경 없이 두고 버튼만 남긴다 — 버튼 하나로 형태는 충분하다.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 화면 4 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 4</p>
+  <h2 class="screen-title">모임 상세 — 신청 버튼 자리</h2>
+  <p class="screen-where">/meetings/[id] · 구 스킨 <code>(main)</code>. 신청·결제는 구경로를 그대로 재사용한다</p>
+  <p class="screen-note">여기가 <b>돈이 움직이는 자리</b>다. 지금은 미자격자도 이 버튼을 눌러 결제까지 갈 수 있다. 하단 고정 바에서 <code>신청하기</code>가 빠지고 그 자리에 <b>같은 문장 + 갈 곳</b>이 온다.</p>
+  <div class="stage">
+    <div class="phone old" id="s4">
+      <div class="old-head"><span>‹</span><b>모임 상세</b></div>
+      <div class="pad" style="padding-bottom:0">
+        <div class="old-card" style="display:flex;gap:14px;align-items:flex-start">
+          <div class="cover c96">물고기는<br>존재하지<br>않는다</div>
+          <div style="min-width:0">
+            <p class="old-eyebrow">이달의 책</p>
+            <p style="margin-top:5px;font-size:14px;font-weight:700;color:var(--neutral-900)">물고기는 존재하지 않는다</p>
+            <p style="margin-top:3px;font-size:12px;color:var(--neutral-600)">룰루 밀러 · 곰출판</p>
+            <p style="margin-top:9px;font-size:12.5px;color:var(--neutral-700);line-height:1.55">분류하고 이름 붙이는 일이 얼마나 위태로운지 이야기하고 싶어 골랐어요.</p>
+          </div>
+        </div>
+
+        <div class="old-card">
+          <p class="old-eyebrow">토론모임</p>
+          <h2 class="old-title" style="margin-top:8px">9월 토론모임<br>물고기는 존재하지 않는다</h2>
+          <div style="margin-top:14px">
+            <div class="old-info"><b>일시</b><span>9월 12일 (금) 오후 7:00</span></div>
+            <div class="old-info"><b>장소</b><span>우연히 책방 (경주)</span></div>
+            <div class="old-info"><b>참가비</b><span>25,000</span></div>
+            <div class="old-info"><b>신청 마감</b><span>9월 5일 (금)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky">
+        <p class="sticky-note">정기모임에 한 번 다녀오면 신청할 수 있어요</p>
+        <div class="btn-outline">다가오는 정기모임 보기</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>왜 비활성 버튼이 아닌가</h4>
+      <ul>
+        <li>이 자리에는 이미 비활성 회색 버튼 두 종류가 산다 — <code>마감</code>, <code>신청 마감 · 모임 7일 전까지…</code>. <b>그건 아무도 할 수 있는 게 없는 상태</b>다</li>
+        <li>자격 잠금은 다르다. <b>할 수 있는 일이 있다.</b> 그래서 회색이 아니라 누를 수 있는 버튼을 둔다</li>
+        <li>테두리 버튼을 고른 이유 — 채운 그린은 이 화면에서 <b>결제로 가는 버튼</b>의 색이다. 같은 색을 쓰면 눌렀을 때 결제창이 뜰 것으로 읽힌다(<code>VOICE.md</code> §3-6 "다음이 예상되게")</li>
+      </ul>
+      <div class="flag"><b>화면 잠금만으로는 부족하다.</b> D-7 신청 마감이 서버 3중(버튼 · 카드 자동취소 · 이체 400)으로 강제되는 것과 같은 모양이 필요하다. 배선은 개발·운영 소관이고, 디자인은 화면까지다.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 화면 5 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 5</p>
+  <h2 class="screen-title">정기모임으로 보내는 길 — 도착했을 때</h2>
+  <p class="screen-where">/meet · "다가오는 정기모임 보기"를 누른 직후</p>
+  <p class="screen-note">보내는 곳은 <b>모임 탭</b>이다. 새 화면을 만들지 않는다. 다만 도착한 사람이 <b>왜 여기 왔는지</b>를 잊지 않도록 목록 위에 한 줄을 둔다.</p>
+  <div class="stage">
+    <div class="phone" id="s5">
+      <div class="nhead"><b>지독해</b><i></i></div>
+      <div class="pad">
+        <p class="h1">이번 주엔<br>어디서 볼까요</p>
+        <p class="ctx">정기모임에 한 번 다녀오면 토론모임 신청이 열려요</p>
+
+        <div class="sec"><h3>정기모임</h3><span>3건</span></div>
+        <div>
+          <div class="row"><span class="daycell"><b>26</b><span>화</span></span>
+            <span class="grow"><span class="rt">우연히 책방</span><span class="rs">오후 7:30 · 4/8명</span></span>
+            <span class="fee"><b>10,000</b><span>참가비</span></span></div>
+          <div class="row"><span class="daycell"><b>29</b><span>금</span></span>
+            <span class="grow"><span class="rt">공간 지그시</span><span class="rs">오후 7:30 · 3명 모집 중</span></span>
+            <span class="fee"><b>10,000</b><span>참가비</span></span></div>
+          <div class="row"><span class="daycell"><b>2</b><span>화</span></span>
+            <span class="grow"><span class="rt">우연히 책방</span><span class="rs">오후 7:30 · 2명 모집 중</span></span>
+            <span class="fee"><b>10,000</b><span>참가비</span></span></div>
+        </div>
+
+        <div class="sec"><h3>토론모임</h3><span>월 1회</span></div>
+        <div class="boxw">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="cover c56">물고기는<br>존재하지<br>않는다</div>
+            <span class="grow">
+              <span style="display:block;font-size:10.5px;font-weight:800;color:var(--tg-500)">9월 12일 (금) 오후 7:00</span>
+              <span style="display:block;margin-top:2px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--tg-900)">물고기는 존재하지 않는다</span>
+              <span class="rs">룰루 밀러 · 우연히 책방</span>
+            </span>
+            <span class="chev">›</span>
+          </div>
+          <p class="locknote">정기모임에 한 번 다녀오면 신청할 수 있어요</p>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div><i></i>홈</div><div class="on"><i></i>모임</div><div><i></i>이야기</div><div><i></i>서재</div><div><i></i>나</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>이 한 줄의 규칙</h4>
+      <ul>
+        <li><b>브랜드 그린을 쓰지 않는다.</b> <code>brand-bg</code> 연그린은 "내가 신청한 것"의 색이라, 여기 쓰면 신청한 줄 안다. 회색 면(<code>tg-100</code>)으로 둔다</li>
+        <li><b>자격이 생기면 사라진다.</b> 닫기 버튼을 두지 않는 이유 — 스스로 끝나는 상태다</li>
+        <li>문장을 카드 안 한 줄과 <b>똑같이 두지 않고</b> 한 겹 다르게 썼다("신청이 열려요"). 같은 사실이지만 여기서는 <b>목적지에서 하는 말</b>이다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 화면 6 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 6 · 빈 상태</p>
+  <h2 class="screen-title">보낼 정기모임이 하나도 없을 때</h2>
+  <p class="screen-where">/meet · 예정된 정기모임 0건</p>
+  <p class="screen-note">가장 나쁜 경우다 — <b>가라고 해놓고 갈 곳이 없다.</b> 여기서 화면이 끝나면 잠금은 그대로 벽이 된다. 그래서 빈 상태에 <b>지금 할 수 있는 다른 일</b>을 하나 남긴다.</p>
+  <div class="stage">
+    <div class="phone" id="s6">
+      <div class="nhead"><b>지독해</b><i></i></div>
+      <div class="pad">
+        <p class="h1">이번 주엔<br>어디서 볼까요</p>
+        <p class="ctx">정기모임에 한 번 다녀오면 토론모임 신청이 열려요</p>
+
+        <div class="sec"><h3>정기모임</h3></div>
+        <div class="empty">
+          <p>예정된 정기모임이 아직 없어요</p>
+          <p>새 일정이 올라오면 여기에 보여요</p>
+          <p style="margin-top:14px;font-size:13px;font-weight:700;color:var(--brand-deep)">지난 토론 둘러보기 ›</p>
+        </div>
+
+        <div class="sec"><h3>토론모임</h3><span>월 1회</span></div>
+        <div class="boxw">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div class="cover c56">물고기는<br>존재하지<br>않는다</div>
+            <span class="grow">
+              <span style="display:block;font-size:10.5px;font-weight:800;color:var(--tg-500)">9월 12일 (금) 오후 7:00</span>
+              <span style="display:block;margin-top:2px;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--tg-900)">물고기는 존재하지 않는다</span>
+              <span class="rs">룰루 밀러 · 우연히 책방</span>
+            </span>
+            <span class="chev">›</span>
+          </div>
+          <p class="locknote">정기모임에 한 번 다녀오면 신청할 수 있어요</p>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div><i></i>홈</div><div class="on"><i></i>모임</div><div><i></i>이야기</div><div><i></i>서재</div><div><i></i>나</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>여기서 하지 않은 것</h4>
+      <ul>
+        <li><b>"알림 받기"를 만들지 않았다.</b> 새 일정 알림 기능이 없다. 없는 것을 화면에 두면 그 순간 약속이 된다</li>
+        <li><b>"곧 올라와요"라고 쓰지 않았다.</b> 일정 주기를 서비스가 보증할 수 없다. <code>새 일정이 올라오면 여기에 보여요</code>는 약속이 아니라 화면 설명이다</li>
+        <li><b>대신 지난 토론으로 보낸다.</b> 이야기 탭 아래 "함께 읽은 N권"이 이미 있고, 발제문·답변은 자격 없이 읽힌다. <b>미자격자에게 유일하게 열려 있는 콘텐츠</b>다</li>
+      </ul>
+      <div class="flag">지난 토론이 아직 한 건도 없는 첫 달에는 이 버튼도 갈 곳이 없다. 그때는 <b>버튼 없이 두 줄만</b> 남긴다 — 없는 곳으로 보내는 것보다 낫다.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 화면 7 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 7</p>
+  <h2 class="screen-title">자격을 막 얻은 날 — 홈에 한 번 뜨는 스트립</h2>
+  <p class="screen-where">/home · 첫 정기모임 다음날. 설계서 §5-10</p>
+  <p class="screen-note">자격은 <b>모임 다음날 조용히</b> 생긴다(결제 완료 + 모임일 경과). 알아채게 하는 일을 화면이 하지 않으면, 잠금이 풀린 것을 아무도 모른다.</p>
+  <div class="stage">
+    <div class="phone" id="s7">
+      <div class="nhead"><b>지독해</b><i></i></div>
+      <div class="pad">
+        <p class="h1">초록고래님,<br>오늘도 읽어볼까요</p>
+
+        <div style="margin-top:16px;border-radius:18px;background:var(--brand-bg);padding:16px">
+          <p style="font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--brand-deep)">초록고래님, 첫 정기모임 다녀오셨네요</p>
+          <p style="margin-top:5px;font-size:12.5px;color:var(--tg-700)">이제 토론모임도 신청할 수 있어요</p>
+          <div style="margin-top:14px;display:flex;align-items:center;gap:12px">
+            <div class="cover c56" style="width:40px;height:60px;font-size:7px;padding:4px">물고기는<br>존재하지<br>않는다</div>
+            <span class="grow">
+              <span class="rt" style="font-size:13px">물고기는 존재하지 않는다</span>
+              <span class="rs">9월 12일 (금) · 우연히 책방</span>
+            </span>
+            <span class="chev">›</span>
+          </div>
+        </div>
+
+        <div class="sec"><h3>할 일</h3></div>
+        <div class="boxw" style="padding:4px 16px">
+          <div class="row" style="min-height:56px">
+            <span style="flex:none;width:40px;height:40px;border-radius:13px;background:var(--warnx-bg);display:flex;align-items:center;justify-content:center;font-size:17px">📖</span>
+            <span class="grow"><span class="rt">읽은 책을 서재에 담아볼까요</span><span class="rs">어제 모임에서 이야기한 책이에요</span></span>
+            <span class="chev">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="on"><i></i>홈</div><div><i></i>모임</div><div><i></i>이야기</div><div><i></i>서재</div><div><i></i>나</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>규칙</h4>
+      <ul>
+        <li><b>축하가 먼저, 추천은 곁들이는 정도.</b> 첫 참여 직후에 25,000짜리를 권하는 자리다(설계서 §5-10). 그래서 큰 버튼을 두지 않고 모임 한 줄만 얹었다</li>
+        <li><b>알림톡으로 보내지 않는다.</b> 자격이 생기는 그날 오전에 이미 물어보기 알림톡이 나간다. 하루 두 통이 된다</li>
+        <li><b>예정된 토론모임이 0건이면 안쪽 모임 줄을 지운다.</b> 축하 두 줄만 남긴다 — 없는 걸 예고하면 기대만 만든다</li>
+        <li><b>호칭은 닉네임</b>(2026-08-07 결정). 이 자리에 실명을 쓰지 않는다</li>
+      </ul>
+      <div class="flag">"한 번만 뜬다"를 무엇으로 기억할지(서버 플래그 · localStorage)는 개발·운영 판단이다. 디자인이 정한 것은 <b>두 번 보이지 않는다</b>는 것까지다.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 화면 8 ══════════ -->
+<section class="screen">
+  <p class="screen-no">화면 8</p>
+  <h2 class="screen-title">잠금이 풀린 뒤 — 이야기 탭</h2>
+  <p class="screen-where">/talk · 화면 3과 같은 자리</p>
+  <p class="screen-note">잠금 안내가 있던 자리에 <b>신청 버튼이 그대로 들어온다.</b> "풀렸어요" 같은 설명을 덧붙이지 않는다 — 알아채는 일은 홈 스트립(화면 7)이 맡고, 여기서 또 말하면 같은 말을 두 번 하는 것이다(<code>VOICE.md</code> §3-2).</p>
+  <div class="stage">
+    <div class="phone" id="s8">
+      <div class="nhead"><b>지독해</b><i></i></div>
+      <div style="background:linear-gradient(var(--brand-bg),rgba(232,247,241,0) 88%);padding:18px 20px 6px;text-align:center">
+        <p style="font-size:11px;font-weight:800;color:var(--brand)">이달의 토론 · 신청 열림</p>
+        <div class="cover c132" style="margin:16px auto 0">물고기는<br>존재하지<br>않는다</div>
+        <h2 style="margin-top:16px;font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--tg-900)">물고기는 존재하지 않는다</h2>
+        <p style="margin-top:2px;font-size:12px;color:var(--tg-600)">룰루 밀러</p>
+        <p style="margin-top:6px;font-size:12px;color:var(--tg-600)">9월 12일 (금) 오후 7:00 · 우연히 책방</p>
+      </div>
+      <div class="pad" style="padding-bottom:8px">
+        <div class="btn-soft">신청하기 · 25,000</div>
+
+        <div class="sec"><h3>발제문</h3></div>
+        <div>
+          <div class="row" style="min-height:56px">
+            <span style="flex:none;width:28px;height:28px;border-radius:9px;background:var(--tg-100);color:var(--tg-700);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">1</span>
+            <span class="grow"><span class="rt" style="font-size:13.5px">이름을 붙인다는 것</span><span class="rs">당신이 세상을 나누는 기준은 무엇인가요?</span></span>
+            <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--brand)">답변 5</span>
+          </div>
+          <div class="row" style="min-height:56px">
+            <span style="flex:none;width:28px;height:28px;border-radius:9px;background:var(--tg-100);color:var(--tg-700);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">2</span>
+            <span class="grow"><span class="rt" style="font-size:13.5px">무질서를 견디는 법</span><span class="rs">계획이 무너졌을 때 무엇을 붙잡았나요?</span></span>
+            <span style="flex:none;font-size:11.5px;font-weight:700;color:var(--brand)">답변 3</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div><i></i>홈</div><div><i></i>모임</div><div class="on"><i></i>이야기</div><div><i></i>서재</div><div><i></i>나</div>
+      </div>
+    </div>
+    <div class="side">
+      <h4>달라진 것</h4>
+      <ul>
+        <li>포스터 위 아이브로우가 <code>이달의 토론</code>에서 <code>이달의 토론 · 신청 열림</code>으로 바뀐다(이미 있는 동작)</li>
+        <li>회색 안내 카드가 사라지고 <b>같은 자리에</b> 신청 버튼이 온다. 위치가 같아서 화면이 흔들리지 않는다</li>
+        <li>모임 탭 카드의 아래 한 줄과 도착 스트립도 <b>함께 사라진다.</b> 잠금 표시는 세 곳에 있고, 전부 같은 조건 하나로 켜지고 꺼진다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════ 문구 ══════════ -->
+<section class="screen">
+  <p class="screen-no">확정 문구</p>
+  <h2 class="screen-title">화면에 붙는 문장 전부</h2>
+  <p class="screen-note">호칭은 닉네임. 금액은 단위 없이 숫자만. 자동 약속 단언 없음. 참여·완독을 재촉하는 표현 없음.</p>
+  <table>
+    <tr><th>자리</th><th>문장</th></tr>
+    <tr><td>모임 탭 · 토론 카드 맨 아래 (화면 1)</td><td>정기모임에 한 번 다녀오면 신청할 수 있어요</td></tr>
+    <tr><td>이야기 탭 · 신청 자리 제목 (화면 3)</td><td>정기모임에 한 번 다녀오면 신청할 수 있어요</td></tr>
+    <tr><td>이야기 탭 · 신청 자리 보조 (화면 3)</td><td>발제문은 지금도 읽을 수 있어요</td></tr>
+    <tr><td>이야기 탭 · 버튼 (화면 3)</td><td>다가오는 정기모임 보기</td></tr>
+    <tr><td>모임 상세 · 하단 안내 (화면 4)</td><td>정기모임에 한 번 다녀오면 신청할 수 있어요</td></tr>
+    <tr><td>모임 상세 · 버튼 (화면 4)</td><td>다가오는 정기모임 보기</td></tr>
+    <tr><td>모임 탭 · 도착 스트립 (화면 5)</td><td>정기모임에 한 번 다녀오면 토론모임 신청이 열려요</td></tr>
+    <tr><td>정기모임 0건 · 제목 (화면 6)</td><td>예정된 정기모임이 아직 없어요</td></tr>
+    <tr><td>정기모임 0건 · 보조 (화면 6)</td><td>새 일정이 올라오면 여기에 보여요</td></tr>
+    <tr><td>정기모임 0건 · 버튼 (화면 6)</td><td>지난 토론 둘러보기</td></tr>
+    <tr><td>홈 · 자격 획득 제목 (화면 7)</td><td>#{닉네임}님, 첫 정기모임 다녀오셨네요</td></tr>
+    <tr><td>홈 · 자격 획득 본문 (화면 7)</td><td>이제 토론모임도 신청할 수 있어요</td></tr>
+  </table>
+
+  <div class="principle" style="margin-top:28px">
+    <p><b>쓰지 않기로 한 말</b></p>
+    <p>· <code>신청 자격이 없습니다</code> — 사람을 판정한다. 우리가 말하려는 건 조건이지 자격 미달이 아니다<br>
+       · <code>정기모임 0회 참여</code> — 못 한 것을 센다. 잠긴 배지를 폐기한 결정과 같은 이유로 쓰지 않는다<br>
+       · <code>아직 신청하실 수 없어요</code> — "아직"이 재촉으로 읽힌다<br>
+       · <code>먼저 정기모임에 참여해 주세요</code> — 부탁이자 지시다. 우리는 조건을 알려주고 선택은 회원이 한다<br>
+       · <code>자물쇠 아이콘 · 흐림 처리 · 빗금</code> — 문구가 아니라 그림으로 하는 거절이다</p>
+  </div>
+</section>
+
+</div>
+</html>
