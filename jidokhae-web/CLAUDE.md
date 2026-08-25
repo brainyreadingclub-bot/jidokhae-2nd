@@ -27,7 +27,11 @@ npx vitest run src/lib/__tests__/kst.test.ts  # Single test file
 
 ### Route Groups
 - `src/app/(main)/` — Authenticated member pages (meeting list, detail, my-registrations)
-- `src/app/(next)/` — **전면개편 5탭 UI (토스 스킨)**: `/home` `/meet` `/talk` `/shelf` `/me`(+`/me/notifications` 알림함). `site_settings.next_ui` 플래그 뒤에 있어 OFF면 회원 노출 0. 레이아웃이 온보딩 게이트(`isOnboarded()` — 미완성자는 `/`로) 수행. 표현 컴포넌트는 `src/components/next/` (NextNav, TossUI, HomeView/MeetView/TalkView). 상세·신청·결제는 구경로(`/meetings/[id]`) 재사용 — 결제 로직 무변경. 플래그 ON 시 `/`는 온보딩 완료자만 `/home`으로 리다이렉트
+- `src/app/(next)/` — **전면개편 5탭 UI (토스 스킨)**: `/home` `/meet` `/talk` `/shelf` `/me`(+`/me/notifications` 알림함). `site_settings.next_ui` 플래그 뒤에 있어 OFF면 회원 노출 0. 레이아웃이 온보딩 게이트(`isOnboarded()` — 미완성자는 `/`로) 수행. 표현 컴포넌트는 `src/components/next/` (NextNav, TossUI, HomeView/MeetView/TalkView). 플래그 ON 시 `/`는 온보딩 완료자만 `/home`으로 리다이렉트.
+  🔴 **상세·신청·결제 화면은 아직 안 만들어졌다 (2026-08-25 실측).** 이 자리에 *"구경로 재사용 — 결제 로직 무변경"*이라고 적혀 있었는데 **설계와 다르다.** 설계서(`docs/superpowers/specs/2026-08-17-전면개편-토스5탭-design.md:82`)는 *"`meetings/[id]` 상세·신청·결제 → 모임 탭 하위, **흐름 로직 무변경, 스킨만**"*이라고 정했고, 승인받은 18화면 시안에도 상세·신청 확인이 그려져 있다. **빼기로 한 결정은 `DECISIONS.md` 어디에도 없다** — 구현 중 축소된 것이 문서에 사실처럼 굳었다.
+  그래서 지금 `(next)`에서 모임을 누르면 **구 스킨 `(main)/meetings/[id]`로 떨어지고 하단 탭이 5개→2개로 바뀐다.** `components/next/*`의 링크 5개가 전부 그리로 간다.
+  🔴 **돈에 걸리는 것 하나** — 시안의 **「신청 확인」 화면(결제 전 금액·입금처·환불 규정)이 없다.** `MeetingActionButton.tsx`의 환불 규정 모달은 `cancelPhase === 'info'`, 즉 **취소를 누를 때만** 뜬다. 회원은 **환불 조건을 모른 채 돈을 보낸다.**
+  전수 목록: `docs/agent-team/조사/2026-08-25-개편-빠진화면-코드측.md` · `docs/superpowers/mockups/2026-08-25-개편-시안대조/대조표.md`
 - `src/app/(admin)/` — Admin pages. Phase 3 M7 Step 2에서 데스크톱 사이드바 + 모바일 드로어 레이아웃으로 재구성. 라우트: `admin/` (허브), `admin/meetings` (지역 필터 포함 목록), `admin/meetings/[id]` (상세 + 신청자), `admin/meetings/new`, `admin/meetings/[id]/edit`, `admin/members`, `admin/settings`, `admin/settlements` (입금 확인·환불 대기·지역별 매출 3탭, admin 전용), `admin/notices` (공지 발송 → 인앱 알림), `admin/library` (서재 응답률), `admin/notifications` (알림톡 이력), `admin/banners` (M8 placeholder, admin 전용), `admin/quotes` (M8 placeholder). 발제문 관리는 토론모임 상세에서 진입
 - `src/app/auth/` — Login page + OAuth callback (auth layout includes Footer for PG 심사)
 - `src/app/policy/` — Public pages (about, terms, privacy, refund, meetings list/detail — no auth required)

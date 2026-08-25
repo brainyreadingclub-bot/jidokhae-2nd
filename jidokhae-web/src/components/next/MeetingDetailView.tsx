@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { formatKoreanDate, formatKoreanTime, formatFee, formatDDay } from '@/lib/kst'
 import type { MeetingDetailData } from '@/lib/meeting-detail'
 import { hasStickyAction } from '@/lib/meeting-detail'
+import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import BookIntro from '@/components/meetings/BookIntro'
@@ -29,9 +30,12 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
     { label: '어디서', value: [m.location, m.region].filter(Boolean).join(' · ') },
     {
       label: '참여',
-      value: data.showAccurateCount
-        ? `${data.confirmedCount}/${m.capacity}명`
-        : `${m.capacity}명 모집 중`,
+      // 마스킹 판정은 `shouldMaskConfirmedCount()` 한 벌이다 — 구 상세·모임 탭과 같은 함수.
+      // showAccurateCount를 그대로 쓰면 **마감(count >= capacity)인데 "N명 모집 중"**으로 보인다
+      // (규칙 함수는 마감이면 마스킹을 푼다). 2026-08-25 렌더 전수에서 나온 회귀.
+      value: shouldMaskConfirmedCount(data.confirmedCount, m.capacity, data.showAccurateCount)
+        ? `${m.capacity}명 모집 중`
+        : `${data.confirmedCount}/${m.capacity}명`,
     },
     {
       label: '참가비',
