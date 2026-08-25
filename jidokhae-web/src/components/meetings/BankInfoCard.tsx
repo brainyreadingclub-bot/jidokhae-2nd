@@ -1,15 +1,19 @@
 'use client'
 
 import { useState } from 'react'
+import type { SkinName } from '@/components/meetings/actionButtonSkin'
 
 type Props = {
   bankName: string
   bankAccount: string
   bankHolder: string
+  /** 'toss' = (next) 5탭 스킨. 미지정이면 구 화면 그대로 */
+  skin?: SkinName
 }
 
-export default function BankInfoCard({ bankName, bankAccount, bankHolder }: Props) {
+export default function BankInfoCard({ bankName, bankAccount, bankHolder, skin = 'legacy' }: Props) {
   const [copied, setCopied] = useState(false)
+  const toss = skin === 'toss'
 
   async function handleCopy() {
     try {
@@ -23,39 +27,42 @@ export default function BankInfoCard({ bankName, bankAccount, bankHolder }: Prop
 
   return (
     <div
-      className="rounded-[var(--radius-lg)] p-5"
-      style={{
-        backgroundColor: 'var(--color-surface-100)',
-        border: '1px solid var(--color-surface-300)',
-      }}
+      className={toss ? 'rounded-[18px] bg-tg-100 p-5' : 'rounded-[var(--radius-lg)] p-5'}
+      style={
+        toss
+          ? undefined
+          : {
+              backgroundColor: 'var(--color-surface-100)',
+              border: '1px solid var(--color-surface-300)',
+            }
+      }
     >
-      <p className="text-sm font-medium text-neutral-700 mb-4">
+      <p className={toss ? 'text-sm font-bold text-tg-900 mb-4' : 'text-sm font-medium text-neutral-700 mb-4'}>
         입금 안내
       </p>
 
       <div className="space-y-2.5">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-neutral-500 w-12 flex-shrink-0">은행</span>
-          <span className="text-sm font-semibold text-neutral-800">{bankName}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-neutral-500 w-12 flex-shrink-0">계좌</span>
-          <span className="text-sm font-semibold text-neutral-800 font-mono tabular-nums">{bankAccount}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-neutral-500 w-12 flex-shrink-0">예금주</span>
-          <span className="text-sm font-semibold text-neutral-800">{bankHolder}</span>
-        </div>
+        <Row label="은행" value={bankName} toss={toss} />
+        <Row label="계좌" value={bankAccount} toss={toss} mono />
+        <Row label="예금주" value={bankHolder} toss={toss} />
       </div>
 
       <button
         onClick={handleCopy}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all active:scale-[0.98]"
-        style={{
-          backgroundColor: 'var(--color-primary-50)',
-          color: 'var(--color-primary-700)',
-          border: '1px solid var(--color-primary-200)',
-        }}
+        className={
+          toss
+            ? 'mt-4 flex w-full items-center justify-center gap-2 rounded-[12px] bg-white py-3 text-sm font-bold text-brand-deep transition-all active:scale-[0.98]'
+            : 'mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all active:scale-[0.98]'
+        }
+        style={
+          toss
+            ? undefined
+            : {
+                backgroundColor: 'var(--color-primary-50)',
+                color: 'var(--color-primary-700)',
+                border: '1px solid var(--color-primary-200)',
+              }
+        }
       >
         <svg
           width="16"
@@ -72,6 +79,33 @@ export default function BankInfoCard({ bankName, bankAccount, bankHolder }: Prop
         </svg>
         {copied ? '복사됨!' : '계좌번호 복사'}
       </button>
+    </div>
+  )
+}
+
+function Row({
+  label,
+  value,
+  toss,
+  mono,
+}: {
+  label: string
+  value: string
+  toss: boolean
+  mono?: boolean
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        className={`text-xs font-medium w-12 flex-shrink-0 ${toss ? 'text-tg-600' : 'text-neutral-500'}`}
+      >
+        {label}
+      </span>
+      <span
+        className={`text-sm font-semibold ${toss ? 'text-tg-900' : 'text-neutral-800'} ${mono ? 'font-mono tabular-nums' : ''}`}
+      >
+        {value}
+      </span>
     </div>
   )
 }

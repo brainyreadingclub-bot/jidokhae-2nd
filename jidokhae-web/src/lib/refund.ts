@@ -7,7 +7,7 @@
  * 날짜 단위 계산 (시간 무관)
  */
 
-import { getKSTToday } from '@/lib/kst'
+import { getKSTToday, shiftDate } from '@/lib/kst'
 
 export const REFUND_RULES = [
   { daysBeforeMeeting: 3, rate: 100, label: '모임 3일 전까지', rateLabel: '참가비 100% 환불' },
@@ -125,4 +125,45 @@ export function calculateRefundByType(
   return meetingType === 'discussion'
     ? calculateDiscussionRefund(meetingDate, paidAmount, kstToday)
     : calculateRefund(meetingDate, paidAmount, kstToday)
+}
+
+// ─── 결제 **전**에 보여주는 환불 안내 ───
+// 지금까지 환불 규정은 "취소하기"를 눌러야 뜨는 모달 안에만 있었다
+// (MeetingActionButton cancelPhase === 'info'). 즉 **회원이 조건을 모른 채 돈을 보냈다.**
+// 아래 두 함수가 신청 확인·모임 상세에서 같은 규칙을 미리 보여주기 위한 단일 진입점이다.
+// 규칙 자체는 위 RULES 상수를 그대로 읽는다 — 날짜·비율을 손으로 적으면 어긋난다.
+
+export type RefundStep = {
+  /** 환불 비율 (100 | 50) */
+  rate: number
+  /** 모임 며칠 전까지인지 */
+  daysBefore: number
+  /** 그 경계 날짜 "YYYY-MM-DD" (= 모임일 − daysBefore) */
+  date: string
+}
+
+/** 유형별 환불 단계 — 상세·신청 확인 화면의 안내 문구용 */
+export function getRefundScheduleByType(
+  meetingType: string | null | undefined,
+  meetingDate: string,
+): RefundStep[] {
+  const rules = meetingType === 'discussion' ? DISCUSSION_REFUND_RULES : REFUND_RULES
+  return rules.map((r) => ({
+    rate: r.rate,
+    daysBefore: r.daysBeforeMeeting,
+    date: shiftDate(meetingDate, -r.daysBeforeMeeting),
+  }))
+}
+
+/**
+ * 100% 환불 경계일 — 토론모임은 신청 마감·책 주문 마감과 **같은 날**이다
+ * (2026-08-17 "세 날짜 통일" 결정). 그래서 여기서 한 번 계산해 셋 다 쓴다.
+ */
+export function getFullRefundDeadline(
+  meetingType: string | null | undefined,
+  meetingDate: string,
+): string {
+  const schedule = getRefundScheduleByType(meetingType, meetingDate)
+  const full = schedule.find((s) => s.rate === 100)
+  return full ? full.date : meetingDate
 }

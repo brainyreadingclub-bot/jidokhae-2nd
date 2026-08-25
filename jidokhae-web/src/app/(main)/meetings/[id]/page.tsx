@@ -1,5 +1,7 @@
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { getMeeting } from '@/lib/meeting'
+import { isNextUiEnabled } from '@/lib/next-ui'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import MeetingDetailContent from '@/components/meetings/MeetingDetailContent'
 import MeetingDetailSkeleton from '@/components/skeletons/MeetingDetailSkeleton'
@@ -34,6 +36,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function MeetingDetailPage({ params }: Props) {
   const { id } = await params
+
+  // next_ui ON이면 새 상세로 넘긴다. 알림톡 버튼 URL이 구경로라 이 리다이렉트가 있어야
+  // 재심사 없이 하위 호환된다 (전면개편 설계서 §10 QA).
+  if (await isNextUiEnabled()) {
+    redirect(`/meet/${id}`)
+  }
 
   return (
     <div className="px-5 pt-4">

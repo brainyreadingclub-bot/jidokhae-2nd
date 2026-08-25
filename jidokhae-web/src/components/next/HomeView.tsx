@@ -82,7 +82,7 @@ export default function HomeView({ data }: { data: HomeData }) {
       {/* 다음 모임 — 토스식 큰 숫자 */}
       {nextMeeting && (
         <BoxWhite>
-          <Link href={`/meetings/${nextMeeting.id}`} className="flex items-center gap-3.5">
+          <Link href={`/meet/${nextMeeting.id}`} className="flex items-center gap-3.5">
             <span className="text-[31px] font-extrabold tracking-[-0.04em] text-tg-900 tabular-nums">
               {nextMeeting.daysLeft === 0 ? (
                 <i className="not-italic text-[23px]">오늘</i>

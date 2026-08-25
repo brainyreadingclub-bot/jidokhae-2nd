@@ -123,9 +123,9 @@ export default function TalkView({ data }: { data: TalkData }) {
             </div>
           )}
 
-          {/* 신청 CTA — 열림 + 미신청 + 대기 아님일 때만. 구경로 재사용 */}
+          {/* 신청 CTA — 열림 + 미신청 + 대기 아님일 때만. 상세는 모임 탭 하위 */}
           {discussion.open && !discussion.applied && !discussion.waitlisted && (
-            <BtnSoft href={`/meetings/${discussion.id}`}>
+            <BtnSoft href={`/meet/${discussion.id}`}>
               신청하기 · {formatFee(discussion.fee)}
             </BtnSoft>
           )}
@@ -133,7 +133,7 @@ export default function TalkView({ data }: { data: TalkData }) {
           {/* 대기 중 안내 — 신청 버튼 재노출 방지 */}
           {discussion.waitlisted && (
             <Link
-              href={`/meetings/${discussion.id}`}
+              href={`/meet/${discussion.id}`}
               className="mt-3 block rounded-[15px] bg-tg-50 px-4 py-3 text-center text-xs font-bold text-tg-700"
             >
               대기 중이에요 — 자리가 나면 자동으로 확정돼요
@@ -212,7 +212,7 @@ export default function TalkView({ data }: { data: TalkData }) {
       {past.length > 0 && (
         <>
           <div className="mt-7">
-            <p className="text-[10.5px] font-extrabold tracking-[.08em] text-tg-500">
+            <p className="text-[10.5px] font-extrabold tracking-[.08em] text-tg-600">
               지독해의 책장
             </p>
             <p className="mt-0.5 text-[17px] font-extrabold tracking-[-0.02em] text-tg-900">
@@ -240,7 +240,7 @@ export default function TalkView({ data }: { data: TalkData }) {
                   </div>
                 )}
                 <p className="mt-1.5 truncate text-xs font-extrabold tracking-tight">{p.title}</p>
-                <p className="mt-0.5 text-[10px] font-semibold text-tg-500">
+                <p className="mt-0.5 text-[10px] font-semibold text-tg-600">
                   {p.monthLabel}
                   {p.participantCount > 0 && ` · ${p.participantCount}명이 함께`}
                 </p>

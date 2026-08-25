@@ -1,10 +1,10 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import { getUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import { getSiteSettings } from '@/lib/site-settings'
+import { isNextUiEnabled } from '@/lib/next-ui'
+import { loadRegistrationSummary } from '@/lib/registration-summary'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
-import type { Meeting } from '@/types/meeting'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -16,51 +16,24 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
   const { paymentId, type } = await searchParams
   const isWaitlisted = type === 'waitlisted'
   const isPendingTransfer = type === 'pending_transfer'
-  const supabase = await createClient()
 
-  // Fetch meeting info
-  const { data: meeting } = await supabase
-    .from('meetings')
-    .select('*')
-    .eq('id', id)
-    .single()
+  // next_ui ON이면 토스 스킨 완료 화면으로. 결제·이체 흐름의 도착지를 바꾸지 않고
+  // 여기서 한 번 갈아탄다 — 결제 코드를 건드리지 않기 위해서다.
+  if (await isNextUiEnabled()) {
+    const qs = new URLSearchParams()
+    if (paymentId) qs.set('paymentId', paymentId)
+    if (type) qs.set('type', type)
+    const suffix = qs.toString()
+    redirect(`/meet/${id}/done${suffix ? `?${suffix}` : ''}`)
+  }
 
-  const typedMeeting = meeting as Meeting | null
+  const { meeting: typedMeeting, paidAmount } = await loadRegistrationSummary(id, {
+    paymentId,
+    isPendingTransfer,
+  })
 
   // Fetch bank info for pending_transfer
   const settings = isPendingTransfer ? await getSiteSettings() : null
-
-  // Fetch registration info — 카드결제는 paymentId로, 계좌이체는 본인 pending_transfer 행으로
-  // (이체 흐름은 paymentId가 없어 정가로 폴백되던 표시 버그 수정 — 스텝 할인가도 정확히 표시)
-  let paidAmount: number | null = null
-  if (paymentId) {
-    const { data: reg } = await supabase
-      .from('registrations')
-      .select('paid_amount')
-      .eq('payment_id', paymentId)
-      .in('status', ['confirmed', 'waitlisted'])
-      .limit(1)
-
-    if (reg && reg.length > 0) {
-      paidAmount = reg[0].paid_amount
-    }
-  } else if (isPendingTransfer) {
-    const user = await getUser()
-    if (user) {
-      const { data: reg } = await supabase
-        .from('registrations')
-        .select('paid_amount')
-        .eq('meeting_id', id)
-        .eq('user_id', user.id)
-        .eq('status', 'pending_transfer')
-        .order('created_at', { ascending: false })
-        .limit(1)
-
-      if (reg && reg.length > 0) {
-        paidAmount = reg[0].paid_amount
-      }
-    }
-  }
 
   return (
     <div className="px-5 pt-8">

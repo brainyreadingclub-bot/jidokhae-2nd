@@ -1,13 +1,5 @@
-import { notFound, redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getUser } from '@/lib/auth'
-import { getProfile } from '@/lib/profile'
-import { getMeeting } from '@/lib/meeting'
-import { getKSTToday, getButtonState } from '@/lib/kst'
-import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
-import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
-import { getDisplayFee } from '@/lib/staff-slot'
 import Link from 'next/link'
+import { loadMeetingDetail, hasStickyAction } from '@/lib/meeting-detail'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
@@ -17,175 +9,50 @@ import ParticipantsList from '@/components/meetings/ParticipantsList'
 import BookSection from '@/components/meetings/BookSection'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 
+/**
+ * 구 스킨(잉크그린) 모임 상세.
+ * 조회·판정은 `lib/meeting-detail.ts`가 단일 소스 — `(next)` 토스 스킨과 공유한다.
+ */
 export default async function MeetingDetailContent({ id }: { id: string }) {
-  const supabase = await createClient()
-  const user = await getUser()
-
-  if (!user) redirect('/auth/login')
-
-  const typedMeeting = await getMeeting(id)
-
-  if (!typedMeeting || typedMeeting.status === 'deleted') {
-    notFound()
-  }
-
-  // 토론모임 + 책 연결 시 표지·선정 이유·책 소개 (2026-08-18 표지 배치)
-  const { data: bookRow } =
-    typedMeeting.meeting_type === 'discussion' && typedMeeting.book_id
-      ? await supabase
-          .from('books')
-          .select('title, authors, publisher, thumbnail, description')
-          .eq('id', typedMeeting.book_id)
-          .maybeSingle()
-      : { data: null }
-
-  const [countsResult, myRegResult, myWaitlistResult, pendingResult, participantsResult, settings] = await Promise.all([
-    supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
-    supabase
-      .from('registrations')
-      .select('id, paid_amount, payment_id, payment_method')
-      .eq('user_id', user.id)
-      .eq('meeting_id', id)
-      .eq('status', 'confirmed')
-      .limit(1),
-    supabase
-      .from('registrations')
-      .select('id, paid_amount, payment_method')
-      .eq('user_id', user.id)
-      .eq('meeting_id', id)
-      .eq('status', 'waitlisted')
-      .limit(1),
-    supabase
-      .from('registrations')
-      .select('id, paid_amount')
-      .eq('user_id', user.id)
-      .eq('meeting_id', id)
-      .eq('status', 'pending_transfer')
-      .limit(1),
-    supabase.rpc('get_meeting_participant_nicknames', { p_meeting_id: id }),
-    getSiteSettings(),
-  ])
-
-  if (countsResult.error) {
-    throw new Error(`참가자 수 조회 실패: ${countsResult.error.message}`)
-  }
-  if (myRegResult.error) {
-    throw new Error(`내 신청 조회 실패: ${myRegResult.error.message}`)
-  }
-  if (myWaitlistResult.error) {
-    throw new Error(`대기 신청 조회 실패: ${myWaitlistResult.error.message}`)
-  }
-  // participantsResult.error는 명단이 부가 기능이라 throw 대신 무시 (빈 배열로 폴백)
-
-  const profile = await getProfile(user.id)
-
-  const confirmedCount = Number(
-    (countsResult.data as { meeting_id: string; confirmed_count: number }[] | null)
-      ?.find((c) => c.meeting_id === id)?.confirmed_count ?? 0,
-  )
-  const myReg = myRegResult.data?.[0] ?? null
-  const myWaitlistReg = myWaitlistResult.data?.[0] ?? null
-  const myPendingTransfer = pendingResult.data?.[0] ?? null
-  const hasConfirmed = myReg !== null
-  const hasWaitlisted = myWaitlistReg !== null
-  const hasPendingTransfer = myPendingTransfer !== null
-  const paymentMode = settings.payment_mode ?? DEFAULT_PAYMENT_MODE
-  const isFull = confirmedCount >= typedMeeting.capacity
-  const role = profile.role ?? 'member'
-  const isAdmin = role === 'admin'
-  const isEditorOrAdmin = role === 'admin' || role === 'editor'
-
-  const participantNicknames = (participantsResult.data as { nickname: string }[] | null)
-    ?.map((row) => row.nickname)
-    .filter((n): n is string => typeof n === 'string' && n.length > 0) ?? []
+  const d = await loadMeetingDetail(id)
+  const meeting = d.meeting
 
   // confirmed/pending_transfer 모두 hero가 흡수 (운영자 입금 확인 지연을 회원이 체감하지 않게)
   // 작은 상단 뱃지는 waitlisted만
-  const registrationStatus: 'waitlisted' | null = hasWaitlisted ? 'waitlisted' : null
+  const registrationStatus: 'waitlisted' | null = d.hasWaitlisted ? 'waitlisted' : null
 
-  // 회원 입장에서 입금 후 운영자 확인 전이라도 "신청 완료"처럼 보이게 — 명단/카운트 모두 confirmed와 동등 취급
-  const isBookedSelf = hasConfirmed || hasPendingTransfer
-
-  // 카운트 마스킹 해제 조건: 운영자 또는 본인이 정원에 차지한 경우 (confirmed/pending_transfer)
-  const showAccurateCount = isEditorOrAdmin || isBookedSelf
-
-  // 입금자명: "M/D 닉네임" — 은행 입금자명 글자수(한글 12자) 한도 + 운영자 식별 편의
-  const [, mm, dd] = typedMeeting.date.split('-')
-  const depositorName = `${Number(mm)}/${Number(dd)} ${profile.nickname}`
-
-  if (typedMeeting.status === 'deleting' && !isAdmin) {
-    notFound()
-  }
-
-  const kstToday = getKSTToday()
-  let buttonState = getButtonState(
-    typedMeeting.date,
-    kstToday,
-    hasConfirmed,
-    isFull,
-    hasWaitlisted,
-    hasPendingTransfer,
-  )
-
-  // displayFee — 자격자(admin/editor/staff) + 슬롯 여석 시 할인가, 그 외 정가
-  const { fee: displayFee, isDiscounted } = await getDisplayFee(
-    typedMeeting.id,
-    { role: profile.role, is_staff: profile.is_staff },
-    typedMeeting.fee,
-    typedMeeting.meeting_type,
-  )
-
-  // 토론모임 D-7 신청 마감 (2026-08-17 결정) — 신규 신청·대기 진입만 차단.
-  // 이미 신청한 사람의 취소/입금 버튼은 그대로 둔다 (환불 7/3 규칙은 별도 동작).
-  if (
-    typedMeeting.meeting_type === 'discussion' &&
-    !isDiscussionApplyOpen(typedMeeting.date, kstToday) &&
-    (buttonState.type === 'register' ||
-      buttonState.type === 'join_waitlist' ||
-      buttonState.type === 'full')
-  ) {
-    buttonState = { type: 'apply_closed' }
-  }
-
-  const hasStickyButton =
-    buttonState.type === 'register' ||
-    buttonState.type === 'full' ||
-    buttonState.type === 'cancel' ||
-    buttonState.type === 'join_waitlist' ||
-    buttonState.type === 'waitlist_cancel' ||
-    buttonState.type === 'pending_transfer' ||
-    buttonState.type === 'apply_closed'
+  const hasStickyButton = hasStickyAction(d.buttonState)
 
   return (
     <div style={{ paddingBottom: hasStickyButton ? 'calc(9rem + env(safe-area-inset-bottom, 0px))' : '1.5rem' }}>
       <TrackMeetingView
-        meetingId={typedMeeting.id}
-        title={typedMeeting.title}
-        fee={typedMeeting.fee}
+        meetingId={meeting.id}
+        title={meeting.title}
+        fee={meeting.fee}
       />
-      {isBookedSelf && (
+      {d.isBookedSelf && (
         <RegistrationHero
-          nickname={profile.nickname || ''}
-          meetingDate={typedMeeting.date}
-          meetingTime={typedMeeting.time}
-          kstToday={kstToday}
-          isPending={hasPendingTransfer}
+          nickname={d.nickname}
+          meetingDate={meeting.date}
+          meetingTime={meeting.time}
+          kstToday={d.kstToday}
+          isPending={d.hasPendingTransfer}
         />
       )}
       <RegistrationStatusBadge status={registrationStatus} />
-      {bookRow && (
-        <BookSection book={bookRow} selectionReason={typedMeeting.selection_reason} />
+      {d.book && (
+        <BookSection book={d.book} selectionReason={meeting.selection_reason} />
       )}
       <MeetingDetailInfo
-        meeting={typedMeeting}
-        confirmedCount={confirmedCount}
-        capacity={typedMeeting.capacity}
-        isPrivileged={showAccurateCount}
-        displayFee={displayFee}
-        isStaffDiscount={isDiscounted}
+        meeting={meeting}
+        confirmedCount={d.confirmedCount}
+        capacity={meeting.capacity}
+        isPrivileged={d.showAccurateCount}
+        displayFee={d.displayFee}
+        isStaffDiscount={d.isStaffDiscount}
       />
 
-      {hasPendingTransfer && (
+      {d.hasPendingTransfer && (
         <div className="mt-4 space-y-3">
           <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 text-center">
             <p className="flex items-center justify-center gap-1.5 text-sm font-medium text-neutral-800">
@@ -195,43 +62,43 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
             <p className="text-xs text-neutral-600 mt-1">아직 입금 전이라면 아래 계좌로 입금해주세요</p>
           </div>
           <BankInfoCard
-            bankName={settings.bank_name ?? ''}
-            bankAccount={settings.bank_account ?? ''}
-            bankHolder={settings.bank_holder ?? ''}
+            bankName={d.bankName}
+            bankAccount={d.bankAccount}
+            bankHolder={d.bankHolder}
           />
         </div>
       )}
 
-      {(isBookedSelf || isEditorOrAdmin) && (
-        <ParticipantsList nicknames={participantNicknames} />
+      {(d.isBookedSelf || d.isEditorOrAdmin) && (
+        <ParticipantsList nicknames={d.participantNicknames} />
       )}
 
       <MeetingActionButton
-        buttonState={buttonState}
-        meetingId={typedMeeting.id}
-        meetingTitle={typedMeeting.title}
-        meetingFee={typedMeeting.fee}
-        displayFee={displayFee}
-        isStaffDiscount={isDiscounted}
-        meetingDate={typedMeeting.date}
-        meetingType={typedMeeting.meeting_type ?? null}
-        userId={user.id}
-        registrationId={myReg?.id}
-        paidAmount={myReg?.paid_amount}
-        waitlistRegistrationId={myWaitlistReg?.id}
-        waitlistPaidAmount={myWaitlistReg?.paid_amount}
-        pendingTransferRegistrationId={myPendingTransfer?.id}
-        paymentMode={paymentMode}
-        registrationPaymentMethod={myReg?.payment_method}
-        supportContact={settings.support_contact ?? ''}
-        waitlistPaymentMethod={myWaitlistReg?.payment_method}
-        bankName={settings.bank_name ?? ''}
-        bankAccount={settings.bank_account ?? ''}
-        bankHolder={settings.bank_holder ?? ''}
-        depositorName={depositorName}
+        buttonState={d.buttonState}
+        meetingId={meeting.id}
+        meetingTitle={meeting.title}
+        meetingFee={meeting.fee}
+        displayFee={d.displayFee}
+        isStaffDiscount={d.isStaffDiscount}
+        meetingDate={meeting.date}
+        meetingType={meeting.meeting_type ?? null}
+        userId={d.userId}
+        registrationId={d.myRegistrationId}
+        paidAmount={d.myPaidAmount}
+        waitlistRegistrationId={d.waitlistRegistrationId}
+        waitlistPaidAmount={d.waitlistPaidAmount}
+        pendingTransferRegistrationId={d.pendingTransferRegistrationId}
+        paymentMode={d.paymentMode}
+        registrationPaymentMethod={d.myPaymentMethod}
+        supportContact={d.supportContact}
+        waitlistPaymentMethod={d.waitlistPaymentMethod}
+        bankName={d.bankName}
+        bankAccount={d.bankAccount}
+        bankHolder={d.bankHolder}
+        depositorName={d.depositorName}
       />
 
-      {isEditorOrAdmin && (
+      {d.isEditorOrAdmin && (
         <div
           className="mt-8 rounded-[var(--radius-md)] p-4"
           style={{ backgroundColor: 'var(--color-surface-100)', border: '1px solid var(--color-surface-300)' }}
@@ -240,7 +107,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
             운영자 전용
           </div>
           <Link
-            href={`/admin/meetings/${typedMeeting.id}`}
+            href={`/admin/meetings/${meeting.id}`}
             className="flex items-center justify-between gap-3"
           >
             <div>

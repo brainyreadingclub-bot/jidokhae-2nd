@@ -2,8 +2,10 @@ import Link from 'next/link'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import BottomNav from '@/components/BottomNav'
+import NextNav from '@/components/next/NextNav'
 import LogoutButton from '@/components/LogoutButton'
 import Footer from '@/components/Footer'
+import { isNextUiEnabled } from '@/lib/next-ui'
 
 export default async function MainLayout({
   children,
@@ -11,6 +13,10 @@ export default async function MainLayout({
   children: React.ReactNode
 }) {
   const user = await getUser()
+  // next_ui ON이면 남아 있는 구 화면(/my, 결제 redirect 등)에도 5탭을 붙인다.
+  // 안 붙이면 "모임 일정"(=/) 탭이 홈으로 가서 라벨과 도착지가 어긋나고,
+  // 회원이 5탭에서 2탭으로 떨어져 자기 위치를 잃는다 (2026-08-25 조사 §2-2).
+  const nextUi = await isNextUiEnabled()
 
   let nickname = ''
   let role = 'member'
@@ -38,11 +44,11 @@ export default async function MainLayout({
         </div>
         <LogoutButton />
       </header>
-      <div style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 16px))' }}>
+      <div style={{ paddingBottom: `calc(${nextUi ? '56px' : '64px'} + env(safe-area-inset-bottom, 16px))` }}>
         {children}
         <Footer />
       </div>
-      <BottomNav />
+      {nextUi ? <NextNav /> : <BottomNav />}
     </>
   )
 }

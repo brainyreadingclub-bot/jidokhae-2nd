@@ -58,7 +58,7 @@ export default async function ShelfPage() {
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-[10px] font-extrabold tracking-[.05em] text-tg-500">
+                <p className="text-[10px] font-extrabold tracking-[.05em] text-tg-600">
                   가장 최근에 담은 책
                 </p>
                 <p className="mt-1 truncate text-base font-extrabold tracking-tight">
@@ -92,7 +92,7 @@ export default async function ShelfPage() {
                 <p className="mt-1.5 truncate text-[11px] font-bold tracking-tight">
                   {e.books.title}
                 </p>
-                <p className="truncate text-[10px] font-semibold text-tg-500">
+                <p className="truncate text-[10px] font-semibold text-tg-600">
                   {sourceLabel(e)}
                 </p>
               </div>
