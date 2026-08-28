@@ -77,7 +77,7 @@ export default async function MePage() {
       </div>
 
       <Sec>내 활동</Sec>
-      <RowItem emoji="🧾" tone="blue" title="신청 내역" sub="내 모임 신청과 취소" href="/my" />
+      <RowItem emoji="🧾" tone="blue" title="신청 내역" sub="내 모임 신청과 취소" href="/my#registrations" />
       <RowItem
         emoji="🔔"
         tone="green"

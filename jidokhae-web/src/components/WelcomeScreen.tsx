@@ -20,9 +20,12 @@ export default function WelcomeScreen({ nickname, settings, memberCount }: Props
   const handleCTA = async () => {
     setLoading(true)
     try {
-      await fetch('/api/welcome', { method: 'POST' })
+      const res = await fetch('/api/welcome', { method: 'POST' })
+      if (!res.ok) throw new Error(String(res.status))
     } catch {
-      // 실패 시 refresh로 재시도 가능
+      // 실패하면 버튼을 되돌린다 — 잠긴 채로 두면 다시 누를 방법이 없다
+      setLoading(false)
+      return
     }
     router.refresh()
   }

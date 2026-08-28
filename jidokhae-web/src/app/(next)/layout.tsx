@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { getUser } from '@/lib/auth'
@@ -29,9 +30,12 @@ export default async function NextLayout({
   return (
     <div className="min-h-dvh bg-white text-tg-900">
       <header className="mx-auto flex h-12 max-w-screen-sm items-center justify-between pl-5 pr-2">
-        <span className="text-[17px] font-extrabold tracking-tight text-brand-deep">
+        <Link
+          href="/home"
+          className="text-[17px] font-extrabold tracking-tight text-brand-deep"
+        >
           지독해
-        </span>
+        </Link>
         {user && <NotificationBell userId={user.id} />}
       </header>
       <main className="mx-auto max-w-screen-sm px-5 pb-24">{children}</main>

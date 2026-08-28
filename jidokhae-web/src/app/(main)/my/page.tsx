@@ -27,7 +27,9 @@ export default function MyPage() {
         <LibrarySection />
       </Suspense>
 
-      <h1 className="mt-8 text-xl font-extrabold text-neutral-800 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>내 신청</h1>
+      {/* id는 나 탭 「신청 내역」이 /my#registrations로 여기 내려오기 위한 앵커
+          (프로필 · 설정은 앵커 없이 맨 위로 간다) */}
+      <h1 id="registrations" className="mt-8 text-xl font-extrabold text-neutral-800 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>내 신청</h1>
       <Suspense fallback={<RegistrationsSkeleton />}>
         <MyRegistrationContent />
       </Suspense>
