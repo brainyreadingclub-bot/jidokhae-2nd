@@ -15,6 +15,26 @@
  * - `cancelPayment`(환불) 등 부작용 API를 **여기에 추가하지 말 것.** 환불은 사람이 판단한다
  * - 개인정보(전화·이메일·실명)는 출력하지 않는다. 닉네임과 user_id 앞 8자까지만
  *
+ * 🔴🔴 기지(旣知) 고아 — 이미 처리된 건이다. **또 환불하지 마라.**
+ *
+ *   paymentId : jdkh-20425c26-c22d8636-1788764839332
+ *   금액·일시 : 12,000 · 2026-09-07 (9/9 경주 정기모임)
+ *   회원       : 「에드워드 책」 (c22d8636)
+ *
+ * 2026-09-10에 **대표님이 계좌이체로 12,000을 회원께 직접 보내 환불을 끝냈다.**
+ * 회원 기준 정산은 이미 ±0이다 (카드 −12,000 / 이체 +12,000).
+ *
+ * 🔴 **이 결제를 PortOne에서 취소하면 회원이 12,000을 두 번 받는다.**
+ *
+ * 그런데 이 도구는 PortOne과 우리 DB만 본다 — **계좌로 나간 돈은 볼 수 없다.**
+ * 카드 결제는 PortOne에 `PAID`로 그대로 살아 있고 `registrations`에는 여전히
+ * 행이 없으므로, 이 건은 **대사를 돌릴 때마다 영원히 「고아 결제」로 뜬다.**
+ * 목록에서 지우지 않는 이유도 같다 — 안 보이면 다음 사람이 존재 자체를 모른다.
+ * 위험한 순간은 문서를 읽을 때가 아니라 **이 도구를 돌릴 때**라, 경고를 여기 둔다.
+ *
+ * 경위: `docs/agent-team/logs/관리자.md` 2026-09-10 2부
+ *       `docs/agent-team/조사/2026-09-10-에드워드책-대기환불-누락.md`
+ *
  * 필요한 env (`.env.local`):
  *   NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
  *   PORTONE_API_SECRET / NEXT_PUBLIC_PORTONE_STORE_ID
@@ -40,6 +60,16 @@ const REQUIRED = [
   'PORTONE_API_SECRET',
   'NEXT_PUBLIC_PORTONE_STORE_ID',
 ]
+
+/**
+ * 계좌이체로 이미 환불이 끝난 고아 결제 (상단 「기지 고아」 절 참조).
+ * 이 도구는 계좌 이체를 볼 수 없어 매번 고아로 잡힌다 — **목록에서 지우지 않고
+ * 표시만 붙인다.** 판단은 사람이 한다.
+ */
+const KNOWN_ORPHANS: Record<string, string> = {
+  'jdkh-20425c26-c22d8636-1788764839332':
+    '2026-09-10 대표님이 계좌이체로 환불 완료 (정산 ±0). 🔴 PortOne에서 취소하면 이중 환불',
+}
 
 function daysAgoISO(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
@@ -137,13 +167,16 @@ async function main() {
     for (const p of orphans) {
       const prefix = userPrefixOf(p.id)
       const nickname = prefix ? (byPrefix.get(prefix) ?? '(프로필 없음)') : '(형식 밖)'
+      const known = KNOWN_ORPHANS[p.id]
       console.log(
         `  ${p.id}\n    ${p.status} · ${p.amount?.total ?? 0} · ${p.paidAt ?? p.requestedAt ?? ''}` +
-          `\n    회원 ${prefix ?? '?'} (${nickname}) · ${p.orderName ?? ''}`,
+          `\n    회원 ${prefix ?? '?'} (${nickname}) · ${p.orderName ?? ''}` +
+          (known ? `\n    ✅ 처리 완료(계좌이체) — ${known}` : ''),
       )
     }
     console.log(
-      '\n  ⚠️ 개발 초기 테스트 결제(orderName에 Test 포함)가 섞일 수 있다. 눈으로 가릴 것',
+      '\n  ⚠️ 개발 초기 테스트 결제(orderName에 Test 포함)가 섞일 수 있다. 눈으로 가릴 것' +
+        '\n  ⚠️ ✅ 표시가 붙은 건은 **계좌이체로 이미 환불이 끝났다.** PortOne에서 취소하면 이중 환불이다',
     )
   }
 
