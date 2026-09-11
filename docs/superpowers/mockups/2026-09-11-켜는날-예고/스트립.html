@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>켜는 날 예고 스트립 — 1단 / 2단 (2026-09-11)</title>
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+  /* globals.css 실측값 (2026-09-11) */
+  :root{
+    --color-primary-50:#F3FAF6;
+    --color-primary-400:#3E9A78;
+    --color-primary-600:#0d5c43;
+    --color-primary-900:#072A20;
+    --color-surface-300:#E5E7EB;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:#F9FAFB;
+  }
+  /* (main)/layout.tsx 헤더 */
+  .header{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;border-bottom:1px solid var(--color-surface-300);background:#fff}
+  .header .who{font-size:14px;font-weight:600;letter-spacing:-.01em;color:#0B3D2E}
+  .header .out{font-size:12px;color:#9CA3AF}
+  /* (main)/page.tsx 컨테이너: px-5 pt-6 */
+  .page{padding:24px 20px 28px;background:#fff}
+  /* NoticeStrip.tsx 그대로 */
+  .strip{
+    margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;
+    border-radius:12px;padding:12px 14px;background:var(--color-primary-50);
+  }
+  .strip .dot{margin-top:6px;height:6px;width:6px;flex:none;border-radius:9999px;
+    background:var(--color-primary-600)}
+  .strip p{min-width:0;flex:1;font-size:12.5px;font-weight:600;line-height:1.625;
+    color:var(--color-primary-900);word-break:keep-all}
+  .strip button{display:flex;height:24px;width:24px;flex:none;align-items:center;
+    justify-content:center;color:var(--color-primary-400);background:none;border:0}
+  /* 홈 히어로 */
+  .hero{font-size:22px;font-weight:700;line-height:1.25;letter-spacing:-.02em;
+    color:#111827;font-family:Georgia,serif}
+  .label{padding:10px 20px 6px;font-size:11px;font-weight:800;letter-spacing:.06em;
+    color:#6B7280;background:#F9FAFB}
+</style>
+</head>
+<body>
+
+<div class="label">1단 — 10/1~10/8 게시</div>
+<section id="s1">
+  <div class="header"><span class="who">초록고래님</span><span class="out">로그아웃</span></div>
+  <div class="page">
+    <div class="strip">
+      <span class="dot"></span>
+      <p>10월 11일, 지독해 화면이 새로워져요</p>
+      <button aria-label="공지 닫기">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <h1 class="hero">지독하게, 함께 읽어요</h1>
+  </div>
+</section>
+
+<div class="label">2단 — 10/9~10/10 교체</div>
+<section id="s2">
+  <div class="header"><span class="who">초록고래님</span><span class="out">로그아웃</span></div>
+  <div class="page">
+    <div class="strip">
+      <span class="dot"></span>
+      <p>이번 일요일, 지독해 화면이 새로워져요</p>
+      <button aria-label="공지 닫기">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <h1 class="hero">지독하게, 함께 읽어요</h1>
+  </div>
+</section>
+
+<div class="label">참고 — 기각한 2단 초안 (「이번 주 일요일」)</div>
+<section id="s3">
+  <div class="header"><span class="who">초록고래님</span><span class="out">로그아웃</span></div>
+  <div class="page">
+    <div class="strip">
+      <span class="dot"></span>
+      <p>이번 주 일요일, 지독해 화면이 새로워져요</p>
+      <button aria-label="공지 닫기">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <h1 class="hero">지독하게, 함께 읽어요</h1>
+  </div>
+</section>
+
+</body>
+</html>
