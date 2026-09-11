@@ -171,7 +171,22 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 </details>
 
-> 🔴 **아래 라우트·컴포넌트·스키마 목록은 실제의 절반 수준이다.** **`(next)` 라우트 그룹 전체(8 페이지)·발제 스레드 5테이블·`app_notifications`·`/admin/notices`·책 표지 연결**이 미반영이다. 2026-08-21 실측: `src/lib/*.ts` **39개**(문서 17) · API 라우트 **35개**(문서 22) · admin 페이지 **14개**(문서 10) · DB 테이블 **17개**(문서 12). **목록을 신뢰하지 말고 실제 파일을 세라.** 코드 상세는 `jidokhae-web/CLAUDE.md`가 최신이다. 일괄 갱신은 플래그를 켠 뒤 한 번에 한다 (`검토문서/2026-08-18-문서정비-계획.md` §3)
+> 🔴 **아래 라우트·컴포넌트·스키마 목록은 실제의 절반 수준이다.** **`(next)` 라우트 그룹 전체·발제 스레드 5테이블·`app_notifications`·`/admin/notices`·책 표지 연결**이 미반영이다. **목록을 신뢰하지 말고 실제 파일을 세라.** 코드 상세는 `jidokhae-web/CLAUDE.md`가 최신이다. 일괄 갱신은 플래그를 켠 뒤 한 번에 한다 (`검토문서/2026-08-18-문서정비-계획.md` §3)
+>
+> **실측 대조 (2026-09-11 재측정 — 세는 명령을 같이 적는다. 숫자만 적으면 다음 사람이 다시 셀 수 없다):**
+>
+> | 대상 | 실제 | 이 문서 | 세는 법 (`jidokhae-web/`에서) |
+> |---|:--:|:--:|---|
+> | `src/lib/*.ts` | **41** | ~17 | `ls src/lib/*.ts \| wc -l` |
+> | API 라우트 | **35** | ~22 | `find src/app/api -name route.ts \| wc -l` |
+> | admin 페이지 | **14** | ~10 | `find "src/app/(admin)" -name page.tsx \| wc -l` |
+> | `(next)` 페이지 | **11** | 0 | `find "src/app/(next)" -name page.tsx \| wc -l` |
+> | `(main)` 페이지 | **6** | — | `find "src/app/(main)" -name page.tsx \| wc -l` |
+> | 단위 테스트 파일 | **16** | ~5 | `ls src/lib/__tests__/*.ts \| wc -l` |
+> | prod DB 테이블 | **17** | ~12 | `information_schema.tables` (`table_schema='public'`) |
+>
+> **prod 테이블 17개 전체 (2026-09-11 실조회):** `profiles` · `meetings` · `registrations` · `notifications` · `app_notifications` · `site_settings` · `venues` · `venue_settlements` · `banners` · `book_quotes` · `books` · `library_entries` · `book_asks` · `discussion_topics` · `topic_answers` · `answer_replies` · `answer_reactions`
+> ⏳ **`payment_failures`는 아직 없다** — 코드는 `fix/payment-safety-net`에 있고 마이그레이션 미실행(아래 「결제 안전망」 참조)
 
 ---
 
@@ -241,7 +256,8 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | Free member (100% 할인) | `profiles.is_free=true` 회원은 정산 "입금 확인 대기" 목록/배지에서 제외 (`settlement.ts getPendingDeposits` + `dashboard.ts getTransferAlerts`, JS 필터 `is_free !== true`). 배경: 운영자 본인 + 소수 고정 무료 참석자가 계좌이체로 신청 후 미입금(코멥)하여 `pending_transfer`로 영구 잔존 → 정산 노이즈. 최소 설계 — 대상자는 **기존 계좌이체 흐름 그대로** 신청(신청/결제/취소 코드 무변경), 정산 조회에서만 제외. `pending_transfer`는 원래 매출·환불 대기에도 안 잡히므로 추가 처리 불필요. 스텝 할인(`is_staff`)과 완전 별개. 대상 지정은 SQL `UPDATE profiles SET is_free=true WHERE nickname=...` (토글 UI 없음, 고정 소수라). 마이그레이션: `migration-free-member.sql` |
 | Batch refund timeout | `Promise.allSettled` required (Vercel 10-second limit) |
 | Payment mode | redirect. PortOne V2는 결제창에서 완료 시 **이미 승인된 상태**로 redirect → redirect 핸들러/웹훅은 `getPayment()`로 `status === 'PAID'` 검증만 수행 (토스처럼 confirmPayment로 돈을 이동시키지 않음) |
-| Webhook backup | PortOne Webhook (`/api/webhooks/portone`, `PORTONE_WEBHOOK_SECRET` 서명 검증) as backup when frontend redirect fails. 레거시 `/api/webhooks/tosspayments`는 미사용 잔존 |
+| Webhook backup | PortOne Webhook (`/api/webhooks/portone`, `PORTONE_WEBHOOK_SECRET` 서명 검증) as backup when frontend redirect fails. 레거시 `/api/webhooks/tosspayments`는 미사용 잔존. 🔴 **이 백업은 M4 최초 구현부터 2026-09-11까지 한 번도 작동한 적이 없었다** — 아래 「결제 안전망」 참조 |
+| 🔴 **결제 안전망** (2026-09-11) | **`paymentId` prefix로 UUID를 되찾을 때 `.like()`를 쓰지 않는다.** `meetings.id`·`profiles.id`는 `uuid`라 Postgres에 `uuid LIKE text` 연산자가 없다(`42883`). **구간 비교**(`.gte(lo).lte(hi)`, `lib/payment-id.ts`의 `uuidPrefixRange`)를 쓴다 — uuid 정렬이 16바이트 `memcmp`라 앞 8자가 같은 집합과 구간이 정확히 일치하고 PK 인덱스도 탄다. 🔴 **조회 실패(`query_failed`)와 대상 없음(`not_found`)을 절대 합치지 않는다** — 합쳐서 200으로 덮은 것이 사고를 몇 달간 숨겼다. `classifyIdLookup`이 4갈래(resolved/query_failed/not_found/ambiguous)로 가르고, 실패는 **500으로 시끄럽게** 끝낸다. prefix 충돌 감지를 위해 `.limit(2)`(1이면 충돌을 모른 채 **남의 명의로 신청이 만들어진다**). 실패는 `payment_failures`에 남긴다(`lib/payment-failure.ts` — **절대 throw 안 함**, 호출부는 `after()`, 표가 없어도 동작해 **배포 순서를 안 탄다**). ⏳ 브랜치 `fix/payment-safety-net`(`0a0f005`), **미머지·마이그레이션 미실행**. 배경: `docs/agent-team/조사/2026-09-10-에드워드책-대기환불-누락.md` |
 | Bank transfer bridge | `site_settings.payment_mode` flag (`transfer_only`/`card_only`). 심사 전 계좌이체로 출시, 심사 후 카드 전환. `pending_transfer` 상태 + `payment_method` 컬럼 |
 | payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
 | Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
@@ -421,7 +437,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 - **API response 표준 포맷:** `{ status: 'success' | 'error', message?, data? }` (Phase 3 M7 Step 1에서 12개 라우트 통일). 신규 API 라우트는 이 포맷을 따를 것. 기존 `{ success: true }` 패턴은 점진적 마이그레이션 중
 - **Business logic in `src/lib/`**: `payment.ts` (confirmation), `cancel.ts` (cancellation, returns meetingId for promotion trigger), `waitlist.ts` (대기 승격 래퍼 + 대기 취소), `refund.ts` (refund calculation + `REFUND_RULES` 상수 — paid_amount 기반이라 스텝 할인 결제도 비율 환불), `portone.ts` (PortOne V2 server SDK 래퍼 — `getPayment`/`cancelPayment`), `tosspayments.ts` (레거시 TossPayments 래퍼, 미사용 잔존), `pricing.ts` (스텝 할인 가격 계산 단일 진입점 — `isStaffEligible`/`calculateFee` + 상수), `staff-slot.ts` (스텝 슬롯 카운트 + `getDisplayFee()`), `auth.ts` (cached `getUser()` via React `cache()` — safe only after middleware session refresh), `profile.ts` (cached `getProfile()` via React `cache()`), `profile-update.ts` (순수 검증 헬퍼 `resolveProfileUpdate` — 마이페이지 프로필 수정 규칙, Vitest 단위 테스트), `meeting.ts` (cached `getMeeting(id)` via React `cache()`), `notification.ts` (알림톡 7종 발송 + notifications 이력), `solapi.ts` (Solapi SDK 래퍼), `regions.ts` (`VALID_REGIONS` 상수 — 13개 지역), `site-settings.ts` (cached `getSiteSettings()` — service_role, React `cache()`), `dashboard.ts` (대시보드 집계 — 매출, 모임, 회원, 알림, 장소 정산). Shared between API routes — keep logic here, not in route handlers
 - **Shared UI components:** `ModalOverlay` (`src/components/ui/ModalOverlay.tsx`) — reusable accessible modal with ESC key handling, focus management, backdrop blur. Used by `DeleteMeetingButton` and `MeetingActionButton`
-- **Unit tests:** Vitest with `@/*` path alias and `globals: true`. **단, 테스트 파일에는 `import { describe, it, expect } from 'vitest'`를 명시할 것** — `globals: true`라 `vitest run`은 import 없이도 통과하지만, `prelaunch`의 `npx tsc --noEmit`가 테스트 파일도 타입 검사하므로 import 없으면 TS2304/TS2582로 실패. 검증은 `vitest run`만으로 끝내지 말고 tsc까지 돌릴 것. Tests in `src/lib/__tests__/` (kst, refund, pricing, visibility, profile-update). Run `npm test` or `npx vitest run`
+- **Unit tests:** Vitest with `@/*` path alias and `globals: true`. **단, 테스트 파일에는 `import { describe, it, expect } from 'vitest'`를 명시할 것** — `globals: true`라 `vitest run`은 import 없이도 통과하지만, `prelaunch`의 `npx tsc --noEmit`가 테스트 파일도 타입 검사하므로 import 없으면 TS2304/TS2582로 실패. 검증은 `vitest run`만으로 끝내지 말고 tsc까지 돌릴 것. Tests in `src/lib/__tests__/` — **2026-09-11 실측 16개 파일**(문서에 5개만 적혀 있었다. 이름을 다시 나열하지 않는다 — `ls src/lib/__tests__/*.ts`가 항상 맞다). `npm test` 또는 `npx vitest run`. **현재 `origin/main` 기준 193개 통과**, `fix/payment-safety-net`에서 223개
 - **Verification scripts & manual checklists:** `scripts/verify-m1*.ts`, `검토문서/` for manual testing checklists
 
 ### Payment Flow (M4)
