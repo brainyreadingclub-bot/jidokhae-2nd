@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>서재 책 담기 동선 시안 (2026-09-14)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+:root{
+  /* 토스 스킨 — jidokhae-web/src/app/globals.css 111~126행 원문 대조 (2026-09-14) */
+  --tg-50:#F9FAFB; --tg-100:#F2F4F6; --tg-200:#E5E8EB; --tg-300:#D1D6DB;
+  --tg-400:#B0B8C1; --tg-500:#8B95A1; --tg-600:#6B7684; --tg-700:#4E5968;
+  --tg-800:#333D4B; --tg-900:#191F28;
+  --brand:#0FA873; --brand-deep:#0C8A5F; --brand-bg:#E8F7F1;
+  --warnx:#FF6B3D; --warnx-bg:#FFF0EA;
+  --shadow-toss-card:0 2px 12px rgba(25,31,40,.07);
+  --sans:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9ECEF;font-family:var(--sans);color:var(--tg-900);word-break:keep-all;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:48px 28px 120px}
+
+.doc-title{font-size:30px;font-weight:800;letter-spacing:-.03em}
+.doc-sub{margin-top:10px;font-size:14px;line-height:1.75;color:var(--tg-700);max-width:880px}
+.doc-sub b{color:var(--tg-900)}
+.rule-box{margin-top:22px;background:#fff;border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-toss-card);max-width:880px}
+.rule-box h3{font-size:14px;font-weight:800;margin-bottom:8px}
+.rule-box ul{margin-left:17px}
+.rule-box li{font-size:13px;line-height:1.85;color:var(--tg-700)}
+.rule-box li b{color:var(--tg-900)}
+.hl{color:#C0392B;font-weight:700}
+
+section.screen{margin-top:56px}
+.screen-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.screen-no{font-size:12px;font-weight:800;color:#fff;background:var(--tg-900);border-radius:6px;padding:3px 8px}
+.screen-no.now{background:var(--tg-500)}
+.screen-name{font-size:21px;font-weight:800;letter-spacing:-.03em}
+.screen-desc{font-size:13px;line-height:1.8;color:var(--tg-700);max-width:880px}
+.pair{display:flex;gap:26px;margin-top:18px;align-items:flex-start}
+.col{width:390px;flex:none}
+.col.narrow{width:320px}
+.col-cap{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.tag{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px}
+.tag-now{background:var(--tg-300);color:var(--tg-800)}
+.tag-new{background:var(--brand);color:#fff}
+.col-cap .sub{font-size:11.5px;color:var(--tg-600)}
+.notes{margin-top:10px}
+.notes li{font-size:11.5px;line-height:1.7;color:var(--tg-700);margin-left:15px}
+.notes li b{color:var(--tg-900)}
+.notes li.warn::marker{color:var(--warnx)}
+.notes li.warn b{color:#C0392B}
+
+/* ═══════ 폰 프레임 ═══════ */
+.phone{width:390px;height:844px;background:#fff;position:relative;overflow:hidden;
+  box-shadow:0 10px 30px rgba(25,31,40,.13);border-radius:14px}
+.phone.w320{width:320px}
+
+/* 헤더 */
+.nx-head{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 20px}
+.nx-wm{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--brand-deep)}
+.bell{color:var(--tg-600);display:flex;align-items:center;justify-content:center;width:36px;height:36px}
+.nx-body{padding:0 20px}
+
+/* 하단 탭 */
+.nav{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid var(--tg-100);
+  display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--tg-400);text-decoration:none}
+.nav a.on{color:var(--tg-900)}
+.nav span{font-size:10px;font-weight:600;letter-spacing:-.02em}
+.nav a.on span{font-weight:700}
+
+/* 타이포 */
+.h1{margin-top:12px;font-size:21px;font-weight:800;line-height:1.3;letter-spacing:-.03em;color:var(--tg-900)}
+.h1 b{color:var(--brand);font-weight:800}
+.sec{margin-top:18px;margin-bottom:4px;display:flex;align-items:baseline;justify-content:space-between}
+.sec h3{font-size:13.5px;font-weight:700;letter-spacing:-.01em;color:var(--tg-600)}
+.sec .add{font-size:13px;font-weight:700;color:var(--brand-deep);display:flex;align-items:center;gap:3px}
+
+/* 카드 */
+.box-gray{margin-top:20px;border-radius:18px;background:var(--tg-100);padding:26px 20px;text-align:center}
+.box-white{margin-top:10px;border-radius:20px;background:#fff;padding:16px;box-shadow:var(--shadow-toss-card)}
+.box-brand{margin-top:18px;border-radius:18px;background:var(--brand-bg);padding:16px;position:relative}
+.btn-brand{height:48px;border-radius:14px;background:var(--brand);color:#fff;font-size:15px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;letter-spacing:-.02em}
+.btn-soft{height:48px;border-radius:14px;background:#fff;color:var(--brand-deep);font-size:14px;font-weight:800;
+  display:flex;align-items:center;justify-content:center}
+.btn-text{height:48px;display:flex;align-items:center;justify-content:center;gap:4px;
+  font-size:13.5px;font-weight:700;color:var(--tg-600)}
+.pill-src{display:inline-flex;align-items:center;border-radius:999px;background:var(--brand-bg);
+  padding:4px 10px;font-size:10.5px;font-weight:800;color:var(--brand-deep)}
+
+/* 표지 */
+.cv{border-radius:5px;object-fit:cover;display:block;background:var(--tg-200)}
+.cv-fb{border-radius:5px;background:var(--tg-100);display:flex;align-items:center;justify-content:center;
+  text-align:center;font-size:10px;font-weight:700;color:var(--tg-600);padding:5px;line-height:1.3}
+.grid3{margin-top:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px 12px}
+.grid3 .t{margin-top:6px;font-size:11px;font-weight:700;letter-spacing:-.02em;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.grid3 .s{margin-top:1px;font-size:10px;font-weight:600;color:var(--tg-600);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.tile-add{aspect-ratio:2/3;border-radius:6px;border:1.5px dashed var(--tg-300);display:flex;
+  flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--tg-500);
+  font-size:11px;font-weight:700}
+
+/* 바텀시트 */
+.dim{position:absolute;inset:0;background:rgba(25,31,40,.45)}
+.sheet{position:absolute;left:0;right:0;background:#fff;border-radius:22px 22px 0 0;
+  box-shadow:0 -8px 28px rgba(25,31,40,.18);display:flex;flex-direction:column}
+.handle{width:38px;height:4px;border-radius:99px;background:var(--tg-200);margin:9px auto 0}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 0}
+.sheet-head h4{font-size:17px;font-weight:800;letter-spacing:-.03em}
+.x{width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:var(--tg-500);
+  margin-right:-6px}
+.fld{height:48px;border-radius:12px;background:var(--tg-100);display:flex;align-items:center;gap:8px;
+  padding:0 14px;font-size:16px;color:var(--tg-900);margin:14px 20px 0}
+.fld.ph{color:var(--tg-400)}
+.fld.focus{background:#fff;box-shadow:0 0 0 2px var(--brand) inset}
+.fld svg{color:var(--tg-400);flex:none}
+.caret{display:inline-block;width:2px;height:19px;background:var(--brand);margin-left:1px;vertical-align:-3px}
+.fld-help{font-size:12px;color:var(--tg-600);margin:6px 20px 0;line-height:1.45}
+.res{margin-top:6px;padding:0 20px;overflow:hidden;flex:1}
+.res-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--tg-100)}
+.res-row:first-child{border-top:0}
+.res-row .meta{min-width:0;flex:1}
+.res-row .t{font-size:14px;font-weight:700;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.res-row .s{margin-top:2px;font-size:11.5px;color:var(--tg-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-add{flex:none;height:32px;padding:0 13px;border-radius:999px;background:var(--brand-bg);
+  color:var(--brand-deep);font-size:12.5px;font-weight:800;display:flex;align-items:center}
+.btn-add.done{background:var(--tg-100);color:var(--tg-500)}
+.sheet-note{margin:16px 20px 0;border-radius:12px;background:var(--brand-bg);padding:11px 13px;
+  display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--brand-deep)}
+.sheet-note.neutral{background:var(--tg-100);color:var(--tg-700)}
+.just{margin:16px 20px 0}
+.just .lbl{font-size:11.5px;font-weight:800;color:var(--tg-600);letter-spacing:.02em}
+.just .strip{margin-top:8px;display:flex;align-items:flex-end;gap:9px}
+.link-go{font-size:12.5px;font-weight:700;color:var(--brand-deep);display:flex;align-items:center;gap:2px}
+.empty-res{padding:34px 20px 30px;text-align:center}
+.empty-res .t{font-size:14px;font-weight:700;color:var(--tg-700)}
+.empty-res .s{margin-top:6px;font-size:12.5px;color:var(--tg-600);line-height:1.55}
+
+/* 키보드 */
+.kbd{position:absolute;left:0;right:0;bottom:0;height:336px;background:#D1D5DB;user-select:none}
+.kbd .sugg{height:45px;display:flex;align-items:center;justify-content:space-around;
+  border-bottom:1px solid #BFC4CB;font-size:14px;color:#3a3f46}
+.kbd .rows{padding:9px 3px 0}
+.kbd .r{display:flex;gap:5px;justify-content:center;margin-bottom:11px}
+.kbd .k{background:#fff;border-radius:5px;height:42px;flex:1;display:flex;align-items:center;
+  justify-content:center;font-size:16px;color:#111;box-shadow:0 1px 0 rgba(0,0,0,.28)}
+.kbd .k.wide{flex:1.5;background:#ACB3BD;font-size:13px}
+.kbd .k.space{flex:5}
+.kbd .k.go{flex:2;background:var(--brand);color:#fff;font-size:14px;font-weight:700}
+
+/* 관리 시트 */
+.seg{margin:16px 20px 0;display:flex;background:var(--tg-100);border-radius:12px;padding:4px;gap:4px}
+.seg div{flex:1;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:13.5px;font-weight:700;color:var(--tg-600)}
+.seg div.on{background:#fff;color:var(--tg-900);font-weight:800;box-shadow:0 1px 3px rgba(25,31,40,.1)}
+.danger{margin:6px 20px 0;height:48px;display:flex;align-items:center;justify-content:center;
+  font-size:13.5px;font-weight:700;color:var(--tg-600)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1 class="doc-title">서재 — 책 담기 동선</h1>
+<p class="doc-sub">
+  새 5탭 UI(<b>next_ui</b>) 안에서 <b>책 담기가 끝나는</b> 흐름. 지금은 서재 탭의 유일한 행동 버튼이
+  구 화면 <b>/my#library</b>로 나가서 하단 탭이 5개 → 2개로 바뀌고, <b>0권인 회원은 그 링크를 눌러도
+  담기 UI를 만나지 못한다</b>(아래 00 참조). 전부 플래그 뒤라 회원 노출은 아직 0이다.
+</p>
+
+<div class="rule-box">
+  <h3>이 시안이 지킨 것</h3>
+  <ul>
+    <li><b>토스 스킨</b> — 테두리 0(구분은 tg-100 면·여백), radius 12~22, 14px 미만 보조 텍스트는 tg-600 이상. 색값은 <b>globals.css 111~126행 원문 대조</b></li>
+    <li><b>진입점은 하나</b> — 서재 탭 안에서 시작해 서재 탭에서 끝난다. 화면을 떠나지 않는다</li>
+    <li><b>출처 라벨은 모임에서 온 책에만</b> 단다. 직접 담은 책에는 안 단다 — 구 <code>LibraryGrid.tsx:165</code>와 같은 규칙이고, 현행 <code>(next)/shelf</code>만 어긋나 있다</li>
+    <li><b>물어보기를 덮지 않는다</b> — 물어보기가 열려 있으면 그 카드가 위, 직접 담기가 아래</li>
+    <li>호칭 <b>닉네임</b>, 금액 표기 없음, 한글 <code>word-break: keep-all</code></li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════ 00 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no now">00</span><h2 class="screen-name">지금 — 빈 서재</h2></div>
+  <p class="screen-desc">
+    현행 <code>src/app/(next)/shelf/page.tsx</code> 재현. 회원이 <b>지금 할 수 있는 것이 하나도 없다.</b>
+    유일한 버튼은 구 UI로 나가는 링크이고, 그 목적지에서도 0권 회원에게는 담기 UI가 렌더되지 않는다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-now">지금</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s00">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">내 서재,<br><b>0권</b> 쌓였어요</div>
+          <div style="margin-top:24px;border-radius:18px;border:1px dashed var(--tg-300);padding:24px;text-align:center">
+            <p style="font-size:14px;font-weight:700;color:var(--tg-700)">아직 담은 책이 없어요</p>
+            <p style="margin-top:4px;font-size:12px;color:var(--tg-600)">모임 다음날 알림에서 읽은 책을 담을 수 있어요</p>
+          </div>
+          <div style="margin-top:24px;height:48px;border-radius:14px;background:var(--tg-100);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--tg-700)">
+            책 담기 · 관리는 마이페이지에서
+          </div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li class="warn"><b>버튼을 눌러도 담을 수 없다.</b> <code>LibrarySection.tsx:24</code>가 콜드스타트 B안(2026-07-31 결정)으로 <b>0권 + 물어보기 없음이면 섹션 자체를 안 그린다</b> → <code>#library</code> 앵커가 없는 화면에 도착한다</li>
+        <li class="warn">하단 탭이 <b>5개 → 2개</b>로 바뀐다(구 <code>(main)</code> BottomNav). 회원은 자기가 어디로 갔는지 모른다</li>
+        <li><b>"0권 쌓였어요"</b> — 쌓인 게 없는데 쌓였다고 말한다. 0권용 문장이 따로 없다</li>
+        <li>안내 문구가 <b>기다리라는 말</b>뿐이다("모임 다음날 알림에서")</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 01 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">01</span><h2 class="screen-name">빈 서재 — 0권 (물어보기 없음)</h2></div>
+  <p class="screen-desc">
+    첫 방문에서 <b>지금 누를 수 있는 것</b>을 준다. 순서를 뒤집었다 — 할 수 있는 일이 먼저, 모임 알림은 부연.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s01">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">읽은 책을<br>담아볼까요</div>
+
+          <div class="box-gray">
+            <svg width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="#D1D6DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto">
+              <path d="M8 10h9v28H8zM17 10h8v28h-8z"/><path d="M26.5 11.6l6.6-1.4 4.4 27-6.6 1.4z"/>
+            </svg>
+            <p style="margin-top:14px;font-size:14.5px;font-weight:800;color:var(--tg-800);letter-spacing:-.02em">담은 책이 여기 쌓여요</p>
+            <p style="margin-top:5px;font-size:12.5px;color:var(--tg-600);line-height:1.5">지금까지 읽은 책부터 넣어보세요</p>
+            <div class="btn-brand" style="margin-top:16px">책 찾아서 담기</div>
+          </div>
+
+          <p style="margin-top:14px;text-align:center;font-size:12px;color:var(--tg-600);line-height:1.5">
+            모임에서 읽은 책은 모임 다음날 따로 물어볼게요
+          </p>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>"0권"을 숫자로 말하지 않는다.</b> 0은 성취가 아니라 상태다 — 1권부터 <code>N권 쌓였어요</code>로 돌아간다</li>
+        <li>점선 외피를 <b>회색 면(tg-100)으로 바꿨다.</b> 점선은 "여기 뭔가 빠졌다"는 신호라 빈 상태를 결함처럼 보이게 한다</li>
+        <li>알림 안내는 <b>카드 밖 한 줄</b>로 내렸다 — 지금 할 일이 아니라 앞으로의 일이라서</li>
+        <li>버튼 한 개. 이 화면에서 다른 곳으로 나가는 링크는 없다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 02 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">02</span><h2 class="screen-name">빈 서재 — 물어보기가 열려 있을 때</h2></div>
+  <p class="screen-desc">
+    모임에 다녀온 회원. <b>맥락이 있는 쪽이 위</b>로 간다. 여기서 담으면 <code>source='ask'</code>로 기록되고
+    물어보기가 해소된다 — 새 동선이 물어보기를 <b>대체하지 않고 착지시킨다</b>.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s02">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">읽은 책을<br>담아볼까요</div>
+
+          <div class="box-brand">
+            <span style="position:absolute;right:10px;top:10px;color:var(--tg-500)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </span>
+            <p style="font-size:10.5px;font-weight:800;letter-spacing:.04em;color:var(--brand-deep)">8월 정기모임</p>
+            <p style="margin-top:4px;font-size:16.5px;font-weight:800;letter-spacing:-.03em;color:var(--tg-900)">무슨 책 읽으셨어요?</p>
+            <p style="margin-top:4px;font-size:12.5px;color:var(--tg-700);line-height:1.5">담아두면 서재에 모임 이름이 함께 남아요</p>
+            <div class="btn-soft" style="margin-top:12px">그 책 담기</div>
+          </div>
+
+          <div style="margin-top:6px" class="btn-text">
+            다른 책 찾아서 담기
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>두 카드가 아니라 카드 하나 + 텍스트 한 줄.</b> 같은 무게의 상자를 둘 쌓으면 회원이 고르느라 멈춘다</li>
+        <li>닫기(×)는 그대로 <code>dismissed</code>. 닫으면 물어보기 카드만 사라지고 <b>01 화면이 남는다</b> — 구 화면처럼 서재가 통째로 사라지지 않는다</li>
+        <li>둘 다 같은 담기 시트를 연다. 다른 것은 <b>어느 출처로 기록되는가</b>뿐이다(위=ask, 아래=manual)</li>
+        <li class="warn"><b>지금 <code>(next)</code> 5탭 어디에도 이 카드가 없다</b> — 물어보기 인앱 안전망이 개편에서 통째로 빠져 있다(본문 보고 §2)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 03 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">03</span><h2 class="screen-name">담기 시트 — 열린 직후</h2></div>
+  <p class="screen-desc">
+    <b>왜 바텀시트인가</b> — 서재 탭을 떠나지 않고, 담은 결과가 시트 뒤에 바로 있고, 연달아 여러 권을 담을 수 있다.
+    별도 페이지로 빼면 첫 방문자가 "그동안 읽은 책 밀어넣기"를 할 때 매번 들락거려야 한다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844 · 키보드 올라온 상태</span></div>
+      <div class="phone" id="s03">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">읽은 책을<br>담아볼까요</div>
+          <div class="box-gray">
+            <svg width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="#D1D6DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto"><path d="M8 10h9v28H8zM17 10h8v28h-8z"/><path d="M26.5 11.6l6.6-1.4 4.4 27-6.6 1.4z"/></svg>
+            <p style="margin-top:14px;font-size:14.5px;font-weight:800;color:var(--tg-800)">담은 책이 여기 쌓여요</p>
+            <p style="margin-top:5px;font-size:12.5px;color:var(--tg-600)">지금까지 읽은 책부터 넣어보세요</p>
+            <div class="btn-brand" style="margin-top:16px">책 찾아서 담기</div>
+          </div>
+        </div>
+        <div class="dim"></div>
+        <div class="sheet" style="top:346px;bottom:336px">
+          <div class="handle"></div>
+          <div class="sheet-head"><h4>책 담기</h4>
+            <span class="x"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+          </div>
+          <div class="fld focus ph">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+            <span style="color:var(--tg-400)">책 제목 일부만 넣어도 돼요</span><span class="caret"></span>
+          </div>
+          <p class="fld-help">예: 데미안, 아몬드</p>
+        </div>
+        <div class="kbd">
+          <div class="sugg"><span>ㄱ</span><span>ㄴ</span><span>ㄷ</span></div>
+          <div class="rows">
+            <div class="r"><div class="k">ㅂ</div><div class="k">ㅈ</div><div class="k">ㄷ</div><div class="k">ㄱ</div><div class="k">ㅅ</div><div class="k">ㅛ</div><div class="k">ㅕ</div><div class="k">ㅑ</div><div class="k">ㅐ</div><div class="k">ㅔ</div></div>
+            <div class="r"><div class="k">ㅁ</div><div class="k">ㄴ</div><div class="k">ㅇ</div><div class="k">ㄹ</div><div class="k">ㅎ</div><div class="k">ㅗ</div><div class="k">ㅓ</div><div class="k">ㅏ</div><div class="k">ㅣ</div></div>
+            <div class="r"><div class="k wide">⇧</div><div class="k">ㅋ</div><div class="k">ㅌ</div><div class="k">ㅊ</div><div class="k">ㅍ</div><div class="k">ㅠ</div><div class="k">ㅜ</div><div class="k">ㅡ</div><div class="k wide">⌫</div></div>
+            <div class="r"><div class="k wide">123</div><div class="k space"></div><div class="k go">검색</div></div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>검색 버튼을 없앴다.</b> 키보드가 이미 초록 <code>검색</code> 키를 준다 — 필드 옆에 버튼을 두면 긴 제목을 넣을 폭이 줄어든다</li>
+        <li>시트는 키보드 위에 붙는다. 시트 아래 하단 탭은 가려도 된다 — <b>지금 회원이 하는 일은 검색 하나</b></li>
+        <li>placeholder와 도움말은 현행 <code>BookSearchInput.tsx:99·114</code> 문구를 그대로 옮겼다(검증된 문구)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 04 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">04</span><h2 class="screen-name">담기 시트 — 검색 결과</h2></div>
+  <p class="screen-desc">카카오 책 검색(<code>src/lib/kakao-books.ts</code>) 결과. 표지·제목·저자·출판사, 행마다 담기 하나.</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844 · 키보드 내려감</span></div>
+      <div class="phone" id="s04">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">읽은 책을<br>담아볼까요</div>
+        </div>
+        <div class="dim"></div>
+        <div class="sheet" style="top:196px;bottom:0">
+          <div class="handle"></div>
+          <div class="sheet-head"><h4>책 담기</h4>
+            <span class="x"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+          </div>
+          <div class="fld">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+            <span>데미안</span>
+          </div>
+          <div class="res">
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안</div>
+              <div class="meta"><p class="t">데미안</p><p class="s">헤르만 헤세 · 민음사</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안</div>
+              <div class="meta"><p class="t">데미안 (세계문학전집 44)</p><p class="s">헤르만 헤세 · 문학동네</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안</div>
+              <div class="meta"><p class="t">데미안 — 청소년판</p><p class="s">헤르만 헤세 · 더클래식</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">헤세를 읽다</div>
+              <div class="meta"><p class="t">헤세를 읽다 — 데미안에서 싯다르타까지</p><p class="s">정여울 · 아르테</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안 필사책</div>
+              <div class="meta"><p class="t">데미안 필사책</p><p class="s">헤르만 헤세 · 북로그컴퍼니</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안</div>
+              <div class="meta"><p class="t">데미안 (영문판)</p><p class="s">Hermann Hesse · Penguin</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안 연구</div>
+              <div class="meta"><p class="t">데미안 — 나에게로 가는 길</p><p class="s">헤르만 헤세 · 열린책들</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>결과 영역만 스크롤한다. 검색 필드는 시트 상단에 <b>고정</b> — 다시 검색하러 위로 올라갈 일이 없다</li>
+        <li class="warn"><b>시트 높이는 상태에 따라 변하지 않는다.</b> 결과가 많든(04) 0건이든(05) 방금 담았든(06) 같은 높이다 — 결과 수에 따라 시트가 오르내리면 <b>누르려던 버튼이 손가락 아래에서 움직인다.</b> 그래서 05·06·12에 남는 여백은 실수가 아니라 대가다</li>
+        <li>표지 없는 책은 <b>제목 폴백</b>(2026-08-18 표지 배치 결정). 시안에서는 전부 폴백으로 그려 최악의 경우를 본다</li>
+        <li>행 높이 82px · 담기 버튼 32px — 손가락 표적은 행 전체가 아니라 <b>담기 버튼만</b>이다. 행을 눌러 실수로 담기는 것을 막는다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 05 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">05</span><h2 class="screen-name">담기 시트 — 결과 없음</h2></div>
+  <p class="screen-desc">검색은 됐는데 결과가 0건. 네트워크 오류는 다른 문구다(노트 참조).</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s05">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body"><div class="h1">읽은 책을<br>담아볼까요</div></div>
+        <div class="dim"></div>
+        <div class="sheet" style="top:196px;bottom:0">
+          <div class="handle"></div>
+          <div class="sheet-head"><h4>책 담기</h4>
+            <span class="x"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+          </div>
+          <div class="fld">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+            <span>데미안 청소년 완역본 개정판</span>
+          </div>
+          <div class="empty-res">
+            <p class="t">찾는 책이 안 보여요</p>
+            <p class="s">제목을 조금 줄이거나<br>띄어쓰기를 바꿔 다시 찾아보세요</p>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>현행 문구(<code>BookSearchInput.tsx:119</code>) 유지 — <b>회원 탓으로 들리지 않게</b> "안 보여요"로 둔다</li>
+        <li>다음 행동을 한 문장에 담는다(줄이기 / 띄어쓰기). 목록이나 버튼을 더 두지 않는다</li>
+        <li><b>네트워크 오류는 같은 자리에 다른 문구</b> — "검색에 실패했어요. 잠시 후 다시 시도해주세요."(현행 <code>:42</code>). 결과 0건과 섞으면 회원이 자기 검색어를 고치려다 시간을 버린다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 06 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">06</span><h2 class="screen-name">담은 직후 — 시트는 닫히지 않는다</h2></div>
+  <p class="screen-desc">
+    <b>관리자 질문 3 — "담은 직후 어떻게 되는가".</b> 시트를 닫지 않는다. 첫 방문 회원은 한 권만 담지 않는다.
+    담긴 것은 시트 안에서 <b>보여주고</b>, 서재로 내려가는 길은 텍스트 링크 하나로 연다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s06">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body"><div class="h1">읽은 책을<br>담아볼까요</div></div>
+        <div class="dim"></div>
+        <div class="sheet" style="top:196px;bottom:0">
+          <div class="handle"></div>
+          <div class="sheet-head"><h4>책 담기</h4>
+            <span class="x"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+          </div>
+          <div class="sheet-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5L20 7"/></svg>
+            데미안, 담았어요
+          </div>
+          <div class="just">
+            <p class="lbl">방금 담은 책 2권</p>
+            <div class="strip">
+              <div class="cv-fb" style="width:44px;height:66px">데미안</div>
+              <div class="cv-fb" style="width:44px;height:66px">아몬드</div>
+              <span style="margin-left:auto" class="link-go">서재에서 보기
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </span>
+            </div>
+          </div>
+          <div class="fld ph" style="margin-top:18px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+            <span>또 담을 책이 있나요?</span>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>토스트를 쓰지 않는다.</b> 토스트 자리(하단)를 시트가 이미 덮고 있어 회원이 못 본다 — 구 화면의 <code>LibraryToast</code>가 여기서는 안 맞는다</li>
+        <li>검색어와 결과는 비우고 placeholder를 <b>"또 담을 책이 있나요?"</b>로 바꿔 연속 담기를 자연스럽게 잇는다</li>
+        <li>담은 표지가 <b>쌓이는 것이 보인다</b> — "조용히 담기면 안 담긴 것과 같다"(2026-08-14 결정)</li>
+        <li>시트를 닫으면 뒤 서재 그리드가 이미 갱신돼 있다(07)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 07 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">07</span><h2 class="screen-name">시트를 닫은 뒤 — 서재 2권</h2></div>
+  <p class="screen-desc">0권 화면에 있던 CTA 자리에 <b>히어로</b>가 들어오고, 담기 진입은 「모든 책」 라벨 옆으로 옮겨 앉는다.</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s07">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">내 서재,<br><b>2권</b> 쌓였어요</div>
+
+          <div style="margin-top:18px;display:flex;align-items:center;gap:16px;border-radius:20px;background:var(--tg-50);padding:16px">
+            <div class="cv-fb" style="width:96px;height:144px;flex:none;font-size:11px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 12px rgba(25,31,40,.14)">데미안</div>
+            <div style="min-width:0">
+              <p style="font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--tg-600)">가장 최근에 담은 책</p>
+              <p style="margin-top:5px;font-size:16px;font-weight:800;letter-spacing:-.03em">데미안</p>
+              <p style="margin-top:3px;font-size:12px;color:var(--tg-600)">헤르만 헤세</p>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>모든 책</h3>
+            <span class="add">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              담기
+            </span>
+          </div>
+          <div class="grid3">
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:11px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">데미안</div><p class="t">데미안</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:11px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">아몬드</div><p class="t">아몬드</p></div>
+          </div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li class="warn"><b>직접 담은 책에는 출처 라벨을 달지 않는다.</b> 현행 <code>shelf/page.tsx:18</code>은 모든 책에 "직접 담았어요"를 붙이는데, 새 동선이 열리면 그게 대다수가 돼 화면을 덮는다. 구 <code>LibraryGrid.tsx:165</code>가 이미 <code>source==='ask'</code>에만 단다 — <b>그쪽이 맞다</b></li>
+        <li>「담은 순」 부제를 뺐다. 시간순은 자명하고, 그 자리는 <b>담기</b>가 더 필요하다</li>
+        <li>담기 진입이 스크롤 위치와 무관하게 <b>상단 고정 자리</b>에 있다 — 30권이 돼도 끝까지 내려갈 일이 없다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 08 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">08</span><h2 class="screen-name">쌓인 서재 — 모임 출처가 섞였을 때</h2></div>
+  <p class="screen-desc">모임에서 담긴 책과 직접 담은 책이 섞인다. <b>출처 라벨이 있는 쪽이 눈에 띈다</b> — 그게 라벨의 목적이다.</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s08">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">내 서재,<br><b>11권</b> 쌓였어요</div>
+
+          <div style="margin-top:18px;display:flex;align-items:center;gap:16px;border-radius:20px;background:var(--tg-50);padding:16px">
+            <div class="cv-fb" style="width:96px;height:144px;flex:none;font-size:11px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 12px rgba(25,31,40,.14)">불편한 편의점</div>
+            <div style="min-width:0">
+              <p style="font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--tg-600)">가장 최근에 담은 책</p>
+              <p style="margin-top:5px;font-size:16px;font-weight:800;letter-spacing:-.03em">불편한 편의점</p>
+              <span class="pill-src" style="margin-top:7px">8월 정기모임에서</span>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>모든 책</h3>
+            <span class="add">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              담기
+            </span>
+          </div>
+          <div class="grid3">
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10.5px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">불편한 편의점</div><p class="t">불편한 편의점</p><p class="s">8월 정기모임에서</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10.5px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">데미안</div><p class="t">데미안</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10.5px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">아몬드</div><p class="t">아몬드</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10.5px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">사피엔스</div><p class="t">사피엔스</p><p class="s">7월 정기모임에서</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10.5px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">파친코 1</div><p class="t">파친코 1</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10.5px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">시선으로부터,</div><p class="t">시선으로부터,</p></div>
+          </div>
+          <div style="margin-top:12px;text-align:center;font-size:13.5px;font-weight:700;color:var(--tg-600)">전체 11권 보기</div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li class="warn"><b>6권(2행)에서 끊고 「전체 N권 보기」.</b> 현행 <code>(next)/shelf</code>는 전량을 렌더한다 — 30권이면 끝없이 내려간다. 구 <code>LibraryGrid.tsx:11</code>의 <code>VISIBLE_LIMIT = 6</code>과 같은 값이다. <b>3행(9권)으로 잡아봤더니 「전체 보기」가 첫 화면 밖으로 밀려났다</b> — 스크롤해야 보이는 더보기는 없는 것과 같다</li>
+        <li>히어로 표지를 <b>96×144</b>로 키웠다. 현행 72×108은 3열 그리드 칸(약 109px)<b>보다 작아서</b> 히어로가 아래 책들보다 작아 보인다. 96은 신청 상세 표지와 같은 값이다(2026-08-18 결정)</li>
+        <li>출처 라벨이 <b>드문드문</b> 있어야 "모임이 담아준 책"이 눈에 띈다. 전부 달면 아무것도 안 달린 것과 같다</li>
+        <li>표지는 전부 폴백으로 그렸다 — 실제로는 카카오 thumbnail이 들어와 <b>더 잘 읽힌다</b></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 09 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">09</span><h2 class="screen-name">책 시트 — 완독 · 빼기 (다음 단계)</h2></div>
+  <p class="screen-desc">
+    <b>담기만 옮기면 「관리」가 구 화면에 남아 회원이 또 튕긴다.</b> 그래서 자리를 여기 정해둔다 —
+    책을 누르면 담기 시트와 <b>같은 문법</b>의 시트가 뜬다. 구현 순서는 담기 다음이다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844 · 다음 단계</span></div>
+      <div class="phone" id="s09">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body"><div class="h1">내 서재,<br><b>11권</b> 쌓였어요</div></div>
+        <div class="dim"></div>
+        <div class="sheet" style="top:522px;bottom:0">
+          <div class="handle"></div>
+          <div class="sheet-head"><h4 style="font-size:0"></h4>
+            <span class="x" style="margin-left:auto"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:0 20px">
+            <div class="cv-fb" style="width:78px;height:117px;flex:none;font-size:11px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 12px rgba(25,31,40,.14)">불편한 편의점</div>
+            <div style="min-width:0">
+              <p style="font-size:17px;font-weight:800;letter-spacing:-.03em">불편한 편의점</p>
+              <p style="margin-top:4px;font-size:12.5px;color:var(--tg-600)">김호연 · 나무옆의자</p>
+              <span class="pill-src" style="margin-top:8px">8월 정기모임에서</span>
+            </div>
+          </div>
+          <div class="seg">
+            <div>읽는 중</div>
+            <div class="on">✓ 다 읽었어요</div>
+          </div>
+          <div class="danger">서재에서 빼기</div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>완독 라벨을 「다 읽었어요」로 바꿨다.</b> "완독"은 성적표 같은 말이고, 이 클럽은 <b>다 못 읽어도 참여하는 편이 낫다</b>고 정했다(2026-08-14). 상태를 단정하는 <code>읽는 중</code>은 선택지 한쪽으로만 남는다</li>
+        <li><b>"빼기"는 빨간색을 쓰지 않는다.</b> 서재에서 빼는 것은 되돌릴 수 있고(구 화면에 실행취소 6.5초가 이미 있다) 위험한 일이 아니다 — 경고색은 돈이 걸린 자리에만</li>
+        <li>이 시트는 <b>다음 단계</b>다. 이번에 만드는 것은 담기(01~08)까지</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 10 · 11 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">10</span><h2 class="screen-name">좁은 폭 검증 — 320px</h2></div>
+  <p class="screen-desc">
+    3열 그리드와 검색 결과 행이 <b>가장 좁은 화면</b>(iPhone SE 1세대 급)에서 깨지지 않는지.
+    컨테이너 실제 폭은 <code>getBoundingClientRect()</code>로 재서 확인했다(노트).
+  </p>
+  <div class="pair">
+    <div class="col narrow">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">320 × 844 · 서재</span></div>
+      <div class="phone w320" id="s10">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">내 서재,<br><b>11권</b> 쌓였어요</div>
+          <div style="margin-top:18px;display:flex;align-items:center;gap:14px;border-radius:20px;background:var(--tg-50);padding:14px">
+            <div class="cv-fb" style="width:88px;height:132px;flex:none;font-size:10px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 12px rgba(25,31,40,.14)">불편한 편의점</div>
+            <div style="min-width:0">
+              <p style="font-size:10px;font-weight:800;letter-spacing:.05em;color:var(--tg-600)">가장 최근에 담은 책</p>
+              <p style="margin-top:5px;font-size:15px;font-weight:800;letter-spacing:-.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">불편한 편의점</p>
+              <span class="pill-src" style="margin-top:7px">8월 정기모임에서</span>
+            </div>
+          </div>
+          <div class="sec">
+            <h3>모든 책</h3>
+            <span class="add"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>담기</span>
+          </div>
+          <div class="grid3" style="gap:10px">
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">불편한 편의점</div><p class="t">불편한 편의점</p><p class="s">8월 정기모임에서</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">데미안</div><p class="t">데미안</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">아몬드</div><p class="t">아몬드</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">사피엔스</div><p class="t">사피엔스</p><p class="s">7월 정기모임에서</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">파친코 1</div><p class="t">파친코 1</p></div>
+            <div><div class="cv-fb" style="aspect-ratio:2/3;font-size:10px;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 11px rgba(25,31,40,.14)">시선으로부터,</div><p class="t">시선으로부터,</p></div>
+          </div>
+        </div>
+        <div class="nav">
+          <a><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a class="on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>320px에서 그리드 칸 폭은 <b>86.7px</b>(패딩 20×2 · gap 10×2) — 표지 비율 2:3 유지, 제목 1줄 말줄임</li>
+        <li>출처 라벨 <code>8월 정기모임에서</code>도 1줄에 들어간다(10px)</li>
+        <li>「모든 책 / + 담기」 한 줄도 안 겹친다</li>
+      </ul>
+    </div>
+
+    <div class="col narrow">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">320 × 844 · 시트 결과</span></div>
+      <div class="phone w320" id="s11">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body"><div class="h1">읽은 책을<br>담아볼까요</div></div>
+        <div class="dim"></div>
+        <div class="sheet" style="top:196px;bottom:0">
+          <div class="handle"></div>
+          <div class="sheet-head"><h4>책 담기</h4>
+            <span class="x"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+          </div>
+          <div class="fld">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+            <span>데미안</span>
+          </div>
+          <div class="res">
+            <div class="res-row"><div class="cv-fb" style="width:38px;height:57px;flex:none;font-size:9px">데미안</div><div class="meta"><p class="t">데미안</p><p class="s">헤르만 헤세 · 민음사</p></div><div class="btn-add">담기</div></div>
+            <div class="res-row"><div class="cv-fb" style="width:38px;height:57px;flex:none;font-size:9px">데미안</div><div class="meta"><p class="t">데미안 (세계문학전집 44)</p><p class="s">헤르만 헤세 · 문학동네</p></div><div class="btn-add">담기</div></div>
+            <div class="res-row"><div class="cv-fb" style="width:38px;height:57px;flex:none;font-size:9px">데미안</div><div class="meta"><p class="t">데미안 — 청소년판</p><p class="s">헤르만 헤세 · 더클래식</p></div><div class="btn-add">담기</div></div>
+            <div class="res-row"><div class="cv-fb" style="width:38px;height:57px;flex:none;font-size:9px">헤세를 읽다</div><div class="meta"><p class="t">헤세를 읽다 — 데미안에서 싯다르타까지</p><p class="s">정여울 · 아르테</p></div><div class="btn-add">담기</div></div>
+            <div class="res-row"><div class="cv-fb" style="width:38px;height:57px;flex:none;font-size:9px">데미안 필사책</div><div class="meta"><p class="t">데미안 필사책</p><p class="s">헤르만 헤세 · 북로그컴퍼니</p></div><div class="btn-add">담기</div></div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>결과 행에서 제목이 가장 먼저 잘린다 — <b>담기 버튼과 표지는 폭을 양보하지 않는다</b>(flex:none)</li>
+        <li>긴 제목(「헤세를 읽다 — 데미안에서 싯다르타까지」)도 버튼을 밀어내지 않는다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ 12 ══════════════════════════════ -->
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">12</span><h2 class="screen-name">이미 담은 책을 또 담을 때</h2></div>
+  <p class="screen-desc">
+    <code>library_entries</code>의 <code>(user, book)</code> UNIQUE에 걸려 서버가 <code>'already'</code>를 돌려주는 경우.
+    현행은 <b>성공으로 처리하고 토스트만 다르게</b> 띄운다 — 그 규칙을 시트 안으로 옮겼다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">새 안</span><span class="sub">390 × 844</span></div>
+      <div class="phone" id="s12">
+        <div class="nx-head">
+          <span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>
+        </div>
+        <div class="nx-body"><div class="h1">내 서재,<br><b>11권</b> 쌓였어요</div></div>
+        <div class="dim"></div>
+        <div class="sheet" style="top:196px;bottom:0">
+          <div class="handle"></div>
+          <div class="sheet-head"><h4>책 담기</h4>
+            <span class="x"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+          </div>
+          <div class="sheet-note neutral">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11.5v4.5"/></svg>
+            이미 서재에 있는 책이에요
+          </div>
+          <div class="fld" style="margin-top:14px">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+            <span>데미안</span>
+          </div>
+          <div class="res">
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안</div>
+              <div class="meta"><p class="t">데미안</p><p class="s">헤르만 헤세 · 민음사</p></div>
+              <div class="btn-add done">담김</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안</div>
+              <div class="meta"><p class="t">데미안 (세계문학전집 44)</p><p class="s">헤르만 헤세 · 문학동네</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+            <div class="res-row">
+              <div class="cv-fb" style="width:40px;height:60px;flex:none">데미안</div>
+              <div class="meta"><p class="t">데미안 — 청소년판</p><p class="s">헤르만 헤세 · 더클래식</p></div>
+              <div class="btn-add">담기</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>실패로 다루지 않는다. <b>회원이 틀린 게 아니라 이미 해둔 것</b>이다 — 문구는 현행 <code>BookSearchInput.tsx:71</code> 그대로</li>
+        <li>그 행의 버튼만 <code>담김</code>(tg-100/tg-500)으로 <b>남겨둔다.</b> 지우면 어느 책이었는지 사라진다</li>
+        <li>중립 회색 알림(brand 아님) — 새로 쌓인 게 없으므로 초록으로 축하하지 않는다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
