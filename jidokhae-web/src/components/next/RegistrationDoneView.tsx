@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 
 export type RegistrationDoneData = {
   meetingId: string
@@ -64,19 +65,25 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
       </div>
 
       {isPendingTransfer && (
-        <div className="mt-7 rounded-[18px] bg-tg-100 px-4 py-4">
-          <p className="text-[15px] font-extrabold tracking-tight text-tg-900">
-            입금을 기다리고 있어요
-          </p>
-          <p className="mt-2 text-[13px] leading-relaxed text-tg-700 break-keep">
-            {data.bankName} {data.bankAccount} {data.bankHolder}
-            <br />
-            입금자명 <b className="font-extrabold text-tg-900">{data.depositorName}</b>
-            {data.amount !== null && ` · ${formatFee(data.amount)}`}
-            <br />
-            확인되면 신청이 확정돼요.
-          </p>
-        </div>
+        <>
+          <div className="mt-7 rounded-[18px] bg-tg-100 px-4 py-4">
+            <p className="text-[15px] font-extrabold tracking-tight text-tg-900">
+              입금을 기다리고 있어요
+            </p>
+            <p className="mt-2 text-[13px] leading-relaxed text-tg-700 break-keep">
+              {data.bankName} {data.bankAccount} {data.bankHolder}
+              {data.amount !== null && ` · ${formatFee(data.amount)}`}
+              <br />
+              확인되면 신청이 확정돼요.
+            </p>
+          </div>
+          {/* 입금자명은 맨 텍스트가 아니라 복사할 수 있게 둔다 — 손으로 옮겨 적다 틀리면
+              운영자가 누가 보낸 돈인지 모른다 (2026-09-20 대표님 피드백 5).
+              신청 직전 모달·상세와 같은 컴포넌트를 쓴다. */}
+          {data.depositorName && (
+            <CopyableDepositorName depositorName={data.depositorName} skin="toss" />
+          )}
+        </>
       )}
 
       {isWaitlisted && (

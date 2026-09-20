@@ -5,6 +5,7 @@ import { hasStickyAction } from '@/lib/meeting-detail'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
+import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 import BookIntro from '@/components/meetings/BookIntro'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 import MeetingInfoRows, { type InfoRow } from '@/components/next/MeetingInfoRows'
@@ -166,7 +167,10 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
 
       <RefundNotice meetingType={m.meeting_type} meetingDate={m.date} />
 
-      {/* 입금 대기 — 아직 안 보냈을 수 있으니 계좌를 다시 보여준다 */}
+      {/* 입금 대기 — 아직 안 보냈을 수 있으니 계좌를 다시 보여준다.
+          입금자명도 함께 둔다: 완료 화면을 벗어나면 다시 볼 자리가 여기뿐이고,
+          이름이 틀리면 운영자가 누가 보낸 돈인지 알 수 없다 (2026-09-20 대표님 피드백 5).
+          값은 `loadMeetingDetail`이 만든 data.depositorName 그대로 — 손으로 조립하지 않는다. */}
       {data.hasPendingTransfer && (
         <div className="mt-5">
           <BankInfoCard
@@ -175,6 +179,9 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
             bankHolder={data.bankHolder}
             skin="toss"
           />
+          {data.depositorName && (
+            <CopyableDepositorName depositorName={data.depositorName} skin="toss" />
+          )}
         </div>
       )}
 
