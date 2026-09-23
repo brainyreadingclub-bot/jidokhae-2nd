@@ -279,7 +279,7 @@ Expected: lint + tsc + test + build 모두 PASS. 특히 `kst.test.ts`의 `getBut
 
 ```bash
 cd C:/jidokhae-2nd
-git add jidokhae-web/src jidokhae-web/CLAUDE.md CLAUDE.md docs/superpowers/plans/2026-07-01-remove-attendance-checkbox.md
+git add jidokhae-web/src jidokhae-web/CLAUDE.md CLAUDE.md docs/설계/plans/2026-07-01-remove-attendance-checkbox.md
 git commit -m "$(cat <<'EOF'
 feat(admin): 참석 체크박스 제거 + 모임 상세 총결제 매출 정합
 

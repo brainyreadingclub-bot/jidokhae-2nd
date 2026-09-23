@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js 16 App Router, React 19, Tailwind CSS v4 (`@theme inline` in `globals.css`, NOT tailwind.config.ts), Noto Serif KR (next/font) + Pretendard (CDN), Vitest.
 
-**근거 스펙:** `docs/superpowers/specs/2026-07-05-지독해-2535-리디자인-디자인시스템.md` (§1~§8), `docs/expert-panel/2026-07-07-2535-redesign-ui-ux-review.md`. 시안(git 추적, `docs/superpowers/mockups/redesign-2535/`): `phones-reskin.html`(리스킨 검증) · `phones-missing.html`(빠진 화면) · `phones-9.html` · `brand-splash-login.html`(로그인 B라이트) · `brand-onboarding.html`(웰컴+프로필) · `brand-icon-grid.html`·`wordmark-v2.html`(브랜드).
+**근거 스펙:** `docs/설계/specs/2026-07-05-지독해-2535-리디자인-디자인시스템.md` (§1~§8), `docs/expert-panel/2026-07-07-2535-redesign-ui-ux-review.md`. 시안(git 추적, `docs/설계/mockups/redesign-2535/`): `phones-reskin.html`(리스킨 검증) · `phones-missing.html`(빠진 화면) · `phones-9.html` · `brand-splash-login.html`(로그인 B라이트) · `brand-onboarding.html`(웰컴+프로필) · `brand-icon-grid.html`·`wordmark-v2.html`(브랜드).
 
 ---
 
@@ -444,7 +444,7 @@ git commit -m "feat(redesign): 공개 페이지/잔여 컴포넌트 리스킨 + 
 
 ## Phase 6 — 온보딩 (로그인/웰컴/프로필/스플래시) + 시스템 화면 + 라이브 회원수
 
-> 확정(2026-07-07): 스플래시/로그인 **B 라이트**(오프화이트 + 잉크그린 워드마크). 로그인 하단 카카오 버튼은 그림자·카드 없이 얇은 여백만으로 가볍게(두툼함 제거). **회원수는 하드코딩/`settings['member_count']` 폐기 → 실제 `profiles` 라이브 COUNT를 `get_member_count()` SECURITY DEFINER RPC로 조회**(비로그인 anon RLS로 못 세므로 카운트-only PII-0 RPC). 로그인/웰컴 모두 낮은 값→실수치 ~2.6초 ease-out **카운트업**(진입 1회). 카피는 유지 원칙 — 로그인 헤드라인 "책으로 연결되는 사람들" 현행 유지(위트는 회원 대상 후속 테스트), 웰컴 "넷플릭스 말고, 독서습관이 생깁니다" 유지, **"3년째"만 안 늙는 "경주·포항에서 꾸준히"로 교체**(연차 하드코딩이라 이미 틀림). 시안: `docs/superpowers/mockups/redesign-2535/brand-splash-login.html`, `brand-onboarding.html`.
+> 확정(2026-07-07): 스플래시/로그인 **B 라이트**(오프화이트 + 잉크그린 워드마크). 로그인 하단 카카오 버튼은 그림자·카드 없이 얇은 여백만으로 가볍게(두툼함 제거). **회원수는 하드코딩/`settings['member_count']` 폐기 → 실제 `profiles` 라이브 COUNT를 `get_member_count()` SECURITY DEFINER RPC로 조회**(비로그인 anon RLS로 못 세므로 카운트-only PII-0 RPC). 로그인/웰컴 모두 낮은 값→실수치 ~2.6초 ease-out **카운트업**(진입 1회). 카피는 유지 원칙 — 로그인 헤드라인 "책으로 연결되는 사람들" 현행 유지(위트는 회원 대상 후속 테스트), 웰컴 "넷플릭스 말고, 독서습관이 생깁니다" 유지, **"3년째"만 안 늙는 "경주·포항에서 꾸준히"로 교체**(연차 하드코딩이라 이미 틀림). 시안: `docs/설계/mockups/redesign-2535/brand-splash-login.html`, `brand-onboarding.html`.
 
 **Files:**
 - Create: `supabase/migration-member-count.sql`
@@ -639,5 +639,5 @@ git commit -m "docs(redesign): 구 팔레트 설명 문서 잉크그린으로 �
 - **로직 불변:** visibility/pricing/staff-slot 무변경 + 각 Phase 회귀 테스트로 가드. 온보딩은 색·비율·문구("3년째"만)만 변경, 프로필 필드/순서/신청·결제 로직 무변경.
 - **회원수 정직성:** 카운트업 목표는 실제 `get_member_count()` 반환값. 실수치 초과 무한증가 금지(거짓). null이면 폴백/숨김.
 - **문서-코드 동기:** 구 팔레트 설명 문서(DESIGN_TOKENS.md·CLAUDE.md·학습서)는 코드 완료 후 Phase 7에서 마지막에 갱신(먼저 하면 불일치). 과거 결정 기록(2026-03-24 brand-color)은 무변경.
-- **시안 보존:** 시안이 gitignore된 `.superpowers/`에만 있어 유실 위험 → `docs/superpowers/mockups/redesign-2535/`로 복사·추적. 플랜 참조 경로도 이 추적 경로로 갱신 완료.
+- **시안 보존:** 시안이 gitignore된 `.superpowers/`에만 있어 유실 위험 → `docs/설계/mockups/redesign-2535/`로 복사·추적. 플랜 참조 경로도 이 추적 경로로 갱신 완료.
 - **결정 3건 확정(2026-07-07):** 결정1(인플레이스 리맵)·결정2(Task1 스케일 표)·결정3(카드 CTA 2분기) 모두 사용자 승인 완료 — 착수 준비됨.

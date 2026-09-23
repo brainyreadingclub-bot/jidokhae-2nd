@@ -51,7 +51,7 @@ model: inherit
 
 ```
 mcp__playwright__browser_resize        390 × 844 (모바일 우선)
-mcp__playwright__browser_navigate      file:///C:/jidokhae-2nd/docs/superpowers/mockups/....html
+mcp__playwright__browser_navigate      file:///C:/jidokhae-2nd/docs/설계/mockups/....html
 mcp__playwright__browser_take_screenshot
 mcp__playwright__browser_close         ← 끝나면 반드시 닫는다
 ```
@@ -60,7 +60,7 @@ mcp__playwright__browser_close         ← 끝나면 반드시 닫는다
 
 | 대상 | 렌더 | 방법 |
 |---|:--:|---|
-| **정적 시안** `docs/superpowers/mockups/*.html` | ✅ **필수** | `file:///` 로 연다 |
+| **정적 시안** `docs/설계/mockups/*.html` | ✅ **필수** | `file:///` 로 연다 |
 | **공개 페이지** `policy/*` · `auth/*` | ✅ **필수** | 로컬 dev 서버 또는 프로덕션 도메인 |
 | **Vercel preview URL** (관리자가 줬을 때) | ✅ **필수** | 그 URL로 |
 | `(main)` · `(next)` · `(admin)` 로컬 | ❌ **불가** | 카카오 OAuth 콜백이 프로덕션 도메인으로 간다 — 로컬에선 로그인 화면만 찍힌다 |
@@ -75,7 +75,7 @@ mcp__playwright__browser_close         ← 끝나면 반드시 닫는다
 
 ## 5. 산출물
 
-- 시안: `docs/superpowers/mockups/YYYY-MM-DD-<주제>.html`
+- 시안: `docs/설계/mockups/YYYY-MM-DD-<주제>.html`
 - 문구 기준 문서: `jidokhae-web/VOICE.md` · `jidokhae-web/DESIGN_TOKENS.md` — **이 두 파일은 코드 저장소 안에 있지만 디자인 소관이다** (2026-08-20 관리자 결정, 공통규약 §3)
 - 알림톡 문안: `검토문서/`
 - 끝나면 **반드시** `docs/agent-team/logs/디자인.md`에 로그를 쓴다 (양식은 공통규약 §4)

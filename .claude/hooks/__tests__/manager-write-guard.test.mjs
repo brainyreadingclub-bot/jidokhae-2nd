@@ -10,7 +10,7 @@ const cases = [
   [2, '관리자 → jidokhae-web/VOICE.md (오늘 2건 난 자리)', { tool_name: 'Edit', tool_input: { file_path: 'jidokhae-web/VOICE.md' } }],
   [2, '관리자 → src/lib/refund.ts (개발·운영)', { tool_name: 'Write', tool_input: { file_path: 'jidokhae-web/src/lib/refund.ts' } }],
   [2, '관리자 → 문서지도/x.md (문서총괄)', { tool_name: 'Write', tool_input: { file_path: 'docs/agent-team/문서지도/x.md' } }],
-  [2, '관리자 → mockups/a.html (디자인)', { tool_name: 'Write', tool_input: { file_path: 'docs/superpowers/mockups/a.html' } }],
+  [2, '관리자 → mockups/a.html (디자인)', { tool_name: 'Write', tool_input: { file_path: 'docs/설계/mockups/a.html' } }],
   [2, '관리자 → roadmap/milestones.md (제품기획)', { tool_name: 'Edit', tool_input: { file_path: 'roadmap/milestones.md' } }],
   [2, '관리자 → supabase/m.sql (개발·운영)', { tool_name: 'Write', tool_input: { file_path: 'jidokhae-web/supabase/m.sql' } }],
   [2, 'BASH 우회 — python 히어독으로 소관 파일 쓰기', { tool_name: 'Bash', tool_input: { command: "python - <<PY\np='검토문서/DECISIONS.md'\nPY" } }],

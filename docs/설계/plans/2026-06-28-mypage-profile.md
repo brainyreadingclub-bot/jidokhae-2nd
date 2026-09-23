@@ -10,7 +10,7 @@
 
 **배포 주의:** 회원 화면 변경(250명 노출) → CLAUDE.md 전략상 가장 신중한 묶음. 별도 feature 브랜치 + Vercel Preview 검증 후 PR. 로컬은 Kakao OAuth 때문에 `(main)` 페이지 직접 검증 불가 → tsc/build/test로 게이트하고 시각 검증은 Preview.
 
-**스펙 근거:** `docs/superpowers/specs/2026-06-28-mypage-profile-design.md`
+**스펙 근거:** `docs/설계/specs/2026-06-28-mypage-profile-design.md`
 
 ---
 

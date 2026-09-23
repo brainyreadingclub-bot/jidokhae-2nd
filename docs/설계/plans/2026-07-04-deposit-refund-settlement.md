@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js 16 App Router (서버 컴포넌트 기본), React 19, TypeScript, Tailwind v4, Supabase(service_role admin client), Vitest.
 
-**설계 근거 문서:** `docs/superpowers/specs/2026-07-04-deposit-refund-settlement-design.md`
+**설계 근거 문서:** `docs/설계/specs/2026-07-04-deposit-refund-settlement-design.md`
 
 ---
 

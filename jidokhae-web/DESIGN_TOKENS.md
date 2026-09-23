@@ -43,7 +43,7 @@
 
 ## 1. 회원 화면 스킨 — 토스 문법 × 지독해 그린
 
-`(next)` 전용. 근거: `검토문서/DECISIONS.md` 2026-08-16 · 시안 [`docs/superpowers/mockups/2026-08-16-토스-스킨.html`](../docs/superpowers/mockups/2026-08-16-토스-스킨.html)
+`(next)` 전용. 근거: `검토문서/DECISIONS.md` 2026-08-16 · 시안 [`docs/설계/mockups/2026-08-16-토스-스킨.html`](../docs/설계/mockups/2026-08-16-토스-스킨.html)
 
 ### 그레이 — TDS 10단계
 

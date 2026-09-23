@@ -53,7 +53,12 @@ docs/agent-team                                # 에이전트 부서 체계 (202
 │   ├── 2026-04-17-phase3-preview-html-review.md
 │   └── 2026-04-27-mobile-homescreen-icon-quality.md
 ├── learning/                                  # 파트너용 기술 학습서 (Part 1 완료, Part 2~6 예정)
-└── superpowers/                               # superpowers 스킬 관련 문서 (plans/는 머지된 plan에 Status 헤더)
+└── 설계/                                      # 계획(plans)·설계서(specs)·시안(mockups)
+    │                                          # 2026-09-23에 `superpowers/`에서 이름을 바꿨다 —
+    │                                          # 도구 이름이 폴더 이름이라 도구를 바꾸니 뜻이 안 맞았다
+    │                                          # (plans/는 머지된 plan에 Status 헤더)
+    └── ⚠️ 옛 plan 문서 머리말의 `REQUIRED SUB-SKILL: superpowers:...` 줄은
+        **과거 도구 지시다. 따르지 말 것.** 그 시절 기록이라 지우지 않고 둔다
 
 /verification-squad/reports/                   # 풀스캔 검증 리포트 (날짜별 디렉토리)
 
