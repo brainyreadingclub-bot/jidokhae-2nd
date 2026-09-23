@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>로그아웃 · 약관 자리 / 신규 회원 첫 화면 시안 (2026-09-19)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+:root{
+  /* 토스 스킨 — jidokhae-web/src/app/globals.css 111~126행 원문 대조 (2026-09-19) */
+  --tg-50:#F9FAFB; --tg-100:#F2F4F6; --tg-200:#E5E8EB; --tg-300:#D1D6DB;
+  --tg-400:#B0B8C1; --tg-500:#8B95A1; --tg-600:#6B7684; --tg-700:#4E5968;
+  --tg-800:#333D4B; --tg-900:#191F28;
+  --brand:#0FA873; --brand-deep:#0C8A5F; --brand-bg:#E8F7F1;
+  --warnx:#FF6B3D; --warnx-bg:#FFF0EA;
+  --shadow-toss-card:0 2px 12px rgba(25,31,40,.07);
+  --sans:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9ECEF;font-family:var(--sans);color:var(--tg-900);word-break:keep-all;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:48px 28px 120px}
+
+.doc-title{font-size:30px;font-weight:800;letter-spacing:-.03em}
+.doc-sub{margin-top:10px;font-size:14px;line-height:1.75;color:var(--tg-700);max-width:900px}
+.doc-sub b{color:var(--tg-900)}
+.rule-box{margin-top:22px;background:#fff;border-radius:16px;padding:20px 22px;box-shadow:var(--shadow-toss-card);max-width:900px}
+.rule-box h3{font-size:14px;font-weight:800;margin-bottom:8px}
+.rule-box ul{margin-left:17px}
+.rule-box li{font-size:13px;line-height:1.85;color:var(--tg-700)}
+.rule-box li b{color:var(--tg-900)}
+.hl{color:#C0392B;font-weight:700}
+
+.part{margin-top:64px;padding-top:26px;border-top:3px solid var(--tg-300)}
+.part-no{display:inline-block;font-size:12px;font-weight:800;color:#fff;background:#C0392B;border-radius:6px;padding:4px 9px}
+.part-title{margin-top:10px;font-size:24px;font-weight:800;letter-spacing:-.03em}
+.part-desc{margin-top:8px;font-size:13.5px;line-height:1.8;color:var(--tg-700);max-width:900px}
+.part-desc b{color:var(--tg-900)}
+
+section.screen{margin-top:48px}
+.screen-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.screen-no{font-size:12px;font-weight:800;color:#fff;background:var(--tg-900);border-radius:6px;padding:3px 8px}
+.screen-no.now{background:var(--tg-500)}
+.screen-name{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.screen-desc{font-size:13px;line-height:1.8;color:var(--tg-700);max-width:900px}
+.pair{display:flex;gap:26px;margin-top:18px;align-items:flex-start}
+.col{width:390px;flex:none}
+.col.narrow{width:320px}
+.col-cap{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.tag{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px}
+.tag-now{background:var(--tg-300);color:var(--tg-800)}
+.tag-new{background:var(--brand);color:#fff}
+.col-cap .sub{font-size:11.5px;color:var(--tg-600)}
+.notes{margin-top:12px;max-width:430px}
+.notes li{font-size:11.5px;line-height:1.75;color:var(--tg-700);margin-left:15px}
+.notes li b{color:var(--tg-900)}
+.notes li.warn::marker{color:var(--warnx)}
+.notes li.warn b{color:#C0392B}
+
+/* ═══════ 폰 프레임 ═══════ */
+.phone{width:390px;height:844px;background:#fff;position:relative;overflow:hidden;
+  box-shadow:0 10px 30px rgba(25,31,40,.13);border-radius:14px}
+.phone.w320{width:320px}
+
+/* 헤더 */
+.nx-head{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 20px}
+.nx-wm{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--brand-deep)}
+.bell{color:var(--tg-600);display:flex;align-items:center;justify-content:center;width:36px;height:36px}
+.nx-body{padding:0 20px}
+
+/* 하단 탭 */
+.nav{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid var(--tg-100);
+  display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--tg-400);text-decoration:none}
+.nav a.on{color:var(--tg-900)}
+.nav span{font-size:10px;font-weight:600;letter-spacing:-.02em}
+.nav a.on span{font-weight:700}
+
+/* 타이포 */
+.h1{margin-top:12px;font-size:21px;font-weight:800;line-height:1.3;letter-spacing:-.03em;color:var(--tg-900)}
+.h1 b{color:var(--brand);font-weight:800}
+.sec{margin-top:24px;margin-bottom:4px;display:flex;align-items:baseline;justify-content:space-between}
+.sec h3{font-size:13.5px;font-weight:700;letter-spacing:-.01em;color:var(--tg-600)}
+.sec .aside{font-size:12px;font-weight:600;color:var(--tg-500)}
+
+/* 카드 */
+.box-white{margin-top:10px;border-radius:20px;background:#fff;padding:16px;box-shadow:var(--shadow-toss-card)}
+.box-gray{margin-top:10px;border-radius:18px;background:var(--tg-100);padding:16px}
+.btn-soft-inline{display:inline-flex;align-items:center;border-radius:9px;background:var(--brand-bg);
+  padding:6px 12px;font-size:11px;font-weight:700;color:var(--brand-deep)}
+
+/* 나 탭 */
+.me-top{margin-top:16px;display:flex;align-items:center;gap:12px}
+.ava{width:48px;height:48px;flex:none;border-radius:17px;background:var(--brand-bg);display:flex;
+  align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--brand-deep)}
+.me-name{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.me-meta{margin-top:2px;font-size:11px;color:var(--tg-600)}
+.counters{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;border-radius:18px;background:var(--tg-100);overflow:hidden}
+.counters>div{padding:16px 0;text-align:center}
+.counters>div+div{border-left:1px solid var(--tg-200)}
+.counters .n{font-size:23px;font-weight:800;letter-spacing:-.03em;color:var(--brand-deep);font-variant-numeric:tabular-nums}
+.counters .l{margin-top:4px;font-size:11px;font-weight:700;color:var(--tg-600)}
+.row{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 0;border-top:1px solid var(--tg-100)}
+.row:first-of-type{border-top:0}
+.row .ic{width:40px;height:40px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.ic.blue{background:#EDF3FF}.ic.green{background:var(--brand-bg)}.ic.yellow{background:#FFF6E0}.ic.orange{background:var(--warnx-bg)}
+.row .tx{min-width:0;flex:1}
+.row .t{display:block;font-size:14px;font-weight:700;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .s{display:block;margin-top:2px;font-size:12px;color:var(--tg-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chev{flex:none;font-size:16px;color:var(--tg-300)}
+.row .cnt{flex:none;font-size:12px;font-weight:700;color:var(--brand)}
+
+/* 법적 블록 + 로그아웃 */
+.legal{margin-top:32px;padding-top:18px;border-top:1px solid var(--tg-100)}
+.legal .links{display:flex;flex-wrap:wrap;align-items:center;gap:0 8px;font-size:12px;font-weight:600}
+.legal .links a{color:var(--tg-700);text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--tg-300)}
+.legal .links i{font-style:normal;color:var(--tg-300)}
+.legal .biz .nb{white-space:nowrap}
+.legal .biz{margin-top:11px;font-size:10.5px;line-height:1.8;color:var(--tg-600)}
+.logout{margin-top:4px;height:48px;display:flex;align-items:center;font-size:13px;font-weight:700;color:var(--tg-600)}
+.logout span{text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--tg-300)}
+
+/* 확인 모달 (ModalOverlay 재사용) */
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(2px)}
+.dlg{position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%);background:#fff;
+  border-radius:16px;padding:24px;box-shadow:0 12px 32px rgba(25,31,40,.22)}
+.dlg h4{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.dlg p{margin-top:8px;font-size:13.5px;line-height:1.6;color:var(--tg-600)}
+.dlg .btns{margin-top:20px;display:flex;gap:9px}
+.dlg .btns div{flex:1;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;letter-spacing:-.02em}
+.dlg .cancel{background:var(--tg-100);color:var(--tg-800)}
+.dlg .go{background:var(--tg-800);color:#fff}
+
+/* 홈 — 빈 상태 */
+.empty-dashed{margin-top:20px;border:1px dashed var(--tg-300);border-radius:18px;padding:20px;text-align:center}
+.empty-dashed .t{font-size:14px;font-weight:700;color:var(--tg-700)}
+.empty-dashed .s{margin-top:4px;font-size:12px;color:var(--tg-600);line-height:1.55}
+.empty-row{margin-top:20px;border-radius:18px;background:var(--tg-100);padding:18px 16px;display:flex;align-items:center;gap:12px}
+.empty-row .tx{flex:1;min-width:0}
+.empty-row .t{font-size:14px;font-weight:700;color:var(--tg-800)}
+.empty-row .s{margin-top:3px;font-size:12px;color:var(--tg-600);line-height:1.5}
+
+/* 홈 — 가장 가까운 모임 카드 */
+.first-card{margin-top:10px;border-radius:20px;background:#fff;padding:16px;box-shadow:var(--shadow-toss-card)}
+.first-card .when{font-size:10.5px;font-weight:800;color:var(--brand);letter-spacing:-.01em}
+.first-card .ttl{margin-top:3px;font-size:16px;font-weight:800;letter-spacing:-.03em}
+.first-card .meta{margin-top:4px;font-size:12px;color:var(--tg-600);line-height:1.5}
+.first-card .btn{margin-top:13px;height:46px;border-radius:14px;background:var(--brand);color:#fff;
+  font-size:14px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;justify-content:center}
+.more-link{margin-top:12px;height:40px;display:flex;align-items:center;justify-content:center;gap:3px;
+  font-size:12.5px;font-weight:700;color:var(--tg-600)}
+
+/* 홈 — 토론 홍보 */
+.promo{margin-top:10px;border-radius:20px;background:#fff;padding:16px;box-shadow:var(--shadow-toss-card);
+  display:flex;align-items:center;gap:14px}
+.cv{border-radius:5px;background:var(--tg-200);flex:none;
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 5px 12px rgba(25,31,40,.18)}
+.cv-fb{border-radius:5px;background:var(--tg-100);display:flex;align-items:center;justify-content:center;
+  text-align:center;font-size:10px;font-weight:700;color:var(--tg-600);padding:6px;line-height:1.35;flex:none;
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 5px 12px rgba(25,31,40,.18)}
+.promo .tx{min-width:0;flex:1}
+.promo .lbl{font-size:10.5px;font-weight:800;color:var(--brand);line-height:1.4}
+.promo .lbl.locked{color:var(--tg-600)}
+.promo .ttl{margin-top:2px;font-size:16px;font-weight:800;letter-spacing:-.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.promo .meta{margin-top:2px;font-size:12px;color:var(--tg-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.legend{margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:var(--tg-600)}
+.legend b{color:var(--tg-900)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1 class="doc-title">로그아웃 · 약관을 어디에 둘까 / 신규 회원의 첫 화면에 무엇을 둘까</h1>
+<p class="doc-sub">
+2026-09-19 · 디자인 · 대상 = <b>개편 5탭(<code>(next)</code>)</b> · 스킨 = 토스 문법 × 지독해 그린(2026-08-16 결정)<br>
+A2 = 5탭 어디에도 <b>로그아웃 버튼과 법적 링크 4종이 없다</b>는 문제. A3 = 개편 홈이 <b>신규 회원에게 구조적으로 빈 화면</b>이라는 문제.<br>
+색·치수는 <code>jidokhae-web/src/app/globals.css</code> 111~126행(토스 토큰)을 원문 대조해 옮겼다. <b>새 토큰을 만들지 않았다.</b>
+</p>
+
+<div class="rule-box">
+  <h3>먼저 — 두 줄 결론</h3>
+  <ul>
+    <li><b>A2 = 「나」 탭 본문 맨 아래 한 블록.</b> 새 화면·새 탭·전 화면 푸터 전부 안 만든다. 법적 링크 3개를 한 줄로, 사업자정보를 그 아래 두 줄로, <b>로그아웃은 그 맨 밑에</b> 두고 <b>확인 한 단계</b>를 붙인다.</li>
+    <li><b>A3 = 빈 홈에 「가장 가까운 모임」 카드 한 장.</b> 목록이 아니라 <b>1건</b>이다. 2026-08-15 「홈에 목록을 두지 않는다」를 뒤집지 않는다 — 그 결정이 적어둔 홈의 내용물 목록 첫 항목이 이미 <b>「다음 모임」</b>이고, 지금 코드는 그 자리를 <b>「내가 신청한」</b> 모임으로만 채워서 신규 회원에게는 영영 비어 있다.</li>
+  </ul>
+</div>
+
+<div class="rule-box" style="margin-top:14px">
+  <h3>읽는 법</h3>
+  <ul>
+    <li><span class="tag tag-now">지금</span> = 켜는 날 그대로 켜면 회원이 보는 화면. <span class="tag tag-new">제안</span> = 이 시안이 권하는 화면</li>
+    <li>화면 하나에 한 장씩. 좁은 폭(320px)은 섹션 끝에 따로 붙였다</li>
+    <li>문구는 <b>현행 <code>(next)</code> 관행</b>을 따랐다 — 해요체, 본문에 이모지 없음, 행 아이콘 이모지는 현행 <code>RowItem</code> 그대로</li>
+    <li><b>이 시안은 구현이 아니다.</b> <code>.tsx</code>는 한 줄도 고치지 않았다</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part">
+  <span class="part-no">A2</span>
+  <h2 class="part-title">로그아웃과 법적 링크 4종을 5탭 안 어디에 둘 것인가</h2>
+  <p class="part-desc">
+    지금 5탭 전 화면을 통틀어 <b>로그아웃 버튼 0개</b>, <b>이용약관 · 개인정보처리방침 · 환불정책 · 사업자정보 링크 0개</b>다
+    (<code>(next)/layout.tsx</code>에 푸터 자체가 없다). 회원이 그 넷에 닿는 유일한 화면이 옛 마이페이지라,
+    <b>옛 화면 링크를 지우는 선택지가 막혀 있다.</b> 이 블록 하나가 그 막힘을 푼다.
+  </p>
+  <p class="part-desc" style="margin-top:12px">
+    <b>왜 「나」 탭인가</b> — ① 푸터를 5탭 전체에 붙이면 홈 · 모임 · 이야기 · 서재 네 화면 하단에도 법률 블록이 깔린다.
+    토스 스킨은 <b>테두리 0 · 면과 여백으로 구분</b>이 규율인데 푸터는 <code>border-t</code> + 밑줄 링크 묶음이라 네 화면의 바닥을 다 흐린다.
+    ② 회원이 약관과 로그아웃을 찾는 곳은 <b>한 곳</b>이고, 5탭에서 그 한 곳은 「나」다.
+    ③ 「나」 탭은 지금 <b>세 행짜리 짧은 화면</b>이라 블록 하나가 들어갈 자리가 이미 비어 있다(01번 화면 아래쪽 여백).
+  </p>
+</div>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no now">01</span><span class="screen-name">「나」 탭 — 지금</span></div>
+  <p class="screen-desc">화면 절반이 비어 있는데도 <b>로그아웃도 약관도 없다.</b> 「프로필 · 설정」을 눌러야 옛 화면으로 나가고, 거기 맨 윗줄과 맨 아래에 그 둘이 있다.</p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-now">지금</span><span class="sub">390 × 844 · <code>(next)/me/page.tsx</code></span></div>
+      <div class="phone" id="s01">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="me-top">
+            <span class="ava">초</span>
+            <div style="min-width:0">
+              <div class="me-name">초록고래</div>
+              <div class="me-meta">2026년 9월부터 · 경주</div>
+            </div>
+          </div>
+          <div class="counters">
+            <div><div class="n">3</div><div class="l">서재</div></div>
+            <div><div class="n">5</div><div class="l">발제 답변</div></div>
+          </div>
+          <div class="sec"><h3>내 활동</h3></div>
+          <div class="row"><span class="ic blue">🧾</span><span class="tx"><span class="t">신청 내역</span><span class="s">내 모임 신청과 취소</span></span><span class="chev">›</span></div>
+          <div class="row"><span class="ic green">🔔</span><span class="tx"><span class="t">알림</span></span><span class="cnt">2 ›</span></div>
+          <div class="row"><span class="ic yellow">⚙️</span><span class="tx"><span class="t">프로필 · 설정</span><span class="s">닉네임 · 연락처 · 지역</span></span><span class="chev">›</span></div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li class="warn"><b>로그아웃 0개 · 법적 링크 0개.</b> <code>grep "LogoutButton\|signOut" src/app/(next)</code> = 0건, <code>Footer</code>를 렌더하는 레이아웃은 <code>(main)</code>·<code>auth</code>·<code>policy</code> 셋뿐</li>
+        <li>화면 아래 <b>380px가 비어 있다</b> — 새 화면을 만들 이유가 없는 이유</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">02</span><span class="screen-name">「나」 탭 — 제안</span></div>
+  <p class="screen-desc">
+    같은 화면 맨 아래에 <b>블록 하나</b>를 붙였다. 위에서부터 ① 법적 링크 한 줄 ② 사업자정보 두 줄 ③ 로그아웃.
+    섹션 라벨(<code>Sec</code>)을 붙이지 않았다 — 「약관 및 정책」 같은 제목은 내용보다 크고, 이 블록은 <b>찾을 때만 보는 것</b>이라 제목이 필요 없다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">제안</span><span class="sub">390 × 844 · 스크롤 없이 다 들어간다</span></div>
+      <div class="phone" id="s02">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="me-top">
+            <span class="ava">초</span>
+            <div style="min-width:0">
+              <div class="me-name">초록고래</div>
+              <div class="me-meta">2026년 9월부터 · 경주</div>
+            </div>
+          </div>
+          <div class="counters">
+            <div><div class="n">3</div><div class="l">서재</div></div>
+            <div><div class="n">5</div><div class="l">발제 답변</div></div>
+          </div>
+          <div class="sec"><h3>내 활동</h3></div>
+          <div class="row"><span class="ic blue">🧾</span><span class="tx"><span class="t">신청 내역</span><span class="s">내 모임 신청과 취소</span></span><span class="chev">›</span></div>
+          <div class="row"><span class="ic green">🔔</span><span class="tx"><span class="t">알림</span></span><span class="cnt">2 ›</span></div>
+          <div class="row"><span class="ic yellow">⚙️</span><span class="tx"><span class="t">프로필 · 설정</span><span class="s">닉네임 · 연락처 · 지역</span></span><span class="chev">›</span></div>
+
+          <div class="legal">
+            <div class="links">
+              <a>이용약관</a><i>·</i><a>개인정보처리방침</a><i>·</i><a>환불정책</a>
+            </div>
+            <div class="biz">
+              지독해 | 대표 임재윤 | <span class="nb">사업자등록번호 494-42-01276</span> (간이과세자)<br>
+              경상북도 경주시 태종로 801-11 (황오동) 208호 | <span class="nb">0507-1396-7908</span>
+            </div>
+            <div class="logout"><span>로그아웃</span></div>
+          </div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>로그아웃이 화면 맨 아래다.</b> 옛 화면은 헤더 오른쪽 — 알림 종 바로 옆, 늘 보이는 자리라 오탭이 나기 쉬웠다. 여기로 내리면 <b>의도해야 닿는다</b></li>
+        <li><b>로그아웃에 그린을 쓰지 않았다.</b> 브랜드 그린은 「진행하세요」의 색이다. 로그아웃에 붙이면 권유로 읽힌다 — <code>tg-600</code> 텍스트 하나로 둔다</li>
+        <li><b>코럴(<code>#F4552A</code>)도 쓰지 않았다.</b> 코럴은 긴급 · 희소 · 에러 · 필수 전용이고 로그아웃은 그 넷 중 무엇도 아니다. 빨갛게 칠하면 「위험」이라고 거짓말하는 셈</li>
+        <li>링크 3개는 12px <code>tg-700</code> + 옅은 밑줄. 토스 스킨은 밑줄을 잘 안 쓰지만 <b>이 줄만은 「눌러서 읽는 것」임이 보여야</b> 한다 — 신호를 딱 하나만 쓴다</li>
+        <li>사업자정보 10.5px는 <code>tg-600</code> 이상. 토스 스킨 규율(14px 미만 보조 텍스트는 <code>tg-600</code> 이상)을 지켰다</li>
+        <li class="warn"><b>사업자정보 값을 새로 적지 않는다.</b> 현행 <code>Footer.tsx</code>가 <code>getSiteSettings()</code>에서 읽는다 — 아래 「Footer 재사용 판단」 참조</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">03</span><span class="screen-name">로그아웃 확인 — 띄운 상태</span></div>
+  <p class="screen-desc">
+    로그아웃은 되돌릴 수 없는 행동이지만, <b>되돌리는 비용은 카카오 로그인 한 번</b>이다.
+    그래서 겁을 주지 않고 <b>한 번 멈추게만</b> 한다. 확인 문구가 그 사실을 그대로 말한다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">제안</span><span class="sub">390 × 844 · 기존 <code>ModalOverlay</code> 재사용</span></div>
+      <div class="phone" id="s03">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="me-top">
+            <span class="ava">초</span>
+            <div style="min-width:0">
+              <div class="me-name">초록고래</div>
+              <div class="me-meta">2026년 9월부터 · 경주</div>
+            </div>
+          </div>
+          <div class="counters">
+            <div><div class="n">3</div><div class="l">서재</div></div>
+            <div><div class="n">5</div><div class="l">발제 답변</div></div>
+          </div>
+          <div class="sec"><h3>내 활동</h3></div>
+          <div class="row"><span class="ic blue">🧾</span><span class="tx"><span class="t">신청 내역</span><span class="s">내 모임 신청과 취소</span></span><span class="chev">›</span></div>
+          <div class="row"><span class="ic green">🔔</span><span class="tx"><span class="t">알림</span></span><span class="cnt">2 ›</span></div>
+          <div class="row"><span class="ic yellow">⚙️</span><span class="tx"><span class="t">프로필 · 설정</span><span class="s">닉네임 · 연락처 · 지역</span></span><span class="chev">›</span></div>
+          <div class="legal">
+            <div class="links"><a>이용약관</a><i>·</i><a>개인정보처리방침</a><i>·</i><a>환불정책</a></div>
+            <div class="biz">
+              지독해 | 대표 임재윤 | <span class="nb">사업자등록번호 494-42-01276</span> (간이과세자)<br>
+              경상북도 경주시 태종로 801-11 (황오동) 208호 | <span class="nb">0507-1396-7908</span>
+            </div>
+            <div class="logout"><span>로그아웃</span></div>
+          </div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+        <div class="dim"></div>
+        <div class="dlg">
+          <h4>로그아웃할까요?</h4>
+          <p>다시 들어올 때는 카카오 로그인 한 번이면 돼요.</p>
+          <div class="btns"><div class="cancel">취소</div><div class="go">로그아웃</div></div>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>새로 만들 것이 없다.</b> <code>components/ui/ModalOverlay.tsx</code>가 ESC · 포커스 복귀 · 배경 블러를 이미 한다(모임 취소 · 모임 삭제가 쓰는 그것). 반경 16px · 흰 배경도 그 컴포넌트 값 그대로 그렸다</li>
+        <li><b>「로그아웃」 버튼을 빨갛게 하지 않았다.</b> 돈도 데이터도 잃지 않는다 — 위험 색을 쓰면 다음에 진짜 위험한 확인이 왔을 때 쓸 색이 없다. <code>tg-800</code> 면에 흰 글씨</li>
+        <li><b>「취소」가 왼쪽, 「로그아웃」이 오른쪽.</b> 모임 취소 모달과 같은 배치라 회원이 이미 익힌 순서다</li>
+        <li class="warn"><b>대표님 O/X 지점</b> — 확인 단계를 <b>아예 빼는 선택</b>도 있다. 옛 화면은 확인 없이 바로 로그아웃됐고 그동안 사고 보고는 없었다. 다만 그때는 <b>2탭</b>이라 헤더가 늘 보였고, 지금은 자리를 옮기며 오탭 위험이 이미 줄었다 — <b>「자리를 내렸으니 확인은 빼자」도 성립한다</b></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">04</span><span class="screen-name">「나」 탭 — 제안 · 좁은 폭</span></div>
+  <p class="screen-desc">320px에서 사업자정보 두 줄이 <b>세 줄로 접힌다.</b> 접히는 자리가 <code>|</code> 구분자 뒤라 말이 가운데서 끊기지 않는다(<code>word-break: keep-all</code>).</p>
+  <div class="pair">
+    <div class="col narrow">
+      <div class="col-cap"><span class="tag tag-new">제안</span><span class="sub">320 × 844</span></div>
+      <div class="phone w320" id="s04">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="me-top">
+            <span class="ava">초</span>
+            <div style="min-width:0">
+              <div class="me-name">초록고래</div>
+              <div class="me-meta">2026년 9월부터 · 경주</div>
+            </div>
+          </div>
+          <div class="counters">
+            <div><div class="n">3</div><div class="l">서재</div></div>
+            <div><div class="n">5</div><div class="l">발제 답변</div></div>
+          </div>
+          <div class="sec"><h3>내 활동</h3></div>
+          <div class="row"><span class="ic blue">🧾</span><span class="tx"><span class="t">신청 내역</span><span class="s">내 모임 신청과 취소</span></span><span class="chev">›</span></div>
+          <div class="row"><span class="ic green">🔔</span><span class="tx"><span class="t">알림</span></span><span class="cnt">2 ›</span></div>
+          <div class="row"><span class="ic yellow">⚙️</span><span class="tx"><span class="t">프로필 · 설정</span><span class="s">닉네임 · 연락처 · 지역</span></span><span class="chev">›</span></div>
+          <div class="legal">
+            <div class="links"><a>이용약관</a><i>·</i><a>개인정보처리방침</a><i>·</i><a>환불정책</a></div>
+            <div class="biz">
+              지독해 | 대표 임재윤 | <span class="nb">사업자등록번호 494-42-01276</span> (간이과세자)<br>
+              경상북도 경주시 태종로 801-11 (황오동) 208호 | <span class="nb">0507-1396-7908</span>
+            </div>
+            <div class="logout"><span>로그아웃</span></div>
+          </div>
+        </div>
+        <div class="nav">
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>링크 줄은 320px에서도 <b>한 줄에 들어간다</b>(「개인정보처리방침」이 가장 길다). 더 좁아지면 <code>flex-wrap</code>으로 두 줄이 되고 말은 안 끊긴다</li>
+        <li>아래 여백이 아직 <b>270px 남는다</b> — 「프로필 · 설정」을 이 탭 안으로 들여오는 A5 작업이 들어와도 자리가 있다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="rule-box" style="margin-top:34px;max-width:1000px">
+  <h3>Footer 컴포넌트를 재사용할 수 있나 — 판단</h3>
+  <ul>
+    <li><b>통째로 재사용하지 말 것.</b> <code>components/Footer.tsx</code>는 구 스킨이다 — <code>border-surface-300</code> 윗선, <code>primary-600</code> 밑줄 링크, <code>text-small</code>.
+      5탭에 그대로 붙이면 「딴 앱처럼 보인다」를 고치려는 작업이 <b>딴 앱 조각을 하나 더 들여오는</b> 꼴이 된다</li>
+    <li><b>그러나 값은 반드시 재사용할 것.</b> 상호 · 대표 · 사업자등록번호 · 주소 · 전화는 <code>getSiteSettings()</code>에서 온다(<code>Footer.tsx:5~11</code>).
+      <span class="hl">이 값을 새 화면에 손으로 적으면 운영자가 설정을 바꿔도 한쪽만 바뀐다.</span> 읽는 함수는 하나여야 한다</li>
+    <li><b>권고 = 표현만 가른다.</b> <code>Footer</code>에 스킨 분기를 두든(<code>actionButtonSkin.ts</code> 선례) 얇은 표현 컴포넌트를 하나 두든 <b>구현은 개발·운영이 고른다.</b>
+      디자인이 요구하는 것은 두 가지뿐 — <b>① 사업자정보를 읽는 곳은 한 군데 ② 링크 목록도 한 군데</b></li>
+    <li><b>링크 5개 중 2개는 일부러 뺐다.</b> 현행 푸터에는 「모임 일정」(<code>/policy/meetings</code>)과 「서비스 소개」가 더 있는데,
+      앞엣것은 <b>모임 탭과 하는 일이 같고</b> 뒤엣것은 <b>비로그인 방문자용 소개</b>다. 로그인한 회원 화면에서는 뺀다.
+      <b>갈라지는 것이 의도라는 사실을 여기 적어둔다</b> — 안 적으면 다음 사람이 「누락」으로 보고 되돌린다</li>
+    <li class="hl">⚠️ 확인 필요 — 전자상거래법 §10의 「초기화면 표시」를 5탭 안 한 곳으로 충족하는지는 <b>법적 판단이라 디자인이 단정하지 않는다.</b>
+      사실만 적으면: <code>auth/login</code>과 <code>policy/*</code>에는 <b>지금도 푸터가 그대로 살아 있다</b>(<code>auth/layout.tsx</code>는 「PG 심사 대응」이라고 이유까지 적혀 있다).
+      로그인 전 화면에서는 사업자정보가 계속 보인다</li>
+  </ul>
+</div>
+
+<div class="rule-box" style="margin-top:14px;max-width:1000px">
+  <h3>곁가지 하나 — 켜면 로그아웃 자리가 <b>두 곳</b>이 된다</h3>
+  <ul>
+    <li><code>(main)/layout.tsx:45</code>의 헤더 로그아웃은 <b>플래그가 켜져도 그대로 산다.</b> 결제 리다이렉트 · 옛 마이페이지 같은 구 화면에서 계속 보인다</li>
+    <li>이 시안대로 「나」 탭에 로그아웃을 두면 <b>같은 행동이 두 군데</b>에 생긴다. 하나로 줄이려면 <code>next_ui</code>가 켜졌을 때 헤더 쪽을 숨기면 된다</li>
+    <li><b>디자인은 이것을 「하자」고 정하지 않는다</b> — 코드 수정이고 A5(자리 옮기기)와 같은 파일을 건드린다. <b>개발·운영이 A5를 할 때 같이 보면 되는 한 줄</b>로 남긴다</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part">
+  <span class="part-no">A3</span>
+  <h2 class="part-title">신규 회원이 도착한 첫 화면에 「할 것 하나」</h2>
+  <p class="part-desc">
+    개편 홈은 네 블록(반응 · 다음 모임 · 토론 홍보 · 할 일)으로 되어 있고 <b>셋이 「이미 신청한 사람」을 전제</b>한다.
+    남는 하나가 토론 홍보인데, 그 버튼은 읽기용 <code>/talk</code>로 가지 신청으로 가지 않는다.
+    전부 비면 <b>링크도 버튼도 아닌 <code>&lt;p&gt;</code> 두 줄</b>이 뜬다(<code>HomeView.tsx:163~168</code>).
+  </p>
+  <p class="part-desc" style="margin-top:12px">
+    <b>2026-08-15 「홈에 목록을 두지 않는다」는 유효하다. 뒤집지 않는다.</b>
+    그 결정문은 홈에 둘 것을 이렇게 적었다 — <i>“지금 내가 할 수 있는 일만. <b>다음 모임</b>, 답 안 한 발제, 내일 번개, 담을 책.”</i>
+    <b>「다음 모임」은 이미 그 목록 첫 줄에 있다.</b> 지금 코드가 그 자리를 <b>「내가 신청한 다음 모임」</b>으로만 채웠을 뿐이다(<code>home/page.tsx:58~72</code>).
+    한 번도 신청하지 않은 회원에게는 그 자리가 <b>영영 비어 있다.</b> 이 시안은 <b>같은 자리에 1건</b>을 넣는다 — 목록이 아니다.
+  </p>
+</div>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no now">05</span><span class="screen-name">홈 — 지금 · 가입 직후 회원</span></div>
+  <p class="screen-desc">
+    켜는 날 신규 회원이 실제로 보게 될 화면. 다가오는 토론모임이 있으면 <b>토론 홍보 카드 하나만</b> 뜬다.
+    그런데 토론모임은 <b>정기모임 1회 이상</b>이라야 신청할 수 있다(2026-08-22 결정) — <span class="hl">처음 온 사람의 첫 화면에, 그 사람이 못 하는 일이 유일한 카드로 떠 있다.</span>
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-now">지금</span><span class="sub">390 × 844 · 신청 0건 · 다가오는 토론모임 있음</span></div>
+      <div class="phone" id="s05">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">초록고래님,<br>오늘도 읽어볼까요</div>
+          <div class="promo">
+            <div class="cv-fb" style="width:60px;height:90px">물고기는<br>존재하지<br>않는다</div>
+            <div class="tx">
+              <div class="lbl">토론모임 · 신청 열림</div>
+              <div class="ttl">물고기는 존재하지 않는다</div>
+              <div class="meta">10월 25일 (토) 오후 3:00 · 공간 지그시</div>
+              <span class="btn-soft-inline" style="margin-top:8px">발제문 먼저 읽어보기</span>
+            </div>
+          </div>
+        </div>
+        <div class="nav">
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li class="warn"><b>정기모임이 열려 있어도 홈에는 한 건도 안 보인다.</b> 신규 회원이 정기모임에 닿으려면 「모임」 탭을 스스로 눌러야 한다 — <b>아무 데서도 그러라고 말해주지 않는다</b></li>
+        <li class="warn"><b>“오늘도 읽어볼까요”</b> — 오늘 처음 온 사람에게 「오늘<b>도</b>」다</li>
+        <li>토론 홍보 카드 자체는 문제가 아니다. <b>미자격자에게 블라인드 금지</b>가 결정돼 있다(2026-08-14) — 보이되 신청만 잠그고 정기모임으로 보낸다. <b>문제는 순서와 라벨</b>이다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">06</span><span class="screen-name">홈 — 제안 · 신규 × 정기모임 있음</span></div>
+  <p class="screen-desc">
+    빈 자리에 <b>가장 가까운 정기모임 1건</b>. 목록이 아니라 한 건이고, 그 아래 「다른 일정도 보기」 한 줄이 모임 탭으로 나가는 문이다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">제안</span><span class="sub">390 × 844 · 신청 0건 · 토론모임 없음</span></div>
+      <div class="phone" id="s06">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">초록고래님,<br>곧 이런 모임이 있어요</div>
+          <div class="sec"><h3>가장 가까운 모임</h3></div>
+          <div class="first-card">
+            <div class="when">10월 14일 (수) 오후 7:30</div>
+            <div class="ttl">경주 정기모임</div>
+            <div class="meta">우연히 책방 · 참가비 12,000</div>
+            <div class="btn">모임 자세히 보기</div>
+          </div>
+          <div class="more-link">다른 일정도 보기 ›</div>
+        </div>
+        <div class="nav">
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>「신청하기」라고 쓰지 않았다.</b> 버튼이 가는 곳은 <b>상세 화면</b>이지 결제창이 아니다. 「신청하기」를 눌렀는데 결제가 뜨면 불안하다 — 도착지를 그대로 부른다</li>
+        <li><b>큰 숫자(「3일」)를 쓰지 않았다.</b> 큰 숫자는 「내가 신청한 모임까지 남은 날」의 언어다. 안 신청한 모임에 같은 모양을 쓰면 <b>이미 신청한 줄 안다</b></li>
+        <li><b>참가비는 숫자만.</b> <code>formatFee()</code>가 그렇게 돌려준다 — 「원」·「₩」 없음</li>
+        <li><b>데이터는 이미 이 페이지에 있다.</b> <code>home/page.tsx:20~29</code>가 다가오는 <b>모든</b> 활성 모임을 이미 불러온다.
+          거기서 <b>내가 신청하지 않은 가장 가까운 정기모임 하나</b>를 고르는 것이라 <b>쿼리가 늘지 않는다</b></li>
+        <li><b>지역이 갈리면 회원 지역(<code>profiles.region</code>)과 겹치는 것을 먼저 고른다.</b> 경주 회원에게 포항 모임이 「가장 가까운 모임」으로 뜨면 틀린 안내다.
+          겹치는 게 없으면 날짜순 첫 번째</li>
+        <li class="warn"><b>대표님 O/X 지점</b> — 이 카드를 <b>누구에게 보여줄 것인가.</b>
+          ㉮ 한 번도 신청한 적 없는 회원에게만 / ㉯ 다가오는 신청이 하나도 없는 회원 모두(오래 쉰 기존 회원 포함).
+          <b>㉮를 권한다</b> — 2026-08-15의 「할 일이 없으면 비어 있어도 된다」를 가장 적게 건드린다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">07</span><span class="screen-name">홈 — 제안 · 신규 × 정기 + 토론 둘 다 있을 때</span></div>
+  <p class="screen-desc">
+    <b>순서를 바꿨다.</b> 할 수 있는 일(정기)이 위, 아직 못 하는 일(토론)이 아래.
+    그리고 토론 카드 라벨이 <b>「신청 열림」에서 「정기모임에 한 번 오시면 신청할 수 있어요」로</b> 바뀐다 — 잠긴 이유를 그 자리에서 말한다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">제안</span><span class="sub">390 × 844 · 신청 0건 · 정기 + 토론 둘 다</span></div>
+      <div class="phone" id="s07">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">초록고래님,<br>곧 이런 모임이 있어요</div>
+          <div class="sec"><h3>가장 가까운 모임</h3></div>
+          <div class="first-card">
+            <div class="when">10월 14일 (수) 오후 7:30</div>
+            <div class="ttl">경주 정기모임</div>
+            <div class="meta">우연히 책방 · 참가비 12,000</div>
+            <div class="btn">모임 자세히 보기</div>
+          </div>
+          <div class="more-link">다른 일정도 보기 ›</div>
+          <div class="sec"><h3>이달의 토론모임</h3></div>
+          <div class="promo" style="margin-top:4px">
+            <div class="cv-fb" style="width:60px;height:90px">물고기는<br>존재하지<br>않는다</div>
+            <div class="tx">
+              <div class="lbl locked">정기모임에 한 번 오시면 신청할 수 있어요</div>
+              <div class="ttl">물고기는 존재하지 않는다</div>
+              <div class="meta">10월 25일 (토) 오후 3:00 · 공간 지그시</div>
+              <span class="btn-soft-inline" style="margin-top:8px">발제문 먼저 읽어보기</span>
+            </div>
+          </div>
+        </div>
+        <div class="nav">
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>토론 카드를 숨기지 않았다.</b> 「미자격자에게 블라인드 금지 — 보이되 신청만 잠그고 정기모임으로 보낸다」(2026-08-14)를 그대로 지킨 모양이다.
+          <b>위에 정기모임이 있다는 것 자체가 「정기모임으로 보낸다」</b>이다</li>
+        <li><b>라벨 색을 그린에서 <code>tg-600</code>으로 내렸다.</b> 잠긴 것을 그린으로 칠하면 「열렸다」고 읽힌다.
+          이것도 <b>덜 쓰는 쪽</b> — 자물쇠 아이콘 · 회색 덮개 · 흐리게 처리를 <b>얹지 않았다</b></li>
+        <li><b>「발제문 먼저 읽어보기」는 그대로 둔다.</b> 자격이 없어도 <b>읽는 것은 할 수 있다.</b> 현행 문구이고 검증된 도착지다</li>
+        <li class="warn"><b>A4에 달려 있는 한 줄</b> — 자격 잠금(A4)이 켜는 날에 안 들어가면 신규도 토론을 신청할 수 있게 되고, 그러면 이 라벨은 <b>거짓말이 된다.</b>
+          그때는 현행 「토론모임 · 신청 열림」을 그대로 쓴다. <b>순서(정기 위 · 토론 아래)는 A4와 무관하게 유효하다</b></li>
+        <li><b>「이달의 토론모임」이라는 섹션 라벨을 새로 붙였다.</b> 현행에는 라벨이 없어 카드 두 장이 이유 없이 나란히 놓인다.
+          토론은 월 1회라 「이달의」가 사실이다(모임 탭도 <code>aside="월 1회"</code>로 같은 말을 한다)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">08</span><span class="screen-name">홈 — 예정된 모임이 하나도 없을 때</span></div>
+  <p class="screen-desc">
+    <b>이 화면이 A3에서 가장 중요한 한 장이다.</b> 여기서는 <span class="hl">줄 수 있는 행동이 없다</span> — 모임이 0건이면 모임 탭에 보내도 거기도 비어 있다.
+    그래서 이 상태를 고치는 방법은 화면이 아니라 <b>모임을 등록하는 것</b>뿐이다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-now">지금</span><span class="sub">390 × 844 · <code>&lt;p&gt;</code> 두 줄, 누를 데 없음</span></div>
+      <div class="phone" id="s08a">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">초록고래님,<br>오늘도 읽어볼까요</div>
+          <div class="empty-dashed">
+            <div class="t">지금은 조용해요</div>
+            <div class="s">모임 탭에서 다음 일정을 볼 수 있어요</div>
+          </div>
+        </div>
+        <div class="nav">
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li class="warn">점선 박스 + 가운데 정렬 + 링크 없음 = <b>「고장인가?」로 읽히는 조합</b></li>
+      </ul>
+    </div>
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">제안</span><span class="sub">390 × 844 · 문구 그대로, 누를 수 있게만</span></div>
+      <div class="phone" id="s08b">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">초록고래님,<br>오늘도 읽어볼까요</div>
+          <div class="empty-row">
+            <div class="tx">
+              <div class="t">지금은 조용해요</div>
+              <div class="s">모임 탭에서 다음 일정을 볼 수 있어요</div>
+            </div>
+            <span class="chev">›</span>
+          </div>
+        </div>
+        <div class="nav">
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>문구를 한 글자도 안 바꿨다.</b> 「지금은 조용해요 / 모임 탭에서 다음 일정을 볼 수 있어요」는 현행 그대로다.
+          바꾼 것은 <b>그 두 줄을 누를 수 있게 한 것</b> 하나 — 점선 박스를 <code>tg-100</code> 면 + <code>›</code>로 바꾸면 <b>이동 수단이 생긴다</b></li>
+        <li><b>「알림으로 알려드릴게요」 같은 말을 넣지 않았다.</b> 새 모임이 올라올 때 알림을 보내는 코드가 <b>없다.</b> 화면이 지킬 수 없는 약속을 하지 않는다</li>
+        <li class="warn"><b>이 화면은 켜는 날에 뜨면 안 되는 화면이다.</b> 2026-09-10 prod 실측에서 10월 모임이 <b>0건</b>이었다.
+          그대로 켜면 <b>전 회원이 이 화면으로 개편을 맞는다.</b> 「10월 모임 등록 확인」이 화면 작업이 아니라 <b>켜는 날 선결 조건</b>인 이유가 이 한 장이다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">09</span><span class="screen-name">홈 — 기존 회원 · 다가오는 모임은 있는데 아직 신청 안 함</span></div>
+  <p class="screen-desc">
+    위 06번 카드를 <b>㉯(다가오는 신청이 없는 회원 모두)</b>로 켰을 때의 화면. 인사만 현행 그대로 「오늘도 읽어볼까요」다.
+    <b>㉮를 고르시면 이 회원은 08번 화면을 본다</b> — 두 선택지가 실제로 어떻게 갈리는지를 보시라고 따로 그렸다.
+  </p>
+  <div class="pair">
+    <div class="col">
+      <div class="col-cap"><span class="tag tag-new">제안 ㉯</span><span class="sub">390 × 844 · 신청 이력 있음 · 다가오는 신청 0건</span></div>
+      <div class="phone" id="s09">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">초록고래님,<br>오늘도 읽어볼까요</div>
+          <div class="sec"><h3>가장 가까운 모임</h3></div>
+          <div class="first-card">
+            <div class="when">10월 14일 (수) 오후 7:30</div>
+            <div class="ttl">경주 정기모임</div>
+            <div class="meta">우연히 책방 · 참가비 12,000</div>
+            <div class="btn">모임 자세히 보기</div>
+          </div>
+          <div class="more-link">다른 일정도 보기 ›</div>
+        </div>
+        <div class="nav">
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li><b>인사만 다르다.</b> 「오늘도」는 두 번째 이상 오는 사람에게 맞는 말이라 현행 그대로 쓴다. 신규(06 · 07)에게만 「곧 이런 모임이 있어요」로 갈린다</li>
+        <li>㉯로 켜면 <b>쉬고 있던 회원에게도 매번 모임 하나가 보인다.</b> 얻는 것과 잃는 것이 같은 자리에 있다 —
+          얻는 것은 복귀 경로, 잃는 것은 <b>「할 일이 없으면 비어 있어도 된다」는 홈의 규율</b></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="screen">
+  <div class="screen-head"><span class="screen-no">10</span><span class="screen-name">홈 — 제안 · 좁은 폭</span></div>
+  <p class="screen-desc">320px. 제목 두 줄(「곧 이런 모임이 있어요」)이 <b>그대로 두 줄</b>이고, 카드 안 메타 줄(장소 · 참가비)이 한 줄에 들어간다.</p>
+  <div class="pair">
+    <div class="col narrow">
+      <div class="col-cap"><span class="tag tag-new">제안</span><span class="sub">320 × 844 · 신규 × 정기 + 토론</span></div>
+      <div class="phone w320" id="s10">
+        <div class="nx-head"><span class="nx-wm">지독해</span>
+          <span class="bell"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg></span>
+        </div>
+        <div class="nx-body">
+          <div class="h1">초록고래님,<br>곧 이런 모임이 있어요</div>
+          <div class="sec"><h3>가장 가까운 모임</h3></div>
+          <div class="first-card">
+            <div class="when">10월 14일 (수) 오후 7:30</div>
+            <div class="ttl">경주 정기모임</div>
+            <div class="meta">우연히 책방 · 참가비 12,000</div>
+            <div class="btn">모임 자세히 보기</div>
+          </div>
+          <div class="more-link">다른 일정도 보기 ›</div>
+          <div class="sec"><h3>이달의 토론모임</h3></div>
+          <div class="promo" style="margin-top:4px;gap:12px">
+            <div class="cv-fb" style="width:56px;height:84px">물고기는<br>존재하지<br>않는다</div>
+            <div class="tx">
+              <div class="lbl locked">정기모임에 한 번 오시면<br>신청할 수 있어요</div>
+              <div class="ttl">물고기는 존재하지 않는다</div>
+              <div class="meta">10월 25일 (토) · 공간 지그시</div>
+              <span class="btn-soft-inline" style="margin-top:8px">발제문 먼저 읽어보기</span>
+            </div>
+          </div>
+        </div>
+        <div class="nav">
+          <a class="on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/></svg><span>홈</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>모임</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12z"/></svg><span>이야기</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v16H4zM10 4h5v16h-5z"/><path d="M15.5 5.6l3.6-.9 2.4 14.6-3.6.9z"/></svg><span>서재</span></a>
+          <a><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg><span>나</span></a>
+        </div>
+      </div>
+      <ul class="notes">
+        <li>320px에서는 토론 카드 날짜 줄에서 <b>시각을 뺐다</b>(「10월 25일 (토) · 공간 지그시」). 장소 이름이 잘리는 것보다 낫다 —
+          시각은 누르면 나오고, <b>어디서 하는지가 갈지 말지를 정한다</b></li>
+        <li>잠금 라벨은 두 줄로 접힌다. <code>word-break: keep-all</code>이라 「신청할」 / 「수 있어요」 사이 낱말 경계에서만 끊긴다</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="part">
+  <span class="part-no" style="background:var(--tg-800)">정리</span>
+  <h2 class="part-title">대표님이 O / X 하실 자리</h2>
+</div>
+
+<div class="rule-box" style="max-width:1000px">
+  <h3>세 가지뿐입니다</h3>
+  <ul>
+    <li><b>① 로그아웃에 확인 한 단계를 둘까요</b> (03번 화면) — <b>O를 권합니다.</b> 잘못 눌렀을 때의 놀람은 크고, 한 번 더 묻는 값은 거의 0입니다.
+      빼도 큰일은 아닙니다 — 자리를 화면 맨 아래로 내린 것만으로 오탭은 이미 줄었습니다</li>
+    <li><b>② 「가장 가까운 모임」 카드를 누구에게 보여줄까요</b> (06 · 09번 화면) —
+      <b>㉮ 한 번도 신청 안 한 회원에게만</b>(권합니다) / ㉯ 다가오는 신청이 없는 회원 모두</li>
+    <li><b>③ 토론 카드를 정기모임 <u>아래</u>로 내리는 것</b> (07번 화면) — <b>O를 권합니다.</b>
+      처음 온 분의 첫 화면에서, 그분이 아직 못 하는 일이 맨 위에 있지 않게 됩니다</li>
+  </ul>
+</div>
+
+<div class="rule-box" style="margin-top:14px;max-width:1000px">
+  <h3>디자인이 확인하지 못한 것 — 넘겨짚지 않고 적어둡니다</h3>
+  <ul>
+    <li><b>실제 화면을 못 봤습니다.</b> <code>(next)</code> 5탭은 카카오 로그인 뒤에 있어 로컬에서 안 열립니다(부서 규칙이 「불가」로 분류한 칸).
+      <b>대신 한 것</b> — 화면 코드 원문 대조(<code>HomeView</code> · <code>MeetView</code> · <code>TossUI</code> · <code>(next)/me/page</code> · <code>(next)/layout</code> · <code>Footer</code> · <code>ModalOverlay</code>),
+      토큰을 <code>globals.css</code>와 한 줄씩 대조, 이 시안 <b>렌더 확인</b>. 진짜 화면 확인은 <b>preview 배포 뒤</b>에 필요합니다</li>
+    <li><b>전자상거래법 §10의 「초기화면 표시」 판단</b> — 법적 판단이라 디자인이 단정하지 않았습니다. 코드 사실만 적었습니다(A2 재사용 판단 마지막 줄)</li>
+    <li><b>토론 자격 잠금(A4)의 최종 모습</b> — 대표님 예외 결정에 달려 있어 07번 라벨은 <b>「자격 잠금이 들어간다」는 전제</b>로 그렸습니다. 안 들어가면 현행 라벨을 그대로 씁니다</li>
+    <li><b>기존 회원의 실제 신청 분포</b> — 「신청 0건이 최대 집단」은 온보딩 전환검토에서 인용한 것이고, 디자인이 다시 세지 않았습니다</li>
+  </ul>
+</div>
+
+<div class="legend">
+  <span><b>파일</b> docs/superpowers/mockups/2026-09-19-로그아웃-약관-첫화면.html</span>
+  <span><b>대조한 코드</b> globals.css 111~126 · HomeView · MeetView · TossUI · (next)/me/page · (next)/layout · Footer · ModalOverlay · home/page</span>
+</div>
+
+</div>
+</body>
+</html>

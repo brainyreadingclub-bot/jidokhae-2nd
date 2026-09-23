@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>모임 상세 재설계 (2026-09-21)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+:root{
+  --tg-50:#F9FAFB; --tg-100:#F2F4F6; --tg-200:#E5E8EB; --tg-300:#D1D6DB;
+  --tg-400:#B0B8C1; --tg-500:#8B95A1; --tg-600:#6B7684; --tg-700:#4E5968;
+  --tg-800:#333D4B; --tg-900:#191F28;
+  --brand:#0FA873; --brand-deep:#0C8A5F; --brand-bg:#E8F7F1;
+  --warnx:#FF6B3D; --warnx-bg:#FFF0EA;
+  --shadow-toss-card:0 2px 12px rgba(25,31,40,.07);
+  --sans:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9ECEF;font-family:var(--sans);color:var(--tg-900);word-break:keep-all;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1300px;margin:0 auto;padding:44px 28px 120px}
+
+.doc-title{font-size:28px;font-weight:800;letter-spacing:-.03em}
+.doc-sub{margin-top:10px;font-size:14px;line-height:1.85;color:var(--tg-700)}
+
+/* 결정 블록 */
+.decide{margin-top:52px;background:#fff;border-radius:20px;padding:26px 28px 30px;box-shadow:var(--shadow-toss-card)}
+.decide h2{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.decide .q{margin-top:7px;font-size:14px;line-height:1.8;color:var(--tg-700)}
+.pair{display:flex;gap:30px;margin-top:22px;align-items:flex-start;flex-wrap:wrap}
+.pick{width:390px;flex:none}
+.pick .lab{margin-top:12px;text-align:center;font-size:14px;font-weight:800;letter-spacing:-.02em;color:var(--tg-800)}
+.pick .lab em{font-style:normal;display:inline-block;min-width:26px;margin-right:6px;padding:2px 7px;border-radius:7px;
+  background:var(--tg-900);color:#fff;font-size:12px}
+.decide .foot{margin-top:20px;font-size:13px;line-height:1.75;color:var(--tg-600)}
+
+/* 화면 목록 */
+.gallery{margin-top:64px}
+.gallery > h2{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.grid{display:flex;gap:30px;flex-wrap:wrap;margin-top:22px}
+.item{width:390px;flex:none}
+.item.w320{width:320px}
+.item .name{margin-bottom:10px;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.item .name b{color:var(--tg-500);font-weight:800;margin-right:7px}
+
+/* ═══════ 폰 프레임 ═══════ */
+.phone{width:390px;height:844px;background:#fff;position:relative;overflow:hidden;
+  box-shadow:0 10px 30px rgba(25,31,40,.13);border-radius:14px}
+.phone.w320{width:320px}
+.nx-head{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 20px}
+.nx-wm{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--brand-deep)}
+.bell{color:var(--tg-600);display:flex;align-items:center;justify-content:center;width:36px;height:36px}
+.nx-body{padding:0 20px 170px;overflow:hidden;height:calc(844px - 48px);display:flex;flex-direction:column}
+.nx-body > *{flex:none}
+details.fold.pinbottom,.nx-body > .pinbottom{margin-top:auto}
+.nav{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid var(--tg-100);
+  display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.nav i{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tg-400);font-style:normal}
+.nav i.on{color:var(--tg-900)}
+.nav i span{font-size:10px;font-weight:600;letter-spacing:-.02em}
+.nav i.on span{font-weight:700}
+.nav i em{display:block;width:18px;height:18px;border-radius:5px;background:currentColor;opacity:.32}
+.nav i.on em{opacity:1}
+
+/* 하단 고정 바 */
+.sticky{position:absolute;left:0;right:0;bottom:56px;background:#fff;padding:12px 20px;
+  box-shadow:0 -2px 10px rgba(25,31,40,.06)}
+.sbar{display:flex;align-items:center;gap:16px}
+.sbar .money{flex:none;min-width:92px}
+.sbar .money .amt{font-size:20px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+.sbar .money .seat{margin-top:2px;font-size:12px;font-weight:700;color:var(--tg-600);letter-spacing:-.01em}
+.sbar .money .seat.urgent{color:var(--warnx)}
+.sbar .cta{flex:1;min-height:52px;border-radius:14px;background:var(--brand);color:#fff;
+  font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;letter-spacing:-.02em}
+.sbar .cta.wait{background:var(--warnx)}
+.sbar .cta.ghost{background:var(--tg-100);color:var(--tg-700)}
+.sfoot{margin-top:9px;font-size:11.5px;line-height:1.6;color:var(--tg-600);text-align:center}
+
+/* 상세 본문 */
+.back{display:flex;align-items:center;gap:6px;height:34px;font-size:14px;font-weight:700;color:var(--tg-700)}
+.strip{margin-top:8px;min-height:46px;display:flex;align-items:center;gap:10px;border-radius:14px;
+  background:var(--brand-bg);padding:10px 14px}
+.strip .ck{width:20px;height:20px;border-radius:999px;background:var(--brand);color:#fff;font-size:10px;
+  font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.strip .tx{flex:1;min-width:0;font-size:13px;font-weight:800;color:var(--brand-deep)}
+.strip .tx .sub{font-weight:700;color:var(--tg-700)}
+.strip .dd{font-size:12px;font-weight:800;color:var(--brand-deep);flex:none}
+.strip.wait{background:var(--tg-100);display:block;padding:12px 14px}
+.strip.wait .t1{font-size:13px;font-weight:800;color:var(--tg-800)}
+.strip.wait .t2{margin-top:3px;font-size:12.5px;line-height:1.6;color:var(--tg-600)}
+
+.h1{margin-top:12px;font-size:24px;font-weight:800;line-height:1.32;letter-spacing:-.03em}
+.meta{margin-top:7px;font-size:13px;font-weight:600;color:var(--tg-600);letter-spacing:-.01em;display:inline-block}
+.lede{margin-top:15px;font-size:15px;line-height:1.78;color:var(--tg-700)}
+
+/* 아이콘 한 줄 */
+.irows{margin-top:22px}
+.irow{display:flex;align-items:center;gap:13px;min-height:58px}
+.irow .ic{width:36px;height:36px;flex:none;border-radius:12px;background:var(--tg-100);
+  display:flex;align-items:center;justify-content:center;color:var(--tg-600)}
+.irow .tx{min-width:0;display:block}
+.irow .t1{display:block;font-size:15px;font-weight:700;color:var(--tg-900);letter-spacing:-.02em;line-height:1.35}
+.irow .t2{display:block;margin-top:2px;font-size:12.5px;color:var(--tg-600);line-height:1.45}
+.irow .t1 .num{font-variant-numeric:tabular-nums}
+
+/* 접는 줄 */
+details.fold{margin-top:8px;border-top:1px solid var(--tg-100)}
+details.fold summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:50px;cursor:pointer}
+details.fold summary::-webkit-details-marker{display:none}
+details.fold summary .lb{font-size:14px;font-weight:700;color:var(--tg-800);letter-spacing:-.02em}
+details.fold summary .cv{margin-left:auto;color:var(--tg-400)}
+details.fold[open] summary .cv{transform:rotate(90deg)}
+details.fold .inner{padding:0 0 16px;font-size:13px;line-height:1.8;color:var(--tg-600)}
+details.fold .inner b{color:var(--tg-900);font-weight:700}
+details.fold .inner .r{display:flex;gap:12px;padding:5px 0}
+details.fold .inner .r .d{width:112px;flex:none;color:var(--tg-700);font-weight:600}
+details.fold .inner .r .v{font-weight:700;color:var(--tg-900)}
+
+/* 입금 카드 */
+.bank{margin-top:18px;border-radius:18px;background:var(--tg-100);padding:18px}
+.bank .ttl{font-size:14px;font-weight:800;color:var(--tg-900)}
+.bank .send{margin-top:12px;display:flex;align-items:baseline;justify-content:space-between}
+.bank .send .lb{font-size:13px;font-weight:700;color:var(--tg-700)}
+.bank .send .am{font-size:22px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--tg-900)}
+.bank .line{margin:12px 0;height:1px;background:var(--tg-200)}
+.bank dl{display:flex;align-items:center;gap:12px;padding:3px 0}
+.bank dt{font-size:12px;font-weight:600;color:var(--tg-600);width:46px;flex:none}
+.bank dd{font-size:13.5px;font-weight:700;color:var(--tg-900)}
+.bank dd.mono{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.bank .cp{margin-top:13px;height:44px;border-radius:12px;background:#fff;color:var(--brand-deep);
+  font-size:13.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px}
+.depname{margin-top:9px;display:flex;align-items:center;gap:9px;border-radius:12px;background:var(--tg-50);
+  padding:11px 14px}
+.depname .lb{font-size:12px;font-weight:700;color:var(--tg-600);flex:none}
+.depname .vl{font-size:13.5px;font-weight:800;color:var(--tg-900);flex:1}
+.depname .cp2{font-size:12px;font-weight:800;color:var(--brand-deep);flex:none}
+
+/* 멤버 */
+.msec{margin-top:24px}
+.mhead{display:flex;align-items:baseline;justify-content:space-between}
+.mhead h3{font-size:13.5px;font-weight:700;color:var(--tg-600)}
+.mhead .cnt{font-size:12px;font-weight:700;color:var(--tg-600);font-variant-numeric:tabular-nums}
+.pills{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+.pills li{list-style:none;border-radius:999px;background:var(--tg-100);padding:6px 12px;
+  font-size:13px;font-weight:700;color:var(--tg-800)}
+
+/* 현행 화면 재현용 */
+.oldbox{margin-top:16px;border-radius:18px;background:var(--tg-100);padding:14px 16px;
+  font-size:14px;line-height:1.7;color:var(--tg-700)}
+.rows{margin-top:12px;border-radius:18px;background:var(--tg-100);padding:2px 16px}
+.rows dl{display:flex;align-items:flex-start;gap:16px;min-height:50px;padding:13px 0}
+.rows dl+dl{border-top:1px solid var(--tg-200)}
+.rows dt{font-size:13px;font-weight:600;color:var(--tg-600);width:52px;flex:none}
+.rows dd{font-size:15px;font-weight:700;color:var(--tg-900)}
+.oldrefund{margin-top:20px;font-size:13px;line-height:1.75;color:var(--tg-600)}
+.oldrefund b{color:var(--tg-900)}
+.oldsticky{position:absolute;left:0;right:0;bottom:56px;background:#fff;padding:12px 20px;
+  box-shadow:0 -2px 10px rgba(25,31,40,.06)}
+.oldsticky .btn{height:52px;border-radius:14px;background:var(--brand);color:#fff;font-size:15px;
+  font-weight:800;display:flex;align-items:center;justify-content:center}
+.oldwaitcard{margin-top:26px;border-radius:18px;background:var(--tg-100);padding:18px}
+.oldwaitcard .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.oldwaitcard .pill{font-size:12px;font-weight:800;color:var(--tg-700);background:#fff;border-radius:999px;padding:5px 11px}
+.oldwaitcard .am{font-size:14px;font-weight:800;color:var(--tg-900)}
+.oldwaitcard .bd{font-size:12px;line-height:1.7;color:var(--tg-600)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1 class="doc-title">모임 상세 — 화면 시안</h1>
+<p class="doc-sub">
+회원이 보는 모임 상세 화면입니다. 아래 <b>두 가지</b>만 골라 주세요.<br>
+그림이라 눌러도 다음 화면으로 넘어가지 않아요.
+</p>
+
+<!-- ══════════════ 결정 A ══════════════ -->
+<section class="decide">
+  <h2>결정 A — 가운데 빈 자리</h2>
+  <p class="q">「취소·환불 안내」 줄을 <b>어디에 둘지</b> 골라 주세요.</p>
+  <div class="pair">
+
+    <!-- A1 -->
+    <div class="pick">
+      <div class="phone" id="p-a1">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 23번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner">
+              <div class="r"><span class="d">10월 4일까지</span><span class="v">전액 12,000</span></div>
+              <div class="r"><span class="d">10월 5일</span><span class="v">절반 6,000</span></div>
+              <div class="r"><span class="d">10월 6일부터</span><span class="v">환불이 어려워요</span></div>
+            </div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat">5자리 남음</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+      <p class="lab"><em>A1</em>맨 아래에 둔다 (지금)</p>
+    </div>
+
+    <!-- A2 -->
+    <div class="pick">
+      <div class="phone" id="p-a2">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 23번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner">
+              <div class="r"><span class="d">10월 4일까지</span><span class="v">전액 12,000</span></div>
+              <div class="r"><span class="d">10월 5일</span><span class="v">절반 6,000</span></div>
+              <div class="r"><span class="d">10월 6일부터</span><span class="v">환불이 어려워요</span></div>
+            </div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat">5자리 남음</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+      <p class="lab"><em>A2</em>위로 올려 붙인다</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════ 결정 B ══════════════ -->
+<section class="decide">
+  <h2>결정 B — 「23번째 모임이에요」 줄</h2>
+  <p class="q">제목 바로 아래 한 줄을 <b>넣을지 뺄지</b> 골라 주세요.</p>
+  <div class="pair">
+
+    <!-- B1 -->
+    <div class="pick">
+      <div class="phone" id="p-b1">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 23번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner">
+              <div class="r"><span class="d">10월 4일까지</span><span class="v">전액 12,000</span></div>
+              <div class="r"><span class="d">10월 5일</span><span class="v">절반 6,000</span></div>
+              <div class="r"><span class="d">10월 6일부터</span><span class="v">환불이 어려워요</span></div>
+            </div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat">5자리 남음</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+      <p class="lab"><em>B1</em>그 줄을 넣는다</p>
+    </div>
+
+    <!-- B2 -->
+    <div class="pick">
+      <div class="phone" id="p-b2">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner">
+              <div class="r"><span class="d">10월 4일까지</span><span class="v">전액 12,000</span></div>
+              <div class="r"><span class="d">10월 5일</span><span class="v">절반 6,000</span></div>
+              <div class="r"><span class="d">10월 6일부터</span><span class="v">환불이 어려워요</span></div>
+            </div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat">5자리 남음</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+      <p class="lab"><em>B2</em>그 줄을 뺀다</p>
+    </div>
+
+  </div>
+  <p class="foot">B1을 고르시면 「23번째」 숫자를 만드는 작업이 따로 필요합니다. 지금은 세어둔 값이 없습니다.</p>
+</section>
+
+<!-- ══════════════ 화면 전체 ══════════════ -->
+<section class="gallery">
+  <h2>화면 전체</h2>
+  <div class="grid">
+
+    <!-- 0 -->
+    <div class="item">
+      <p class="name"><b>지금</b>신청 전 — 현행</p>
+      <div class="phone" id="p-0">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div class="oldbox">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</div>
+          <div class="rows">
+            <dl><dt>언제</dt><dd>10월 7일 (수) 오후 7:30</dd></dl>
+            <dl><dt>어디서</dt><dd>우연히책방 · 경주</dd></dl>
+            <dl><dt>참여</dt><dd>7/12명</dd></dl>
+            <dl><dt>참가비</dt><dd>12,000</dd></dl>
+          </div>
+          <div class="oldrefund">
+            모임 <b>3일 전까지 전액</b>, 2일 전 50%, 이후는 환불이 어려워요.<br>
+            취소는 언제든 하실 수 있어요.
+          </div>
+        </div>
+        <div class="oldsticky"><div class="btn">신청하러 가기 · 12,000</div></div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1 -->
+    <div class="item">
+      <p class="name"><b>1</b>신청 전 — 일반</p>
+      <div class="phone" id="p-1">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 23번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner">
+              <div class="r"><span class="d">10월 4일까지</span><span class="v">전액 12,000</span></div>
+              <div class="r"><span class="d">10월 5일</span><span class="v">절반 6,000</span></div>
+              <div class="r"><span class="d">10월 6일부터</span><span class="v">환불이 어려워요</span></div>
+              <p style="margin-top:6px">취소는 언제든 하실 수 있어요.</p>
+            </div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat">5자리 남음</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="item">
+      <p class="name"><b>2</b>신청 전 — 인원이 가려진 상태</p>
+      <div class="phone" id="p-2">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 둘째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 24번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 14일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner"><p>모임 3일 전까지 전액, 2일 전 절반, 이후는 환불이 어려워요.</p></div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+          <p class="sfoot">모임 당일까지 신청할 수 있어요</p>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="item">
+      <p class="name"><b>3</b>신청 전 — 마감(정원이 찼다)</p>
+      <div class="phone" id="p-3">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 23번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner"><p>대기 중에 취소하면 <b>언제든 전액</b> 돌려받아요.</p></div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat urgent">자리가 다 찼어요</div></div>
+            <div class="cta wait">대기 신청하기</div>
+          </div>
+          <p class="sfoot">자리가 나면 자동으로 확정돼요. 안 나면 모임 전날 전액 환불돼요.</p>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="item">
+      <p class="name"><b>4</b>신청 후 — 카드 결제 완료</p>
+      <div class="phone" id="p-4">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <div class="strip">
+            <span class="ck">✓</span><span class="tx">신청 완료</span><span class="dd">D-16</span>
+          </div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주 황성로 12, 2층</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.5" y="5.5" width="19" height="13" rx="3"/><path d="M2.5 10h19"/></svg></span>
+              <span class="tx"><span class="t1 num">12,000</span><span class="t2">카드로 결제했어요</span></span>
+            </div>
+          </div>
+          <details class="fold">
+            <summary><span class="lb">모임 안내 보기</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner"><p>각자 읽고 싶은 책을 가져와 30분 읽고, 30분 돌아가며 이야기해요.</p></div>
+          </details>
+          <details class="fold">
+            <summary><span class="lb">취소하면 얼마 돌려받나</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner"><p>10월 4일까지 전액, 10월 5일은 절반이에요.</p></div>
+          </details>
+          <section class="msec">
+            <div class="mhead"><h3>함께하는 멤버</h3><span class="cnt">7명</span></div>
+            <ul class="pills">
+              <li>초록고래</li><li>레고</li><li>강물</li><li>우와</li><li>단무지</li><li>밤톨</li><li>해초</li>
+            </ul>
+          </section>
+        </div>
+        <div class="sticky">
+          <div class="sbar"><div class="cta ghost">취소하기</div></div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="item">
+      <p class="name"><b>5</b>신청 후 — 입금 대기</p>
+      <div class="phone" id="p-5">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <div class="strip">
+            <span class="ck">✓</span><span class="tx">신청 완료 <span class="sub">· 입금 확인 중</span></span><span class="dd">D-16</span>
+          </div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주 황성로 12, 2층</span></span>
+            </div>
+          </div>
+          <div class="bank">
+            <p class="ttl">입금 안내</p>
+            <div class="send"><span class="lb">보낼 금액</span><span class="am">12,000</span></div>
+            <div class="line"></div>
+            <dl><dt>은행</dt><dd>국민은행</dd></dl>
+            <dl><dt>계좌</dt><dd class="mono">123456-01-789012</dd></dl>
+            <dl><dt>예금주</dt><dd>김재윤</dd></dl>
+            <div class="cp">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              계좌번호 복사
+            </div>
+          </div>
+          <div class="depname"><span class="lb">입금자명</span><span class="vl">10/7 초록고래</span><span class="cp2">복사</span></div>
+          <details class="fold" style="margin-top:14px">
+            <summary><span class="lb">취소하면 얼마 돌려받나</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner"><p>아직 안 보내셨으면 취소만 하시면 돼요. 이미 보내셨다면 운영자가 확인하고 돌려드려요.</p></div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar"><div class="cta ghost">신청 취소</div></div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6a -->
+    <div class="item">
+      <p class="name"><b>지금</b>대기 중 — 현행</p>
+      <div class="phone" id="p-6a">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <div class="strip wait" style="display:flex;align-items:center;gap:10px">
+            <span class="t1">대기 중이에요</span><span class="t2" style="margin-top:0">자리가 나면 자동으로 확정돼요</span>
+          </div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div class="oldbox">각자 읽고 싶은 책을 가져와 30분 읽고, 30분 돌아가며 이야기해요.</div>
+          <div class="rows">
+            <dl><dt>언제</dt><dd>10월 7일 (수) 오후 7:30</dd></dl>
+            <dl><dt>어디서</dt><dd>우연히책방 · 경주</dd></dl>
+            <dl><dt>참여</dt><dd>12/12명</dd></dl>
+            <dl><dt>참가비</dt><dd>12,000</dd></dl>
+          </div>
+          <div class="oldrefund">모임 <b>3일 전까지 전액</b>, 2일 전 50%, 이후는 환불이 어려워요.</div>
+          <div class="oldwaitcard">
+            <div class="top"><span class="pill">대기 중</span><span class="am">12,000</span></div>
+            <p class="bd">자리가 나면 자동으로 참여가 확정됩니다.<br>모임 전날까지 승격되지 않으면 자동 전액 환불됩니다.</p>
+          </div>
+        </div>
+        <div class="oldsticky"><div class="btn" style="background:var(--tg-100);color:var(--tg-700)">대기 취소하기</div></div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6b -->
+    <div class="item">
+      <p class="name"><b>6</b>대기 중</p>
+      <div class="phone" id="p-6b">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <div class="strip wait">
+            <p class="t1">대기 중이에요</p>
+            <p class="t2">자리가 나면 자동으로 확정돼요. 안 나면 모임 전날 <b style="color:var(--tg-800)">12,000</b> 전액 환불돼요.</p>
+          </div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <div class="pinbottom">
+            <details class="fold">
+              <summary><span class="lb">모임 안내 보기</span><span class="cv">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+              <div class="inner"><p>각자 읽고 싶은 책을 가져와 30분 읽고, 30분 돌아가며 이야기해요.</p></div>
+            </details>
+            <details class="fold">
+              <summary><span class="lb">대기를 취소하면</span><span class="cv">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+              <div class="inner"><p>언제 취소하셔도 <b>12,000 전액</b> 돌려드려요. 환불 규칙은 대기에 적용되지 않아요.</p></div>
+            </details>
+          </div>
+        </div>
+        <div class="sticky">
+          <div class="sbar"><div class="cta ghost">대기 취소하기</div></div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="item w320">
+      <p class="name"><b>7</b>가장 좁은 화면 (320px)</p>
+      <div class="phone w320" id="p-7">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 23번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom">
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner"><p>10월 4일까지 전액, 10월 5일은 절반이에요.</p></div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat">5자리 남음</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="item">
+      <p class="name"><b>8</b>신청 전 — 환불 안내를 편 상태</p>
+      <div class="phone" id="p-8">
+        <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span></div>
+        <div class="nx-body">
+          <div class="back">‹ 정기모임</div>
+          <h2 class="h1">10월 첫째 주 정기모임</h2>
+          <div><span class="meta">경주에서 여는 23번째 모임이에요</span></div>
+          <p class="lede">각자 읽고 싶은 책을 가져와 30분 조용히 읽고, 30분 돌아가며 이야기해요. 같은 책을 읽지 않아도 되고, 다 못 읽고 오셔도 괜찮아요. 처음 오시는 분은 그날 읽은 부분만 짧게 나눠 주시면 돼요.</p>
+          <div class="irows">
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+              <span class="tx"><span class="t1 num">10월 7일 (수) 오후 7:30</span></span>
+            </div>
+            <div class="irow">
+              <span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+              <span class="tx"><span class="t1">우연히책방</span><span class="t2">경주</span></span>
+            </div>
+          </div>
+          <details class="fold pinbottom" open>
+            <summary><span class="lb">취소·환불 안내</span><span class="cv">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+            <div class="inner">
+              <div class="r"><span class="d">10월 4일까지</span><span class="v">전액 12,000</span></div>
+              <div class="r"><span class="d">10월 5일</span><span class="v">절반 6,000</span></div>
+              <div class="r"><span class="d">10월 6일부터</span><span class="v">환불이 어려워요</span></div>
+              <p style="margin-top:6px">취소는 언제든 하실 수 있어요.</p>
+            </div>
+          </details>
+        </div>
+        <div class="sticky">
+          <div class="sbar">
+            <div class="money"><div class="amt">12,000</div><div class="seat">5자리 남음</div></div>
+            <div class="cta">신청하기</div>
+          </div>
+        </div>
+        <div class="nav">
+          <i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i>
+          <i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</div>
+</body>
+</html>
