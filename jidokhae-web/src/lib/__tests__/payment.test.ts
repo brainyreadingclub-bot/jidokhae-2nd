@@ -262,7 +262,12 @@ describe('같은 paymentId로 confirm이 두 번 들어올 때', () => {
     const result = await processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID)
 
     expect(mocks.cancelPayment).not.toHaveBeenCalled()
-    expect(result).toEqual({ status: 'success', registrationId: 'reg-seed' })
+    // `duplicateCallBlocked`는 Layer 3에서만 붙는 관찰 신호다 (2026-10-06 관찰계획 ②).
+    expect(result).toEqual({
+      status: 'success',
+      registrationId: 'reg-seed',
+      duplicateCallBlocked: true,
+    })
   })
 
   it('대기 신청으로 만들어진 행이면 waitlisted로 응답하고 환불하지 않는다', async () => {
@@ -279,7 +284,11 @@ describe('같은 paymentId로 confirm이 두 번 들어올 때', () => {
     const result = await processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID)
 
     expect(mocks.cancelPayment).not.toHaveBeenCalled()
-    expect(result).toEqual({ status: 'waitlisted', registrationId: 'reg-wait' })
+    expect(result).toEqual({
+      status: 'waitlisted',
+      registrationId: 'reg-wait',
+      duplicateCallBlocked: true,
+    })
   })
 })
 
@@ -371,5 +380,101 @@ describe('다른 RPC 결과는 기존대로 환불한다', () => {
 
     expect(mocks.cancelPayment).toHaveBeenCalledWith(PAYMENT_ID, '스텝 할인 슬롯 마감')
     expect(result.status).toBe('error')
+  })
+})
+
+// ─── 5. 관찰 신호 duplicateCallBlocked ───
+
+/**
+ * 결과에 관찰 신호가 붙었는지. 유니온 멤버 일부에만 있는 옵셔널 필드라 테스트에서는
+ * 캐스팅으로 읽는다 (프로덕션 코드는 `status`로 먼저 좁힌다).
+ */
+function blockedFlag(result: unknown): unknown {
+  return (result as { duplicateCallBlocked?: unknown }).duplicateCallBlocked
+}
+
+describe('관찰 신호는 Layer 3에서만 붙는다', () => {
+  /**
+   * 🔴 **이것이 제일 중요한 단언이다.**
+   * 매 결제마다 신호가 붙으면 라우트가 매번 기록을 남기고, 그러면 `payment_failures`가
+   * 쓰레기가 되어 "누가 두 번 보내는지"를 영원히 못 찾는다. 관찰의 목적 자체가 깨진다.
+   */
+  it('정상 1회 결제 — 신호가 붙지 않는다', async () => {
+    const result = await processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID)
+
+    expect(result.status).toBe('success')
+    expect(blockedFlag(result)).toBeUndefined()
+    expect(mocks.cancelPayment).not.toHaveBeenCalled()
+  })
+
+  it('정상 1회 대기 신청(정원 초과) — 신호가 붙지 않는다', async () => {
+    // 정원 1명을 이미 다른 회원이 채운 상태 → 이번 결제는 waitlisted로 들어간다
+    db.meetings[0].capacity = 1
+    db.registrations.push({
+      id: 'reg-other',
+      user_id: '33333333-3333-4333-8333-333333333333',
+      meeting_id: MEETING_ID,
+      status: 'confirmed',
+      payment_id: 'jdkh-11111111-33333333-1600000000000',
+      paid_amount: FEE,
+    })
+
+    const result = await processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID)
+
+    expect(result.status).toBe('waitlisted')
+    expect(blockedFlag(result)).toBeUndefined()
+    expect(mocks.cancelPayment).not.toHaveBeenCalled()
+  })
+
+  /**
+   * ⚠️ Layer 1과 Layer 3를 가르는 단언.
+   * Layer 1은 **시간이 떨어진 재요청**(회원이 나중에 새로고침 — 정상 멱등)이고,
+   * Layer 3는 거의 동시에 들어온 **진짜 중복**이다. 둘을 같이 기록하면 단서가 사라진다.
+   */
+  it('Layer 1 멱등 (이미 보이는 내 신청) — 신호가 붙지 않는다', async () => {
+    db.registrations.push({
+      id: 'reg-seed',
+      user_id: USER_ID,
+      meeting_id: MEETING_ID,
+      status: 'confirmed',
+      payment_id: PAYMENT_ID,
+      paid_amount: FEE,
+    })
+    // paymentIdReadPlan 비움 = Layer 1이 그 행을 바로 본다 (RPC까지 가지 않는다)
+
+    const result = await processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID)
+
+    expect(result).toEqual({ status: 'success', registrationId: 'reg-seed' })
+    expect(blockedFlag(result)).toBeUndefined()
+    expect(mocks.getPayment).not.toHaveBeenCalled()
+  })
+
+  it('진짜 중복(남의 결제로 만들어진 신청) — 환불은 하고 신호는 붙지 않는다', async () => {
+    db.registrations.push({
+      id: 'reg-old',
+      user_id: USER_ID,
+      meeting_id: MEETING_ID,
+      status: 'confirmed',
+      payment_id: OTHER_PAYMENT_ID,
+      paid_amount: FEE,
+    })
+
+    const result = await processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID)
+
+    expect(result.status).toBe('already_registered')
+    expect(blockedFlag(result)).toBeUndefined()
+    expect(mocks.cancelPayment).toHaveBeenCalledTimes(1)
+  })
+
+  it('동시 호출 — 막아낸 쪽에만 신호가 붙는다 (둘 다 붙지 않는다)', async () => {
+    const results = await Promise.all([
+      processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID),
+      processPaymentConfirmation(PAYMENT_ID, MEETING_ID, USER_ID),
+    ])
+
+    const blocked = results.filter((r) => blockedFlag(r) === true)
+    expect(blocked).toHaveLength(1)
+    expect(db.registrations).toHaveLength(1)
+    expect(mocks.cancelPayment).not.toHaveBeenCalled()
   })
 })

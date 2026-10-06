@@ -11,7 +11,7 @@ import { NextResponse, after, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { processPaymentConfirmation } from '@/lib/payment'
 import { sendRegistrationConfirmNotification, sendWaitlistConfirmNotification } from '@/lib/notification'
-import { recordPaymentFailure } from '@/lib/payment-failure'
+import { recordDuplicateCallBlocked, recordPaymentFailure } from '@/lib/payment-failure'
 
 export async function POST(request: NextRequest) {
   // Authenticate user via Supabase session cookies
@@ -85,6 +85,24 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // 관찰 — 중복 호출을 막아낸 건이면 **누가 보냈는지**를 남긴다. 사고 기록이 아니다.
+  // 돈은 나가지 않았고 신청도 1건뿐이다. 여기서 남기지 않으면 흔적이 아예 없다
+  // (서버 로그 보관 약 1시간). 설계: docs/agent-team/2026-10-06-중복호출-관찰계획.md
+  if (
+    (result.status === 'success' || result.status === 'waitlisted') &&
+    result.duplicateCallBlocked
+  ) {
+    after(
+      recordDuplicateCallBlocked({
+        source: 'confirm',
+        paymentId,
+        meetingId,
+        userId: user.id,
+        userAgent: request.headers.get('user-agent'),
+      }),
+    )
+  }
+
   // 알림톡 — 실패해도 결제 응답에 영향 없음
   if (result.status === 'success') {
     try {
@@ -115,5 +133,14 @@ export async function POST(request: NextRequest) {
   }
 
   const httpStatus = result.status === 'error' ? 500 : 200
-  return NextResponse.json(result, { status: httpStatus })
+
+  // 관찰 신호는 **응답에 싣지 않는다.** 브라우저가 알 이유가 없고, 응답에 보이면 다음
+  // 사람이 그걸 읽어 클라이언트에 가드를 덧대기 쉽다 — 원인을 모르는 채로 증상만 가리는
+  // 바로 그 길이다(관찰계획 §7에서 안 하기로 한 것). 기존 응답 형식도 그대로 유지된다.
+  const responseBody =
+    result.status === 'success' || result.status === 'waitlisted'
+      ? { status: result.status, registrationId: result.registrationId }
+      : result
+
+  return NextResponse.json(responseBody, { status: httpStatus })
 }

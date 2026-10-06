@@ -11,9 +11,18 @@ import { getPayment, cancelPayment } from '@/lib/portone'
 import { calculateFee, isStaffDiscountableMeetingType } from '@/lib/pricing'
 import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 
+/**
+ * 🔴 **옵셔널 필드로만 넓힌다.** 호출부가 여럿(confirm 라우트·웹훅)이라 필수 필드를
+ * 더하면 전부 고쳐야 하고, 돈 경로를 건드리는 변경은 적을수록 좋다.
+ *
+ * `duplicateCallBlocked` — **Layer 3에서만** 붙는다. "같은 결제로 거의 동시에 두 번
+ * 들어왔고 환불하지 않고 막았다"는 신호다. 기록은 라우트가 한다(User-Agent를 아는 쪽).
+ * ⚠️ **Layer 1에는 붙이지 않는다** — Layer 1은 시간이 떨어진 정상 재요청(멱등)이고,
+ * Layer 3가 거의 동시에 들어온 진짜 중복이다. 섞으면 단서가 사라진다.
+ */
 export type ConfirmResult =
-  | { status: 'success'; registrationId: string }
-  | { status: 'waitlisted'; registrationId: string }
+  | { status: 'success'; registrationId: string; duplicateCallBlocked?: true }
+  | { status: 'waitlisted'; registrationId: string; duplicateCallBlocked?: true }
   | { status: 'full'; message: string }
   | { status: 'already_registered'; message: string }
   | { status: 'error'; message: string }
@@ -201,9 +210,14 @@ export async function processPaymentConfirmation(
 
     if (mine.kind === 'found') {
       // 내 결제로 만들어진 행이다 → 환불하지 않고 Layer 1과 같은 결과로 응답한다.
+      //
+      // `duplicateCallBlocked`를 붙여 **막아냈다는 사실만** 내보낸다. 기록은 하지 않는다 —
+      // 여기는 라이브러리 계층이라 요청 헤더(User-Agent)를 모르고, 그게 범인을 가리는
+      // 유일한 단서다. 기록은 라우트가 `recordDuplicateCallBlocked`로 한다.
+      // 설계: docs/agent-team/2026-10-06-중복호출-관찰계획.md
       return mine.status === 'waitlisted'
-        ? { status: 'waitlisted', registrationId: mine.id }
-        : { status: 'success', registrationId: mine.id }
+        ? { status: 'waitlisted', registrationId: mine.id, duplicateCallBlocked: true }
+        : { status: 'success', registrationId: mine.id, duplicateCallBlocked: true }
     }
 
     if (mine.kind === 'query_failed') {
