@@ -18,6 +18,42 @@ export type ConfirmResult =
   | { status: 'already_registered'; message: string }
   | { status: 'error'; message: string }
 
+type ServiceClient = ReturnType<typeof createServiceClient>
+
+/**
+ * `payment_id`로 신청 행을 찾은 결과.
+ * 🔴 조회 실패(`query_failed`)와 대상 없음(`none`)을 **절대 합치지 않는다** —
+ * 합치면 DB가 잠깐 흔들린 것을 "진짜 중복"으로 읽고 회원 돈을 돌려준다.
+ */
+type PaymentIdLookup =
+  | { kind: 'found'; id: string; status: string }
+  | { kind: 'none' }
+  | { kind: 'query_failed' }
+
+/**
+ * 이 `paymentId`로 만들어진 신청 행을 찾는다 — **멱등성 판정의 단일 기준.**
+ *
+ * Layer 1(RPC 호출 전)과 Layer 3(`already_registered` 분기)이 둘 다 이 함수를 쓴다.
+ * 두 곳이 서로 다른 조건으로 보면 "내 결제인데 남의 중복으로 오판"하는 틈이 다시 생긴다.
+ */
+async function findRegistrationByPaymentId(
+  supabase: ServiceClient,
+  paymentId: string,
+): Promise<PaymentIdLookup> {
+  const { data, error } = await supabase
+    .from('registrations')
+    .select('id, status')
+    .eq('payment_id', paymentId)
+    .in('status', ['confirmed', 'waitlisted'])
+    .limit(1)
+
+  if (error) return { kind: 'query_failed' }
+  if (data && data.length > 0) {
+    return { kind: 'found', id: String(data[0].id), status: String(data[0].status) }
+  }
+  return { kind: 'none' }
+}
+
 /**
  * 결제 확정 처리.
  *
@@ -36,18 +72,16 @@ export async function processPaymentConfirmation(
   const supabase = createServiceClient()
 
   // Layer 1: Idempotency — already confirmed or waitlisted with this paymentId?
-  const { data: existing } = await supabase
-    .from('registrations')
-    .select('id, status')
-    .eq('payment_id', paymentId)
-    .in('status', ['confirmed', 'waitlisted'])
-    .limit(1)
+  const prior = await findRegistrationByPaymentId(supabase, paymentId)
 
-  if (existing && existing.length > 0) {
-    return existing[0].status === 'waitlisted'
-      ? { status: 'waitlisted', registrationId: existing[0].id }
-      : { status: 'success', registrationId: existing[0].id }
+  if (prior.kind === 'found') {
+    return prior.status === 'waitlisted'
+      ? { status: 'waitlisted', registrationId: prior.id }
+      : { status: 'success', registrationId: prior.id }
   }
+  // `query_failed`면 여기서 끊지 않고 RPC로 넘어간다 — RPC가 FOR UPDATE 안에서 중복을
+  // 다시 막고, 중복으로 판정되면 Layer 3에서 같은 조회를 한 번 더 한다. 여기서 끊으면
+  // "결제는 됐는데 신청이 없는" 상태가 된다 (돈 안전성 규칙).
 
   // Verify meeting exists and is active
   const { data: meeting } = await supabase
@@ -155,6 +189,35 @@ export async function processPaymentConfirmation(
   }
 
   if (rpcResult === 'already_registered') {
+    // Layer 3: 환불 전에 "그 신청이 **이 결제로** 만들어진 것인지" 확인한다.
+    //
+    // 🔴 2026-10-06 사고 수정 — 실피해 6명·72,000.
+    //   브라우저가 confirm을 두 번 보내면(카카오톡 인앱 브라우저 복귀 시 재마운트) Layer 1은
+    //   락 밖이라 두 요청이 모두 통과하고, RPC의 FOR UPDATE가 둘을 줄 세워 **두 번째가
+    //   already_registered**가 된다. 그때 무조건 환불하면 방금 자기가 만든 신청의 돈이
+    //   나가고 신청 행은 남는다 → 돈 안 낸 회원이 자리를 차지한다.
+    //   조사: docs/agent-team/조사/2026-10-06-중복환불-사고.md
+    const mine = await findRegistrationByPaymentId(supabase, paymentId)
+
+    if (mine.kind === 'found') {
+      // 내 결제로 만들어진 행이다 → 환불하지 않고 Layer 1과 같은 결과로 응답한다.
+      return mine.status === 'waitlisted'
+        ? { status: 'waitlisted', registrationId: mine.id }
+        : { status: 'success', registrationId: mine.id }
+    }
+
+    if (mine.kind === 'query_failed') {
+      // 조회 실패를 "대상 없음"과 합치면 돈이 나간다. 환불하지 않고 시끄럽게 끝낸다.
+      console.error(
+        `[payment] already_registered 재확인 조회 실패 — 환불 보류: ${paymentId}`,
+      )
+      return {
+        status: 'error',
+        message: '신청 상태 확인에 실패했습니다. 내 신청 내역을 확인해주세요',
+      }
+    }
+
+    // 이 결제로 만들어진 행이 없다 = 다른 결제·계좌이체로 이미 신청돼 있다 → 진짜 중복
     await safeCancel(paymentId, '중복 신청으로 인한 환불')
     return { status: 'already_registered', message: '이미 신청한 모임입니다' }
   }
