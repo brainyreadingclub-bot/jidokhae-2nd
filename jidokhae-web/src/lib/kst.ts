@@ -96,6 +96,22 @@ export function getWeekLater(dateStr: string): string {
   return `${y}-${m}-${day}`
 }
 
+/** "2026-09-06" → "9월 6일" (요일 없음 — 환불 안내처럼 문장 안에 들어갈 때) */
+export function formatMonthDay(dateStr: string): string {
+  const [, month, day] = dateStr.split('-').map(Number)
+  return `${month}월 ${day}일`
+}
+
+/** "YYYY-MM-DD"에서 days만큼 이동 (음수 가능). 날짜 단위라 시간대 영향 없음 */
+export function shiftDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + days)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 /** "2026-03-29" → "3월 29일 토요일" (full weekday name) */
 export function formatKoreanDateFull(dateStr: string): string {
   const [, month, day] = dateStr.split('-').map(Number)

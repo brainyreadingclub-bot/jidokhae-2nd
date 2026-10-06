@@ -9,6 +9,7 @@ import { calculateRefundByType, getRefundRuleTextByType } from '@/lib/refund'
 import ModalOverlay from '@/components/ui/ModalOverlay'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
+import { getActionSkin, type SkinName } from '@/components/meetings/actionButtonSkin'
 import { trackEvent } from '@/lib/analytics'
 
 type Props = {
@@ -37,6 +38,15 @@ type Props = {
   bankAccount?: string
   bankHolder?: string
   depositorName?: string
+  /**
+   * 겉 스타일만 고른다 — 로직은 한 벌이다 (actionButtonSkin.ts 주석 참조).
+   * 'toss' = `(next)` 5탭 스킨. 미지정이면 구 화면 그대로.
+   */
+  skin?: SkinName
+  /** 취소·환불 완료 후 "모임 일정으로" 도착지. 라벨과 실제 목적지를 맞춘다 */
+  listHref?: string
+  /** 주 버튼 문구 교체 (신청 확인 화면의 "이대로 신청하기 · 12,000") */
+  registerLabel?: string
 }
 
 type CancelPhase = 'idle' | 'info' | 'confirm' | 'processing' | 'complete'
@@ -67,9 +77,13 @@ export default function MeetingActionButton({
   bankAccount,
   bankHolder,
   depositorName,
+  skin = 'legacy',
+  listHref = '/',
+  registerLabel,
 }: Props) {
   // 결제 처리에 사용할 실제 금액 — 미지정 시 정가 fallback
   const effectiveFee = displayFee ?? meetingFee
+  const s = getActionSkin(skin)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -280,13 +294,13 @@ export default function MeetingActionButton({
     <>
       {/* === Sticky bottom buttons === */}
       {showStickyButton && (
-        <StickyBottom>
+        <StickyBottom outerStyle={s.stickyOuterStyle} innerStyle={s.stickyInnerStyle}>
           {buttonState.type === 'register' && (
             <button
               onClick={handleRegister}
               disabled={loading}
-              className="w-full rounded-[var(--radius-lg)] bg-primary-600 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
+              className={s.btnPrimary}
+              style={s.btnPrimaryStyle}
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -294,25 +308,19 @@ export default function MeetingActionButton({
                   결제 진행 중...
                 </span>
               ) : (
-                '신청하기'
+                registerLabel ?? '신청하기'
               )}
             </button>
           )}
 
           {buttonState.type === 'full' && (
-            <button
-              disabled
-              className="w-full rounded-[var(--radius-lg)] bg-neutral-100 py-4 text-sm font-bold text-neutral-400 cursor-not-allowed"
-            >
+            <button disabled className={s.btnDisabled}>
               마감
             </button>
           )}
 
           {buttonState.type === 'apply_closed' && (
-            <button
-              disabled
-              className="w-full rounded-[var(--radius-lg)] bg-neutral-100 py-4 text-sm font-bold text-neutral-400 cursor-not-allowed"
-            >
+            <button disabled className={s.btnDisabled}>
               신청 마감 · 모임 7일 전까지 신청할 수 있어요
             </button>
           )}
@@ -320,10 +328,8 @@ export default function MeetingActionButton({
           {buttonState.type === 'cancel' && cancelPhase === 'idle' && (
             <button
               onClick={() => setCancelPhase('info')}
-              className="w-full rounded-[var(--radius-lg)] bg-white py-4 text-sm font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]"
-              style={{
-                border: '1px solid var(--color-neutral-300)',
-              }}
+              className={s.btnGhost}
+              style={s.btnGhostStyle}
             >
               취소하기
             </button>
@@ -334,8 +340,8 @@ export default function MeetingActionButton({
               <button
                 onClick={handleRegister}
                 disabled={loading}
-                className="w-full rounded-[var(--radius-lg)] bg-accent-500 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-accent-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ boxShadow: '0 4px 14px rgba(180, 100, 60, 0.25)' }}
+                className={s.btnWaitlist}
+                style={s.btnWaitlistStyle}
               >
                 {loading ? (
                   <span className="inline-flex items-center gap-2">
@@ -343,10 +349,10 @@ export default function MeetingActionButton({
                     결제 진행 중...
                   </span>
                 ) : (
-                  '대기 신청하기'
+                  registerLabel ?? '대기 신청하기'
                 )}
               </button>
-              <p className="mt-2 text-center text-xs text-primary-400 leading-relaxed">
+              <p className={s.note}>
                 취소자 발생 시 자동으로 참여가 확정됩니다.
                 <br />
                 모임 전날까지 승격되지 않으면 자동 전액 환불됩니다.
@@ -357,10 +363,8 @@ export default function MeetingActionButton({
           {buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle' && (
             <button
               onClick={() => setWaitlistCancelPhase('confirm')}
-              className="w-full rounded-[var(--radius-lg)] bg-white py-4 text-sm font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]"
-              style={{
-                border: '1px solid var(--color-neutral-300)',
-              }}
+              className={s.btnGhost}
+              style={s.btnGhostStyle}
             >
               대기 취소하기
             </button>
@@ -369,10 +373,8 @@ export default function MeetingActionButton({
           {buttonState.type === 'pending_transfer' && pendingTransferCancelPhase === 'idle' && (
             <button
               onClick={() => setPendingTransferCancelPhase('confirm')}
-              className="w-full rounded-[var(--radius-lg)] bg-white py-4 text-sm font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]"
-              style={{
-                border: '1px solid var(--color-neutral-300)',
-              }}
+              className={s.btnGhost}
+              style={s.btnGhostStyle}
             >
               신청 취소
             </button>
@@ -382,14 +384,8 @@ export default function MeetingActionButton({
 
       {/* === Cancel complete (replaces button area) === */}
       {cancelPhase === 'complete' && cancelResult && (
-        <div
-          className="mt-8 rounded-[var(--radius-lg)] p-6 text-center"
-          style={{
-            backgroundColor: 'var(--color-surface-50)',
-            border: '1px solid var(--color-surface-300)',
-          }}
-        >
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50">
+        <div className={s.panel} style={s.panelStyle}>
+          <div className={s.panelIcon}>
             <svg
               width="24"
               height="24"
@@ -399,21 +395,21 @@ export default function MeetingActionButton({
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-primary-600"
+              className={s.panelIconSvg}
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h3 className="text-base font-bold text-primary-900">취소 완료</h3>
-          <p className="mt-2 text-sm text-primary-600/70">
+          <h3 className={s.panelTitle}>취소 완료</h3>
+          <p className={s.panelBody}>
             {cancelResult.refundedAmount > 0 ? (
               <>
                 환불 예정 금액:{' '}
-                <span className="font-bold text-primary-800">
-                  {formatFee(cancelResult.refundedAmount)}원
+                <span className={s.panelStrong}>
+                  {formatFee(cancelResult.refundedAmount)}
                 </span>
                 <br />
-                <span className="text-xs text-primary-400">
+                <span className={s.panelSmall}>
                   {registrationPaymentMethod === 'transfer'
                     ? supportContact || '환불은 운영자에게 문의해주세요'
                     : '영업일 기준 3~5일 내 환불됩니다'}
@@ -425,10 +421,7 @@ export default function MeetingActionButton({
                 : '환불 불가 기간으로 환불 금액이 없습니다'
             )}
           </p>
-          <button
-            onClick={() => router.push('/')}
-            className="mt-4 w-full rounded-[var(--radius-lg)] bg-primary-600 py-3.5 text-sm font-bold text-white transition-all hover:bg-primary-700 active:scale-[0.98]"
-          >
+          <button onClick={() => router.push(listHref)} className={s.panelCta}>
             모임 일정으로
           </button>
         </div>
@@ -436,24 +429,14 @@ export default function MeetingActionButton({
 
       {/* === Waitlist info card === */}
       {buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle' && (
-        <div
-          className="mt-8 rounded-[var(--radius-lg)] p-5"
-          style={{
-            backgroundColor: 'var(--color-surface-50)',
-            border: '1px solid var(--color-accent-200)',
-          }}
-        >
+        <div className={s.waitCard} style={s.waitCardStyle}>
           <div className="flex items-center justify-between mb-3">
-            <span className="inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-[11px] font-bold text-accent-700 border border-accent-200">
-              대기 중
-            </span>
+            <span className={s.waitPill}>대기 중</span>
             {waitlistPaidAmount != null && (
-              <span className="text-sm font-bold text-primary-800">
-                {formatFee(waitlistPaidAmount)}원
-              </span>
+              <span className={s.waitAmount}>{formatFee(waitlistPaidAmount)}</span>
             )}
           </div>
-          <p className="text-xs text-primary-500 leading-relaxed">
+          <p className={s.waitBody}>
             자리가 나면 자동으로 참여가 확정됩니다.
             <br />
             모임 전날까지 승격되지 않으면 자동 전액 환불됩니다.
@@ -463,14 +446,8 @@ export default function MeetingActionButton({
 
       {/* === Waitlist cancel complete === */}
       {waitlistCancelPhase === 'complete' && (
-        <div
-          className="mt-8 rounded-[var(--radius-lg)] p-6 text-center"
-          style={{
-            backgroundColor: 'var(--color-surface-50)',
-            border: '1px solid var(--color-surface-300)',
-          }}
-        >
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50">
+        <div className={s.panel} style={s.panelStyle}>
+          <div className={s.panelIcon}>
             <svg
               width="24"
               height="24"
@@ -480,29 +457,24 @@ export default function MeetingActionButton({
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-primary-600"
+              className={s.panelIconSvg}
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h3 className="text-base font-bold text-primary-900">대기 취소 완료</h3>
-          <p className="mt-2 text-sm text-primary-600/70">
+          <h3 className={s.panelTitle}>대기 취소 완료</h3>
+          <p className={s.panelBody}>
             {waitlistPaymentMethod === 'transfer' ? (
               '대기가 취소되었습니다'
             ) : (
               <>
                 결제 금액이 전액 환불됩니다.
                 <br />
-                <span className="text-xs text-primary-400">
-                  영업일 기준 3~5일 내 환불됩니다
-                </span>
+                <span className={s.panelSmall}>영업일 기준 3~5일 내 환불됩니다</span>
               </>
             )}
           </p>
-          <button
-            onClick={() => router.push('/')}
-            className="mt-4 w-full rounded-[var(--radius-lg)] bg-primary-600 py-3.5 text-sm font-bold text-white transition-all hover:bg-primary-700 active:scale-[0.98]"
-          >
+          <button onClick={() => router.push(listHref)} className={s.panelCta}>
             모임 일정으로
           </button>
         </div>
@@ -510,10 +482,7 @@ export default function MeetingActionButton({
 
       {/* === Attended === */}
       {buttonState.type === 'attended' && (
-        <div
-          className="mt-8 w-full rounded-[var(--radius-lg)] bg-primary-50 py-4 text-center text-sm font-bold text-primary-700"
-          style={{ border: '1px solid var(--color-primary-100)' }}
-        >
+        <div className={s.attended} style={s.attendedStyle}>
           참여 완료
         </div>
       )}
@@ -521,73 +490,44 @@ export default function MeetingActionButton({
       {/* === Cancel Info Modal (Phase 1) === */}
       {cancelPhase === 'info' && refundInfo && (
         <ModalOverlay onClose={() => setCancelPhase('idle')}>
-          <h3 className="text-base font-bold text-primary-900">환불 규정 안내</h3>
-          <div
-            className="mt-4 rounded-[var(--radius-md)] p-4"
-            style={{
-              backgroundColor: 'var(--color-surface-100)',
-              border: '1px solid var(--color-surface-300)',
-            }}
-          >
+          <h3 className={s.modalTitle}>환불 규정 안내</h3>
+          <div className={s.infoBox} style={s.infoBoxStyle}>
             <div className="flex justify-between text-sm">
-              <span className="text-primary-500">결제 금액</span>
-              <span className="font-semibold text-primary-800">
-                {formatFee(paidAmount ?? 0)}원
-              </span>
+              <span className={s.infoLabel}>결제 금액</span>
+              <span className={s.infoValue}>{formatFee(paidAmount ?? 0)}</span>
             </div>
             <div className="mt-2 flex justify-between text-sm">
-              <span className="text-primary-500">환불 비율</span>
-              <span className="font-semibold text-primary-800">
-                {refundInfo.refundRate}%
-              </span>
+              <span className={s.infoLabel}>환불 비율</span>
+              <span className={s.infoValue}>{refundInfo.refundRate}%</span>
             </div>
             <div
               className="mt-2 pt-2 flex justify-between text-sm"
-              style={{ borderTop: '1px solid var(--color-surface-300)' }}
+              style={s.infoDividerStyle}
             >
-              <span className="font-semibold text-primary-700">환불 예정 금액</span>
-              <span className="font-bold text-accent-600">
-                {formatFee(refundInfo.refundAmount)}원
-              </span>
+              <span className={s.infoTotalLabel}>환불 예정 금액</span>
+              <span className={s.infoTotalValue}>{formatFee(refundInfo.refundAmount)}</span>
             </div>
           </div>
           {refundInfo.refundRate === 0 && (
-            <p className="mt-3 text-xs text-warning text-center font-medium">
+            <p className={`mt-3 ${s.warnText}`}>
               환불 불가 기간입니다. 취소 시 환불 금액이 없습니다.
             </p>
           )}
-          <div className="mt-4 text-xs text-primary-400 text-center">
-            {getRefundRuleTextByType(meetingType)}
-          </div>
+          <div className={s.ruleText}>{getRefundRuleTextByType(meetingType)}</div>
           {registrationPaymentMethod === 'transfer' && refundInfo.refundAmount > 0 && supportContact && (
-            <div
-              className="mt-3 rounded-[var(--radius-md)] p-3 text-center"
-              style={{
-                backgroundColor: 'var(--color-accent-50)',
-                border: '1px solid var(--color-accent-200)',
-              }}
-            >
-              <p className="text-xs text-accent-700 leading-relaxed">
-                {supportContact}
-              </p>
+            <div className={s.supportBox} style={s.supportBoxStyle}>
+              <p className={s.supportText}>{supportContact}</p>
             </div>
           )}
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setCancelPhase('idle')}
-              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
-              style={{
-                backgroundColor: 'var(--color-surface-50)',
-                border: '1px solid var(--color-surface-300)',
-                color: 'var(--color-primary-600)',
-              }}
+              className={s.btnSecondary}
+              style={s.btnSecondaryStyle}
             >
               닫기
             </button>
-            <button
-              onClick={() => setCancelPhase('confirm')}
-              className="flex-1 rounded-[var(--radius-md)] bg-primary-700 py-2.5 text-sm font-bold text-white transition-colors hover:bg-primary-800"
-            >
+            <button onClick={() => setCancelPhase('confirm')} className={s.btnConfirm}>
               취소 진행
             </button>
           </div>
@@ -597,42 +537,30 @@ export default function MeetingActionButton({
       {/* === Cancel Confirm Modal (Phase 2) === */}
       {cancelPhase === 'confirm' && refundInfo && (
         <ModalOverlay onClose={() => setCancelPhase('info')}>
-          <h3 className="text-base font-bold text-primary-900 text-center">
+          <h3 className={`${s.modalTitle} text-center`}>
             취소를 확정하시겠습니까?
           </h3>
-          <p className="mt-3 text-sm text-primary-600/70 text-center">
+          <p className={`${s.modalBody} text-center`}>
             환불 금액:{' '}
-            <span className="font-bold text-primary-800">
-              {formatFee(refundInfo.refundAmount)}원
-            </span>
+            <span className={s.panelStrong}>{formatFee(refundInfo.refundAmount)}</span>
             {refundInfo.refundRate < 100 && (
-              <span className="text-primary-400">
-                {' '}
-                ({refundInfo.refundRate}%)
-              </span>
+              <span className={s.modalMuted}> ({refundInfo.refundRate}%)</span>
             )}
           </p>
           {refundInfo.refundAmount === 0 && (
-            <p className="mt-1 text-xs text-warning text-center font-medium">
-              환불 금액이 0원입니다. 그래도 취소하시겠습니까?
+            <p className={`mt-1 ${s.warnText}`}>
+              환불 금액이 0입니다. 그래도 취소하시겠습니까?
             </p>
           )}
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setCancelPhase('info')}
-              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
-              style={{
-                backgroundColor: 'var(--color-surface-50)',
-                border: '1px solid var(--color-surface-300)',
-                color: 'var(--color-primary-600)',
-              }}
+              className={s.btnSecondary}
+              style={s.btnSecondaryStyle}
             >
               돌아가기
             </button>
-            <button
-              onClick={handleCancelConfirm}
-              className="flex-1 rounded-[var(--radius-md)] bg-error py-2.5 text-sm font-bold text-white transition-colors hover:bg-error/90"
-            >
+            <button onClick={handleCancelConfirm} className={s.btnDanger}>
               취소 확정
             </button>
           </div>
@@ -644,7 +572,7 @@ export default function MeetingActionButton({
         <ModalOverlay>
           <div className="flex flex-col items-center py-4">
             <Spinner />
-            <p className="mt-3 text-sm text-primary-500">취소 처리 중...</p>
+            <p className={s.processingText}>취소 처리 중...</p>
           </div>
         </ModalOverlay>
       )}
@@ -652,28 +580,19 @@ export default function MeetingActionButton({
       {/* === Waitlist Cancel Confirm Modal === */}
       {waitlistCancelPhase === 'confirm' && (
         <ModalOverlay onClose={() => setWaitlistCancelPhase('idle')}>
-          <h3 className="text-base font-bold text-primary-900 text-center">
+          <h3 className={`${s.modalTitle} text-center`}>
             대기를 취소하시겠습니까?
           </h3>
-          <p className="mt-3 text-sm text-primary-600/70 text-center">
-            결제 금액이 전액 환불됩니다.
-          </p>
+          <p className={`${s.modalBody} text-center`}>결제 금액이 전액 환불됩니다.</p>
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setWaitlistCancelPhase('idle')}
-              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
-              style={{
-                backgroundColor: 'var(--color-surface-50)',
-                border: '1px solid var(--color-surface-300)',
-                color: 'var(--color-primary-600)',
-              }}
+              className={s.btnSecondary}
+              style={s.btnSecondaryStyle}
             >
               닫기
             </button>
-            <button
-              onClick={handleWaitlistCancelConfirm}
-              className="flex-1 rounded-[var(--radius-md)] bg-error py-2.5 text-sm font-bold text-white transition-colors hover:bg-error/90"
-            >
+            <button onClick={handleWaitlistCancelConfirm} className={s.btnDanger}>
               대기 취소
             </button>
           </div>
@@ -685,7 +604,7 @@ export default function MeetingActionButton({
         <ModalOverlay>
           <div className="flex flex-col items-center py-4">
             <Spinner />
-            <p className="mt-3 text-sm text-primary-500">대기 취소 처리 중...</p>
+            <p className={s.processingText}>대기 취소 처리 중...</p>
           </div>
         </ModalOverlay>
       )}
@@ -697,23 +616,23 @@ export default function MeetingActionButton({
             {/* Method Selection */}
             {registerPhase === 'method' && (
               <>
-                <h3 className="text-base font-bold text-primary-900 text-center">
+                <h3 className={`${s.modalTitle} text-center`}>
                   결제 방법을 선택해주세요
                 </h3>
                 {/* 자격자 — 결제 금액 사전 확인용 영수증 (정가 + 할인 + 총액) */}
                 {isStaffDiscount && (
-                  <div className="mt-4 mx-auto max-w-[280px] text-left rounded-[var(--radius-md)] bg-surface-50 px-4 py-3" style={{ border: '1px solid var(--color-surface-300)' }}>
-                    <div className="flex justify-between text-[12px] text-neutral-400 mb-1">
+                  <div className={`mt-4 max-w-[280px] ${s.receipt}`} style={s.receiptStyle}>
+                    <div className={`flex justify-between mb-1 ${s.receiptStruck}`}>
                       <span className="line-through">참가비</span>
                       <span className="line-through">{formatFee(meetingFee)}</span>
                     </div>
                     <div className="flex justify-between text-[12px] mb-2">
-                      <span className="text-primary-700 font-semibold">스텝 할인 50%</span>
-                      <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}</span>
+                      <span className={s.receiptDiscountLabel}>스텝 할인 50%</span>
+                      <span className={s.receiptDiscountValue}>−{formatFee(meetingFee - effectiveFee)}</span>
                     </div>
-                    <div className="flex justify-between items-baseline pt-2" style={{ borderTop: '1px dashed var(--color-surface-300)' }}>
-                      <span className="text-[13px] font-bold text-neutral-800">결제 금액</span>
-                      <span className="text-lg font-extrabold text-primary-500">{formatFee(effectiveFee)}</span>
+                    <div className="flex justify-between items-baseline pt-2" style={s.receiptDividerStyle}>
+                      <span className={s.receiptTotalLabel}>결제 금액</span>
+                      <span className={s.receiptTotalValue}>{formatFee(effectiveFee)}</span>
                     </div>
                   </div>
                 )}
@@ -722,39 +641,30 @@ export default function MeetingActionButton({
                   {paymentMode === 'both' ? (
                     <button
                       onClick={handleCardPayment}
-                      className="w-full rounded-[var(--radius-lg)] p-4 text-left transition-all hover:bg-primary-100 active:scale-[0.98]"
-                      style={{
-                        backgroundColor: 'var(--color-primary-50)',
-                        border: '1px solid var(--color-primary-200)',
-                      }}
+                      className={s.optionCard}
+                      style={s.optionCardStyle}
                     >
                       <div className="flex items-center gap-3">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-600">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={s.optionIcon}>
                           <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                           <line x1="1" y1="10" x2="23" y2="10" />
                         </svg>
                         <div>
-                          <p className="text-sm font-semibold text-primary-800">카드결제</p>
-                          <p className="text-xs text-primary-500 mt-0.5">카카오페이 (카드 + 카카오페이머니)</p>
+                          <p className={s.optionTitle}>카드결제</p>
+                          <p className={s.optionSub}>카카오페이 (카드 + 카카오페이머니)</p>
                         </div>
                       </div>
                     </button>
                   ) : (
-                    <div
-                      className="rounded-[var(--radius-lg)] p-4 opacity-50 cursor-not-allowed"
-                      style={{
-                        backgroundColor: 'var(--color-surface-100)',
-                        border: '1px solid var(--color-surface-300)',
-                      }}
-                    >
+                    <div className={s.optionCardOff} style={s.optionCardOffStyle}>
                       <div className="flex items-center gap-3">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-400">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={s.optionIconOff}>
                           <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                           <line x1="1" y1="10" x2="23" y2="10" />
                         </svg>
                         <div>
-                          <p className="text-sm font-semibold text-primary-700">카드결제</p>
-                          <p className="text-xs text-primary-400 mt-0.5">준비 중입니다</p>
+                          <p className={s.optionTitleOff}>카드결제</p>
+                          <p className={s.optionSubOff}>준비 중입니다</p>
                         </div>
                       </div>
                     </div>
@@ -763,20 +673,17 @@ export default function MeetingActionButton({
                   {/* 계좌이체 — active */}
                   <button
                     onClick={() => setRegisterPhase('transfer')}
-                    className="w-full rounded-[var(--radius-lg)] p-4 text-left transition-all hover:bg-primary-100 active:scale-[0.98]"
-                    style={{
-                      backgroundColor: 'var(--color-primary-50)',
-                      border: '1px solid var(--color-primary-200)',
-                    }}
+                    className={s.optionCard}
+                    style={s.optionCardStyle}
                   >
                     <div className="flex items-center gap-3">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary-600">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={s.optionIcon}>
                         <line x1="12" y1="1" x2="12" y2="23" />
                         <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                       </svg>
                       <div>
-                        <p className="text-sm font-semibold text-primary-800">계좌이체</p>
-                        <p className="text-xs text-primary-500 mt-0.5">계좌번호로 직접 입금</p>
+                        <p className={s.optionTitle}>계좌이체</p>
+                        <p className={s.optionSub}>계좌번호로 직접 입금</p>
                       </div>
                     </div>
                   </button>
@@ -787,10 +694,7 @@ export default function MeetingActionButton({
             {/* Transfer Details */}
             {registerPhase === 'transfer' && (
               <>
-                <button
-                  onClick={() => setRegisterPhase('method')}
-                  className="inline-flex items-center gap-1 text-sm text-primary-500 hover:text-primary-700 transition-colors mb-4"
-                >
+                <button onClick={() => setRegisterPhase('method')} className={s.backBtn}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
@@ -798,26 +702,24 @@ export default function MeetingActionButton({
                 </button>
 
                 <div className="text-center mb-4">
-                  <p className="text-sm font-bold text-primary-900">{meetingTitle}</p>
+                  <p className={s.transferTitle}>{meetingTitle}</p>
                   {isStaffDiscount ? (
-                    <div className="mt-3 mx-auto max-w-[260px] text-left rounded-[var(--radius-md)] bg-surface-50 px-4 py-3" style={{ border: '1px solid var(--color-surface-300)' }}>
-                      <div className="flex justify-between text-[12px] text-neutral-400 mb-1">
+                    <div className={`mt-3 max-w-[260px] ${s.receipt}`} style={s.receiptStyle}>
+                      <div className={`flex justify-between mb-1 ${s.receiptStruck}`}>
                         <span className="line-through">참가비</span>
                         <span className="line-through">{formatFee(meetingFee)}</span>
                       </div>
                       <div className="flex justify-between text-[12px] mb-2">
-                        <span className="text-primary-700 font-semibold">스텝 할인 50%</span>
-                        <span className="text-primary-600 font-semibold">−{formatFee(meetingFee - effectiveFee)}</span>
+                        <span className={s.receiptDiscountLabel}>스텝 할인 50%</span>
+                        <span className={s.receiptDiscountValue}>−{formatFee(meetingFee - effectiveFee)}</span>
                       </div>
-                      <div className="flex justify-between items-baseline pt-2" style={{ borderTop: '1px dashed var(--color-surface-300)' }}>
-                        <span className="text-[13px] font-bold text-neutral-800">결제 금액</span>
-                        <span className="text-lg font-extrabold text-primary-500">{formatFee(effectiveFee)}</span>
+                      <div className="flex justify-between items-baseline pt-2" style={s.receiptDividerStyle}>
+                        <span className={s.receiptTotalLabel}>결제 금액</span>
+                        <span className={s.receiptTotalValue}>{formatFee(effectiveFee)}</span>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-lg font-bold text-neutral-900 mt-1">
-                      {formatFee(effectiveFee)}
-                    </p>
+                    <p className={s.transferAmount}>{formatFee(effectiveFee)}</p>
                   )}
                 </div>
 
@@ -826,11 +728,12 @@ export default function MeetingActionButton({
                     bankName={bankName}
                     bankAccount={bankAccount}
                     bankHolder={bankHolder}
+                    skin={skin}
                   />
                 )}
 
                 {depositorName && (
-                  <CopyableDepositorName depositorName={depositorName} />
+                  <CopyableDepositorName depositorName={depositorName} skin={skin} />
                 )}
 
                 <button
@@ -859,8 +762,8 @@ export default function MeetingActionButton({
                       showToast('네트워크 오류가 발생했습니다')
                     }
                   }}
-                  className="mt-5 w-full rounded-[var(--radius-lg)] bg-primary-600 py-4 text-sm font-bold text-white tracking-wide transition-all hover:bg-primary-700 active:scale-[0.98]"
-                  style={{ boxShadow: '0 4px 14px rgba(27, 67, 50, 0.25)' }}
+                  className={`mt-5 ${s.btnPrimary}`}
+                  style={s.btnPrimaryStyle}
                 >
                   입금 완료
                 </button>
@@ -871,7 +774,7 @@ export default function MeetingActionButton({
             {registerPhase === 'processing' && (
               <div className="flex flex-col items-center py-4">
                 <Spinner />
-                <p className="mt-3 text-sm text-primary-500">신청 처리 중...</p>
+                <p className={s.processingText}>신청 처리 중...</p>
               </div>
             )}
           </div>
@@ -881,28 +784,19 @@ export default function MeetingActionButton({
       {/* === Pending Transfer Cancel Confirm Modal === */}
       {pendingTransferCancelPhase === 'confirm' && (
         <ModalOverlay onClose={() => setPendingTransferCancelPhase('idle')}>
-          <h3 className="text-base font-bold text-primary-900 text-center">
+          <h3 className={`${s.modalTitle} text-center`}>
             신청을 취소하시겠습니까?
           </h3>
-          <p className="mt-3 text-sm text-primary-600/70 text-center">
-            취소 후에는 다시 신청해야 합니다.
-          </p>
+          <p className={`${s.modalBody} text-center`}>취소 후에는 다시 신청해야 합니다.</p>
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setPendingTransferCancelPhase('idle')}
-              className="flex-1 rounded-[var(--radius-md)] py-2.5 text-sm font-medium transition-colors hover:bg-primary-50"
-              style={{
-                backgroundColor: 'var(--color-surface-50)',
-                border: '1px solid var(--color-surface-300)',
-                color: 'var(--color-primary-600)',
-              }}
+              className={s.btnSecondary}
+              style={s.btnSecondaryStyle}
             >
               돌아가기
             </button>
-            <button
-              onClick={handlePendingTransferCancelConfirm}
-              className="flex-1 rounded-[var(--radius-md)] bg-error py-2.5 text-sm font-bold text-white transition-colors hover:bg-error/90"
-            >
+            <button onClick={handlePendingTransferCancelConfirm} className={s.btnDanger}>
               취소하기
             </button>
           </div>
@@ -914,7 +808,7 @@ export default function MeetingActionButton({
         <ModalOverlay>
           <div className="flex flex-col items-center py-4">
             <Spinner />
-            <p className="mt-3 text-sm text-primary-500">취소 처리 중...</p>
+            <p className={s.processingText}>취소 처리 중...</p>
           </div>
         </ModalOverlay>
       )}
@@ -923,10 +817,7 @@ export default function MeetingActionButton({
       {toast && (
         <div
           className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2.5 text-sm font-medium text-white animate-[fadeIn_0.2s_ease-out]"
-          style={{
-            backgroundColor: 'var(--color-primary-800)',
-            boxShadow: 'var(--shadow-elevated)',
-          }}
+          style={s.toastStyle}
         >
           {toast}
         </div>
@@ -937,19 +828,18 @@ export default function MeetingActionButton({
 
 // --- Sub-components ---
 
-function StickyBottom({ children }: { children: React.ReactNode }) {
+function StickyBottom({
+  children,
+  outerStyle,
+  innerStyle,
+}: {
+  children: React.ReactNode
+  outerStyle: React.CSSProperties
+  innerStyle: React.CSSProperties
+}) {
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-40"
-      style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}
-    >
-      <div
-        className="mx-auto max-w-screen-sm px-5 py-3"
-        style={{
-          backgroundColor: 'var(--color-surface-50)',
-          boxShadow: '0 -2px 8px rgba(45, 90, 61, 0.06)',
-        }}
-      >
+    <div className="fixed bottom-0 left-0 right-0 z-40" style={outerStyle}>
+      <div className="mx-auto max-w-screen-sm px-5 py-3" style={innerStyle}>
         {children}
       </div>
     </div>
