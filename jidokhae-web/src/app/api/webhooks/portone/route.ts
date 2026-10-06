@@ -23,7 +23,7 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import { processPaymentConfirmation } from '@/lib/payment'
 import { sendRegistrationConfirmNotification, sendWaitlistConfirmNotification } from '@/lib/notification'
 import { classifyIdLookup, parsePaymentId, uuidPrefixRange } from '@/lib/payment-id'
-import { recordPaymentFailure } from '@/lib/payment-failure'
+import { recordDuplicateCallBlocked, recordPaymentFailure } from '@/lib/payment-failure'
 
 export async function POST(request: NextRequest) {
   const secret = process.env.PORTONE_WEBHOOK_SECRET
@@ -184,6 +184,28 @@ export async function POST(request: NextRequest) {
       }),
     )
     return NextResponse.json({ status: 'error', message: 'Confirmation error' }, { status: 500 })
+  }
+
+  // 관찰 — 중복 호출을 막아낸 건이면 **누가 보냈는지**를 남긴다. 사고 기록이 아니다.
+  //
+  // 🔴 confirm 라우트만 하지 않고 여기도 하는 이유 — 웹훅도 같은 Layer 3를 탄다.
+  // 9/28 사고에서 당시 기록은 `source='confirm'`이었지만 **웹훅이 두 번째 호출자인
+  // 경우가 지워지지 않았다.** 한쪽만 남기면 범인을 안 보고 수사하는 셈이다.
+  // 웹훅의 User-Agent는 PortOne 서버가 보내는 값이라 브라우저와 확연히 갈린다 —
+  // 그것만으로도 "플랫폼 재시도냐 사람 행동이냐"가 갈린다.
+  if (
+    (result.status === 'success' || result.status === 'waitlisted') &&
+    result.duplicateCallBlocked
+  ) {
+    after(
+      recordDuplicateCallBlocked({
+        source: 'webhook',
+        paymentId,
+        meetingId,
+        userId,
+        userAgent: request.headers.get('user-agent'),
+      }),
+    )
   }
 
   // 알림톡 발송 (실패해도 응답에 영향 없음)

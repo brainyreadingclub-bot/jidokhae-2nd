@@ -51,6 +51,24 @@ export type PaymentFailureStage =
   | 'confirm_rejected'
   /** 라우트에서 예상 못 한 예외 */
   | 'unhandled_exception'
+  /**
+   * 🔴 **이것은 실패가 아니다. 막아낸 기록이다.**
+   *
+   * 같은 `paymentId`로 확정 요청이 **거의 동시에 두 번** 들어왔고, `payment.ts`의
+   * Layer 3가 *"그 신청은 바로 이 결제로 만들어진 것"*임을 확인해 **환불하지 않고**
+   * 성공으로 응답한 건이다. 회원 돈은 나가지 않았고 신청도 1건만 남았다.
+   *
+   * 다음 사람에게 — 이 행이 보여도 **사고 대응을 시작하지 마라.** 쌓이는 것이 정상이고,
+   * 쌓여야 *"누가 두 번 보내는지"*(`detail`의 `ua=`)를 알 수 있다. 서버 로그 보관이
+   * 약 1시간이라 이 표 말고는 남을 곳이 없어서 여기에 둔 것이다.
+   * 설계: `docs/agent-team/2026-10-06-중복호출-관찰계획.md`
+   *
+   * 🔴 보고서에서도 사고 건수와 섞지 않는다 — `payment-failure-report.ts`의
+   * `OBSERVATION_STAGES`가 이 단계를 「관찰」로 갈라낸다. 상시 점등된 경고는 아무도 안 본다.
+   *
+   * ⚠️ Layer 1(시간이 떨어진 정상 재요청)은 **여기 남기지 않는다.** 섞으면 단서가 사라진다.
+   */
+  | 'duplicate_call_blocked'
 
 export type PaymentFailureInput = {
   source: PaymentFailureSource
@@ -113,4 +131,50 @@ export async function recordPaymentFailure(input: PaymentFailureInput): Promise<
       e,
     )
   }
+}
+
+/**
+ * User-Agent 기록 상한.
+ *
+ * 길면 `detail` 칸을 잡아먹는다. 반대로 너무 짧으면 **아무것도 가를 수 없다** — 카카오톡 인앱
+ * 브라우저는 UA 맨 뒤에 `KAKAOTALK x.y.z`를 붙이므로, 앞부분만 남기면 정작 가르고 싶은
+ * 클라이언트 종류가 잘려 나간다. 200자면 모바일 UA 전체가 들어간다.
+ */
+export const USER_AGENT_MAX = 200
+
+/**
+ * 「막아낸 중복 호출」 1건 기록 — 🔴 **사고 기록이 아니다.**
+ * (`duplicate_call_blocked` 단계 주석을 먼저 읽을 것)
+ *
+ * 왜 라우트가 부르고 `payment.ts`가 안 부르나 — `payment.ts`는 라이브러리 계층이라
+ * **요청 헤더를 모른다.** User-Agent를 아는 것은 라우트뿐이다. 그래서 `payment.ts`는
+ * `ConfirmResult.duplicateCallBlocked`로 *신호만* 내보내고, 기록은 라우트가 한다.
+ *
+ * 🔴 호출부는 반드시 `after()`로 감쌀 것 — `void promise()`는 Vercel 람다 freeze로 유실된다.
+ * 이 함수는 `recordPaymentFailure`를 그대로 쓰므로 **절대 throw하지 않는다**(규칙 1).
+ *
+ * @example
+ *   after(recordDuplicateCallBlocked({ source: 'confirm', paymentId, userAgent: request.headers.get('user-agent') }))
+ */
+export function recordDuplicateCallBlocked(input: {
+  source: PaymentFailureSource
+  paymentId: string
+  meetingId?: string | null
+  userId?: string | null
+  /** 요청 헤더의 `user-agent`. 🔴 개인정보가 아니라 **클라이언트 종류**라 허용된다 */
+  userAgent: string | null | undefined
+}): Promise<void> {
+  // 「두 호출의 간격」은 일부러 기록하지 않는다 — `registrations.created_at`과 이 행의
+  // `created_at`을 빼면 나온다. 같은 사실을 두 곳에 적으면 한쪽이 틀리기 시작한다.
+  const flat = (input.userAgent ?? '').replace(/\s+/g, ' ').trim()
+  const ua = flat.length === 0 ? '(없음)' : flat.slice(0, USER_AGENT_MAX)
+
+  return recordPaymentFailure({
+    source: input.source,
+    stage: 'duplicate_call_blocked',
+    paymentId: input.paymentId,
+    meetingId: input.meetingId,
+    userId: input.userId,
+    detail: `ua=${ua}`,
+  })
 }

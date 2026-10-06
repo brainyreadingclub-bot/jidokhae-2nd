@@ -33,6 +33,51 @@ export type PaymentFailureRow = {
 export const DETAIL_MAX = 160
 
 /**
+ * 「관찰」 줄의 `detail` 상한 — 사고 줄보다 넉넉하다.
+ *
+ * 이유가 있다. 관찰 줄의 내용은 `ua=<User-Agent>`이고 **가르고 싶은 단서가 UA 맨 뒤에
+ * 있다** (카카오톡 인앱 브라우저는 `… Mobile/15E148 KAKAOTALK 10.5.0` 꼴). 160자에서
+ * 자르면 하필 `KAKAOTALK`이 잘려 나가, 남긴 기록으로 아무것도 가를 수 없게 된다.
+ */
+export const OBSERVE_DETAIL_MAX = 240
+
+/**
+ * 🔴 **사고가 아니라 「관찰」인 단계** — 보고서에서 사고 건수와 섞지 않는다.
+ *
+ * `duplicate_call_blocked`는 서버가 중복 호출을 **막아낸** 기록이다. 돈은 나가지 않았다.
+ * 이것을 사고로 세면 (1) 건수가 부풀어 **진짜 사고가 묻히고** (2) 상시 점등된 경고가 되어
+ * **아무도 안 보게 된다** — 2026-08-13에 같은 이유로 내린 결정과 같다.
+ *
+ * 새 관찰 단계가 생기면 **여기에만** 추가한다. 출력 쪽에 조건을 또 적으면 한쪽만 갱신된다.
+ * 설계: `docs/agent-team/2026-10-06-중복호출-관찰계획.md`
+ */
+export const OBSERVATION_STAGES: readonly string[] = ['duplicate_call_blocked']
+
+/** 이 단계가 「관찰」인가 (= 사고 집계에서 빠지는가) */
+export function isObservationStage(stage: string): boolean {
+  return OBSERVATION_STAGES.includes(stage)
+}
+
+/**
+ * 행을 **사고**와 **관찰** 둘로 가른다. 순서는 입력 순서를 그대로 지킨다
+ * (호출부가 최근순으로 받아오므로 그 순서가 뜻을 갖는다).
+ *
+ * 🔴 **버리지 않고 가른다.** 관찰을 빼서 숨기는 것이 아니라 따로 보여주려는 것이다 —
+ * 이 기록이 쌓여야 "누가 두 번 보내는지"를 알 수 있다.
+ */
+export function partitionFailureRows<T extends { stage: string }>(
+  rows: readonly T[],
+): { incidents: T[]; observations: T[] } {
+  const incidents: T[] = []
+  const observations: T[] = []
+  for (const row of rows) {
+    if (isObservationStage(row.stage)) observations.push(row)
+    else incidents.push(row)
+  }
+  return { incidents, observations }
+}
+
+/**
  * 표가 아직 없는 환경(마이그레이션 미실행)인지 판정한다.
  *
  * 🔴 이 판정이 필요한 이유 — 표가 없다고 대사 스크립트 전체가 죽으면,
@@ -64,6 +109,9 @@ export function isMissingTableError(
  *
  * 개별 줄보다 이 요약이 먼저 읽힌다 — 한 종류가 몰려 있으면 그 자체가 신호다
  * (예: `id_lookup_failed`가 쌓여 있으면 웹훅 조회가 또 깨진 것이다).
+ *
+ * ⚠️ 이 함수는 받은 것을 그대로 센다. **사고 요약을 원하면 `partitionFailureRows`로
+ * 관찰을 먼저 갈라내고 `incidents`만 넘긴다** — 섞어 넘기면 막아낸 건이 사고로 잡힌다.
  */
 export function summarizeStages(
   rows: readonly { stage: string }[],

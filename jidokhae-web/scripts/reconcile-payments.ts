@@ -56,6 +56,8 @@ import {
   describeCoverage,
   formatKstStamp,
   isMissingTableError,
+  OBSERVE_DETAIL_MAX,
+  partitionFailureRows,
   summarizeStages,
   truncateDetail,
   type PaymentFailureRow,
@@ -97,6 +99,11 @@ const KNOWN_ORPHANS: Record<string, string> = {
  */
 const FAILURE_FETCH_MAX = 2000
 const FAILURE_PRINT_MAX = 50
+/**
+ * 「관찰」 출력 줄 수. 사고보다 적게 잡는다 — 이 기록은 **쌓이는 것이 정상**이라
+ * 사고 목록을 밀어내면 안 된다. 전체 건수는 요약 줄에 그대로 나온다.
+ */
+const OBSERVE_PRINT_MAX = 20
 
 function daysAgoISO(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
@@ -156,24 +163,62 @@ async function reportPaymentFailures(
     return
   }
 
-  console.log(`  🔴 ${total}건`)
+  // 🔴 사고와 「관찰」을 가른다. `duplicate_call_blocked`는 서버가 중복 호출을 **막아낸**
+  //    기록이라 사고로 세면 진짜 사고가 묻힌다 (payment-failure-report.ts 참조).
+  const { incidents, observations } = partitionFailureRows(rows)
 
-  console.log('\n  [stage별 건수]')
-  for (const { stage, count: n } of summarizeStages(rows)) {
-    console.log(`    ${stage.padEnd(22)} ${n}`)
+  // ── 사고 ──
+  if (incidents.length === 0) {
+    console.log('  사고 0건 ✅ — 사람이 봐야 할 실패는 없었다')
+  } else {
+    console.log(`  🔴 사고 ${incidents.length}건`)
+    console.log('\n  [stage별 건수]')
+    for (const { stage, count: n } of summarizeStages(incidents)) {
+      console.log(`    ${stage.padEnd(22)} ${n}`)
+    }
   }
 
-  const shown = rows.slice(0, FAILURE_PRINT_MAX)
-  console.log('\n  [최근 순]')
-  for (const r of shown) {
+  const shownIncidents = incidents.slice(0, FAILURE_PRINT_MAX)
+  if (shownIncidents.length > 0) {
+    console.log('\n  [최근 순]')
+    for (const r of shownIncidents) {
+      console.log(
+        `    ${formatKstStamp(r.created_at)} · ${r.source}/${r.stage}` +
+          `\n      ${r.payment_id}` +
+          `\n      ${truncateDetail(r.detail)}`,
+      )
+    }
+  }
+
+  // ── 관찰 (사고 아님) ──
+  const shownObservations = observations.slice(0, OBSERVE_PRINT_MAX)
+  if (observations.length > 0) {
     console.log(
-      `    ${formatKstStamp(r.created_at)} · ${r.source}/${r.stage}` +
-        `\n      ${r.payment_id}` +
-        `\n      ${truncateDetail(r.detail)}`,
+      `\n  [관찰] 중복 호출을 막아낸 기록 ${observations.length}건 — **사고가 아니다.**` +
+        '\n    돈은 나가지 않았고 신청도 1건만 남았다. 대응할 것 없다.' +
+        '\n    쌓이는 것이 정상이고, 쌓여야 ua= 로 **누가 두 번 보내는지** 알 수 있다.' +
+        '\n    두 호출의 간격은 같은 payment_id의 registrations.created_at과 빼면 나온다.' +
+        '\n    설계: docs/agent-team/2026-10-06-중복호출-관찰계획.md',
     )
+    for (const r of shownObservations) {
+      console.log(
+        `    ${formatKstStamp(r.created_at)} · ${r.source}` +
+          `\n      ${r.payment_id}` +
+          `\n      ${truncateDetail(r.detail, OBSERVE_DETAIL_MAX)}`,
+      )
+    }
+    if (shownObservations.length < observations.length) {
+      console.log(
+        `\n    ⚠️ ${observations.length}건 중 최근 ${shownObservations.length}건만 표시했다`,
+      )
+    }
   }
 
-  for (const note of describeCoverage(total, rows.length, shown.length)) {
+  for (const note of describeCoverage(
+    total,
+    rows.length,
+    shownIncidents.length + shownObservations.length,
+  )) {
     console.log(`\n  ${note}`)
   }
 
