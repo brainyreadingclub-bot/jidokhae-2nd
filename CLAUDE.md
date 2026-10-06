@@ -38,13 +38,13 @@ The actual implementation codebase lives at `jidokhae-web/` (nested inside this 
 /memory                                        # ⚠️ 낡은 사본. 정본이 아니다 (아래 주의 참조)
 
 docs/agent-team                                # 에이전트 부서 체계 (2026-08 신설)
-├── 00 읽는 순서.md                              # 표지
-├── 공통규약.md                                  # 전 부서 공통 — 의도 확인·소통·파일 소유권·로그·금지
-├── 부서정의.md                                  # 부서 8개의 목적·범위 밖·기본 동작
-├── 관리자규칙.md                                # 메인 세션(팀장)이 지킬 것
-├── 안내판-라우팅표.md                           # 요청 → 담당 부서
-├── logs/                                       # 부서별 작업 로그 + 관리자 판정
-└── 문서지도/                                    # 문서총괄 점호 결과 (중복·모순 목록)
+├── 공통규약.md                                  # 🔴 부서가 일 시작 전 읽는 규칙 (의도 확인·파일 소유권·로그·금지)
+├── 2026-09-19-켜기전-전체목록.md                 # 🔴 켜기 전 남은 할 일의 정본 — A~E 등급
+├── logs/ · 문서지도/ · 조사/                     # 작업 로그+판정 / 중복·모순 점호 / 사고 규명
+└── (그 밖의 규칙·기록 문서는 `ls docs/agent-team`로 본다)
+    ⚠️ `00 읽는 순서.md`는 **표지지 목록이 아니다.** 실제 파일의 절반만 실려 있고
+    "부서 정의는 아직 안 만들었다"처럼 이미 틀린 문장이 있다. 목록 용도로 믿지 말 것
+    (여기 둘만 남긴 이유 — 이 CLAUDE.md의 다른 대목이 **이 두 파일을 직접 지목**한다)
 
 /docs
 ├── expert-panel/                              # 전문가 패널 토론 결과 (의사결정 배경)
@@ -153,7 +153,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 > | prod DB 테이블 | **17** | ~12 | `information_schema.tables` (`table_schema='public'`) |
 >
 > **prod 테이블 17개 전체 (2026-09-11 실조회):** `profiles` · `meetings` · `registrations` · `notifications` · `app_notifications` · `site_settings` · `venues` · `venue_settlements` · `banners` · `book_quotes` · `books` · `library_entries` · `book_asks` · `discussion_topics` · `topic_answers` · `answer_replies` · `answer_reactions`
-> ⏳ **`payment_failures`는 아직 없다** — 코드는 `fix/payment-safety-net`에 있고 마이그레이션 미실행(아래 「결제 안전망」 참조)
+> ⏳ **`payment_failures`는 아직 없다** — 코드는 **PR #67**(`fix/payment-safety-net`)에 있고 마이그레이션 미실행(아래 「결제 안전망」 참조)
 
 ---
 
@@ -224,7 +224,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | Batch refund timeout | `Promise.allSettled` required (Vercel 10-second limit) |
 | Payment mode | redirect. PortOne V2는 결제창에서 완료 시 **이미 승인된 상태**로 redirect → redirect 핸들러/웹훅은 `getPayment()`로 `status === 'PAID'` 검증만 수행 (토스처럼 confirmPayment로 돈을 이동시키지 않음) |
 | Webhook backup | PortOne Webhook (`/api/webhooks/portone`, `PORTONE_WEBHOOK_SECRET` 서명 검증) as backup when frontend redirect fails. 레거시 `/api/webhooks/tosspayments`는 미사용 잔존. 🔴 **이 백업은 M4 최초 구현부터 2026-09-11까지 한 번도 작동한 적이 없었다** — 아래 「결제 안전망」 참조 |
-| 🔴 **결제 안전망** (2026-09-11) | **`paymentId` prefix로 UUID를 되찾을 때 `.like()`를 쓰지 않는다.** `meetings.id`·`profiles.id`는 `uuid`라 Postgres에 `uuid LIKE text` 연산자가 없다(`42883`). **구간 비교**(`.gte(lo).lte(hi)`, `lib/payment-id.ts`의 `uuidPrefixRange`)를 쓴다 — uuid 정렬이 16바이트 `memcmp`라 앞 8자가 같은 집합과 구간이 정확히 일치하고 PK 인덱스도 탄다. 🔴 **조회 실패(`query_failed`)와 대상 없음(`not_found`)을 절대 합치지 않는다** — 합쳐서 200으로 덮은 것이 사고를 몇 달간 숨겼다. `classifyIdLookup`이 4갈래(resolved/query_failed/not_found/ambiguous)로 가르고, 실패는 **500으로 시끄럽게** 끝낸다. prefix 충돌 감지를 위해 `.limit(2)`(1이면 충돌을 모른 채 **남의 명의로 신청이 만들어진다**). 실패는 `payment_failures`에 남긴다(`lib/payment-failure.ts` — **절대 throw 안 함**, 호출부는 `after()`, 표가 없어도 동작해 **배포 순서를 안 탄다**). ⏳ 브랜치 `fix/payment-safety-net`(`0a0f005`), **미머지·마이그레이션 미실행**. 배경: `docs/agent-team/조사/2026-09-10-에드워드책-대기환불-누락.md` |
+| 🔴 **결제 안전망** (2026-09-11) | **`paymentId` prefix로 UUID를 되찾을 때 `.like()`를 쓰지 않는다.** `meetings.id`·`profiles.id`는 `uuid`라 Postgres에 `uuid LIKE text` 연산자가 없다(`42883`). **구간 비교**(`.gte(lo).lte(hi)`, `lib/payment-id.ts`의 `uuidPrefixRange`)를 쓴다 — uuid 정렬이 16바이트 `memcmp`라 앞 8자가 같은 집합과 구간이 정확히 일치하고 PK 인덱스도 탄다. 🔴 **조회 실패(`query_failed`)와 대상 없음(`not_found`)을 절대 합치지 않는다** — 합쳐서 200으로 덮은 것이 사고를 몇 달간 숨겼다. `classifyIdLookup`이 4갈래(resolved/query_failed/not_found/ambiguous)로 가르고, 실패는 **500으로 시끄럽게** 끝낸다. prefix 충돌 감지를 위해 `.limit(2)`(1이면 충돌을 모른 채 **남의 명의로 신청이 만들어진다**). 실패는 `payment_failures`에 남긴다(`lib/payment-failure.ts` — **절대 throw 안 함**, 호출부는 `after()`, 표가 없어도 동작해 **배포 순서를 안 탄다**). ⏳ **PR #67로 열려 있다**(`fix/payment-safety-net`) — 코드는 리뷰를 끝내고 **머지 버튼만 남은 상태**이나 아직 **미머지·마이그레이션 미실행**이라 prod에서는 안전망이 여전히 꺼져 있다. 열린 PR 목록은 `gh pr list`가 항상 맞다(SHA는 박지 않는다 — 낡는다). 배경: `docs/agent-team/조사/2026-09-10-에드워드책-대기환불-누락.md` |
 | Bank transfer bridge | `site_settings.payment_mode` flag (`transfer_only`/`card_only`). 심사 전 계좌이체로 출시, 심사 후 카드 전환. `pending_transfer` 상태 + `payment_method` 컬럼 |
 | payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
 | Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
