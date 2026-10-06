@@ -549,7 +549,7 @@ export default function MeetingActionButton({
           </p>
           {refundInfo.refundAmount === 0 && (
             <p className={`mt-1 ${s.warnText}`}>
-              환불 금액이 0입니다. 그래도 취소하시겠습니까?
+              환불 금액이 0원입니다. 그래도 취소하시겠습니까?
             </p>
           )}
           <div className="mt-5 flex gap-2">
