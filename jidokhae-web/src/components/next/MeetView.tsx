@@ -6,7 +6,8 @@ import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
  * 모임 탭 표현 (전면개편 스펙 §2 — "언제 어디서 만나나?").
  * 유형은 형태로 구분: 정기 = 날짜 축 행 / 토론 = 카드 한 장 (2026-08-14 결정).
  * 번개는 2단계 — 이 화면에 아직 없음.
- * 상세·신청은 구경로(/meetings/[id]) 재사용 — 결제 로직 무변경 (스펙 §6).
+ * 상세는 같은 탭 하위 `/meet/[id]` (2026-08-25 신설). 결제 버튼은 구 화면과 같은
+ * MeetingActionButton을 스킨만 바꿔 쓴다 — 돈 흐름 코드는 한 벌이다 (스펙 §6).
  */
 
 export type MeetData = {
@@ -54,7 +55,7 @@ export default function MeetView({ data }: { data: MeetData }) {
       {/* 내 신청 스트립 */}
       {mine && (
         <Link
-          href={`/meetings/${mine.id}`}
+          href={`/meet/${mine.id}`}
           className={`mt-4 flex min-h-[46px] items-center gap-2.5 rounded-[12px] px-3.5 py-2.5 ${mine.waitlisted ? 'bg-tg-50' : 'bg-brand-bg'}`}
         >
           <span
@@ -68,7 +69,7 @@ export default function MeetView({ data }: { data: MeetData }) {
             </b>{' '}
             {formatKoreanDate(mine.date)} · {mine.title}
           </span>
-          <span className={`flex-none text-[11px] font-bold ${mine.waitlisted ? 'text-tg-500' : 'text-brand-deep'}`}>
+          <span className={`flex-none text-[11px] font-bold ${mine.waitlisted ? 'text-tg-600' : 'text-brand-deep'}`}>
             {mine.waitlisted ? '대기 중' : mine.daysLeft === 0 ? '오늘' : `D-${mine.daysLeft}`}
           </span>
           <Chevron />
@@ -88,14 +89,14 @@ export default function MeetView({ data }: { data: MeetData }) {
             return (
               <Link
                 key={m.id}
-                href={`/meetings/${m.id}`}
+                href={`/meet/${m.id}`}
                 className="flex min-h-[60px] items-center gap-3 border-t border-tg-100 py-3 first:border-t-0"
               >
                 <span className="w-10 flex-none text-center">
                   <span className="block text-base font-extrabold tracking-tight tabular-nums">
                     {day}
                   </span>
-                  <span className="block text-[9.5px] font-semibold text-tg-400">
+                  <span className="block text-[9.5px] font-semibold text-tg-600">
                     {weekday}
                   </span>
                 </span>
@@ -111,7 +112,7 @@ export default function MeetView({ data }: { data: MeetData }) {
                   <span className="block text-[13px] font-bold tabular-nums">
                     {formatFee(m.fee)}
                   </span>
-                  <span className="block text-[10px] text-tg-400">참가비</span>
+                  <span className="block text-[10px] text-tg-600">참가비</span>
                 </span>
               </Link>
             )
