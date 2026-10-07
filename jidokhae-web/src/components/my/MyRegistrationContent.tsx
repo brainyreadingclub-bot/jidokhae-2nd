@@ -6,7 +6,15 @@ import { getKSTToday } from '@/lib/kst'
 import RegistrationCard from '@/components/registrations/RegistrationCard'
 import type { RegistrationWithMeeting } from '@/types/registration'
 
-export default async function MyRegistrationContent() {
+/**
+ * @param browseHref "모임 둘러보기"가 갈 곳. 구 `/my`에서는 `/`가 모임 목록이지만
+ *   5탭에서는 `/`가 홈으로 리다이렉트돼 라벨과 도착지가 어긋난다 — 그래서 받는다.
+ */
+export default async function MyRegistrationContent({
+  browseHref = '/',
+}: {
+  browseHref?: string
+} = {}) {
   const supabase = await createClient()
   const user = await getUser()
 
@@ -31,7 +39,7 @@ export default async function MyRegistrationContent() {
       <div className="mt-4">
         <p className="text-caption text-neutral-400">신청 내역이 없습니다</p>
         <Link
-          href="/"
+          href={browseHref}
           className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
         >
           모임 둘러보기
@@ -77,7 +85,7 @@ export default async function MyRegistrationContent() {
         <div className="rounded-[var(--radius-md)] bg-surface-50 border border-dashed border-neutral-300 py-8 text-center">
           <p className="text-caption text-neutral-400">신청한 모임이 없어요</p>
           <Link
-            href="/"
+            href={browseHref}
             className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
           >
             모임 둘러보기

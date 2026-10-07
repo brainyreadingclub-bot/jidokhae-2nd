@@ -7,7 +7,8 @@ import type { LibraryEntryWithBook } from '@/types/book'
 /**
  * 서재 탭 — "나의 책장" (2026-08-18 v3: 플랫 개인 기록).
  * 가장 최근에 담은 책이 히어로 + 출처 라벨, 아래는 표지 3열 그리드.
- * 데이터는 기존 library lib 재사용, 담기·관리는 마이페이지가 담당.
+ * 데이터는 기존 library lib 재사용. 담기·관리는 하위 화면 `/shelf/manage`
+ * (구 `/my#library`로 내보내던 것을 5탭 안으로 들였다 — 2026-10-07).
  * next_ui를 켜는 날 library_enabled도 함께 켠다 (스펙 §8 의존성).
  */
 
@@ -102,10 +103,10 @@ export default async function ShelfPage() {
       )}
 
       <Link
-        href="/my#library"
+        href="/shelf/manage"
         className="mt-6 flex min-h-[48px] items-center justify-center rounded-[14px] bg-tg-100 text-sm font-bold text-tg-700"
       >
-        책 담기 · 관리는 마이페이지에서
+        책 담기 · 관리
       </Link>
     </div>
   )

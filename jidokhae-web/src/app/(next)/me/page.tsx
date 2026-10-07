@@ -8,7 +8,9 @@ import AccountFooter from '@/components/next/AccountFooter'
 /**
  * 나 탭 — 카운터(명사: 서재·발제 답변)·내 활동 (전면개편 스펙 §2).
  * 번개 호스트 카운터는 2단계에서 추가.
- * 신청 내역·프로필 수정은 구경로(/my) 재사용 (스펙 §6).
+ * 신청 내역·프로필 수정은 **5탭 안의 하위 화면**(/me/registrations · /me/profile)으로 간다.
+ * 내용은 구 `/my`와 같은 컴포넌트를 재사용하고 주소만 안으로 들였다 — 구경로로 내보내면
+ * 구 헤더·푸터가 5탭 위에 겹쳐 떠서 딴 앱처럼 보였다 (2026-10-07).
  * 맨 아래 법적 링크·사업자정보·로그아웃은 `AccountFooter` (2026-09-19 A2) —
  * 5탭 전체를 통틀어 그 셋이 있는 유일한 자리다.
  */
@@ -80,7 +82,7 @@ export default async function MePage() {
       </div>
 
       <Sec>내 활동</Sec>
-      <RowItem emoji="🧾" tone="blue" title="신청 내역" sub="내 모임 신청과 취소" href="/my#registrations" />
+      <RowItem emoji="🧾" tone="blue" title="신청 내역" sub="내 모임 신청과 취소" href="/me/registrations" />
       <RowItem
         emoji="🔔"
         tone="green"
@@ -92,7 +94,7 @@ export default async function MePage() {
         }
         href="/me/notifications"
       />
-      <RowItem emoji="⚙️" tone="yellow" title="프로필 · 설정" sub="닉네임 · 연락처 · 지역" href="/my" />
+      <RowItem emoji="⚙️" tone="yellow" title="프로필 · 설정" sub="닉네임 · 연락처 · 지역" href="/me/profile" />
 
       <AccountFooter />
     </div>
