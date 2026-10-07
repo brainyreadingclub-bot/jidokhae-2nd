@@ -12,6 +12,18 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/report-contract.mjs\"",
+            "timeout": 10,
+            "statusMessage": "보고 규칙 확인 중"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
@@ -58,7 +70,8 @@
     "code-review@claude-plugins-official": true,
     "supabase@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": false
+    "superpowers@claude-plugins-official": false,
+    "dryforge@dryforge": true
   },
   "autoUpdatesChannel": "latest"
 }
