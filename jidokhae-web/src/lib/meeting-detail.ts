@@ -5,6 +5,8 @@ import { getProfile } from '@/lib/profile'
 import { getMeeting } from '@/lib/meeting'
 import { getKSTToday, getButtonState, type ButtonState } from '@/lib/kst'
 import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
+import { getDiscussionApplyBlock } from '@/lib/discussion-gate'
+import { isNextUiEnabled } from '@/lib/next-ui'
 import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
 import { getDisplayFee } from '@/lib/staff-slot'
 import type { Meeting } from '@/types/meeting'
@@ -45,6 +47,8 @@ export type MeetingDetailData = {
   isEditorOrAdmin: boolean
   /** 운영자 또는 정원을 차지한 본인 — 카운트 마스킹 해제 */
   showAccurateCount: boolean
+  /** 자격 잠금 안내에서 보낼 곳 — next_ui ON이면 모임 탭, OFF면 구 홈. 없는 화면으로 보내지 않는다 */
+  regularListHref: string
   participantNicknames: string[]
   /** "M/D 닉네임" — 은행 입금자명 12자 한도 + 운영자 식별 편의 */
   depositorName: string
@@ -190,6 +194,22 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
     buttonState = { type: 'apply_closed' }
   }
 
+  // 토론모임 참여 자격 + 격리 플래그 — D-7과 **같은 자리**. 새 층을 만들지 않는다.
+  //
+  // D-7 마감이 먼저다: 모두에게 닫힌 모임을 두고 "정기모임 다녀오면 열려요"라고 하면 사실이 아니다.
+  // 이미 신청한 사람의 취소·입금 버튼은 여기서도 건드리지 않는다 —
+  // 끄면서 취소를 막으면 환불 경로 자체가 사라진다 (2026-08-22 §2-2).
+  const discussionBlock =
+    buttonState.type === 'register' ||
+    buttonState.type === 'join_waitlist' ||
+    buttonState.type === 'full'
+      ? await getDiscussionApplyBlock(typedMeeting.meeting_type, user.id)
+      : null
+  if (discussionBlock === 'not_eligible') buttonState = { type: 'discussion_locked' }
+  else if (discussionBlock === 'paused') buttonState = { type: 'discussion_paused' }
+
+  const regularListHref = (await isNextUiEnabled()) ? '/meet?from=lock' : '/'
+
   return {
     meeting: typedMeeting,
     userId: user.id,
@@ -204,6 +224,7 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
     hasPendingTransfer,
     isEditorOrAdmin,
     showAccurateCount,
+    regularListHref,
     participantNicknames,
     depositorName,
     nickname: profile.nickname || '',
@@ -232,6 +253,8 @@ export function hasStickyAction(buttonState: ButtonState): boolean {
     buttonState.type === 'join_waitlist' ||
     buttonState.type === 'waitlist_cancel' ||
     buttonState.type === 'pending_transfer' ||
-    buttonState.type === 'apply_closed'
+    buttonState.type === 'apply_closed' ||
+    buttonState.type === 'discussion_locked' ||
+    buttonState.type === 'discussion_paused'
   )
 }

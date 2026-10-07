@@ -10,6 +10,7 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import { getPayment, cancelPayment } from '@/lib/portone'
 import { calculateFee, isStaffDiscountableMeetingType } from '@/lib/pricing'
 import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
+import { getDiscussionApplyBlock, DISCUSSION_BLOCK_MESSAGE } from '@/lib/discussion-gate'
 
 /**
  * 🔴 **옵셔널 필드로만 넓힌다.** 호출부가 여럿(confirm 라우트·웹훅)이라 필수 필드를
@@ -108,6 +109,19 @@ export async function processPaymentConfirmation(
   if (meeting.meeting_type === 'discussion' && !isDiscussionApplyOpen(meeting.date)) {
     await safeCancel(paymentId, '토론모임 신청 마감(D-7) 이후 결제')
     return { status: 'error', message: '신청이 마감된 모임입니다. 결제는 자동 취소됩니다' }
+  }
+
+  // 토론모임 참여 자격 + 격리 플래그 — D-7과 같은 자리. 화면 버튼이 실질 방어선이고
+  // 여기는 딥링크·공유 URL·결제창 체류 같은 우회 경로의 안전망이다.
+  // ⚠️ 여기 도달했을 때는 이미 승인된 결제라 safeCancel로 되돌린다(회원에게 결제→취소가 연달아 간다).
+  //    그래서 검증 기준은 "화면 버튼이 확실히 잠기는가"다.
+  const block = await getDiscussionApplyBlock(meeting.meeting_type, userId)
+  if (block) {
+    await safeCancel(paymentId, `토론모임 신청 차단(${block})`)
+    return {
+      status: 'error',
+      message: `${DISCUSSION_BLOCK_MESSAGE[block]}. 결제는 자동 취소됩니다`,
+    }
   }
 
   // 포트원에서 결제 검증 (이미 결제 완료 상태여야 함)

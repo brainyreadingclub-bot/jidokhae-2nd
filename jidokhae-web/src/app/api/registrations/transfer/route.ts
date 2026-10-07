@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getDisplayFee } from '@/lib/staff-slot'
 import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
+import { getDiscussionApplyBlock, DISCUSSION_BLOCK_MESSAGE } from '@/lib/discussion-gate'
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,6 +76,16 @@ export async function POST(request: NextRequest) {
   if (meeting.meeting_type === 'discussion' && !isDiscussionApplyOpen(meeting.date)) {
     return NextResponse.json(
       { status: 'error', message: '신청이 마감된 모임입니다' },
+      { status: 400 },
+    )
+  }
+
+  // 토론모임 참여 자격 + 격리 플래그 — 딥링크·공유 URL 경로 차단.
+  // 이체는 승인 개념이 없어 돈이 움직이기 전에 거절된다(카드와 달리 환불이 필요 없다)
+  const discussionBlock = await getDiscussionApplyBlock(meeting.meeting_type, user.id)
+  if (discussionBlock) {
+    return NextResponse.json(
+      { status: 'error', message: DISCUSSION_BLOCK_MESSAGE[discussionBlock] },
       { status: 400 },
     )
   }

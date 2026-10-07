@@ -74,16 +74,17 @@ export default async function HomeContent() {
     throw new Error(`모임 목록 조회 실패: ${meetingsError.message}`)
   }
 
-  const typedMeetings = (meetings ?? []) as Meeting[]
+  const allMeetings = (meetings ?? []) as Meeting[]
 
-  if (typedMeetings.length === 0) {
+  if (allMeetings.length === 0) {
     diag.stage('complete (empty)')
     // 여기가 이미 모임 목록이라 「모임 둘러보기」는 자기 자신(/)을 가리킨다 —
     // 갈 데가 없으므로 링크를 내린다 (2026-08-28 도착지 교정)
     return <EmptyMeetings />
   }
 
-  const meetingIds = typedMeetings.map((m) => m.id)
+  // 신청 조회는 토론 포함 전체로 먼저 한다 — 아래 필터가 "내가 신청했는지"를 알아야 한다
+  const meetingIds = allMeetings.map((m) => m.id)
 
   diag.stage('parallel queries start')
   const tParallel = diag.elapsed()
@@ -142,6 +143,24 @@ export default async function HomeContent() {
   const pendingArr = (myPendingResult.data ?? []).map(
     (r: { meeting_id: string }) => r.meeting_id,
   )
+
+  // 🔴 토론모임은 이 목록에 **플래그 값과 무관하게 항상** 뜨지 않는다 (2026-08-22 결정).
+  // 이유 둘 — (1) 토론모임의 진입점은 이야기 탭이다(2026-08-15 결정), (2) 이 카드는 토론 형태
+  // (표지·D-7·자격 잠금)를 모르는 채 정기모임처럼 렌더한다("유형은 라벨이 아니라 형태로 구분").
+  //
+  // 🔴 단, **이미 신청한 본인에게는 남긴다.** 결제한 모임이 화면에서 사라지면 회원은 돈 사고로
+  // 인식한다 — 진입점을 끊는 것이 목적이지 낸 돈을 숨기는 것이 아니다.
+  //
+  // 쿼리 `.neq()`가 아니라 JS 필터인 이유: `meeting_type`이 NULL이면 `.neq`가 그 행까지 지운다
+  const myMeetingIds = new Set([...registeredArr, ...waitlistedArr, ...pendingArr])
+  const typedMeetings = allMeetings.filter(
+    (m) => m.meeting_type !== 'discussion' || myMeetingIds.has(m.id),
+  )
+
+  if (typedMeetings.length === 0) {
+    diag.stage('complete (empty — 토론 제외 후)')
+    return <EmptyMeetings />
+  }
 
   diag.stage('complete')
 

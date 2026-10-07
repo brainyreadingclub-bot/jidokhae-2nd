@@ -37,7 +37,7 @@ export default async function PublicMeetingsPage() {
   const tMeetings = diag.elapsed()
   const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
-    .select('id, title, description, date, time, location, venue_id, capacity, fee, status, region, is_featured, created_at, updated_at')
+    .select('id, title, description, date, time, location, venue_id, capacity, fee, status, meeting_type, region, is_featured, created_at, updated_at')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })
@@ -48,7 +48,13 @@ export default async function PublicMeetingsPage() {
     throw new Error(`모임 목록 조회 실패: ${meetingsError.message}`)
   }
 
-  const typedMeetings = (meetings ?? []) as Meeting[]
+  // 🔴 비로그인 공개 목록에서도 토론모임은 **플래그와 무관하게 항상 제외** (2026-08-22 결정).
+  // 자격(정기모임 1회 이상)이 걸린 모임이라 비로그인에게 보여줄 이유가 없다.
+  // 지금까지 안 걸러지고 있었고(컬럼 화이트리스트에 `meeting_type`이 아예 없었다),
+  // 첫 토론모임을 만드는 순간 여기 떴을 것이다
+  const typedMeetings = ((meetings ?? []) as Meeting[]).filter(
+    (m) => m.meeting_type !== 'discussion',
+  )
 
   let countMap = new Map<string, number>()
   if (typedMeetings.length > 0) {
