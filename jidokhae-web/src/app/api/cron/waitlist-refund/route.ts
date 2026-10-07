@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   // catch-up 쿼리: 내일 이전 모임 중 아직 waitlisted인 건도 포함
   const { data: waitlistedRegs, error: queryError } = await supabase
     .from('registrations')
-    .select('id, user_id, payment_id, paid_amount, meeting_id, payment_method, meetings(title, date)')
+    .select('id, user_id, payment_id, paid_amount, meeting_id, payment_method, meetings(title, date, time)')
     .eq('status', 'waitlisted')
     .lte('meetings.date', tomorrow)
 
@@ -89,7 +89,11 @@ export async function GET(request: NextRequest) {
         .eq('status', 'waitlisted')
 
       // 미승격 알림톡 (실패해도 환불은 완료)
-      const meetingData = reg.meetings as unknown as { title: string; date: string }
+      const meetingData = reg.meetings as unknown as {
+        title: string
+        date: string
+        time: string
+      }
       try {
         await sendWaitlistRefundedNotification(
           reg.user_id,
@@ -97,6 +101,8 @@ export async function GET(request: NextRequest) {
           reg.meeting_id,
           meetingData.title,
           reg.paid_amount ?? 0,
+          meetingData.date,
+          meetingData.time,
         )
       } catch (error) {
         // 환불은 이미 완료 — 알림 실패는 흐름을 막지 않는다(설계).
