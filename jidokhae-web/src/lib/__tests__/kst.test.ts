@@ -11,7 +11,9 @@ import {
   formatKoreanDate,
   formatKoreanTime,
   formatFee,
-  formatFeeOrFree,
+  formatMeetingFee,
+  formatPaidAmount,
+  formatPaidAmountWithUnit,
   getDaysUntil,
   getMeetingTiming,
   getButtonState,
@@ -144,21 +146,69 @@ describe('formatFee', () => {
   })
 })
 
-// ─── formatFeeOrFree ───
-// 0을 "0"으로 쓰면 값을 못 불러온 것처럼 보인다 (2026-10-07 대구 무료 모임).
-// 단, formatFee는 그대로 "0"을 돌려줘야 한다 — 운영자·정산은 숫자가 맞는 값이다.
+// ─── formatMeetingFee / formatPaidAmount ───
+//
+// 규칙 하나뿐이다 — **「무료」는 모임이 0원일 때만.**
+// 0을 "0"으로 쓰면 값을 못 불러온 것처럼 보이고(2026-10-07 대구 무료 모임),
+// 결제액으로 판정하면 유료 모임에 「무료」가 뜬다(2026-10-06 중복환불 장부 정리).
+// 둘 다 실제로 prod에서 일어난 일이라 테스트로 박아둔다.
 
-describe('formatFeeOrFree', () => {
-  it('0 → "무료"', () => {
-    expect(formatFeeOrFree(0)).toBe('무료')
+describe('formatMeetingFee', () => {
+  it('0원 모임 → "무료"', () => {
+    expect(formatMeetingFee(0)).toBe('무료')
   })
 
-  it('0이 아니면 formatFee와 같다', () => {
-    expect(formatFeeOrFree(12000)).toBe('12,000')
-    expect(formatFeeOrFree(6000)).toBe('6,000')
+  it('유료 모임 → 숫자 그대로', () => {
+    expect(formatMeetingFee(12000)).toBe('12,000')
+    expect(formatMeetingFee(6000)).toBe('6,000')
+  })
+})
+
+describe('formatPaidAmount', () => {
+  it('0원 모임 → "무료"', () => {
+    expect(formatPaidAmount(0, 0)).toBe('무료')
   })
 
-  it('formatFee는 여전히 0을 "0"으로 돌려준다 (운영자·정산용)', () => {
+  it('유료 모임 정상 결제 → 숫자 그대로', () => {
+    expect(formatPaidAmount(12000, 12000)).toBe('12,000')
+  })
+
+  it('유료 모임 + 스텝 할인 결제 → 결제액 그대로 ("무료" 아님)', () => {
+    expect(formatPaidAmount(6000, 12000)).toBe('6,000')
+  })
+
+  // 🔴 회귀 방지 — 이 케이스 때문에 판정 기준을 결제액에서 모임 참가비로 옮겼다.
+  // 2026-10-06 중복환불 사고로 신청은 남기고 돈만 돌려드린 뒤 장부를 0으로 맞춘
+  // 건들이 prod에 있다. 그 건은 "0원으로 처리됐다"이지 "공짜 모임"이 아니다.
+  it('🔴 유료 모임인데 결제액이 0 → "무료"가 아니라 "0"', () => {
+    expect(formatPaidAmount(0, 12000)).toBe('0')
+  })
+
+  it('0원 모임이면 결제액이 무엇이든 "무료"', () => {
+    expect(formatPaidAmount(0, 0)).toBe('무료')
+    expect(formatPaidAmount(12000, 0)).toBe('무료')
+  })
+})
+
+describe('formatPaidAmountWithUnit', () => {
+  it('0원 모임 → "무료" (단위를 안 붙인다 — "무료원" 금지)', () => {
+    expect(formatPaidAmountWithUnit(0, 0)).toBe('무료')
+  })
+
+  it('유료 모임 → 숫자 + "원"', () => {
+    expect(formatPaidAmountWithUnit(12000, 12000)).toBe('12,000원')
+    expect(formatPaidAmountWithUnit(6000, 12000)).toBe('6,000원')
+  })
+
+  // 🔴 회귀 방지 — 마이페이지 「신청 내역」이 이 자리다.
+  // 2026-10-06 중복환불 장부 정리로 결제액이 0인 유료 모임 신청 건이 prod에 있다.
+  it('🔴 유료 모임인데 결제액이 0 → "무료"가 아니라 "0원"', () => {
+    expect(formatPaidAmountWithUnit(0, 12000)).toBe('0원')
+  })
+})
+
+describe('formatFee는 안 바뀐다 (운영자·정산·환불용)', () => {
+  it('0 → "0"', () => {
     expect(formatFee(0)).toBe('0')
   })
 })

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Sec, BoxWhite, Chevron } from '@/components/next/TossUI'
-import { formatKoreanDate, formatKoreanTime, formatFeeOrFree } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
 
 /**
  * 모임 탭 표현 (전면개편 스펙 §2 — "언제 어디서 만나나?").
@@ -110,7 +110,7 @@ export default function MeetView({ data }: { data: MeetData }) {
                 </span>
                 <span className="flex-none text-right">
                   <span className="block text-[13px] font-bold tabular-nums">
-                    {formatFeeOrFree(m.fee)}
+                    {formatMeetingFee(m.fee)}
                   </span>
                   <span className="block text-[10px] text-tg-600">참가비</span>
                 </span>

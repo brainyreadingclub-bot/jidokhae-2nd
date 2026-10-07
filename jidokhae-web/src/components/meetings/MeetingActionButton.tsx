@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import * as PortOne from '@portone/browser-sdk/v2'
 import type { ButtonState } from '@/lib/kst'
-// formatFee = 환불 금액(0은 "돌려받을 돈 없음") / formatFeeOrFree = 낼 돈(0은 "무료")
-import { formatFee, formatFeeOrFree } from '@/lib/kst'
+// formatFee = 환불 금액(0은 "돌려받을 돈 없음")
+// formatPaidAmount = 낼 돈/낸 돈 — 「무료」는 **모임 참가비**(meetingFee)로만 판정한다
+import { formatFee, formatPaidAmount } from '@/lib/kst'
 import { calculateRefundByType, getRefundRuleTextByType } from '@/lib/refund'
 import ModalOverlay from '@/components/ui/ModalOverlay'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
@@ -434,7 +435,7 @@ export default function MeetingActionButton({
           <div className="flex items-center justify-between mb-3">
             <span className={s.waitPill}>대기 중</span>
             {waitlistPaidAmount != null && (
-              <span className={s.waitAmount}>{formatFeeOrFree(waitlistPaidAmount)}</span>
+              <span className={s.waitAmount}>{formatPaidAmount(waitlistPaidAmount, meetingFee)}</span>
             )}
           </div>
           <p className={s.waitBody}>
@@ -495,7 +496,7 @@ export default function MeetingActionButton({
           <div className={s.infoBox} style={s.infoBoxStyle}>
             <div className="flex justify-between text-sm">
               <span className={s.infoLabel}>결제 금액</span>
-              <span className={s.infoValue}>{formatFeeOrFree(paidAmount ?? 0)}</span>
+              <span className={s.infoValue}>{formatPaidAmount(paidAmount ?? 0, meetingFee)}</span>
             </div>
             <div className="mt-2 flex justify-between text-sm">
               <span className={s.infoLabel}>환불 비율</span>
@@ -720,7 +721,7 @@ export default function MeetingActionButton({
                       </div>
                     </div>
                   ) : (
-                    <p className={s.transferAmount}>{formatFeeOrFree(effectiveFee)}</p>
+                    <p className={s.transferAmount}>{formatPaidAmount(effectiveFee, meetingFee)}</p>
                   )}
                 </div>
 

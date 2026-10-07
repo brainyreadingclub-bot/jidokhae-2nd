@@ -1,4 +1,4 @@
-import { formatKoreanDate, formatKoreanTime, formatFeeOrFree } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmount } from '@/lib/kst'
 import type { MeetingDetailData } from '@/lib/meeting-detail'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import MeetingInfoRows, { type InfoRow } from '@/components/next/MeetingInfoRows'
@@ -25,7 +25,7 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
     { label: '어디서', value: [m.location, m.region].filter(Boolean).join(' · ') },
     {
       label: '참가비',
-      value: formatFeeOrFree(data.displayFee),
+      value: formatPaidAmount(data.displayFee, data.meeting.fee),
       sub: data.isStaffDiscount ? '스텝 가격이 적용되었어요' : undefined,
       subTone: 'brand',
     },
@@ -96,7 +96,7 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
         depositorName={data.depositorName}
         skin="toss"
         listHref="/meet"
-        registerLabel={`이대로 ${isWaitlist ? '대기 ' : ''}신청하기 · ${formatFeeOrFree(data.displayFee)}`}
+        registerLabel={`이대로 ${isWaitlist ? '대기 ' : ''}신청하기 · ${formatPaidAmount(data.displayFee, data.meeting.fee)}`}
       />
     </div>
   )
