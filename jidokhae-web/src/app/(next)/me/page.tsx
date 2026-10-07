@@ -96,6 +96,23 @@ export default async function MePage() {
       />
       <RowItem emoji="⚙️" tone="yellow" title="프로필 · 설정" sub="닉네임 · 연락처 · 지역" href="/me/profile" />
 
+      {/* 운영 입구 — admin·editor에게만 (2026-10-08).
+          5탭에는 구 헤더의 「운영자」 꼬리표가 없어, 모임 상세를 거치지 않으면 /admin으로 갈 길이 없었다.
+          ⚠️ 이 조건은 **링크를 숨기는 것**일 뿐 접근 차단이 아니다 — 주소를 직접 쳐도
+          `(admin)/layout.tsx`의 역할 체크가 admin·editor 아닌 사용자를 `/`로 돌려보낸다. */}
+      {(profile?.role === 'admin' || profile?.role === 'editor') && (
+        <>
+          <Sec>운영</Sec>
+          <RowItem
+            emoji="🛠"
+            tone="orange"
+            title="운영자 화면"
+            sub="모임 관리 · 정산 · 회원"
+            href="/admin"
+          />
+        </>
+      )}
+
       <AccountFooter />
     </div>
   )
