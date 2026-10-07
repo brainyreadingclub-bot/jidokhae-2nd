@@ -1,4 +1,4 @@
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmount } from '@/lib/kst'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import type { Meeting } from '@/types/meeting'
 
@@ -99,7 +99,7 @@ export default function MeetingDetailInfo({ meeting, confirmedCount, capacity, i
             </svg>
           }
           label="참가비"
-          value={formatFee(displayFee ?? meeting.fee)}
+          value={formatPaidAmount(displayFee ?? meeting.fee, meeting.fee)}
           subText={isStaffDiscount ? '스텝 가격이 적용되었습니다' : undefined}
           highlight
           isLast

@@ -60,6 +60,51 @@ export function formatFee(fee: number): string {
   return fee.toLocaleString('ko-KR')
 }
 
+/**
+ * 모임 참가비 표기. **0원 모임이면 "무료".**
+ *
+ * 왜 `formatFee`를 안 고치고 함수를 더 두는가 —
+ *   - 운영자·정산 화면에서는 **0이 맞는 값**이다. 거기 "무료"가 뜨면 집계를 읽을 수 없다
+ *   - 환불 금액에도 쓰지 않는다. 0은 "공짜"가 아니라 "돌려받을 돈이 없음"이고,
+ *     그 자리는 이미 전용 문구로 처리돼 있다("환불 불가 기간입니다" 등)
+ *
+ * 배경: `fee = 0`인 무료 모임(대구)이 화면마다 참가비 "0"으로 떠서
+ * 값을 못 불러온 것처럼 보였다 (2026-10-07).
+ */
+export function formatMeetingFee(fee: number): string {
+  return formatPaidAmount(fee, fee)
+}
+
+/**
+ * 결제 건(신청)의 금액 표기.
+ *
+ * 🔴 **「무료」인지는 `meetingFee`로만 판정한다. 결제액으로 판정하지 않는다.**
+ * 유료 모임인데 `paid_amount = 0`인 신청이 **실제로 prod에 있다** — 2026-10-06 중복환불
+ * 사고에서 신청은 남기고 돈만 돌려드린 뒤 장부를 0으로 맞춘 건들이다. 그 건은
+ * "이 신청은 0원으로 처리됐다"이지 **"이 모임은 공짜였다"가 아니다.**
+ * 결제액으로 판정하면 그분들 화면에 「무료」라는 거짓말이 뜬다.
+ *
+ * 인자를 둘 다 필수로 받는 이유도 같다 — 결제액 하나만 넘기는 호출을
+ * **문법적으로 쓸 수 없게** 해서 같은 실수가 되돌아오지 못하게 한다.
+ *
+ * @param paidAmount 화면에 쓸 금액 (결제액 · 입금 예정액 · 표시가)
+ * @param meetingFee 그 모임의 참가비 — 「무료」 판정의 유일한 근거
+ */
+export function formatPaidAmount(paidAmount: number, meetingFee: number): string {
+  return meetingFee === 0 ? '무료' : formatFee(paidAmount)
+}
+
+/**
+ * `formatPaidAmount`에 "원"까지 붙인 형태. 「무료」일 때는 단위를 빼서 "무료원"을 막는다.
+ *
+ * 금액 뒤에 "원"을 직접 붙이는 자리(마이페이지 신청 내역 등)가 호출한다 —
+ * 호출부에서 `formatPaidAmount(...) + '원'`을 하면 "무료원"이 되므로
+ * 분기를 호출부에 두지 않고 여기 한 벌만 둔다.
+ */
+export function formatPaidAmountWithUnit(paidAmount: number, meetingFee: number): string {
+  return meetingFee === 0 ? '무료' : `${formatFee(paidAmount)}원`
+}
+
 /** Returns current KST month as "YYYY-MM" */
 export function getKSTMonth(): string {
   return new Intl.DateTimeFormat('en-CA', {

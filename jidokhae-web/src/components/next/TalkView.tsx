@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Sec, BtnSoft } from '@/components/next/TossUI'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
 import type { TopicWithStats } from '@/types/discussion'
 
 /**
@@ -126,7 +126,7 @@ export default function TalkView({ data }: { data: TalkData }) {
           {/* 신청 CTA — 열림 + 미신청 + 대기 아님일 때만. 상세는 모임 탭 하위 */}
           {discussion.open && !discussion.applied && !discussion.waitlisted && (
             <BtnSoft href={`/meet/${discussion.id}`}>
-              신청하기 · {formatFee(discussion.fee)}
+              신청하기 · {formatMeetingFee(discussion.fee)}
             </BtnSoft>
           )}
 
