@@ -120,13 +120,13 @@ export default function TopicThread({
               type="button"
               onClick={() => toggleReaction(a.id)}
               className={`min-h-[32px] text-[11px] font-semibold ${
-                a.my_reacted ? 'text-brand-deep' : 'text-tg-500'
+                a.my_reacted ? 'text-brand-deep' : 'text-tg-600'
               }`}
             >
               ♡ {a.reaction_count > 0 ? a.reaction_count : '공감'}
             </button>
             {a.reply_count > 0 && (
-              <span className="flex min-h-[32px] items-center text-[11px] text-tg-500">
+              <span className="flex min-h-[32px] items-center text-[11px] text-tg-600">
                 답글 {a.reply_count}
               </span>
             )}

@@ -49,7 +49,7 @@ export default function NotificationList({ items }: { items: AppNotification[] }
               {sub && (
                 <span className="mt-0.5 line-clamp-2 block text-xs text-tg-600">{sub}</span>
               )}
-              <span className="mt-0.5 block text-[11px] text-tg-500">
+              <span className="mt-0.5 block text-[11px] text-tg-600">
                 {formatWhen(n.created_at)}
               </span>
             </span>
