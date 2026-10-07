@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmount } from '@/lib/kst'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 
 export type RegistrationDoneData = {
@@ -11,6 +11,8 @@ export type RegistrationDoneData = {
   region: string | null
   /** 실제 결제(또는 입금 예정) 금액 */
   amount: number | null
+  /** 그 모임의 참가비 — 「무료」 판정의 유일한 근거. `amount`로 판정하지 않는다 */
+  meetingFee: number
   kind: 'confirmed' | 'waitlisted' | 'pending_transfer'
   bankName: string
   bankAccount: string
@@ -72,7 +74,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-tg-700 break-keep">
               {data.bankName} {data.bankAccount} {data.bankHolder}
-              {data.amount !== null && ` · ${formatFee(data.amount)}`}
+              {data.amount !== null && ` · ${formatPaidAmount(data.amount, data.meetingFee)}`}
               <br />
               확인되면 신청이 확정돼요.
             </p>
@@ -101,7 +103,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
         <div className="mt-7 rounded-[18px] bg-tg-100 px-4 py-4 text-center">
           <p className="text-[13px] font-semibold text-tg-600">결제 금액</p>
           <p className="mt-1 text-[22px] font-extrabold tracking-tight text-tg-900">
-            {formatFee(data.amount)}
+            {formatPaidAmount(data.amount, data.meetingFee)}
           </p>
         </div>
       )}

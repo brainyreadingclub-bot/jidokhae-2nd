@@ -39,6 +39,7 @@ export default async function NextRegistrationDonePage({ params, searchParams }:
         location: meeting.location,
         region: meeting.region ?? null,
         amount: paidAmount ?? meeting.fee ?? null,
+        meetingFee: meeting.fee,
         kind: isPendingTransfer
           ? 'pending_transfer'
           : type === 'waitlisted'

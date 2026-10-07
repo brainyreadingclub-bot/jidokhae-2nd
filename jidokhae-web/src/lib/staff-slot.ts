@@ -45,6 +45,14 @@ export async function getDisplayFee(
   meetingFee: number,
   meetingType: string,
 ): Promise<{ fee: number; isDiscounted: boolean }> {
+  // 무료 모임은 깎을 것이 없다. 0의 50%도 0이라 계산은 "할인 성공"으로 떨어지지만,
+  // 그 결과 운영자에게 「스텝 가격이 적용되었어요」가 떠서 틀린 말을 한다
+  // (2026-10-07 미리보기 실측 — 대구 모임 fee=0). 금액이 같으므로 회원에게는
+  // 안 보이던 오표시이고, 여기서 끊으면 영수증(정가/−할인/총액)도 함께 사라진다.
+  if (meetingFee === 0) {
+    return { fee: 0, isDiscounted: false }
+  }
+
   // 스텝 할인은 정기모임 한정 (2026-08-17 결정) — 토론모임 등은 정가
   if (!isStaffDiscountableMeetingType(meetingType)) {
     return { fee: meetingFee, isDiscounted: false }

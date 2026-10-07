@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getSiteSettings } from '@/lib/site-settings'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: '서비스 소개 | 지독해',
@@ -8,9 +9,21 @@ export const metadata: Metadata = {
 }
 
 export default async function AboutPage() {
-  const settings = await getSiteSettings()
+  const supabase = await createClient()
+  const [settings, { data: memberCount }] = await Promise.all([
+    getSiteSettings(),
+    // 손으로 적는 site_settings.member_count 대신 실제 가입자를 센다.
+    // 그 값은 256이었고 실제 가입자는 166이라 로그인 화면과 숫자가 갈려 있었다
+    // — 같은 앱이 두 숫자를 말하는 자리가 **비로그인도 보는 첫 화면**이었다.
+    // 로그인 화면(auth/login/page.tsx)이 쓰던 RPC를 그대로 쓴다. 새로 만들지 않았다.
+    supabase.rpc('get_member_count'),
+  ])
   const regionsLabel = settings['active_regions_label'] ?? '경주 · 포항'
-  const memberCount = settings['member_count'] ?? '250'
+  // 지역이 셋이 되자 기존 `.replace(' · ', '와 ')`가 첫 구분자만 바꿔
+  // "경주와 포항 · 대구에서"라는 문장을 만들었다 (2026-10-07 렌더 실측).
+  // 둘일 때만 "A와 B", 그 외는 쉼표로 잇는다 — 지역이 더 늘어도 안 깨진다.
+  const regions = regionsLabel.split('·').map((r) => r.trim()).filter(Boolean)
+  const regionsPhrase = regions.length === 2 ? regions.join('와 ') : regions.join(', ')
   return (
     <div className="flex min-h-screen flex-col">
       {/* ── Hero Section ── */}
@@ -53,8 +66,14 @@ export default async function AboutPage() {
           </h1>
           <div className="mt-5 h-px w-[48px] bg-neutral-600" />
           <p className="mt-5 text-sm leading-relaxed text-neutral-300">
-            책을 읽고, 사람을 만나고, 생각을 나누는 모임.<br />
-            {regionsLabel.replace(' · ', '와 ')}에서 {memberCount}명이 함께하고 있어요.
+            책을 읽고, 사람을 만나고, 생각을 나누는 모임.
+            {/* RPC가 없는 환경에서는 회원 수 줄만 숨긴다 — 로그인 화면과 같은 가드 */}
+            {memberCount !== null && memberCount !== undefined && (
+              <>
+                <br />
+                {regionsPhrase}에서 {memberCount}명이 함께하고 있어요.
+              </>
+            )}
           </p>
         </div>
       </section>
@@ -102,9 +121,11 @@ export default async function AboutPage() {
           <p className="text-sm font-bold text-neutral-800">
             참가비 안내
           </p>
+          {/* 금액을 못 박지 않는다 — 대구 정기 모임은 무료라 "12,000원"이 틀린 말이었고,
+              참가비는 모임마다 운영자가 정한다. 값은 모임 일정이 항상 맞게 들고 있다 */}
           <p className="mt-1.5 text-sm leading-relaxed text-neutral-500">
-            정기모임 참가비는 <span className="font-semibold text-neutral-700">12,000원</span>이며, 카드 결제로 간편하게 신청할 수 있습니다.
-            <br />결제 완료 즉시 모임 참여가 확정됩니다.
+            참가비는 <span className="font-semibold text-neutral-700">모임마다 다릅니다</span>. 모임 일정에서 각 모임의 참가비를 확인할 수 있어요.
+            <br />카드 결제로 간편하게 신청할 수 있고, 결제 완료 즉시 모임 참여가 확정됩니다.
           </p>
         </div>
       </section>

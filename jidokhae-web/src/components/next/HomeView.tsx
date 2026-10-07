@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec, BoxWhite, RowItem, Chevron } from '@/components/next/TossUI'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
 
 /**
  * 홈 탭 표현 (전면개편 스펙 §2 — "지금 나 뭐 해야 하지?").
@@ -157,7 +157,7 @@ export default function HomeView({ data }: { data: HomeData }) {
               {nearest.title}
             </span>
             <span className="mt-1 block break-keep text-xs leading-[1.5] text-tg-600">
-              {nearest.venueName} · 참가비 {formatFee(nearest.fee)}
+              {nearest.venueName} · 참가비 {formatMeetingFee(nearest.fee)}
             </span>
             <span className="mt-[13px] flex h-[46px] items-center justify-center rounded-[14px] bg-brand text-sm font-extrabold tracking-tight text-white">
               모임 자세히 보기
