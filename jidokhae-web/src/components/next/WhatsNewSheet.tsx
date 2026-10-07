@@ -1,6 +1,7 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
+import { useRouter } from 'next/navigation'
 
 const SEEN_KEY = 'next_ui_whatsnew_seen_v1'
 
@@ -21,10 +22,11 @@ const ITEMS = [
     sub: '홈 · 모임 · 이야기 · 서재 · 나 — 흩어져 있던 것들이 제자리를 찾았어요',
   },
   {
-    emoji: '💬',
+    // 발제 안내(💬)를 뺀 자리다 — 켜는 날 토론모임이 0건이라 이야기 탭에 가도 볼 것이 없다
+    emoji: '📚',
     bg: '#EEF3FF',
-    title: '발제문에 미리 답을 남겨요',
-    sub: '토론모임 전에 이야기 탭에서 생각을 나눠보세요',
+    title: '모임에서 읽은 책이 쌓여요',
+    sub: '서재 탭에 한 권씩 모아두세요',
   },
   {
     emoji: '🔔',
@@ -39,6 +41,7 @@ const ITEMS = [
  * next_ui 켠 뒤 새 홈 첫 접속에 딱 한 번 — 닫으면 다시 안 나온다 (localStorage).
  */
 export default function WhatsNewSheet() {
+  const router = useRouter()
   // 서버/하이드레이션: 항상 숨김 — 클라이언트에서 localStorage 확인 후 노출
   const seen = useSyncExternalStore(
     subscribe,
@@ -49,6 +52,12 @@ export default function WhatsNewSheet() {
   function close() {
     localStorage.setItem(SEEN_KEY, '1')
     listeners.forEach((l) => l())
+  }
+
+  /** 「둘러보기」 = 닫고 모임 탭으로. 닫기만 하면 누른 보람이 없다(홈에 그대로 남는다) */
+  function closeAndTour() {
+    close()
+    router.push('/meet')
   }
 
   if (seen) return null
@@ -82,7 +91,7 @@ export default function WhatsNewSheet() {
         </ul>
         <button
           type="button"
-          onClick={close}
+          onClick={closeAndTour}
           className="mt-4 block w-full rounded-2xl bg-brand py-4 text-center text-[15px] font-extrabold text-white"
         >
           둘러보기

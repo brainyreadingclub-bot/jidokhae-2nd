@@ -14,6 +14,12 @@ import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
 
 export type HomeData = {
   nickname: string
+  /**
+   * 신청 이력이 **평생 0건**인 회원 — 인사 문구만 가른다.
+   * `nearest`(카드)와 분리한 이유: 카드는 「지금 신청한 모임이 없는」 기존 회원에게도 뜨는데,
+   * 그 사람에게 「곧 이런 모임이 있어요」는 처음 온 사람의 말이다 (2026-09-19 A3 시안 06).
+   */
+  firstTime: boolean
   /** 나를 향한 최신 미읽음 답글 — 없으면 null (빈 상태 폴백, 스펙 §10 UX) */
   reply: { actorNickname: string; preview: string; topicId: string } | null
   /** 내가 신청한(confirmed·pending_transfer) 다음 모임 */
@@ -27,7 +33,7 @@ export type HomeData = {
     pendingTransfer: boolean
   } | null
   /**
-   * 「가장 가까운 모임」 1건 — 신청 이력이 한 번도 없는 회원에게만 (2026-09-19 A3, ㉮안).
+   * 「가장 가까운 모임」 1건 — 내가 신청한 다가오는 모임이 없을 때 (2026-09-19 A3, ㉮안).
    * 목록이 아니다. 늘리지 말 것.
    */
   nearest: {
@@ -60,7 +66,7 @@ export type HomeData = {
 }
 
 export default function HomeView({ data }: { data: HomeData }) {
-  const { nickname, reply, nextMeeting, nearest, promo, todo } = data
+  const { nickname, firstTime, reply, nextMeeting, nearest, promo, todo } = data
 
   return (
     <div className="pt-2">
@@ -72,8 +78,10 @@ export default function HomeView({ data }: { data: HomeData }) {
             <br />
             <span className="text-brand">{reply.actorNickname}님이</span> 답을 남겼어요
           </>
-        ) : nearest ? (
-          // 오늘 처음 온 사람에게 「오늘도」는 틀린 말이다 (2026-09-19 A3 시안 06)
+        ) : firstTime ? (
+          // 오늘 처음 온 사람에게 「오늘도」는 틀린 말이다 (2026-09-19 A3 시안 06).
+          // 거꾸로 — 기존 회원에게 「곧 이런 모임이 있어요」는 처음 온 사람의 말이라
+          // 아래 `nearest` 카드가 떠도 인사는 「오늘도 읽어볼까요」가 맞다.
           <>
             {nickname}님,
             <br />
@@ -136,7 +144,7 @@ export default function HomeView({ data }: { data: HomeData }) {
       )}
 
       {/*
-        가장 가까운 모임 1건 — 신청 이력 0건 회원 (2026-09-19 A3 시안 06).
+        가장 가까운 모임 1건 — 신청한 다가오는 모임이 없는 회원 (2026-09-19 A3 시안 06).
         「신청하기」가 아니라 「모임 자세히 보기」다 — 도착지가 상세지 결제창이 아니다.
         큰 숫자(「3일」)도 안 쓴다 — 그건 「내가 신청한 모임」의 언어라 이미 신청한 줄 안다.
       */}

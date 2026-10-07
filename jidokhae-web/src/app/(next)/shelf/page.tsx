@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { getUser } from '@/lib/auth'
 import { getMyLibrary } from '@/lib/library'
 import { Sec } from '@/components/next/TossUI'
+import AskStripSection from '@/components/library/AskStripSection'
 import type { LibraryEntryWithBook } from '@/types/book'
 
 /**
@@ -9,6 +11,7 @@ import type { LibraryEntryWithBook } from '@/types/book'
  * 가장 최근에 담은 책이 히어로 + 출처 라벨, 아래는 표지 3열 그리드.
  * 데이터는 기존 library lib 재사용. 담기·관리는 하위 화면 `/shelf/manage`
  * (구 `/my#library`로 내보내던 것을 5탭 안으로 들였다 — 2026-10-07).
+ * 단 **물어보기 담기는 이 화면**이다 — 아래 `AskStripSection` 주석 참조.
  * next_ui를 켜는 날 library_enabled도 함께 켠다 (스펙 §8 의존성).
  */
 
@@ -31,6 +34,20 @@ export default async function ShelfPage() {
         <br />
         <span className="text-brand">{entries.length}권</span> 쌓였어요
       </h1>
+
+      {/*
+        물어보기 담기 스트립 — 「책 담기」 알림톡 버튼의 주소(`/my`)가 승인된 템플릿에
+        박혀 있어 고칠 수 없다. 그래서 `/my`가 미해소 물어보기를 가진 회원을 여기로
+        보낸다(`(main)/my/page.tsx`). 받는 자리에 이 스트립이 없으면 회원이 책을
+        담을 수 없다.
+        🔴 `/shelf/manage`의 `BookSearchInput`으로 대신할 수 없다 — 그쪽은
+        `askMeetingId`가 없어 `source='manual'`로 들어가고 물어보기가 영구 미해소로
+        남는다(응답률 분모만 늘고 분자는 0). 해소되는 경로는 이 스트립 하나다.
+        물어보기가 없으면 컴포넌트가 스스로 null을 반환해 평소 화면은 그대로다.
+      */}
+      <Suspense fallback={null}>
+        <AskStripSection />
+      </Suspense>
 
       {entries.length === 0 ? (
         <div className="mt-6 rounded-[18px] border border-dashed border-tg-300 p-6 text-center">

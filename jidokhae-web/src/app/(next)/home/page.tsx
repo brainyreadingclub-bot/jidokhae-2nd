@@ -85,13 +85,21 @@ export default async function NextHomePage() {
       }
     : null
 
-  // ③ 가장 가까운 모임 — 신청 이력 0건 회원에게만 1건 (2026-09-19 A3, ㉮안).
+  // ③ 가장 가까운 모임 — **내가 신청한 다가오는 모임이 없을 때** 1건 (2026-09-19 A3, ㉮안).
+  //    게이트가 `firstTime`에서 `!mine`으로 넓어졌다 — 신청 이력은 있지만 지금 신청한 모임이
+  //    없는 기존 회원이 홈에서 「지금은 조용해요」만 보고 있었다. 켜는 날 대부분이 이 상태다.
+  //    인사 문구는 이 카드를 따라가지 않는다 — 그쪽은 `firstTime`이 가른다 (HomeView 참조).
   //    쿼리를 더 치지 않는다. 위에서 이미 불러온 upcoming에서 고르는 것뿐이다.
   let nearest: HomeData['nearest'] = null
-  if (firstTime) {
+  if (!mine) {
     const myRegions = profile?.region ?? []
-    // upcoming은 date·time 오름차순 — 지역이 겹치는 첫 건, 없으면 날짜순 첫 건
-    const regular = upcoming.filter((m) => m.meeting_type !== 'discussion')
+    // upcoming은 date·time 오름차순 — 지역이 겹치는 첫 건, 없으면 날짜순 첫 건.
+    // 대기 중인 모임은 뺀다 — 이미 줄을 선 모임을 「가장 가까운 모임」으로 다시 권유하지
+    // 않는다. `mine`은 confirmed·pending_transfer만 세지만 `myRegMap`은 waitlisted까지
+    // 담고 있어, 이 한 줄이 대기 건을 덮는다
+    const regular = upcoming.filter(
+      (m) => m.meeting_type !== 'discussion' && !myRegMap.has(m.id),
+    )
     const pick = regular.find((m) => myRegions.includes(m.region)) ?? regular[0]
     if (pick) {
       nearest = {
@@ -142,7 +150,7 @@ export default async function NextHomePage() {
   return (
     <>
       <WhatsNewSheet />
-      <HomeView data={{ nickname, reply, nextMeeting, nearest, promo, todo }} />
+      <HomeView data={{ nickname, firstTime, reply, nextMeeting, nearest, promo, todo }} />
     </>
   )
 }
