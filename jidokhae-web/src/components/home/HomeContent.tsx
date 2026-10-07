@@ -78,7 +78,9 @@ export default async function HomeContent() {
 
   if (typedMeetings.length === 0) {
     diag.stage('complete (empty)')
-    return <EmptyMeetings showBrowseLink />
+    // 여기가 이미 모임 목록이라 「모임 둘러보기」는 자기 자신(/)을 가리킨다 —
+    // 갈 데가 없으므로 링크를 내린다 (2026-08-28 도착지 교정)
+    return <EmptyMeetings />
   }
 
   const meetingIds = typedMeetings.map((m) => m.id)
