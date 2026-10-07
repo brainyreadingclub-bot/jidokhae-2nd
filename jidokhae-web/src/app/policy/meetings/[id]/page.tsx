@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatFeeOrFree } from '@/lib/kst'
 import MeetingDetailInfo from '@/components/meetings/MeetingDetailInfo'
 import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 import type { Meeting } from '@/types/meeting'
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: '지독해 - 독서모임' }
   }
 
-  const description = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatFee(meeting.fee)}`
+  const description = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatFeeOrFree(meeting.fee)}`
 
   return {
     title: `${meeting.title} | 지독해`,

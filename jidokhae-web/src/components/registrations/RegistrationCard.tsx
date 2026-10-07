@@ -55,7 +55,10 @@ export default function RegistrationCard({ registration, badge }: Props) {
           <div className="mt-3 pt-2.5 border-t border-neutral-200 text-caption text-neutral-600">
             결제금액{' '}
             <span className={`font-bold font-mono ${isMuted ? 'line-through' : ''}`}>
-              {formatFee(registration.paid_amount)}원
+              {/* 무료 모임(fee=0)은 "0원" 대신 "무료" — "무료원"이 되지 않게 단위까지 분기 */}
+              {registration.paid_amount === 0
+                ? '무료'
+                : `${formatFee(registration.paid_amount)}원`}
             </span>
             {registration.status === 'cancelled' &&
               registration.refunded_amount != null &&

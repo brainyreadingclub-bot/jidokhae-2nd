@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatFeeOrFree } from '@/lib/kst'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 
 export type RegistrationDoneData = {
@@ -72,7 +72,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-tg-700 break-keep">
               {data.bankName} {data.bankAccount} {data.bankHolder}
-              {data.amount !== null && ` · ${formatFee(data.amount)}`}
+              {data.amount !== null && ` · ${formatFeeOrFree(data.amount)}`}
               <br />
               확인되면 신청이 확정돼요.
             </p>
@@ -101,7 +101,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
         <div className="mt-7 rounded-[18px] bg-tg-100 px-4 py-4 text-center">
           <p className="text-[13px] font-semibold text-tg-600">결제 금액</p>
           <p className="mt-1 text-[22px] font-extrabold tracking-tight text-tg-900">
-            {formatFee(data.amount)}
+            {formatFeeOrFree(data.amount)}
           </p>
         </div>
       )}

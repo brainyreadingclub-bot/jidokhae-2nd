@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { loadMeetingDetail } from '@/lib/meeting-detail'
 import { getMeeting } from '@/lib/meeting'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatFeeOrFree } from '@/lib/kst'
 import MeetingDetailView from '@/components/next/MeetingDetailView'
 
 type Props = {
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: '지독해 - 독서모임' }
   }
 
-  const description = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatFee(meeting.fee)}`
+  const description = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatFeeOrFree(meeting.fee)}`
 
   return {
     title: meeting.title,

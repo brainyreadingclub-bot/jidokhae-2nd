@@ -60,6 +60,21 @@ export function formatFee(fee: number): string {
   return fee.toLocaleString('ko-KR')
 }
 
+/**
+ * 회원이 "낼 돈"을 보는 자리의 참가비·결제 금액 표기. 0이면 "무료".
+ *
+ * 왜 `formatFee`를 안 고치고 함수를 하나 더 두는가 —
+ *   - 운영자·정산 화면에서는 **0이 맞는 값**이다. 거기 "무료"가 뜨면 집계를 읽을 수 없다
+ *   - 환불 금액에도 쓰지 않는다. 0은 "공짜"가 아니라 "돌려받을 돈이 없음"이고,
+ *     그 자리는 이미 전용 문구로 처리돼 있다("환불 불가 기간입니다" 등)
+ *
+ * 배경: `fee = 0`인 무료 모임(대구)이 화면마다 참가비 "0"으로 떠서
+ * 값을 못 불러온 것처럼 보였다 (2026-10-07).
+ */
+export function formatFeeOrFree(fee: number): string {
+  return fee === 0 ? '무료' : formatFee(fee)
+}
+
 /** Returns current KST month as "YYYY-MM" */
 export function getKSTMonth(): string {
   return new Intl.DateTimeFormat('en-CA', {

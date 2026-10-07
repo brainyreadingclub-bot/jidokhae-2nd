@@ -11,6 +11,7 @@ import {
   formatKoreanDate,
   formatKoreanTime,
   formatFee,
+  formatFeeOrFree,
   getDaysUntil,
   getMeetingTiming,
   getButtonState,
@@ -140,6 +141,25 @@ describe('formatFee', () => {
 
   it('100000 → "100,000"', () => {
     expect(formatFee(100000)).toBe('100,000')
+  })
+})
+
+// ─── formatFeeOrFree ───
+// 0을 "0"으로 쓰면 값을 못 불러온 것처럼 보인다 (2026-10-07 대구 무료 모임).
+// 단, formatFee는 그대로 "0"을 돌려줘야 한다 — 운영자·정산은 숫자가 맞는 값이다.
+
+describe('formatFeeOrFree', () => {
+  it('0 → "무료"', () => {
+    expect(formatFeeOrFree(0)).toBe('무료')
+  })
+
+  it('0이 아니면 formatFee와 같다', () => {
+    expect(formatFeeOrFree(12000)).toBe('12,000')
+    expect(formatFeeOrFree(6000)).toBe('6,000')
+  })
+
+  it('formatFee는 여전히 0을 "0"으로 돌려준다 (운영자·정산용)', () => {
+    expect(formatFee(0)).toBe('0')
   })
 })
 

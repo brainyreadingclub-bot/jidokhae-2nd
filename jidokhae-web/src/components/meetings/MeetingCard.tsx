@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatFeeOrFree } from '@/lib/kst'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import type { Meeting } from '@/types/meeting'
 
@@ -115,7 +115,7 @@ export default function MeetingCard({
       {showCta && (
         <div className="mx-4 flex items-center justify-between border-t border-neutral-100 pt-3 pb-4">
           <span className="text-[13px] font-semibold tabular-nums text-neutral-700">
-            {formatFee(meeting.fee)}
+            {formatFeeOrFree(meeting.fee)}
           </span>
           {isFull ? (
             <span className="rounded-[9px] bg-neutral-100 px-4 py-1.5 text-xs font-bold text-neutral-600">

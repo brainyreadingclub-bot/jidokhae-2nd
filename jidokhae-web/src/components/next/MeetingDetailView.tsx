@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatFee, formatDDay } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatFeeOrFree, formatDDay } from '@/lib/kst'
 import type { MeetingDetailData } from '@/lib/meeting-detail'
 import { hasStickyAction } from '@/lib/meeting-detail'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
@@ -40,7 +40,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
     },
     {
       label: '참가비',
-      value: formatFee(data.displayFee),
+      value: formatFeeOrFree(data.displayFee),
       sub: data.isStaffDiscount ? '스텝 가격이 적용되었어요' : undefined,
       subTone: 'brand',
     },
@@ -240,7 +240,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
               }`}
             >
               {data.buttonState.type === 'join_waitlist' ? '대기 신청하러 가기' : '신청하러 가기'} ·{' '}
-              {formatFee(data.displayFee)}
+              {formatFeeOrFree(data.displayFee)}
             </Link>
           </div>
         </div>
