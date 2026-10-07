@@ -93,8 +93,13 @@ export default async function NextHomePage() {
   let nearest: HomeData['nearest'] = null
   if (!mine) {
     const myRegions = profile?.region ?? []
-    // upcoming은 date·time 오름차순 — 지역이 겹치는 첫 건, 없으면 날짜순 첫 건
-    const regular = upcoming.filter((m) => m.meeting_type !== 'discussion')
+    // upcoming은 date·time 오름차순 — 지역이 겹치는 첫 건, 없으면 날짜순 첫 건.
+    // 대기 중인 모임은 뺀다 — 이미 줄을 선 모임을 「가장 가까운 모임」으로 다시 권유하지
+    // 않는다. `mine`은 confirmed·pending_transfer만 세지만 `myRegMap`은 waitlisted까지
+    // 담고 있어, 이 한 줄이 대기 건을 덮는다
+    const regular = upcoming.filter(
+      (m) => m.meeting_type !== 'discussion' && !myRegMap.has(m.id),
+    )
     const pick = regular.find((m) => myRegions.includes(m.region)) ?? regular[0]
     if (pick) {
       nearest = {
