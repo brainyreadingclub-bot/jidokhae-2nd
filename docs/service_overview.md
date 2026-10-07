@@ -299,14 +299,14 @@ supabase.from('profiles').select('id').like('id', `${userId8}%`).limit(1)
 
 → **M4 최초 구현부터 2026-09-11 발견까지, 브라우저 redirect가 실패한 모든 결제가 조용히 유실됐다.** 실제 사고(대기 환불 누락)로 발각됨. 조사 기록: `docs/agent-team/조사/2026-09-10-에드워드책-대기환불-누락.md`
 
-수정본은 `fix/payment-safety-net` 브랜치(`0a0f005`)에 있고 **아직 머지되지 않았다**:
+✅ **수정본은 2026-09-24에 머지돼 prod에서 돌고 있다**(그 뒤 중복환불 수정 둘이 더 얹혔다 — 2026-10-06). 고친 내용:
 - `.like()` → **구간 비교** `.gte(lo).lte(hi)`(`lib/payment-id.ts` `uuidPrefixRange`) — uuid 정렬이 16바이트 memcmp라 prefix 집합과 구간이 정확히 일치하고 PK 인덱스도 탄다
 - `classifyIdLookup`이 **4갈래**로 분류: `resolved` / `query_failed` / `not_found` / `ambiguous` — 실패는 **500으로 시끄럽게**
 - `.limit(2)` — `.limit(1)`이면 prefix 충돌을 모른 채 **남의 명의로 신청이 만들어진다**
 - 실패를 `payment_failures` 표에 기록(`lib/payment-failure.ts` — 절대 throw 안 함, 표가 없어도 동작해 배포 순서를 안 탐)
 - 부수 작업은 `after()`로 (`void` fire-and-forget은 Vercel 람다 freeze로 유실 — Preview 실측 13분 지연)
 
-**⏳ 마이그레이션 미실행. `payment_failures` 테이블이 prod에 아직 없다.**
+✅ **마이그레이션 실행 완료. `payment_failures` 표가 prod에 있다** (2026-10-07 실조회 확인 — public 표 18개 중 하나). 세는 법: `information_schema.tables`에서 `table_schema='public'`.
 
 ### 3-4. 취소 / 환불
 
@@ -504,11 +504,11 @@ STAFF_DISCOUNT_MAX_PER_MEETING = 2
 - 플래그 뒤 코드는 **회원 피드백을 0건 받았다.** 켜는 순간 처음 검증된다 — 다크 배포의 안전성은 **켜기 전까지만** 유효하다.
 - 코드가 익는 게 아니라 **낡는다.**
 
-### 5-2. 🔴 결제 안전망이 아직 머지되지 않았다
+### 5-2. ~~🔴 결제 안전망이 아직 머지되지 않았다~~ → ✅ **해소 (2026-09-24 머지, prod 가동)**
 
-§3-3 참조. `fix/payment-safety-net`(`0a0f005`)에 수정·테스트(223개)가 다 있는데 **main에 없고 `payment_failures` 마이그레이션도 미실행**이다.
+§3-3 참조. 코드와 표 둘 다 prod에 있다(2026-10-07 실조회). **지워지지 않은 위험은 이제 「우리가 모르는 유실」이 아니라 「누가 두 번 보내는지 모른다」다** — 2026-10-06 중복환불 사고의 원인은 막았지만 **호출 주체는 아직 모른다**(관찰 기록이 쌓이는 중, 몇 주 걸릴 수 있다). 조사: `docs/agent-team/조사/2026-10-06-중복환불-사고.md`
 
-→ **지금 이 순간에도 브라우저 redirect가 실패한 결제는 유실된다.**
+⚠️ **회원 5명이 「내 신청」에서 결제금액 0원을 본다** — 그 사고의 남은 흔적이고 대표님이 그대로 두기로 했다.
 
 ### 5-3. 🟠 `(next)`에 남은 구 화면 이탈 2곳
 

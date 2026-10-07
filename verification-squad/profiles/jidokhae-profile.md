@@ -52,7 +52,7 @@
 ## 비즈니스 로직 핵심
 - **모임 종류**: `meetings.meeting_type` — `regular`(정기) / `discussion`(토론). **규칙이 서로 다르다**
 - **환불(정기)**: 3일 이상 100% / 2일 50% / 2일 미만 0%
-- **환불(토론)**: 🔴 **7일 전 100% / 3일 전 50% / 이후 불가** (2026-08-14에 14/7일에서 완화. `feat/next-phase1a` 배포 대기)
+- **환불(토론)**: 🔴 **7일 전 100% / 3일 전 50% / 이후 불가** (2026-08-14에 14/7일에서 완화). ~~배포 대기~~ → **2026-08-21 머지, prod 가동 중**(`calculateRefundByType`이 단일 진입점)
 - **토론모임 D-7 통일**: 신청 마감 = 환불 100% 경계 = 책 주문 마감이 **전부 같은 날**(D-7, 23:59 KST). 회원이 외울 날짜를 하나로
 - **스텝 할인**: 50%, 모임당 슬롯 2명. 🔴 **정기모임 한정 — 토론모임 제외**(2026-08-17 확정). `pricing.ts` 상수 ↔ SQL 가드(`migration-staff-discount-discussion-guard.sql`) **동기 필수**
 - **무료 회원**: `profiles.is_free=true` — 정산 목록에서만 제외. 토글 UI 없음(SQL로 지정)
@@ -62,7 +62,7 @@
   - Meeting: `active` → `deleting` → `deleted`
   - Notification: `pending` → `sent` | `failed` | `skipped`
 - **동시성 보호**: `confirm_registration()` `register_transfer()` `promote_next_waitlisted()` `admin_confirm_transfer()` — 전부 `FOR UPDATE` 행 락
-- **알림톡**: 7종. V2 6종 **APPROVED**, `BOOK_ASK`는 문구 수정 **재심사 중(INSPECTING)**. 켜는 날 = BOOK_ASK 승인 + env 템플릿 ID 6개 V2 교체 + `next_ui`·`library_enabled` 동시 flip
+- **알림톡**: 7종 **전부 APPROVED**. ~~`BOOK_ASK` 재심사 중(INSPECTING)~~ → **2026-08-19 승인.** 2026-10-07에 **Solapi API로 7종을 읽어 코드와 대조, 전부 일치**(*"콘솔은 사람만 볼 수 있다"*는 틀렸다). 켜는 날 = env 템플릿 ID V2 교체 + `site_settings` 행 INSERT 3개(`next_ui`·`library_enabled`·`discussion_meeting_enabled`) + flip
 
 ## 사용자
 - **비기술 사용자 대다수.** 회원 수는 계속 변하므로 숫자를 여기 적지 않는다 — 필요하면 `profiles` 테이블을 직접 센다
@@ -129,4 +129,4 @@
 | 알림 종류 union이 **4곳에 서로 다르게** 정의 (`types/notification.ts` 2종 / `lib/notification.ts` 5종 / `notification-log.ts` 7종 / `migration.sql` CHECK 5종). `types/notification.ts`는 **어디서도 import 안 되는 사문** | 인지됨. types로 통합하는 수정이 **미머지** |
 | 발송 실패 시 이력 행이 남고 중복 방지 인덱스가 자리를 차지해 **재시도가 영영 안 됨** | 인지됨. 재발송 버튼은 별도 작업 |
 | 호칭이 채널 간 불일치 — 인앱 닉네임, 알림톡 실명 우선 | 닉네임 통일로 결정됨. 🔨 **코드 미적용** |
-| 토론모임 환불 7/3일, D-7 통일 | 🔨 구현됨, `feat/next-phase1a` **배포 대기** |
+| 토론모임 환불 7/3일, D-7 통일 | ✅ **배포됨** (2026-08-21 머지) |
