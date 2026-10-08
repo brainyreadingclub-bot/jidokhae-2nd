@@ -101,7 +101,11 @@ export default async function MyRegistrationContent({
           <summary className="cursor-pointer list-none text-xs font-bold text-neutral-400 tracking-tight">
             지난 내역 {past.length}건 ▸
           </summary>
-          <div className="mt-3 flex max-h-[420px] flex-col gap-3 overflow-y-auto pr-1">
+          {/* 🔴 세로 flex를 쓰지 않는다. 카드 뿌리(RegistrationCard의 Link)가
+              `overflow-hidden`이라 자동 최소 높이(min-height:auto)가 0으로 풀린다
+              → 높이가 420px로 묶인 세로 flex 안에서 카드가 테두리만 남기고
+              전부 눌렸다(prod 실측 1.3px). 블록 배치 + space-y로 간격만 준다 */}
+          <div className="mt-3 max-h-[420px] space-y-3 overflow-y-auto pr-1">
             {past.map((reg) => (
               <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} />
             ))}
