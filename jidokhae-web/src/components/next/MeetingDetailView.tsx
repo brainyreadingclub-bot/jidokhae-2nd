@@ -270,6 +270,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
           depositorName={data.depositorName}
           skin="toss"
           listHref="/meet"
+          regularListHref={data.regularListHref}
         />
       )}
     </div>

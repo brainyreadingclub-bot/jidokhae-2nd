@@ -96,6 +96,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         bankAccount={d.bankAccount}
         bankHolder={d.bankHolder}
         depositorName={d.depositorName}
+        regularListHref={d.regularListHref}
       />
 
       {d.isEditorOrAdmin && (

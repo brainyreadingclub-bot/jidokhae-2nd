@@ -23,6 +23,8 @@ export type TalkData = {
     applied: boolean
     /** 본인이 대기 중 — CTA 대신 대기 안내 (자리 확정 아님) */
     waitlisted: boolean
+    /** 참여 자격 미충족 — 신청 버튼 자리만 바뀐다. 포스터·책·발제문은 그대로 다 보인다 */
+    locked: boolean
     isToday: boolean
     /** 연결된 책 (없으면 제목 텍스트 폴백) */
     thumbnail: string | null
@@ -101,8 +103,9 @@ export default function TalkView({ data }: { data: TalkData }) {
             </p>
           </div>
 
-          {/* 진행 프로그레스 — 부담 노출 (2026-08-14 결정) */}
-          {discussion.progress && discussion.progress.total > 0 && (
+          {/* 진행 프로그레스 — 부담 노출 (2026-08-14 결정).
+              미자격자에게는 그리지 않는다: 참여할 수 없는 사람에게 보이면 부담이 아니라 소외가 된다 */}
+          {!discussion.locked && discussion.progress && discussion.progress.total > 0 && (
             <div className="mt-4 rounded-[15px] bg-tg-100 px-4 py-3">
               <div className="flex justify-between text-[11.5px] font-bold">
                 <span className="text-brand-deep">
@@ -123,11 +126,25 @@ export default function TalkView({ data }: { data: TalkData }) {
             </div>
           )}
 
-          {/* 신청 CTA — 열림 + 미신청 + 대기 아님일 때만. 상세는 모임 탭 하위 */}
-          {discussion.open && !discussion.applied && !discussion.waitlisted && (
+          {/* 신청 CTA — 열림 + 미신청 + 대기 아님 + 자격 있음일 때만. 상세는 모임 탭 하위 */}
+          {discussion.open && !discussion.applied && !discussion.waitlisted && !discussion.locked && (
             <BtnSoft href={`/meet/${discussion.id}`}>
               신청하기 · {formatMeetingFee(discussion.fee)}
             </BtnSoft>
+          )}
+
+          {/* 자격 잠금 — 같은 자리에 같은 크기로. 비활성 회색 버튼을 두면 벽이 되고,
+              갈 곳이 있는 버튼을 두면 문이 된다. 두 번째 줄이 막다른 길을 막는다 */}
+          {discussion.open && !discussion.applied && !discussion.waitlisted && discussion.locked && (
+            <>
+              <div className="mt-5 text-center">
+                <p className="text-[13.5px] font-bold text-tg-800">
+                  정기모임에 한 번 다녀오면 신청할 수 있어요
+                </p>
+                <p className="mt-1 text-xs text-tg-600">발제문은 지금도 읽을 수 있어요</p>
+              </div>
+              <BtnSoft href="/meet?from=lock">다가오는 정기모임 보기</BtnSoft>
+            </>
           )}
 
           {/* 대기 중 안내 — 신청 버튼 재노출 방지 */}

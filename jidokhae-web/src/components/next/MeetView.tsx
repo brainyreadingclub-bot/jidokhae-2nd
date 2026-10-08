@@ -31,6 +31,8 @@ export type MeetData = {
     /** 연결된 책 (2026-08-18 표지 배치 — 토론은 표지가 얼굴, 56×84) */
     thumbnail: string | null
     authors: string | null
+    /** 참여 자격 미충족 — 카드는 그대로 두고 맨 아래 한 줄만 붙인다 */
+    locked: boolean
   } | null
 }
 
@@ -41,7 +43,14 @@ function dayParts(date: string): { day: number; weekday: string } {
   return { day: d.getDate(), weekday: WEEKDAY[d.getDay()] }
 }
 
-export default function MeetView({ data }: { data: MeetData }) {
+export default function MeetView({
+  data,
+  showLockContext = false,
+}: {
+  data: MeetData
+  /** 잠금 안내에서 넘어왔을 때만 — 도착한 사람이 왜 여기 왔는지 잊지 않게 */
+  showLockContext?: boolean
+}) {
   const { mine, regular, discussion } = data
 
   return (
@@ -51,6 +60,14 @@ export default function MeetView({ data }: { data: MeetData }) {
         <br />
         어디서 볼까요
       </h1>
+
+      {/* 도착 스트립 — 브랜드 그린을 쓰지 않는다. 연그린은 "내가 신청한 것"의 색이라
+          여기 쓰면 신청한 줄 안다. 자격이 생기면 스스로 사라지므로 닫기 버튼도 없다 */}
+      {showLockContext && (
+        <p className="mt-3.5 rounded-[12px] bg-tg-100 px-3.5 py-2.5 text-xs text-tg-700">
+          정기모임에 한 번 다녀오면 토론모임 신청이 열려요
+        </p>
+      )}
 
       {/* 내 신청 스트립 */}
       {mine && (
@@ -136,7 +153,13 @@ export default function MeetView({ data }: { data: MeetData }) {
               />
             )}
             <span className="min-w-0 flex-1">
-              <span className="block text-[10.5px] font-extrabold text-brand">
+              {/* 미자격자에게 날짜 줄이 그린이 아니다 — 그린은 "신청이 열려 있다"는 신호다.
+                  그 한 가지와 아래 한 줄 말고는 자격자 카드와 전부 같다 (흐리기·자물쇠 금지) */}
+              <span
+                className={`block text-[10.5px] font-extrabold ${
+                  discussion.locked ? 'text-tg-500' : 'text-brand'
+                }`}
+              >
                 {formatKoreanDate(discussion.date)} {formatKoreanTime(discussion.time)}
                 {!discussion.open && ' · 신청 마감'}
               </span>
@@ -149,6 +172,11 @@ export default function MeetView({ data }: { data: MeetData }) {
             </span>
             <Chevron />
           </Link>
+          {discussion.locked && (
+            <p className="mt-3 border-t border-tg-100 pt-3 text-xs text-tg-600">
+              정기모임에 한 번 다녀오면 신청할 수 있어요
+            </p>
+          )}
         </BoxWhite>
       ) : (
         <p className="mt-2 rounded-[14px] bg-tg-50 p-4 text-center text-xs text-tg-600">

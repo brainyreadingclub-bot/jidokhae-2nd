@@ -4,6 +4,7 @@ import { getUser } from '@/lib/auth'
 import { getKSTToday } from '@/lib/kst'
 import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
+import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
 import TalkView, { type TalkData } from '@/components/next/TalkView'
 import type { Meeting } from '@/types/meeting'
 
@@ -87,6 +88,14 @@ export default async function NextTalkPage() {
       }
     }
 
+    const applied = canWriteAnswer(myStatus)
+
+    // 자격 미충족 — 신청 CTA 자리에 안내 + 정기모임으로 가는 길을 둔다.
+    // 발제문 읽기는 자격과 무관하게 열려 있다(`canWriteAnswer`가 쓰기만 막는다) —
+    // 그래서 "발제문은 지금도 읽을 수 있어요"는 약속이 아니라 사실이다
+    const locked =
+      !applied && !waitlisted && user ? !(await canApplyToDiscussion(user.id)) : false
+
     discussion = {
       id: d.id,
       title: d.title,
@@ -95,8 +104,9 @@ export default async function NextTalkPage() {
       venueName: d.location,
       fee: d.fee,
       open: isDiscussionApplyOpen(d.date, kstToday),
-      applied: canWriteAnswer(myStatus),
+      applied,
       waitlisted,
+      locked,
       isToday: d.date === kstToday,
       thumbnail: d.books?.thumbnail ?? null,
       authors: d.books?.authors ?? null,
@@ -104,12 +114,24 @@ export default async function NextTalkPage() {
     }
   }
 
+  // 격리 플래그 OFF — 미참여자에게 이야기 탭을 빈 상태로 둔다(목록 노출 차단).
+  // 🔴 이미 신청한 사람(confirmed·pending_transfer)과 대기자에게는 그대로 보인다.
+  //    자기가 쓴 답변이 없어진 것처럼 보이면 안 된다 — 데이터도 지우지 않는다.
+  //    탭 자체는 남긴다(5탭 레이아웃이 흔들리지 않게)
+  const discussionEnabled = await isDiscussionMeetingEnabled()
+  const isParticipant = discussion?.applied === true || discussion?.waitlisted === true
+  const hideDiscussion = !discussionEnabled && !isParticipant
+  if (hideDiscussion) {
+    discussion = null
+    topics = []
+  }
+
   // 지난 토론 — 공동 기록: 순번(전체 히스토리 기준) + 참여·발제·답변 흔적
   type PastRow = { id: string; title: string; date: string; books: { thumbnail: string | null } | null }
   const pastMeetings = (pastRows ?? []) as unknown as PastRow[]
   let past: TalkData['past'] = []
 
-  if (pastMeetings.length > 0) {
+  if (pastMeetings.length > 0 && !hideDiscussion) {
     const admin = createServiceClient()
     const pastIds = pastMeetings.map((p) => p.id)
 

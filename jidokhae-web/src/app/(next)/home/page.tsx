@@ -5,9 +5,9 @@ import { getKSTToday, getDaysUntil } from '@/lib/kst'
 import { listAppNotifications } from '@/lib/app-notifications'
 import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
+import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
 import HomeView, { type HomeData } from '@/components/next/HomeView'
 import WhatsNewSheet from '@/components/next/WhatsNewSheet'
-import { isCurator } from '@/lib/curator'
 import type { Meeting } from '@/types/meeting'
 
 /** 자리를 차지하고 있는(= 새로 신청할 수 없는) status */
@@ -115,8 +115,19 @@ export default async function NextHomePage() {
 
   // ④ 토론 홍보 — 미신청 + (열림이거나 마감 후 문구 전환)
   const discussion = upcoming.find((m) => m.meeting_type === 'discussion')
+
+  // 격리 플래그 OFF면 홍보를 내린다 — "새로 들어오는 것만 막는다"의 홈 쪽 몫.
+  // ② 내 모임 스트립은 플래그와 무관하게 위에서 그대로 렌더된다(결제한 모임은 안 숨긴다)
+  const discussionEnabled = discussion ? await isDiscussionMeetingEnabled() : false
+
+  // 자격 판정 본체가 들어왔다 — `firstTime` 어림짐작을 실제 판정으로 바꾼다.
+  // 카드를 숨기지는 않는다(블라인드 금지). 라벨만 바뀌고, CTA는 「발제문 먼저 읽어보기」라
+  // 자격이 없어도 할 수 있는 일을 가리킨다
+  const promoLocked =
+    discussion && discussionEnabled && user ? !(await canApplyToDiscussion(user.id)) : false
+
   const promo: HomeData['promo'] =
-    discussion && !myRegMap.has(discussion.id)
+    discussion && discussionEnabled && !myRegMap.has(discussion.id)
       ? {
           meetingId: discussion.id,
           title: discussion.title,
@@ -124,9 +135,7 @@ export default async function NextHomePage() {
           time: discussion.time,
           venueName: discussion.location ?? '',
           open: isDiscussionApplyOpen(discussion.date, kstToday),
-          // 신청 이력 0건 = 정기 1회 이상(2026-08-22)을 채웠을 수 없다. 큐레이터는 우회 통과라 제외.
-          // ⚠️ 자격 판정 본체(A4)는 아직 없다 — 확실히 미자격인 집합에만 라벨을 붙인다.
-          locked: firstTime && !(profile && isCurator(profile)),
+          locked: promoLocked,
           thumbnail: discussion.books?.thumbnail ?? null,
           authors: discussion.books?.authors ?? null,
         }

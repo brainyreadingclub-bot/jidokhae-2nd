@@ -16,11 +16,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const supabase = await createClient()
   const { data: meeting } = await supabase
     .from('meetings')
-    .select('title, date, time, location, fee')
+    .select('title, date, time, location, fee, meeting_type')
     .eq('id', id)
     .single()
 
-  if (!meeting) {
+  // 토론모임은 공개 상세가 404다 — 제목·장소가 OG 메타로 새 나가지 않게 여기서도 막는다
+  if (!meeting || meeting.meeting_type === 'discussion') {
     return { title: '지독해 - 독서모임' }
   }
 
@@ -46,7 +47,7 @@ export default async function PublicMeetingDetailPage({ params }: Props) {
   // 제외 (Phase 3 M7 Step 2.5, 검토문서 §4 커밋 4)
   const { data: meeting, error: meetingError } = await supabase
     .from('meetings')
-    .select('id, title, description, date, time, location, venue_id, capacity, fee, status, region, is_featured, created_at, updated_at')
+    .select('id, title, description, date, time, location, venue_id, capacity, fee, status, meeting_type, region, is_featured, created_at, updated_at')
     .eq('id', id)
     .single()
 
@@ -57,6 +58,13 @@ export default async function PublicMeetingDetailPage({ params }: Props) {
   const typedMeeting = meeting as Meeting | null
 
   if (!typedMeeting || typedMeeting.status === 'deleted' || typedMeeting.status === 'deleting') {
+    notFound()
+  }
+
+  // 🔴 토론모임은 비로그인 공개 상세에도 **플래그와 무관하게** 노출하지 않는다 (목록과 같은 근거).
+  // 로그인 회원의 `/meet/[id]`·`/meetings/[id]`는 살려둔다 — 이미 신청한 사람이 자기 신청을
+  // 못 보면 안 되고, 미자격자에게도 블라인드는 금지다(보이되 신청만 잠근다)
+  if (typedMeeting.meeting_type === 'discussion') {
     notFound()
   }
 

@@ -224,6 +224,11 @@ export type ButtonState =
   | { type: 'pending_transfer' }
   // 토론모임 D-7 신청 마감 (2026-08-17 결정) — 마감 후 신청·대기 모두 차단
   | { type: 'apply_closed' }
+  // 토론모임 참여 자격 미충족 (2026-08-14·08-22 결정) — 비활성 버튼이 아니라 "갈 곳이 있는" 버튼.
+  // 벽이 아니라 문으로 만든다. 모임 자체는 보인다 (블라인드 금지)
+  | { type: 'discussion_locked' }
+  // 토론모임 격리 플래그 OFF — 새 신청만 막는다. 취소·환불은 이 상태로 오지 않는다
+  | { type: 'discussion_paused' }
 
 /** Computes the action button state for a meeting detail page (PRD §6-2 + Phase 2-2 대기 + 계좌이체 브릿지) */
 export function getButtonState(

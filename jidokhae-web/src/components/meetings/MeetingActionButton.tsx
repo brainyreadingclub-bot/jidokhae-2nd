@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import * as PortOne from '@portone/browser-sdk/v2'
 import type { ButtonState } from '@/lib/kst'
@@ -49,6 +50,8 @@ type Props = {
   listHref?: string
   /** 주 버튼 문구 교체 (신청 확인 화면의 "이대로 신청하기 · 12,000") */
   registerLabel?: string
+  /** 토론모임 자격 잠금 시 보낼 곳 (next_ui ON이면 /meet, OFF면 /). `loadMeetingDetail`이 계산한다 */
+  regularListHref?: string
 }
 
 type CancelPhase = 'idle' | 'info' | 'confirm' | 'processing' | 'complete'
@@ -82,6 +85,7 @@ export default function MeetingActionButton({
   skin = 'legacy',
   listHref = '/',
   registerLabel,
+  regularListHref = '/',
 }: Props) {
   // 결제 처리에 사용할 실제 금액 — 미지정 시 정가 fallback
   const effectiveFee = displayFee ?? meetingFee
@@ -287,6 +291,8 @@ export default function MeetingActionButton({
     (buttonState.type === 'register') ||
     (buttonState.type === 'full') ||
     (buttonState.type === 'apply_closed') ||
+    (buttonState.type === 'discussion_locked') ||
+    (buttonState.type === 'discussion_paused') ||
     (buttonState.type === 'cancel' && cancelPhase === 'idle') ||
     (buttonState.type === 'join_waitlist') ||
     (buttonState.type === 'waitlist_cancel' && waitlistCancelPhase === 'idle') ||
@@ -324,6 +330,29 @@ export default function MeetingActionButton({
           {buttonState.type === 'apply_closed' && (
             <button disabled className={s.btnDisabled}>
               신청 마감 · 모임 7일 전까지 신청할 수 있어요
+            </button>
+          )}
+
+          {/* 토론모임 자격 잠금 — 회색 비활성이 아니라 **갈 곳이 있는** 버튼.
+              회색은 "아무도 할 수 있는 게 없다"는 뜻이고, 여기는 할 수 있는 일이 있다.
+              주 버튼 색(그린/브랜드)은 이 화면에서 결제로 가는 색이라 쓰지 않는다. */}
+          {buttonState.type === 'discussion_locked' && (
+            <div>
+              <Link
+                href={regularListHref}
+                className={`flex items-center justify-center ${s.btnGhost}`}
+                style={s.btnGhostStyle}
+              >
+                다가오는 정기모임 보기
+              </Link>
+              <p className={s.note}>정기모임에 한 번 다녀오면 신청할 수 있어요</p>
+            </div>
+          )}
+
+          {/* 격리 플래그 OFF — 새 신청만 막는다. 취소·환불 상태는 이 분기로 오지 않는다 */}
+          {buttonState.type === 'discussion_paused' && (
+            <button disabled className={s.btnDisabled}>
+              지금은 신청을 받고 있지 않아요
             </button>
           )}
 
