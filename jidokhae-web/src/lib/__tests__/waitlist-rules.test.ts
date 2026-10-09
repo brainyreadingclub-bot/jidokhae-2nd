@@ -14,6 +14,15 @@ describe('isWaitlistCardOnly — 대기 신청은 카드만 (2026-10-09)', () =>
     expect(isWaitlistCardOnly(true, 0)).toBe(false)
   })
 
+  it('is_free 회원의 유료 대기 → 계좌이체 허용 (결정 A)', () => {
+    expect(isWaitlistCardOnly(true, 10000, true)).toBe(false)
+    expect(isWaitlistCardOnly(true, 5000, true)).toBe(false)
+  })
+
+  it('is_free가 아닌 회원의 유료 대기 → 감춘다 (명시 false)', () => {
+    expect(isWaitlistCardOnly(true, 10000, false)).toBe(true)
+  })
+
   it('대기가 아니면 금액과 무관하게 감추지 않는다', () => {
     expect(isWaitlistCardOnly(false, 10000)).toBe(false)
     expect(isWaitlistCardOnly(false, 0)).toBe(false)
@@ -30,6 +39,11 @@ describe('resolvePromotedConfirmed — 승격 알림톡 판정', () => {
     expect(resolvePromotedConfirmed(undefined, 'card')).toBe(true)
     expect(resolvePromotedConfirmed(undefined, null)).toBe(true)
     expect(resolvePromotedConfirmed(undefined, 'transfer')).toBe(false)
+  })
+
+  it('is_free 회원의 유료 계좌이체 승격 → RPC가 pending_transfer(false)를 주면 알림톡 없음', () => {
+    // 승격은 그 건의 금액으로만 가른다 — is_free라도 금액이 걸리면 pending_transfer (결정 A)
+    expect(resolvePromotedConfirmed(false, 'transfer')).toBe(false)
   })
 
   it('null도 옛 판정으로 떨어진다', () => {

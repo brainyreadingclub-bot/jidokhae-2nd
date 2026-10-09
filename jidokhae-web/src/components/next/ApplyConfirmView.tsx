@@ -36,9 +36,10 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
   const hasBank = Boolean(data.bankName && data.bankAccount && data.bankHolder)
 
   // 대기 신청은 카드만 받는다 (2026-10-09 대표님 결정). 0원 건은 예외 — 받을 돈이 없다.
+  // 본인이 is_free여도 예외 (결정 A).
   // `displayFee`를 보는 이유는 이 숫자가 그대로 `paid_amount`가 되고
   // 서버(`register_transfer`)도 그 값으로 거절을 판정하기 때문이다.
-  const waitlistCardOnly = isWaitlistCardOnly(isWaitlist, data.displayFee)
+  const waitlistCardOnly = isWaitlistCardOnly(isWaitlist, data.displayFee, data.isFree)
 
   return (
     <div style={{ paddingBottom: 'calc(8rem + env(safe-area-inset-bottom, 0px))' }}>
@@ -97,6 +98,7 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
         meetingFee={m.fee}
         displayFee={data.displayFee}
         isStaffDiscount={data.isStaffDiscount}
+        isFree={data.isFree}
         meetingDate={m.date}
         meetingType={m.meeting_type ?? null}
         userId={data.userId}

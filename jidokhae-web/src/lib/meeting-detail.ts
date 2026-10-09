@@ -39,6 +39,11 @@ export type MeetingDetailData = {
   /** 자격자(admin/editor/staff) + 슬롯 여석이면 할인가, 그 외 정가 */
   displayFee: number
   isStaffDiscount: boolean
+  /**
+   * 본인이 `profiles.is_free`(입금이 없는 무료 참석자)인지. 유료 대기에서 계좌이체 선택지를
+   * 보여줄지 가르는 데만 쓴다(결정 A, 2026-10-09). 진짜 판정은 `register_transfer` RPC
+   */
+  isFree: boolean
   /** 정원을 차지한 본인(confirmed 또는 pending_transfer) */
   isBookedSelf: boolean
   hasConfirmed: boolean
@@ -90,7 +95,7 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
           .maybeSingle()
       : { data: null }
 
-  const [countsResult, myRegResult, myWaitlistResult, pendingResult, participantsResult, settings] = await Promise.all([
+  const [countsResult, myRegResult, myWaitlistResult, pendingResult, participantsResult, settings, freeResult] = await Promise.all([
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
@@ -115,6 +120,9 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
       .limit(1),
     supabase.rpc('get_meeting_participant_nicknames', { p_meeting_id: id }),
     getSiteSettings(),
+    // is_free는 `getProfile`에 넣지 않고 여기서 따로 읽는다 — `getProfile`은 20여 곳이 쓰고
+    // 실패하면 throw한다. 이 값은 겉막이용이라 못 읽으면 false(=계좌이체 대기 감춤)로 떨어진다.
+    supabase.from('profiles').select('is_free').eq('id', user.id).maybeSingle(),
   ])
 
   if (countsResult.error) {
@@ -218,6 +226,7 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
     buttonState,
     displayFee,
     isStaffDiscount: isDiscounted,
+    isFree: (freeResult.data as { is_free: boolean | null } | null)?.is_free === true,
     isBookedSelf,
     hasConfirmed,
     hasWaitlisted,

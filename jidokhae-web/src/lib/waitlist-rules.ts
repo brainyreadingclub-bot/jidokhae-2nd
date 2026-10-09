@@ -12,12 +12,22 @@ import { paymentStatusLabel } from '@/lib/registration-status'
 /**
  * 계좌이체 선택지를 감춰야 하는 대기 신청인가.
  *
+ * 예외 둘 — 낼 돈이 0원이거나, 본인이 `is_free`(입금 자체가 없는 무료 참석자 —
+ * 2026-10-09 밤 결정 A). 운영자의 유료 모임 신청 건은 0원인 적이 없어(정가 또는 스텝 반값)
+ * 0원 예외만으로는 is_free 운영자의 계좌이체 대기가 막힌다.
+ * ⚠️ is_free는 **대기 허용에만** 쓴다. 승격은 그 건의 금액으로만 가른다 —
+ * is_free라도 금액이 걸린 건은 `pending_transfer`로 올라간다(migration-waitlist-card-only.sql).
+ *
  * 🔴 금액은 정가가 아니라 **실제로 낼 돈**(`displayFee`/`effectiveFee`)을 넘긴다 —
  * 그 수가 그대로 `paid_amount`가 되고 RPC도 `paid_amount`로 거절한다.
  * 두 곳이 같은 수를 봐야 화면과 서버가 갈리지 않는다.
  */
-export function isWaitlistCardOnly(isWaitlist: boolean, paidAmount: number): boolean {
-  return isWaitlist && paidAmount > 0
+export function isWaitlistCardOnly(
+  isWaitlist: boolean,
+  paidAmount: number,
+  isFree: boolean = false,
+): boolean {
+  return isWaitlist && paidAmount > 0 && !isFree
 }
 
 /**
