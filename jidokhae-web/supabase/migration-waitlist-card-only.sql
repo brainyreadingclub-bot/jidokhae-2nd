@@ -57,6 +57,8 @@
 --     PUBLIC·anon·authenticated·service_role 전부 EXECUTE. 새로 만든 함수는 Postgres 기본
 --     (PUBLIC EXECUTE) + Supabase 기본 권한(anon·authenticated·service_role)을 다시 받으므로
 --     **같은 값으로 돌아와야 정상이다.** 다르면 손으로 맞춘다.
+--   🔴 2026-10-09 22시경 이후로는 기대값이 다르다 — `migration-lock-definer-rpcs.sql`이
+--     네 함수를 {postgres=X, service_role=X}로 잠갔다. 이 파일 끝의 REVOKE가 그 잠금을 지킨다.
 --   실행 전·후에 같은 조회로 권한이 같은지 대조한다:
 --     select p.proname, p.proacl from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 --     where n.nspname = 'public' and p.proname in ('register_transfer','promote_next_waitlisted');
@@ -251,6 +253,9 @@ $$;
 
 -- DROP으로 사라진 권한을 다시 준다 (위 머리말 「권한」). 앱은 service_role로만 부른다.
 GRANT EXECUTE ON FUNCTION public.promote_next_waitlisted(UUID) TO service_role;
+-- 🔴 DROP+CREATE는 Supabase 기본 권한(PUBLIC·anon·authenticated)으로 다시 연다 — 이 파일을 다시 돌리면
+--    2026-10-09 잠금(migration-lock-definer-rpcs.sql)이 풀린다. 그래서 아래 REVOKE를 반드시 같이 돈다.
+REVOKE EXECUTE ON FUNCTION public.promote_next_waitlisted(UUID) FROM PUBLIC, anon, authenticated;
 
 COMMIT;
 

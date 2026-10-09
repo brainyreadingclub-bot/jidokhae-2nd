@@ -161,5 +161,8 @@ $$;
 
 -- DROP으로 사라진 권한을 다시 준다 (위 머리말 「권한」). 앱은 service_role로만 부른다.
 GRANT EXECUTE ON FUNCTION public.promote_next_waitlisted(UUID) TO service_role;
+-- 🔴 DROP+CREATE는 Supabase 기본 권한(PUBLIC·anon·authenticated)으로 다시 연다 — 이 파일을 다시 돌리면
+--    2026-10-09 잠금(migration-lock-definer-rpcs.sql)이 풀린다. 그래서 아래 REVOKE를 반드시 같이 돈다.
+REVOKE EXECUTE ON FUNCTION public.promote_next_waitlisted(UUID) FROM PUBLIC, anon, authenticated;
 
 COMMIT;
