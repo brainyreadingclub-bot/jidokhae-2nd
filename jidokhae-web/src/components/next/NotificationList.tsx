@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { trackEvent } from '@/lib/analytics'
+import { renderTopicPosted } from '@/lib/topic-notification'
 import type { AppNotification } from '@/types/app-notification'
 
 /**
@@ -95,12 +96,8 @@ function renderNotification(
       }
     }
     case 'topic_posted':
-      return {
-        emoji: '📖',
-        title: '새 발제문이 올라왔어요',
-        sub: p.title ? `발제 ${p.topic_no ?? ''} · ${p.title}` : undefined,
-        href: '/talk',
-      }
+      // 옛 payload(발제 1건 = 알림 1건)와 새 payload(공개 1번 = 알림 1건)를 둘 다 읽는다
+      return { emoji: '📖', ...renderTopicPosted(p), href: '/talk' }
     case 'flash_opened':
       return { emoji: '⚡', title: '새 번개가 열렸어요', href: '/meet' }
     case 'flash_cancelled':
