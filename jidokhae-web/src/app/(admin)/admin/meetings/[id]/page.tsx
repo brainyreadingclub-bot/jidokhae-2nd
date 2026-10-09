@@ -46,7 +46,7 @@ export default async function AdminMeetingDetailPage({ params }: Props) {
   const registrations = (regsResult.data ?? []) as RegistrationWithProfile[]
 
   return (
-    <div className="px-5 pt-6 pb-10 lg:px-10 lg:pt-10">
+    <div>
       {/* Breadcrumb */}
       <Link
         href="/admin/meetings"

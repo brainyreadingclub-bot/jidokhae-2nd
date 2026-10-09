@@ -34,7 +34,7 @@ export default async function AdminNotificationsPage() {
   ]
 
   return (
-    <div className="px-5 pt-6 pb-10 lg:px-10 lg:pt-10">
+    <div>
       <div className="mb-6">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-500">
           시스템

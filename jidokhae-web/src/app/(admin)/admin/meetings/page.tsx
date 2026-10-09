@@ -11,7 +11,7 @@ export default async function AdminMeetingsPage({ searchParams }: Props) {
   const { filter = 'active', region = 'all' } = await searchParams
 
   return (
-    <div className="px-5 pt-6 pb-10 lg:px-10 lg:pt-10">
+    <div>
       <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-500">
