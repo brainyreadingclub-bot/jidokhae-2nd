@@ -119,25 +119,21 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 **로드맵보다 먼저 진행된 것** — 토론모임 개편 + 2535 리디자인.
 - 2535 잉크그린 리디자인 ✅ (PR #39, prod 배포)
 - 토론모임 0조각 — `meetings.meeting_type` 정기/토론 구분 ✅ (PR #41, 회원 화면 영향 0)
-- 토론모임 1조각 — **서재 + 물어보기(책 담기) + 응답률 측정** ✅ 배포 (PR #42, `dcc61d5`). **단 `site_settings.library_enabled` 플래그 OFF → 회원 노출 0**
+- 토론모임 1조각 — **서재 + 물어보기(책 담기) + 응답률 측정** ✅ 배포 (PR #42, `dcc61d5`). 회원 노출은 `site_settings.library_enabled`가 정한다 — **값은 여기 적지 않는다, `select key,value from site_settings`로 센다**
 - 물어보기 응답률 계측 버그 수정 + 지표 재정의 ✅ (PR #43, `1f9ffaa`, 7/24 prod)
-- **전면개편 1단계 (5탭 next_ui × 토스 스킨 + 발제 스레드)** ✅ 머지 (2026-08-17, PR #54 `b57aee0` + #55 `42ae701`). **`next_ui` 플래그 OFF — 회원 노출 0.** prod SQL 실행 완료(발제 5테이블 + 스텝할인 토론 제외 RPC 가드). 스텝 할인 = 정기모임 한정 확정
+- **전면개편 1단계 (5탭 next_ui × 토스 스킨 + 발제 스레드)** ✅ 머지 (2026-08-17, PR #54 `b57aee0` + #55 `42ae701`). 회원 노출은 `next_ui`(5탭)·`discussion_meeting_enabled`(토론모임) 플래그가 정한다 — 값은 `site_settings`에서 센다. prod SQL 실행 완료(발제 5테이블 + 스텝할인 토론 제외 RPC 가드). 스텝 할인 = 정기모임 한정 확정
 - **전면개편 마감 정비 ✅ (2026-08-20~21):** 전 흐름 스윕 크리티컬 5종(PR #61 — 온보딩 게이트·D-7 서버 강제·대기자 신호·웹훅 hex 검증) + 나 탭 지역 라벨 가드(PR #62) + **토론모임 환불 7/3 배선**(PR #64 — `calculateRefundByType` 단일 진입점, 만들어두고 안 부르던 누락을 교차 세션 스캔이 발견). 프리뷰·프로드 클릭 검증 통과
 - **알림톡 심사는 전부 끝났다** — V2 6종 ✅ APPROVED(8/17), **BOOK_ASK도 ✅ APPROVED(8/19)**. 외부 관문은 더 남아 있지 않다
 - 서재/물어보기·발제 스레드·`(next)` 라우트는 `jidokhae-web/CLAUDE.md`에 반영됨 (2026-08-21)
 
-### 켜는 날 — 절차 게이트는 전부 닫혔다 (2026-09-10 종료)
+### 켜는 날 — ✅ 지난 일이다 (2026-10-07 23:15에 켰다)
 
-**날짜 = 2026-10-11(일).** 🚫 **예고는 하지 않는다**(2026-09-23 대표님 결정 — 문구 4종·게시 일정 전부 취소).
+예정일(10-11)보다 앞당겨 켰고, 머지 순서 제약(`#50 → #49 → #53`)·env 교체 뒤 재배포 금지도 **그날 전부 지켜진 채 끝났다.** 할 일이 아니라 기록이다. 경위는 켜는 날 런북(`검토문서/`)과 `DECISIONS.md`에 있다. 🚫 예고는 하지 않는다는 결정(2026-09-23)은 그대로다.
 
-당일 절차의 정본은 **켜는 날 런북**(`검토문서/`), 결정 기록은 **`DECISIONS.md`(2026-08-22 세 행)**다. 여기 있던 경위 52줄은 그 두 곳과 겹쳐서 걷어냈다. **남은 할 일은 `docs/agent-team/2026-09-19-켜기전-전체목록.md`가 센다.**
-
-🔴 **여기 남기는 이유가 있는 것만 넷**
+🔴 **그날에서 남기는 교훈 둘** (다음 출시에도 쓰인다)
 
 | | 왜 남기나 |
 |---|---|
-| **머지 순서 `#50 → #49 → #53`은 권고가 아니라 제약** | `#53`이 `#49` 위에 얹힌 스택이다. 순서를 어기면 환영 알림톡과 물어보기 크론이 **한 커밋에 묶여** 롤백 단위를 잃는다 |
-| **env 교체 → 머지 전까지 재배포 금지** | 위험한 건 env 교체가 아니라 **그 뒤의 재배포**다. 반대로 적힌 경고문 때문에 한 번 뒤집혔다 |
 | **명령이 실행되기 전까지 닫힌 것이 아니다** | 결정이 난 날과 리모트가 바뀐 날이 **18일** 벌어졌다. 이 문장이 없었으면 완료로 착각했을 것이다 |
 | **문서에 SHA·개수를 박으면 낡는다** | `origin/main` SHA를 박아둔 문서 여럿이 동시에 틀렸다. **세는 법을 적지 값을 적지 않는다** |
 
@@ -228,7 +224,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 | Payment mode | redirect. PortOne V2는 결제창에서 완료 시 **이미 승인된 상태**로 redirect → redirect 핸들러/웹훅은 `getPayment()`로 `status === 'PAID'` 검증만 수행 (토스처럼 confirmPayment로 돈을 이동시키지 않음) |
 | Webhook backup | PortOne Webhook (`/api/webhooks/portone`, `PORTONE_WEBHOOK_SECRET` 서명 검증) as backup when frontend redirect fails. 레거시 `/api/webhooks/tosspayments`는 미사용 잔존. 🔴 **이 백업은 M4 최초 구현부터 2026-09-11까지 한 번도 작동한 적이 없었다** — 아래 「결제 안전망」 참조 |
 | 🔴 **결제 안전망** (2026-09-11) | **`paymentId` prefix로 UUID를 되찾을 때 `.like()`를 쓰지 않는다.** `meetings.id`·`profiles.id`는 `uuid`라 Postgres에 `uuid LIKE text` 연산자가 없다(`42883`). **구간 비교**(`.gte(lo).lte(hi)`, `lib/payment-id.ts`의 `uuidPrefixRange`)를 쓴다 — uuid 정렬이 16바이트 `memcmp`라 앞 8자가 같은 집합과 구간이 정확히 일치하고 PK 인덱스도 탄다. 🔴 **조회 실패(`query_failed`)와 대상 없음(`not_found`)을 절대 합치지 않는다** — 합쳐서 200으로 덮은 것이 사고를 몇 달간 숨겼다. `classifyIdLookup`이 4갈래(resolved/query_failed/not_found/ambiguous)로 가르고, 실패는 **500으로 시끄럽게** 끝낸다. prefix 충돌 감지를 위해 `.limit(2)`(1이면 충돌을 모른 채 **남의 명의로 신청이 만들어진다**). 실패는 `payment_failures`에 남긴다(`lib/payment-failure.ts` — **절대 throw 안 함**, 호출부는 `after()`, 표가 없어도 동작해 **배포 순서를 안 탄다**). ✅ **켜져 있다** — PR #67 머지 + `payment_failures` **prod 실재 확인**(2026-10-06 실조회). 🔴 **그전까지 이 자리는 *"PR #67로 열려 있다 · 미머지 · 마이그레이션 미실행 · prod에서 안전망이 꺼져 있다"*로 2주간 서 있었다** — 셋 다 사실이 아니었고, **매 세션 주입되는 문서가 돈 안전장치를 꺼져 있다고 말했다.** 상태를 손으로 적으면 이렇게 된다. 앞으로 이 줄의 상태를 믿지 말고 **`gh pr list`(열린 PR)와 `information_schema.tables`(표 실재)로 센다.** 그 위에 PR #68(자기 결제를 중복으로 오판해 환불하던 자리) · #69(막아낸 중복 호출 기록)가 더 얹혔다. 배경: `docs/agent-team/조사/2026-09-10-에드워드책-대기환불-누락.md` · `조사/2026-10-06-중복환불-사고.md` |
-| Bank transfer bridge | `site_settings.payment_mode` flag (`transfer_only`/`card_only`). 심사 전 계좌이체로 출시, 심사 후 카드 전환. `pending_transfer` 상태 + `payment_method` 컬럼 |
+| Bank transfer bridge | `site_settings.payment_mode` flag (`transfer_only`/`card_only`/`both`). 계좌이체로 출시했고 이후 카드가 열렸다 — **현재 값은 `site_settings`에서 센다**(여기 적지 않는다). `pending_transfer` 상태 + `payment_method` 컬럼 |
 | payment_id idempotency | API Route checks payment_id before processing — if already confirmed, returns success (no refund). 2-layer: API Route (payment_id) + DB Function (user+meeting) |
 | Refund failure safety | On refund API failure, keep `confirmed` status (never leave user with no money AND no registration) |
 | Waitlist | B안: 대기 시 미리 결제 → 승격 시 자동 확정 → 미승격 시 전날 자동 전액 환불. `confirm_registration()` RPC가 정원 초과 시 `waitlisted` INSERT |
@@ -270,14 +266,16 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 ## Working with This Repository
 
-**세션 수칙 6줄** (2026-10-09 신설 — 한 줄씩만 둔다. 겹치는 것은 참조만 건다)
+**세션 수칙** (2026-10-09 신설·합침 — 한 줄씩만 둔다. 요금제 단정 금지는 `business-numbers` 스킬, 예약 작업 0건 판정은 `post-deploy-check` 스킬로 옮겼다)
 
-- **날짜·요일·경과일은 `date`로 확인하고 `YYYY-MM-DD`로 쓴다.** "어제/오늘"이라고 쓰지 않는다.
-- **세션 시작 시 `git fetch`로 작업 폴더가 원격보다 뒤처졌는지, Vercel 연결이 `Jaeyoune's projects` 팀인지 먼저 확인한다** (공통규약 §8-1 「그 자리에서 확인한다」의 구체형).
-- **외부 계정(Vercel·Supabase 등)의 요금제·소유 상태는 지금 로그인한 계정만 보고 단정하지 않는다** — 다른 계정이 있을 수 있으니 대표님 확인을 요청한다.
-- **코드 밖 설정(결제 웹훅·로그인 리다이렉트·카카오 콜백·알림톡 버튼 링크)은 확인 못 하면 「모름」으로 남긴다** — 보고에서는 「모름」으로 쓴다. 부서 규약의 「확인 필요」와 같은 뜻.
-- **예약 작업이 「보낼 게 없어 0건」인지 「안 돌았는지」는 실행 기록으로 구분한다** — DB에 행이 없다는 것만으로는 갈라지지 않는다.
+- **날짜·요일·경과일은 `date`로 확인하고 한국시간 기준 `YYYY-MM-DD`로 쓴다.** "어제/오늘"이라고 쓰지 않는다.
+- **작업 전 `git fetch` + `git branch --show-current`로 뒤처졌는지·어느 브랜치인지, 다른 세션이 같은 곳을 쓰는지, Vercel 연결이 `Jaeyoune's projects` 팀인지 확인한다** (공통규약 §8-1의 구체형).
+- **코드 밖 설정(결제 웹훅·로그인 리다이렉트·카카오 콜백·알림톡 버튼 링크)은 확인 못 하면 「모름」으로 남긴다** — 부서 규약의 「확인 필요」와 같은 뜻.
 - **머지·배포는 한 세션에서만 한다** — 다른 세션이 같은 브랜치를 쓰고 있으면 먼저 알린다 (공통규약 §3 소유권과 짝).
+- **인수인계는 세션별 파일에 쓴다. 같이 쓰는 문서는 고치기 직전에 다시 읽고 자기 줄만 고친다** — 통째로 덮어써서 다른 세션 기록을 지운 적이 있다(2026-10-09).
+- **결정을 미루면 `docs/agent-team/결정대기.md`에 적고, 정해지면 지운다**(정해진 내용은 `DECISIONS.md`로).
+- **사람 손 없이 도는 작업(예약·자동 발송·점검 메일) 목록은 `docs/agent-team/걸어둔-자동작업.md`** — 걸거나 끄면 그 세션 안에 고친다.
+- **화면 캡처 중 크롬 창 크기를 바꾸지 않는다** — 줄인 직후 캡처가 먹통이 됐다. 폭은 페이지 안에서 맞춘다.
 
 - **Language:** All planning documents are written in Korean. Maintain Korean when editing core and roadmap documents.
 - **Core documents are authoritative:** `/core` documents define the spec. When implementing, always cross-reference these specs — do not rely on memory or summaries alone.
@@ -446,7 +444,7 @@ npm run screenshot                   # Capture UI screenshots (Playwright)
 
 ### Notification Flow (Phase 2-1)
 
-**알림톡 7종:** Solapi SDK (`src/lib/solapi.ts`) → KakaoTalk 알림톡 (아래 5종 + `book_ask` 물어보기 + `new_member_welcome` 가입 환영 — 뒤 둘은 draft PR #49·#53에 있어 아직 main에 없다)
+**알림톡 7종:** Solapi SDK (`src/lib/solapi.ts`) → KakaoTalk 알림톡 (아래 5종 + `book_ask` 물어보기 + `new_member_welcome` 가입 환영 — 뒤 둘도 2026-10-07에 main에 머지됐다)
 
 1. **신청 완료 확인** (이벤트 기반): 결제 성공 → API Route/웹훅에서 `sendRegistrationConfirmNotification()` 호출 (fire-and-forget, try-catch)
 2. **모임 전날 리마인드** (Vercel Cron): `GET /api/cron/meeting-remind` — 매일 KST 19:00 (UTC `0 10 * * *`). 내일 active 모임의 confirmed 신청자에게 발송
