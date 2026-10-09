@@ -1,4 +1,5 @@
 import BookIntro from '@/components/meetings/BookIntro'
+import { highResCoverUrl } from '@/lib/book-cover'
 
 /**
  * 토론모임 신청 상세의 책 섹션 (2026-08-18 표지 배치 확정).
@@ -21,9 +22,10 @@ export default function BookSection({ book, selectionReason }: Props) {
   return (
     <div className="mt-5">
       <div className="flex gap-4">
+        {/* src는 highResCoverUrl 경유 필수 — 생 thumbnail은 120px라 뭉개진다 (lib/book-cover.ts) */}
         {book.thumbnail ? (
           <img
-            src={book.thumbnail}
+            src={highResCoverUrl(book.thumbnail) ?? book.thumbnail}
             alt={book.title}
             width={96}
             height={144}
