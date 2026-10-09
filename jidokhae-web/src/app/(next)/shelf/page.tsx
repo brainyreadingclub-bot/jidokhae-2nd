@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { getUser } from '@/lib/auth'
 import { getMyLibrary } from '@/lib/library'
+import { highResCoverUrl } from '@/lib/book-cover'
 import { Sec } from '@/components/next/TossUI'
 import AskStripSection from '@/components/library/AskStripSection'
 import type { LibraryEntryWithBook } from '@/types/book'
@@ -13,6 +14,10 @@ import type { LibraryEntryWithBook } from '@/types/book'
  * (구 `/my#library`로 내보내던 것을 5탭 안으로 들였다 — 2026-10-07).
  * 단 **물어보기 담기는 이 화면**이다 — 아래 `AskStripSection` 주석 참조.
  * next_ui를 켜는 날 library_enabled도 함께 켠다 (스펙 §8 의존성).
+ *
+ * 🔴 표지 src는 반드시 `highResCoverUrl`을 거친다. DB에 담긴 `books.thumbnail`은
+ * 카카오가 준 120×174 리사이즈본이라 72·104px 칸을 3배 밀도 화면에서 채우려면
+ * 2.5~3배 확대가 되어 글자가 뭉개진다. 근거·실측은 `lib/book-cover.ts` 주석.
  */
 
 function sourceLabel(e: LibraryEntryWithBook): string {
@@ -26,6 +31,7 @@ export default async function ShelfPage() {
   const user = await getUser()
   const entries = user ? await getMyLibrary(user.id) : []
   const recent = entries[0] ?? null
+  const recentCover = recent ? highResCoverUrl(recent.books.thumbnail) : null
 
   return (
     <div className="pt-2">
@@ -61,9 +67,9 @@ export default async function ShelfPage() {
           {/* 가장 최근에 담은 책 — 히어로 */}
           {recent && (
             <div className="mt-5 flex items-center gap-4 rounded-[20px] bg-tg-50 p-4">
-              {recent.books.thumbnail ? (
+              {recentCover ? (
                 <img
-                  src={recent.books.thumbnail}
+                  src={recentCover}
                   alt={recent.books.title}
                   width={72}
                   height={108}
@@ -91,30 +97,35 @@ export default async function ShelfPage() {
 
           <Sec aside="담은 순">모든 책</Sec>
           <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-4">
-            {entries.map((e) => (
-              <div key={e.id}>
-                {e.books.thumbnail ? (
-                  <img
-                    src={e.books.thumbnail}
-                    alt={e.books.title}
-                    width={104}
-                    height={156}
-                    className="aspect-[2/3] w-full rounded-[6px] object-cover"
-                    style={{ boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 4px 11px rgba(25,31,40,.14)' }}
-                  />
-                ) : (
-                  <div className="flex aspect-[2/3] w-full items-center justify-center rounded-[6px] bg-tg-100 p-2 text-center text-xs font-bold text-tg-600">
+            {entries.map((e) => {
+              const cover = highResCoverUrl(e.books.thumbnail)
+              return (
+                <div key={e.id}>
+                  {cover ? (
+                    <img
+                      src={cover}
+                      alt={e.books.title}
+                      width={104}
+                      height={156}
+                      loading="lazy"
+                      decoding="async"
+                      className="aspect-[2/3] w-full rounded-[6px] object-cover"
+                      style={{ boxShadow: '0 0 0 1px rgba(0,0,0,.05), 0 4px 11px rgba(25,31,40,.14)' }}
+                    />
+                  ) : (
+                    <div className="flex aspect-[2/3] w-full items-center justify-center rounded-[6px] bg-tg-100 p-2 text-center text-xs font-bold text-tg-600">
+                      {e.books.title}
+                    </div>
+                  )}
+                  <p className="mt-1.5 truncate text-[11px] font-bold tracking-tight">
                     {e.books.title}
-                  </div>
-                )}
-                <p className="mt-1.5 truncate text-[11px] font-bold tracking-tight">
-                  {e.books.title}
-                </p>
-                <p className="truncate text-[10px] font-semibold text-tg-600">
-                  {sourceLabel(e)}
-                </p>
-              </div>
-            ))}
+                  </p>
+                  <p className="truncate text-[10px] font-semibold text-tg-600">
+                    {sourceLabel(e)}
+                  </p>
+                </div>
+              )
+            })}
           </div>
         </>
       )}

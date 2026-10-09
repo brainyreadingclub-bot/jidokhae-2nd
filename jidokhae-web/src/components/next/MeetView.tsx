@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Sec, BoxWhite, Chevron } from '@/components/next/TossUI'
 import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
+import { highResCoverUrl } from '@/lib/book-cover'
 
 /**
  * 모임 탭 표현 (전면개편 스펙 §2 — "언제 어디서 만나나?").
@@ -142,9 +143,10 @@ export default function MeetView({
       {discussion ? (
         <BoxWhite>
           <Link href="/talk" className="flex items-center gap-3.5">
+            {/* src는 highResCoverUrl 경유 필수 — 생 thumbnail은 120px라 뭉개진다 (lib/book-cover.ts) */}
             {discussion.thumbnail && (
               <img
-                src={discussion.thumbnail}
+                src={highResCoverUrl(discussion.thumbnail) ?? discussion.thumbnail}
                 alt={discussion.title}
                 width={56}
                 height={84}

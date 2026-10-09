@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Sec, BtnSoft } from '@/components/next/TossUI'
 import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
+import { highResCoverUrl } from '@/lib/book-cover'
 import type { TopicWithStats } from '@/types/discussion'
 
 /**
@@ -81,9 +82,10 @@ export default function TalkView({ data }: { data: TalkData }) {
             <p className="text-[11px] font-extrabold text-brand">
               {discussion.open ? '이달의 토론 · 신청 열림' : '이달의 토론'}
             </p>
+            {/* src는 highResCoverUrl 경유 필수 — 생 thumbnail은 120px라 뭉개진다 (lib/book-cover.ts) */}
             {discussion.thumbnail && (
               <img
-                src={discussion.thumbnail}
+                src={highResCoverUrl(discussion.thumbnail) ?? discussion.thumbnail}
                 alt={discussion.title}
                 width={132}
                 height={198}
@@ -244,10 +246,12 @@ export default function TalkView({ data }: { data: TalkData }) {
                 </p>
                 {p.thumbnail ? (
                   <img
-                    src={p.thumbnail}
+                    src={highResCoverUrl(p.thumbnail) ?? p.thumbnail}
                     alt={p.title}
                     width={96}
                     height={144}
+                    loading="lazy"
+                    decoding="async"
                     className="mt-1.5 h-[144px] w-[96px] rounded-[6px] object-cover"
                     style={{ boxShadow: '0 0 0 1px rgba(0,0,0,.06), 0 5px 14px rgba(25,31,40,.16)' }}
                   />
