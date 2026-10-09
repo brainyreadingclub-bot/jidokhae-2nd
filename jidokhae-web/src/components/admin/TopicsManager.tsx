@@ -1,31 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ModalOverlay from '@/components/ui/ModalOverlay'
 import { splitPastedTopics, isTopicIncomplete } from '@/lib/topic-paste'
 import { topicStatusLabel } from '@/lib/topic-status'
 import { topicPostedTitle } from '@/lib/topic-notification'
 import type { DiscussionTopic } from '@/types/discussion'
 
 /**
- * 발제문 관리 (2026-10-09 시안 B — `docs/설계/mockups/2026-10-09-발제문-운영자상세/B-발제문관리.html`).
- * 왼쪽 붙여넣기 → 번호별로 나눠 「작성 중」으로 저장 / 오른쪽 목록(수정·삭제) /
- * 위 막대에 상태 + 회원 화면 미리보기 + 공개하기.
+ * 발제문 관리 (2026-10-09 시안 B — `docs/설계/mockups/2026-10-09-발제문-운영자상세/`).
+ * 데스크톱(`B-발제문관리.html`): 왼쪽 붙여넣기 / 오른쪽 목록 / 위 막대에 상태 + 미리보기 + 공개하기.
+ * 폰(`B-발제문관리-폰.html`, P1~P6): 한 줄로 쌓고, **화면 아래 고정 바에 지금 할 일 하나만** —
+ *   붙여넣은 직후 「번호별로 나누기」 / 목록 「공개하기」+막힌 이유 / 고치는 중 「취소·저장」.
+ *   확인은 아래에서 올라오는 시트. 목록의 수정·삭제는 44px 「⋮」 하나.
  * 현행 카톡 형식 그대로: 번호 · 소제목 · 인용(쪽수) · 질문.
  * 권한은 서버(API)가 검사 — 큐레이터(admin·editor·is_staff).
+ *
+ * 🔴 폰 360·390에서 가로 스크롤 0이 조건이다(대표님 지시). 고정 바는 left/right 0 + 좌우 20px,
+ *    「⋮」에 음수 마진을 쓰지 않는다(오른쪽 여백이 깨졌던 원인).
  */
 
 type Props = {
   meetingId: string
   meetingTitle: string
   topics: DiscussionTopic[]
+  /** 발제별 답변 수 — 삭제 확인에서 「답변 N개도 함께 지워져요」에 쓴다(실제 값) */
+  answerCounts: Record<string, number>
   applicantCount: number
   lastPublishedLabel: string | null
 }
 
 type SplitNotice = { count: number; ignored: string[]; ids: string[]; raw: string }
-
 
 const btnLine =
   'inline-flex h-10 items-center justify-center whitespace-nowrap rounded-[var(--radius-md)] border border-surface-300 bg-white px-4 text-[13px] font-bold text-primary-700 transition-colors hover:bg-surface-100 disabled:opacity-50'
@@ -35,11 +40,19 @@ const btnSmLine =
   'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-[9px] border border-surface-300 bg-white px-3 text-xs font-bold text-primary-700 transition-colors hover:bg-surface-100 disabled:opacity-50'
 const btnSmPrimary =
   'inline-flex h-8 items-center justify-center whitespace-nowrap rounded-[9px] bg-primary-600 px-3 text-xs font-bold text-white transition-colors hover:bg-primary-700 disabled:bg-neutral-200 disabled:text-neutral-500'
+/** 폰 고정 바·시트의 큰 버튼 (52px, 엄지 자리) */
+const btnBigLine =
+  'inline-flex h-[52px] items-center justify-center whitespace-nowrap rounded-[14px] border border-surface-300 bg-white px-5 text-[15px] font-bold text-primary-700 disabled:opacity-50 lg:h-11 lg:rounded-[var(--radius-md)] lg:text-sm'
+const btnBigPrimary =
+  'inline-flex h-[52px] items-center justify-center whitespace-nowrap rounded-[14px] bg-primary-600 px-5 text-[15px] font-bold text-white disabled:bg-neutral-200 disabled:text-neutral-500 lg:h-11 lg:rounded-[var(--radius-md)] lg:text-sm'
+const btnBigDanger =
+  'inline-flex h-[52px] items-center justify-center whitespace-nowrap rounded-[14px] bg-error px-5 text-[15px] font-bold text-white disabled:opacity-50 lg:h-11 lg:rounded-[var(--radius-md)] lg:text-sm'
 
 export default function TopicsManager({
   meetingId,
   meetingTitle,
   topics,
+  answerCounts,
   applicantCount,
   lastPublishedLabel,
 }: Props) {
@@ -49,8 +62,10 @@ export default function TopicsManager({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<SplitNotice | null>(null)
-  const [editing, setEditing] = useState<Set<string>>(new Set())
-  const [adding, setAdding] = useState(false)
+  /** 지금 고치는 발제 하나 ('new' = 새로 추가). 폰 고정 바가 이 편집기의 취소·저장이 된다 */
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [menuFor, setMenuFor] = useState<DiscussionTopic | null>(null)
+  const [deleteFor, setDeleteFor] = useState<DiscussionTopic | null>(null)
   const [publishOpen, setPublishOpen] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
 
@@ -60,6 +75,9 @@ export default function TopicsManager({
   const counts = { draft: drafts.length, published: published.length }
   const canPublish = drafts.length > 0 && incomplete.length === 0
   const nextNo = (topics.at(-1)?.topic_no ?? 0) + 1
+  const noTopics = topics.length === 0
+  const pasteVisible = noTopics || pasteOpen
+  const foundCount = useMemo(() => splitPastedTopics(paste).topics.length, [paste])
 
   async function call(method: string, url: string, body: unknown) {
     const res = await fetch(url, {
@@ -111,18 +129,20 @@ export default function TopicsManager({
     }
   }
 
-  async function deleteTopic(t: DiscussionTopic) {
-    const msg =
-      t.published_at !== null
-        ? '이 발제를 삭제할까요? 회원에게 이미 보인 발제예요. 달린 답변도 함께 삭제돼요.'
-        : '이 발제를 삭제할까요?'
-    if (!confirm(msg)) return
+  async function confirmDelete() {
+    if (!deleteFor || busy) return
+    setBusy(true)
     setError(null)
     try {
-      await call('DELETE', '/api/admin/topics', { id: t.id })
+      await call('DELETE', '/api/admin/topics', { id: deleteFor.id })
+      if (editingId === deleteFor.id) setEditingId(null)
+      setDeleteFor(null)
       router.refresh()
     } catch (e) {
       setError((e as Error).message)
+      setDeleteFor(null)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -143,16 +163,7 @@ export default function TopicsManager({
     }
   }
 
-  function setOpen(id: string, open: boolean) {
-    setEditing((prev) => {
-      const next = new Set(prev)
-      if (open) next.add(id)
-      else next.delete(id)
-      return next
-    })
-  }
-
-  // ── 상태 막대 문구 ──
+  // ── 상태 문구 ──
   let statusNote: React.ReactNode = null
   if (incomplete.length > 0) {
     statusNote = (
@@ -172,7 +183,7 @@ export default function TopicsManager({
         {lastPublishedLabel}에 공개했어요 · 신청자에게 알림을 보냈어요
       </span>
     )
-  } else if (topics.length === 0) {
+  } else if (noTopics) {
     statusNote = (
       <span className="mt-0.5 block text-xs text-neutral-600">
         붙여넣거나 하나씩 추가하면 「작성 중」으로 들어가요
@@ -187,10 +198,62 @@ export default function TopicsManager({
         ? `발제 ${drafts.length}개 공개하기`
         : '공개하기'
 
+  // ── 폰 고정 바: 지금 할 일 하나 (편집기가 열려 있으면 편집기가 자기 바를 그린다) ──
+  let dock: React.ReactNode = null
+  if (editingId === null) {
+    if (pasteVisible && paste.trim() !== '') {
+      dock = (
+        <Dock>
+          <DockText
+            title={foundCount > 0 ? `발제 ${foundCount}개를 찾았어요` : '번호로 시작하는 줄이 없어요'}
+            sub={foundCount > 0 ? '나누기 전에 확인할 수 있어요' : '1. · 1) · ① · 발제 1'}
+            warn={foundCount === 0}
+          />
+          <button
+            type="button"
+            onClick={splitAndSave}
+            disabled={busy || foundCount === 0}
+            className={`flex-none ${btnBigPrimary}`}
+          >
+            {busy ? '나누는 중…' : '번호별로 나누기'}
+          </button>
+        </Dock>
+      )
+    } else if (!noTopics) {
+      dock = (
+        <Dock>
+          <DockText
+            title={topicStatusLabel(counts)}
+            sub={
+              incomplete.length > 0
+                ? `제목이나 질문이 빈 발제 ${incomplete.length}개`
+                : drafts.length > 0
+                  ? applicantCount > 0
+                    ? `신청자 ${applicantCount}명에게 알림 1번`
+                    : '아직 신청자가 없어 알림은 안 가요'
+                  : '신청자에게 알림을 보냈어요'
+            }
+            warn={incomplete.length > 0}
+          />
+          <button
+            type="button"
+            onClick={() => setPublishOpen(true)}
+            disabled={!canPublish || busy}
+            className={`flex-none ${btnBigPrimary}`}
+          >
+            {drafts.length === 0 ? '모두 공개됨' : '공개하기'}
+          </button>
+        </Dock>
+      )
+    }
+  }
+  const hasDock = dock !== null || editingId !== null
+
   const pasteSection = (
     <div>
       <label htmlFor="topic-paste" className="mb-1.5 block text-xs font-bold text-neutral-800">
-        카톡 발제문
+        <span className="lg:hidden">발제문 전체</span>
+        <span className="hidden lg:inline">카톡 발제문</span>
       </label>
       <textarea
         id="topic-paste"
@@ -198,13 +261,14 @@ export default function TopicsManager({
         onChange={(e) => setPaste(e.target.value)}
         spellCheck={false}
         placeholder={'1. 소제목\n"인용문" (p.289)\n질문'}
-        className="min-h-[220px] w-full resize-y rounded-[10px] border border-neutral-300 bg-white px-3 py-2.5 text-[13px] leading-[1.7] text-neutral-900 focus:border-primary-500 focus:outline-none lg:min-h-[420px]"
+        className="min-h-[260px] w-full resize-y rounded-[10px] border border-neutral-300 bg-white px-3 py-2.5 text-base leading-[1.7] text-neutral-900 focus:border-primary-500 focus:outline-none lg:min-h-[420px] lg:text-[13px]"
       />
+      {/* 데스크톱만 — 폰은 아래 고정 바가 이 버튼이다 */}
       <button
         type="button"
         onClick={splitAndSave}
         disabled={busy || paste.trim() === ''}
-        className={`mt-2.5 w-full ${topics.length === 0 ? btnPrimary : btnLine}`}
+        className={`mt-2.5 w-full max-lg:hidden ${noTopics ? btnPrimary : btnLine}`}
       >
         {busy ? '나누는 중…' : '번호별로 나누기'}
       </button>
@@ -225,23 +289,44 @@ export default function TopicsManager({
         </li>
         <li>번호는 이미 있는 발제 뒤로 이어 붙어요</li>
       </ul>
+      {noTopics && editingId === null && (
+        <div className="mt-3.5 flex justify-center lg:hidden">
+          <button
+            type="button"
+            onClick={() => setEditingId('new')}
+            className="flex min-h-11 items-center text-[13px] font-bold text-primary-600"
+          >
+            하나씩 직접 쓰기
+          </button>
+        </div>
+      )}
     </div>
   )
 
   return (
-    <div>
-      {/* 상태 + 공개 */}
-      <div className="my-6 flex flex-col gap-3 border-y border-surface-300 py-3.5 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+    <div className={hasDock ? 'pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0' : ''}>
+      {/* 상태 + (데스크톱) 공개 */}
+      <div className="my-4 flex items-center justify-between gap-3 border-y border-surface-300 py-3 lg:my-6 lg:gap-4 lg:py-3.5">
         <div className="min-w-0 text-sm text-neutral-700">
           <b className="font-extrabold text-neutral-900">{topicStatusLabel(counts)}</b>
-          {statusNote}
+          {drafts.length > 0 && <span className="lg:hidden"> · 회원에게 안 보여요</span>}
+          <span className="hidden lg:block">{statusNote}</span>
         </div>
         <div className="flex flex-none gap-2">
+          {!noTopics && (
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              className="flex min-h-11 items-center text-[13px] font-bold text-primary-600 lg:hidden"
+            >
+              회원 화면 미리보기
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setPreviewOpen(true)}
-            disabled={topics.length === 0}
-            className={`flex-1 lg:flex-none ${btnLine}`}
+            disabled={noTopics}
+            className={`max-lg:hidden ${btnLine}`}
           >
             회원 화면 미리보기
           </button>
@@ -249,7 +334,7 @@ export default function TopicsManager({
             type="button"
             onClick={() => setPublishOpen(true)}
             disabled={!canPublish || busy}
-            className={`flex-1 lg:flex-none ${btnPrimary}`}
+            className={`max-lg:hidden ${btnPrimary}`}
           >
             {publishLabel}
           </button>
@@ -262,53 +347,53 @@ export default function TopicsManager({
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-10">
-        {/* 왼쪽: 붙여넣기 */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-10">
+        {/* 붙여넣기 — 발제가 없으면 펼쳐 두고(이 화면에 온 이유가 그것뿐), 생기면 폰에서는 접는다 */}
         <section>
-          <h2 className="mb-3 hidden text-[15px] font-extrabold tracking-tight text-neutral-900 lg:block">
-            {published.length > 0 && drafts.length === 0 ? '발제 더 붙여넣기' : '한꺼번에 붙여넣기'}
+          <h2 className={`mb-3 text-[15px] font-extrabold tracking-tight text-neutral-900 ${noTopics ? '' : 'hidden lg:block'}`}>
+            <span className="lg:hidden">카톡 발제문 붙여넣기</span>
+            <span className="hidden lg:inline">
+              {published.length > 0 && drafts.length === 0 ? '발제 더 붙여넣기' : '한꺼번에 붙여넣기'}
+            </span>
           </h2>
-          {/* 모바일: 발제가 있으면 접어 둔다 */}
-          {topics.length > 0 && (
+          {noTopics && (
+            <p className="-mt-2 mb-3.5 text-xs text-neutral-600 lg:hidden">
+              카톡에 쓴 발제문을 통째로 붙여넣으면 번호별로 나눠 드려요.
+            </p>
+          )}
+          {!noTopics && (
             <button
               type="button"
               onClick={() => setPasteOpen((v) => !v)}
-              className="flex w-full items-center justify-between rounded-[var(--radius-md)] border border-surface-300 px-3.5 py-3 text-[13px] font-bold text-neutral-800 lg:hidden"
+              className="flex min-h-12 w-full items-center justify-between rounded-[var(--radius-md)] border border-surface-300 px-3.5 text-[13px] font-bold text-neutral-800 lg:hidden"
               aria-expanded={pasteOpen}
             >
-              한꺼번에 붙여넣기
+              카톡 발제문 더 붙여넣기
               <span className="text-xs font-medium text-neutral-600">
                 {pasteOpen ? '닫기 ▴' : '열기 ▾'}
               </span>
             </button>
           )}
-          <div
-            className={`${topics.length > 0 && !pasteOpen ? 'hidden lg:block' : ''} ${
-              topics.length > 0 ? 'mt-3 lg:mt-0' : ''
-            }`}
-          >
-            {topics.length === 0 && (
-              <h2 className="mb-3 text-[15px] font-extrabold tracking-tight text-neutral-900 lg:hidden">
-                한꺼번에 붙여넣기
-              </h2>
-            )}
+          <div className={`${pasteVisible ? '' : 'hidden lg:block'} ${noTopics ? '' : 'mt-3 lg:mt-0'}`}>
             {pasteSection}
           </div>
         </section>
 
-        {/* 오른쪽: 발제 목록 */}
-        <section>
+        {/* 발제 목록 — 폰에서 발제가 하나도 없으면 감춘다(붙여넣기가 이 화면의 전부) */}
+        <section className={noTopics && editingId !== 'new' ? 'hidden lg:block' : ''}>
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <h2 className="text-[15px] font-extrabold tracking-tight text-neutral-900">발제 목록</h2>
-            {topics.length > 0 && (
-              <small className="text-xs text-neutral-600">작성 중인 발제는 회원에게 안 보여요</small>
+            {!noTopics && (
+              <small className="hidden text-xs text-neutral-600 lg:inline">
+                작성 중인 발제는 회원에게 안 보여요
+              </small>
             )}
           </div>
 
           {notice && (
             <div className="mb-1.5 flex items-start justify-between gap-3 rounded-[10px] bg-surface-200 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-neutral-800">
-              <span>
-                붙여넣은 글을 발제 {notice.count}개로 나눴어요.
+              <span className="min-w-0">
+                발제 {notice.count}개로 나눴어요.
                 {notice.ignored.length > 0 &&
                   ` 발제 밖의 줄(「${notice.ignored[0]}」${
                     notice.ignored.length > 1 ? ` 외 ${notice.ignored.length - 1}줄` : ''
@@ -325,7 +410,7 @@ export default function TopicsManager({
             </div>
           )}
 
-          {topics.length === 0 && !adding ? (
+          {noTopics && editingId !== 'new' ? (
             <div className="rounded-[var(--radius-md)] border border-dashed border-neutral-300 px-6 py-10 text-center">
               <b className="block text-[15px] font-extrabold text-neutral-800">아직 발제가 없어요</b>
               <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-600">
@@ -333,64 +418,170 @@ export default function TopicsManager({
                 <br />
                 번호별로 나눠서 「작성 중」으로 넣어요
               </p>
-              <button type="button" onClick={() => setAdding(true)} className={`mt-4 ${btnSmLine}`}>
+              <button type="button" onClick={() => setEditingId('new')} className={`mt-4 ${btnSmLine}`}>
                 하나씩 직접 추가
               </button>
             </div>
           ) : (
             <ul>
-              {topics.map((t) =>
-                editing.has(t.id) || isTopicIncomplete(t) ? (
-                  <li key={t.id} className="my-2">
-                    <TopicEditor
+              {topics.map((t) => {
+                const incompleteRow = isTopicIncomplete(t)
+                if (editingId === t.id) {
+                  return (
+                    <li key={t.id} className="my-2">
+                      <TopicEditor
+                        topic={t}
+                        withDock
+                        onDone={() => {
+                          setEditingId(null)
+                          router.refresh()
+                        }}
+                        onCancel={() => setEditingId(null)}
+                        onDelete={() => setDeleteFor(t)}
+                      />
+                    </li>
+                  )
+                }
+                if (incompleteRow) {
+                  // 데스크톱은 빈 칸 발제를 열어 둔다(B2) / 폰은 접은 채 빨간 한 줄 — 눌러서 연다(P3)
+                  return (
+                    <li key={t.id} className="first:border-t-0 max-lg:border-t max-lg:border-surface-300">
+                      <div className="my-2 hidden lg:block">
+                        <TopicEditor
+                          topic={t}
+                          onDone={() => router.refresh()}
+                          onDelete={() => setDeleteFor(t)}
+                        />
+                      </div>
+                      <div className="lg:hidden">
+                        <TopicRow
+                          topic={t}
+                          answerCount={answerCounts[t.id] ?? 0}
+                          onOpen={() => setEditingId(t.id)}
+                          onMenu={() => setMenuFor(t)}
+                          onEdit={() => setEditingId(t.id)}
+                          onDelete={() => setDeleteFor(t)}
+                        />
+                      </div>
+                    </li>
+                  )
+                }
+                return (
+                  <li key={t.id} className="border-t border-surface-300 first:border-t-0">
+                    <TopicRow
                       topic={t}
-                      onDone={() => {
-                        setOpen(t.id, false)
-                        router.refresh()
-                      }}
-                      onCancel={isTopicIncomplete(t) ? undefined : () => setOpen(t.id, false)}
-                      onDelete={() => deleteTopic(t)}
+                      answerCount={answerCounts[t.id] ?? 0}
+                      onMenu={() => setMenuFor(t)}
+                      onEdit={() => setEditingId(t.id)}
+                      onDelete={() => setDeleteFor(t)}
                     />
                   </li>
-                ) : (
-                  <TopicRow
-                    key={t.id}
-                    topic={t}
-                    onEdit={() => setOpen(t.id, true)}
-                    onDelete={() => deleteTopic(t)}
-                  />
-                ),
-              )}
-              {adding && (
+                )
+              })}
+              {editingId === 'new' && (
                 <li className="my-2">
                   <TopicEditor
                     meetingId={meetingId}
                     nextNo={nextNo}
+                    withDock
                     onDone={() => {
-                      setAdding(false)
+                      setEditingId(null)
                       router.refresh()
                     }}
-                    onCancel={() => setAdding(false)}
+                    onCancel={() => setEditingId(null)}
                   />
                 </li>
               )}
             </ul>
           )}
 
-          {topics.length > 0 && !adding && (
-            <button type="button" onClick={() => setAdding(true)} className={`mt-3 ${btnSmLine}`}>
+          {!noTopics && editingId === null && (
+            <button
+              type="button"
+              onClick={() => setEditingId('new')}
+              className={`mt-3 h-11 lg:h-8 ${btnSmLine}`}
+            >
               ＋ 발제 하나 추가
             </button>
           )}
         </section>
       </div>
 
+      {dock}
+
+      {/* ⋮ — 폰 목록의 수정·삭제 */}
+      {menuFor && (
+        <Sheet onClose={() => setMenuFor(null)}>
+          <h3 className="truncate text-[17px] font-extrabold tracking-tight text-neutral-900">
+            {menuFor.topic_no}번 발제 「{menuFor.title || '제목 없음'}」
+          </h3>
+          <div className="mt-4 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEditingId(menuFor.id)
+                setMenuFor(null)
+              }}
+              className={btnBigLine}
+            >
+              수정
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteFor(menuFor)
+                setMenuFor(null)
+              }}
+              className={`${btnBigLine} !text-error`}
+            >
+              삭제
+            </button>
+            <button type="button" onClick={() => setMenuFor(null)} className="min-h-11 text-sm font-bold text-neutral-600">
+              닫기
+            </button>
+          </div>
+        </Sheet>
+      )}
+
+      {/* 발제 삭제 확인 — 한 단계 더 (P6). 답변 수는 실제 값. FK: 답변은 발제 삭제 시 cascade,
+          답글·공감은 답변 삭제 시 cascade (migration-discussion-thread.sql ③④⑤) */}
+      {deleteFor && (
+        <Sheet onClose={() => setDeleteFor(null)}>
+          <h3 className="text-[17px] font-extrabold tracking-tight text-neutral-900 lg:text-lg">
+            {deleteFor.topic_no}번 발제 「{deleteFor.title || '제목 없음'}」을 삭제할까요?
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+            {deleteFor.published_at !== null ? (
+              (answerCounts[deleteFor.id] ?? 0) > 0 ? (
+                <>
+                  이미 공개된 발제예요. 회원 화면에서도 사라지고, 달린{' '}
+                  <b className="text-neutral-900">답변 {answerCounts[deleteFor.id]}개</b>와 그 답글·공감도
+                  함께 지워져요. 되돌릴 수 없어요.
+                </>
+              ) : (
+                '이미 공개된 발제예요. 회원 화면에서도 사라져요. 아직 달린 답변은 없어요. 되돌릴 수 없어요.'
+              )
+            ) : (
+              '작성 중이라 회원에게 보인 적 없는 발제예요. 되돌릴 수 없어요.'
+            )}
+          </p>
+          <div className="mt-5 flex gap-2">
+            <button type="button" onClick={() => setDeleteFor(null)} className={`flex-[0_0_34%] lg:flex-1 ${btnBigLine}`}>
+              취소
+            </button>
+            <button type="button" onClick={confirmDelete} disabled={busy} className={`flex-1 ${btnBigDanger}`}>
+              {busy ? '삭제하는 중…' : '삭제'}
+            </button>
+          </div>
+        </Sheet>
+      )}
+
       {publishOpen && (
-        <ModalOverlay onClose={() => setPublishOpen(false)}>
-          <h3 className="text-[17px] font-extrabold tracking-tight text-neutral-900">
+        <Sheet onClose={() => setPublishOpen(false)}>
+          <h3 className="text-lg font-extrabold tracking-tight text-neutral-900">
             발제 {drafts.length}개를 공개할까요?
           </h3>
-          <p className="mt-2.5 text-sm leading-relaxed text-neutral-700">
+          <p className="mt-2 text-sm leading-relaxed text-neutral-700">
             {applicantCount > 0 ? (
               <>
                 신청자 <b className="text-neutral-900">{applicantCount}명</b>에게 앱 알림이{' '}
@@ -403,7 +594,7 @@ export default function TopicsManager({
           </p>
           {applicantCount > 0 && (
             <>
-              <p className="mt-3.5 text-[11px] font-bold tracking-wide text-neutral-500">
+              <p className="mt-4 text-[11px] font-bold tracking-wide text-neutral-500">
                 회원 알림함에 이렇게 떠요
               </p>
               <div className="mt-1.5 flex gap-2.5 rounded-[12px] bg-surface-200 p-3">
@@ -420,14 +611,14 @@ export default function TopicsManager({
             </>
           )}
           <div className="mt-5 flex gap-2">
-            <button type="button" onClick={() => setPublishOpen(false)} className={`flex-1 !h-11 ${btnLine}`}>
+            <button type="button" onClick={() => setPublishOpen(false)} className={`flex-[0_0_34%] lg:flex-1 ${btnBigLine}`}>
               취소
             </button>
-            <button type="button" onClick={publish} disabled={busy} className={`flex-1 !h-11 ${btnPrimary}`}>
+            <button type="button" onClick={publish} disabled={busy} className={`flex-1 ${btnBigPrimary}`}>
               {busy ? '공개하는 중…' : '공개하기'}
             </button>
           </div>
-        </ModalOverlay>
+        </Sheet>
       )}
 
       {previewOpen && (
@@ -441,25 +632,83 @@ export default function TopicsManager({
   )
 }
 
+/* ─────────────── 폰 고정 바 · 시트 ─────────────── */
+
+/**
+ * 폰 화면 아래 고정 바. left/right 0 + 좌우 20px — 폭이 화면을 넘지 않는다.
+ * z-30: 운영자 메뉴 서랍(오버레이 z-40 · 서랍 z-50)이 열리면 그 아래로 깔린다.
+ * 조상에 transform이 없어야 화면 기준으로 붙는다 — (admin)/layout.tsx 주석 참조.
+ */
+function Dock({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-surface-300 bg-white px-5 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom))] lg:hidden">
+      {children}
+    </div>
+  )
+}
+
+function DockText({ title, sub, warn }: { title: string; sub: string; warn?: boolean }) {
+  return (
+    <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-neutral-700">
+      <b className="block truncate text-sm font-extrabold text-neutral-900">{title}</b>
+      <span className={`block truncate ${warn ? 'font-semibold text-accent-600' : ''}`}>{sub}</span>
+    </div>
+  )
+}
+
+/** 확인 창 — 폰은 아래에서 올라오는 시트(엄지 자리), 데스크톱은 가운데 창 */
+function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center lg:items-center lg:p-5"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full rounded-t-[20px] bg-white px-5 pt-[22px] pb-[calc(16px+env(safe-area-inset-bottom))] lg:max-w-sm lg:rounded-[var(--radius-lg)] lg:p-6 lg:shadow-[var(--shadow-elevated)]">
+        <div className="mx-auto -mt-2 mb-4 h-1 w-9 rounded-full bg-neutral-300 lg:hidden" aria-hidden />
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /* ─────────────── 목록 한 줄 ─────────────── */
 
 function TopicRow({
   topic: t,
+  answerCount,
+  onOpen,
+  onMenu,
   onEdit,
   onDelete,
 }: {
   topic: DiscussionTopic
+  answerCount: number
+  /** 폰에서 빈 칸 발제 — 줄을 누르면 편집기를 연다 */
+  onOpen?: () => void
+  onMenu: () => void
   onEdit: () => void
   onDelete: () => void
 }) {
+  const missing = isTopicIncomplete(t)
   return (
-    <li className="flex flex-wrap gap-3 border-t border-surface-300 py-4 first:border-t-0 lg:flex-nowrap">
+    <div className="flex gap-2.5 py-3.5 lg:gap-3 lg:py-4">
       <span className="mt-px flex h-[26px] w-[26px] flex-none items-center justify-center rounded-lg bg-neutral-100 text-xs font-extrabold text-neutral-700">
         {t.topic_no}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <b className="min-w-0 text-[14.5px] font-extrabold tracking-tight text-neutral-900">{t.title}</b>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <b className="min-w-0 break-keep text-[14.5px] font-extrabold tracking-tight text-neutral-900">
+            {t.title || '(제목 없음)'}
+          </b>
           {t.published_at === null ? (
             <span className="flex-none rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] font-bold text-neutral-700">
               작성 중
@@ -471,19 +720,48 @@ function TopicRow({
           )}
         </div>
         {t.quote && (
-          <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-700">
+          <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-neutral-700">
             “{t.quote}”
             {/* 쪽수 없음은 오류가 아니다(선택 칸) — 작성 중에만 회색으로 알린다 */}
             {(t.quote_page || t.published_at === null) && (
               <span className="ml-1 whitespace-nowrap text-neutral-500">
-                {t.quote_page ? `${t.quote_page}쪽` : '쪽수 없음'}
+                {t.quote_page ? `${t.quote_page}쪽` : '· 쪽수 없음'}
               </span>
             )}
           </p>
         )}
-        <p className="mt-1 text-[13px] leading-relaxed text-neutral-800">{t.question}</p>
+        {missing ? (
+          <button
+            type="button"
+            onClick={onOpen}
+            className="mt-1 text-left text-[13px] font-semibold text-accent-600"
+          >
+            {t.title.trim() === '' ? '제목' : '질문'}이 비어 있어요 — 눌러서 채우기
+          </button>
+        ) : (
+          <p className="mt-1 line-clamp-2 break-keep text-[13px] leading-relaxed text-neutral-800 lg:line-clamp-none">
+            {t.question}
+          </p>
+        )}
+        {t.published_at !== null && answerCount > 0 && (
+          <p className="mt-1 text-xs text-neutral-600">답변 {answerCount}개</p>
+        )}
       </div>
-      <div className="flex flex-none basis-full gap-3 self-start pl-[38px] pt-0.5 text-xs font-semibold lg:basis-auto lg:pl-0 lg:pt-1">
+      {/* 폰: ⋮ 하나 (44px, 음수 마진 없음 — 오른쪽 여백을 지킨다) */}
+      <button
+        type="button"
+        onClick={onMenu}
+        aria-label={`${t.topic_no}번 발제 수정·삭제`}
+        className="-mt-2.5 flex h-11 w-11 flex-none items-center justify-center rounded-[10px] text-neutral-600 lg:hidden"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+          <circle cx="12" cy="5" r="1.8" />
+          <circle cx="12" cy="12" r="1.8" />
+          <circle cx="12" cy="19" r="1.8" />
+        </svg>
+      </button>
+      {/* 데스크톱: 글자 버튼 둘 */}
+      <div className="hidden flex-none gap-3 self-start pt-1 text-xs font-semibold lg:flex">
         <button type="button" onClick={onEdit} className="text-neutral-600 hover:text-neutral-900">
           수정
         </button>
@@ -491,7 +769,7 @@ function TopicRow({
           삭제
         </button>
       </div>
-    </li>
+    </div>
   )
 }
 
@@ -501,6 +779,7 @@ function TopicEditor({
   topic,
   meetingId,
   nextNo,
+  withDock,
   onDone,
   onCancel,
   onDelete,
@@ -508,6 +787,8 @@ function TopicEditor({
   topic?: DiscussionTopic
   meetingId?: string
   nextNo?: number
+  /** 폰 고정 바를 「취소·저장」으로 쓴다 — 한 번에 하나만 열린 편집기만 true */
+  withDock?: boolean
   onDone: () => void
   onCancel?: () => void
   onDelete?: () => void
@@ -556,13 +837,25 @@ function TopicEditor({
     }
   }
 
+  // 폰에서 16px 미만이면 iOS가 입력할 때 화면을 확대한다
   const inputCls =
-    'w-full rounded-[10px] border border-neutral-300 bg-white px-3 py-2 text-sm leading-relaxed text-neutral-900 focus:border-primary-500 focus:outline-none'
+    'w-full rounded-[10px] border border-neutral-300 bg-white px-3 py-2 text-base leading-relaxed text-neutral-900 focus:border-primary-500 focus:outline-none lg:text-sm'
   const missCls = '!border-accent-300 !bg-accent-50'
+  const saveDisabled = busy || titleMissing || questionMissing
 
   return (
     <div className="rounded-[var(--radius-md)] bg-surface-100 p-4">
-      <div className="grid grid-cols-[64px_1fr] gap-3">
+      <div className="mb-3 flex min-h-11 items-center justify-between lg:hidden">
+        <b className="text-[13px] font-extrabold text-neutral-800">
+          {topic ? `발제 ${topic.topic_no} 고치는 중` : '새 발제'}
+        </b>
+        {topic && onDelete && (
+          <button type="button" onClick={onDelete} className="flex min-h-11 items-center text-[13px] font-semibold text-error">
+            삭제
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-2.5 lg:gap-3">
         <div>
           <label className="mb-1.5 block text-xs font-bold text-neutral-800">번호</label>
           <input
@@ -605,7 +898,8 @@ function TopicEditor({
           value={form.quote_page}
           onChange={(e) => setForm({ ...form, quote_page: e.target.value })}
           placeholder="예: 289"
-          className={`${inputCls} lg:!w-[120px]`}
+          inputMode="numeric"
+          className={`${inputCls} !w-[120px]`}
         />
       </div>
       <div className="mt-3.5">
@@ -627,7 +921,8 @@ function TopicEditor({
         )}
       </div>
       {error && <p className="mt-2 text-xs font-semibold text-accent-600">{error}</p>}
-      <div className="mt-4 flex justify-end gap-2">
+      {/* 데스크톱 — 편집기 안의 작은 버튼 */}
+      <div className={`mt-4 justify-end gap-2 ${withDock ? 'hidden lg:flex' : 'flex'}`}>
         {onDelete && !onCancel && (
           <button type="button" onClick={onDelete} className={btnSmLine}>
             삭제
@@ -638,15 +933,21 @@ function TopicEditor({
             취소
           </button>
         )}
-        <button
-          type="button"
-          onClick={save}
-          disabled={busy || titleMissing || questionMissing}
-          className={btnSmPrimary}
-        >
+        <button type="button" onClick={save} disabled={saveDisabled} className={btnSmPrimary}>
           {busy ? '저장 중…' : '저장'}
         </button>
       </div>
+      {/* 폰 — 고정 바가 취소·저장 */}
+      {withDock && (
+        <Dock>
+          <button type="button" onClick={onCancel} className={`flex-1 ${btnBigLine}`}>
+            취소
+          </button>
+          <button type="button" onClick={save} disabled={saveDisabled} className={`flex-1 ${btnBigPrimary}`}>
+            {busy ? '저장 중…' : '저장'}
+          </button>
+        </Dock>
+      )}
     </div>
   )
 }

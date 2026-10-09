@@ -40,6 +40,20 @@ export default async function AdminTopicsPage({
       (c) => c.meeting_id === id,
     )?.confirmed_count ?? 0,
   )
+  // 발제별 답변 수 — 삭제 확인 시트가 「답변 N개도 함께 지워져요」를 실제 값으로 말한다
+  const answerCounts: Record<string, number> = {}
+  if (list.length > 0) {
+    const { data: answers } = await admin
+      .from('topic_answers')
+      .select('topic_id')
+      .in(
+        'topic_id',
+        list.map((t) => t.id),
+      )
+    for (const a of (answers ?? []) as { topic_id: string }[]) {
+      answerCounts[a.topic_id] = (answerCounts[a.topic_id] ?? 0) + 1
+    }
+  }
   const lastPublished = list
     .map((t) => t.published_at)
     .filter((v): v is string => v !== null)
@@ -57,7 +71,8 @@ export default async function AdminTopicsPage({
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
-        모임 상세로 돌아가기
+        <span className="lg:hidden">모임 상세</span>
+        <span className="hidden lg:inline">모임 상세로 돌아가기</span>
       </Link>
       <div className="mb-2 flex items-center gap-1.5">
         {m.region && (
@@ -87,6 +102,7 @@ export default async function AdminTopicsPage({
         meetingId={id}
         meetingTitle={m.title}
         topics={list}
+        answerCounts={answerCounts}
         applicantCount={applicantCount}
         lastPublishedLabel={lastPublished ? formatKSTDateTime(lastPublished) : null}
       />
