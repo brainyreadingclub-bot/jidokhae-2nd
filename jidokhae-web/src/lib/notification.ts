@@ -8,8 +8,11 @@
 
 import { sendAlimtalk } from '@/lib/solapi'
 import { createServiceClient } from '@/lib/supabase/admin'
-import { formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
+// formatPaidAmount = 낸 돈/낼 돈. 🔴 「무료」 판정은 **모임 참가비**로만 한다 —
+// 결제액으로 판정하면 스텝 할인 0원 같은 건에 「무료」가 붙어 틀린 말이 된다 (kst.ts 주석)
+import { formatKoreanDate, formatKoreanTime, formatFee, formatPaidAmount } from '@/lib/kst'
 import { paymentStatusLabel } from '@/lib/registration-status'
+import { confirmAmountText } from '@/lib/waitlist-rules'
 import type { Meeting } from '@/types/meeting'
 // 알림 종류는 types/notification.ts가 유일한 정의다. 여기 따로 적어두면
 // 종류가 늘 때 한쪽만 갱신돼 어긋난다 (실제로 그랬다).
@@ -158,14 +161,28 @@ export async function sendRegistrationConfirmNotification(
 
   if (!meeting) return
 
-  // registration 결제 금액 조회 (스텝 할인 시 paid_amount < fee)
+  // registration 결제 금액 + status 조회 (스텝 할인 시 paid_amount < fee)
   const { data: registration } = await supabase
     .from('registrations')
-    .select('paid_amount')
+    .select('paid_amount, status')
     .eq('id', registrationId)
     .single()
 
   const paidAmount = registration?.paid_amount ?? (meeting as Meeting).fee
+
+  // 🔴 계좌이체 신청에 결제 상태를 **금액 변수 안에** 붙인다 (2026-10-09 대표님 지시).
+  // 판정은 `confirmAmountText`(lib/waitlist-rules.ts) 한 벌 — 단위 테스트가 거기 붙어 있다.
+  //
+  // 왜 `#{결제상태}` 변수를 쓰지 않는가 — **승인된 `REGISTRATION_CONFIRM_V2`에 그 변수가
+  // 없다.** 2026-10-09에 Solapi에서 본문을 직접 읽어 확인했다(`■ 참가비: #{결제금액}`
+  // 한 줄뿐). 템플릿에 없는 변수를 보내면 치환 오류로 **발송 자체가 막힌다** —
+  // `cron/meeting-remind` 머리말이 같은 사고를 기록해 뒀다. 변수에 들어가는 **값**은
+  // 재심사 대상이 아니라서 이 방식은 템플릿을 건드리지 않는다.
+  //
+  // 「미입금」이라고 쓰지 않는 이유는 `paymentStatusLabel`에 적혀 있다 — 운영자가 입금
+  // 확인을 월말에 몰아 처리하므로 이미 낸 사람에게 틀린 말이 된다.
+  // 0원 모임에는 붙이지 않는다. 받을 돈이 없으니 확인할 입금도 없다.
+  const amountText = confirmAmountText(paidAmount, (meeting as Meeting).fee, registration?.status)
 
   const profile = await getProfileForNotification(userId)
   const displayName = profile.nickname || profile.real_name || ''
@@ -182,7 +199,7 @@ export async function sendRegistrationConfirmNotification(
       '#{모임명}': (meeting as Meeting).title,
       '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
       '#{장소}': (meeting as Meeting).location,
-      '#{결제금액}': formatFee(paidAmount),
+      '#{결제금액}': amountText,
     },
   })
 }
@@ -249,9 +266,11 @@ export async function sendWaitlistPromotedNotification(
 
   if (!meeting) return
 
-  // status도 함께 읽는다 — 계좌이체로 대기 신청한 회원은 승격 시 RPC가
-  // `pending_transfer`로 분기시키므로 "결제완료"라고 단언하면 틀린 말이 된다
-  // (promote_next_waitlisted, migration-bank-transfer-functions.sql).
+  // status도 함께 읽는다. 2026-10-09부터 이 함수를 부르는 쪽(`lib/waitlist.ts`)이
+  // **`confirmed`로 올라간 건만** 부르므로 실제로는 "결제완료"로 떨어진다.
+  // 그래도 `paymentStatusLabel`을 거치는 이유 — 승격 분기는 세 갈래(카드 / 0원 계좌이체 /
+  // 금액 있는 계좌이체)이고, 호출 조건이 바뀌면 여기서 "결제완료"가 거짓이 된다.
+  // 상태를 읽어 라벨로 옮기는 편이 단언보다 안 틀린다 (migration-waitlist-card-only.sql).
   const { data: registration } = await supabase
     .from('registrations')
     .select('paid_amount, status')
@@ -275,7 +294,9 @@ export async function sendWaitlistPromotedNotification(
       '#{모임명}': (meeting as Meeting).title,
       '#{모임일시}': `${formatKoreanDate((meeting as Meeting).date)} ${formatKoreanTime((meeting as Meeting).time)}`,
       '#{장소}': (meeting as Meeting).location,
-      '#{결제금액}': formatFee(paidAmount),
+      // 0원 모임이면 「무료」. 판정 근거는 결제액이 아니라 **모임 참가비**다
+      // (2026-10-09 — 0원 계좌이체 대기자가 승격되면 이 자리를 지난다)
+      '#{결제금액}': formatPaidAmount(paidAmount, (meeting as Meeting).fee),
       '#{결제상태}': paymentStatusLabel(registration?.status ?? 'confirmed'),
       '#{모임ID}': (meeting as Meeting).id,
     },

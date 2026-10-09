@@ -14,6 +14,7 @@ import BankInfoCard from '@/components/meetings/BankInfoCard'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 import { getActionSkin, type SkinName } from '@/components/meetings/actionButtonSkin'
 import { trackEvent } from '@/lib/analytics'
+import { isWaitlistCardOnly } from '@/lib/waitlist-rules'
 
 type Props = {
   buttonState: ButtonState
@@ -24,6 +25,8 @@ type Props = {
   displayFee?: number
   /** 스텝 할인이 적용되는 신청인지 여부. 모달에서 영수증 패턴 노출에 사용. */
   isStaffDiscount?: boolean
+  /** 본인 `profiles.is_free` — 유료 대기에서도 계좌이체를 보여준다 (결정 A, 2026-10-09) */
+  isFree?: boolean
   meetingDate: string
   /** 환불 규칙 분기용 (discussion = 7/3, 그 외 3/2) */
   meetingType?: string | null
@@ -66,6 +69,7 @@ export default function MeetingActionButton({
   meetingFee,
   displayFee,
   isStaffDiscount = false,
+  isFree = false,
   meetingDate,
   meetingType = null,
   userId,
@@ -89,6 +93,17 @@ export default function MeetingActionButton({
 }: Props) {
   // 결제 처리에 사용할 실제 금액 — 미지정 시 정가 fallback
   const effectiveFee = displayFee ?? meetingFee
+
+  // 대기 신청은 카드만 받는다 (2026-10-09 대표님 결정).
+  // 받을 돈이 없는 건(0원)은 예외 — 입금 확인 단계가 애초에 없으므로 계좌이체로도 줄을 설 수 있다.
+  // 본인이 is_free(입금 자체가 없는 무료 참석자)여도 예외다 (결정 A, 2026-10-09 밤).
+  //
+  // 여기 쓰는 값이 `meetingFee`가 아니라 `effectiveFee`인 이유 — 이 숫자가 그대로
+  // `paid_amount`로 들어가고, 거절 판정을 하는 `register_transfer` RPC도 `paid_amount`를 본다.
+  // 두 곳이 **같은 수를** 보게 해야 화면과 서버가 갈리지 않는다.
+  // 🔴 이건 겉 막이다. 실제 방어선은 RPC다 — 정원 판정이 FOR UPDATE 락 안에 있어야
+  // 동시 신청에 지지 않는다 (migration-waitlist-card-only.sql).
+  const waitlistCardOnly = isWaitlistCardOnly(buttonState.type === 'join_waitlist', effectiveFee, isFree)
   const s = getActionSkin(skin)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -701,24 +716,32 @@ export default function MeetingActionButton({
                     </div>
                   )}
 
-                  {/* 계좌이체 — active */}
-                  <button
-                    onClick={() => setRegisterPhase('transfer')}
-                    className={s.optionCard}
-                    style={s.optionCardStyle}
-                  >
-                    <div className="flex items-center gap-3">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={s.optionIcon}>
-                        <line x1="12" y1="1" x2="12" y2="23" />
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                      </svg>
-                      <div>
-                        <p className={s.optionTitle}>계좌이체</p>
-                        <p className={s.optionSub}>계좌번호로 직접 입금</p>
+                  {/* 계좌이체 — 대기 신청(유료)에서는 아예 내보이지 않는다 (2026-10-09 결정).
+                      "준비 중"으로 흐려 두지 않는 이유 — 나중에 열릴 것처럼 읽힌다. */}
+                  {!waitlistCardOnly && (
+                    <button
+                      onClick={() => setRegisterPhase('transfer')}
+                      className={s.optionCard}
+                      style={s.optionCardStyle}
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={s.optionIcon}>
+                          <line x1="12" y1="1" x2="12" y2="23" />
+                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                        </svg>
+                        <div>
+                          <p className={s.optionTitle}>계좌이체</p>
+                          <p className={s.optionSub}>계좌번호로 직접 입금</p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  )}
                 </div>
+                {waitlistCardOnly && (
+                  <p className={s.note}>
+                    대기 신청은 카드 결제로만 가능해요.
+                  </p>
+                )}
               </>
             )}
 

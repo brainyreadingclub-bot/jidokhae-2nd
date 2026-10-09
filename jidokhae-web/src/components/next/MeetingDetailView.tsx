@@ -254,6 +254,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
           meetingFee={m.fee}
           displayFee={data.displayFee}
           isStaffDiscount={data.isStaffDiscount}
+          isFree={data.isFree}
           meetingDate={m.date}
           meetingType={m.meeting_type ?? null}
           userId={data.userId}

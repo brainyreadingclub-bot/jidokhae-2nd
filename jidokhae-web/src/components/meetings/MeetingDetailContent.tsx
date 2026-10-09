@@ -80,6 +80,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         meetingFee={meeting.fee}
         displayFee={d.displayFee}
         isStaffDiscount={d.isStaffDiscount}
+        isFree={d.isFree}
         meetingDate={meeting.date}
         meetingType={meeting.meeting_type ?? null}
         userId={d.userId}
