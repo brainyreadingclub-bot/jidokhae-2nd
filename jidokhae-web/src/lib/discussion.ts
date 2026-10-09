@@ -12,7 +12,7 @@ import type {
  * 쓰기는 전부 API Route — 여기는 읽기만.
  */
 
-/** meeting의 발제 목록 + 답변 수 + 내 답변 여부 */
+/** meeting의 **공개된** 발제 목록 + 답변 수 + 내 답변 여부 (작성 중은 회원 화면에 안 나간다) */
 export const getTopicsWithStats = cache(
   async (meetingId: string, userId: string | null): Promise<TopicWithStats[]> => {
     const supabase = createServiceClient()
@@ -20,6 +20,7 @@ export const getTopicsWithStats = cache(
       .from('discussion_topics')
       .select('*')
       .eq('meeting_id', meetingId)
+      .not('published_at', 'is', null)
       .order('topic_no')
     if (!topics || topics.length === 0) return []
 

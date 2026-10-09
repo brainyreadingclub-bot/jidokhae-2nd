@@ -7,6 +7,8 @@ export type DiscussionTopic = {
   quote_page: string | null
   question: string
   author_id: string
+  /** null = 작성 중(회원에게 안 보임). 「공개하기」가 채운다 — migration-topics-publish.sql */
+  published_at: string | null
   created_at: string
   updated_at: string
 }

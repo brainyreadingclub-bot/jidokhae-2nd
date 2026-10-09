@@ -30,6 +30,7 @@ export async function POST(
       .from('discussion_topics')
       .select('meeting_id')
       .eq('id', topicId)
+      .not('published_at', 'is', null)
       .single()
     if (!topic) {
       return NextResponse.json(

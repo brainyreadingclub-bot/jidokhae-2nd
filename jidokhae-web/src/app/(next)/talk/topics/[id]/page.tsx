@@ -19,7 +19,9 @@ export default async function TopicPage({
     .from('discussion_topics')
     .select('*')
     .eq('id', id)
+    .not('published_at', 'is', null)
     .single()
+  // 작성 중인 발제는 주소를 알아도 열리지 않는다
   if (!topic) notFound()
   const typedTopic = topic as DiscussionTopic
 
