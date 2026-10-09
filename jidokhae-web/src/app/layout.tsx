@@ -63,7 +63,8 @@ export default function RootLayout({
           cacheOnNavigation={false}
           reloadOnOnline={false}
         >
-          <div className="mx-auto max-w-screen-sm min-h-screen bg-surface-50">
+          {/* data-root-frame: 운영자 화면은 globals.css가 이 640 캡을 푼다 ([data-admin-root]) */}
+          <div data-root-frame className="mx-auto max-w-screen-sm min-h-screen bg-surface-50">
             <main>
               {children}
             </main>

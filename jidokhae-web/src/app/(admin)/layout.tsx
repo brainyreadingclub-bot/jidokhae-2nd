@@ -21,12 +21,12 @@ export default async function AdminLayout({
   const nickname = profile.nickname || user.email || '운영자'
 
   return (
-    // full-bleed: root 레이아웃의 max-w-screen-sm(640) 캡을 벗어나 admin을 전체 폭으로.
+    // 전체 폭: root 레이아웃의 max-w-screen-sm(640) 캡은 globals.css가 푼다
+    //   ([data-root-frame]:has([data-admin-root]) — 운영자 화면이 들어 있을 때만).
+    // 🔴 예전에는 w-screen(100vw) + 음수 마진으로 캡을 벗어났는데, 100vw는 세로 스크롤바 폭까지 잡아
+    //    스크롤바가 있는 화면(폰 포함)에서 늘 가로 스크롤이 생겼다(2026-10-09 360·390 실측). vw를 쓰지 않는다.
     // ⚠️ transform(-translate-*) 금지 — 아래 fixed 사이드바의 기준이 뷰포트에서 이 div로 바뀌어 깨진다.
-    // 음수 마진 기법은 containing block을 만들지 않아 fixed가 뷰포트 기준을 유지한다.
-    // 폰(<640)에서는 root가 이미 화면 폭이라 벗어날 필요가 없다 — w-screen(100vw)은 세로 스크롤바
-    // 폭까지 포함해 가로 스크롤을 만든다(2026-10-09 360·390 실측). 그래서 sm부터만 full-bleed.
-    <div className="min-h-screen bg-surface-50 sm:w-screen sm:ml-[calc(-50vw+50%)] sm:mr-[calc(-50vw+50%)]">
+    <div data-admin-root className="min-h-screen bg-surface-50">
       {/* 모바일 헤더 + Drawer */}
       <AdminMobileNav role={role} nickname={nickname} />
 
