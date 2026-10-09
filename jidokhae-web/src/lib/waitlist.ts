@@ -3,7 +3,7 @@
  * - promoteNextWaitlisted(): 취소 발생 시 대기자 자동 승격 (DB 함수 래퍼)
  *
  * 대기 신청은 카드만 받는다 (2026-10-09 대표님 결정). 계좌이체 대기는
- * `register_transfer` RPC가 거절하고, 예외인 0원 건은 자리가 나면 `pending_transfer`가
+ * `register_transfer` RPC가 거절한다(예외: 0원 건 · is_free 회원 — 결정 A). 0원 건은 자리가 나면 `pending_transfer`가
  * 아니라 바로 `confirmed`로 올라간다 — 받을 돈이 없어 확인할 입금도 없다.
  * - processWaitlistCancel(): 대기자 직접 취소 (100% 환불)
  */

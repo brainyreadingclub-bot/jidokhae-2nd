@@ -2,7 +2,7 @@
  * 계좌이체 신청.
  *
  * 2026-10-09에 둘이 달라졌다 (대표님 결정).
- *   1. 정원이 찬 뒤의 **계좌이체 대기를 받지 않는다** — 0원 건만 예외.
+ *   1. 정원이 찬 뒤의 **계좌이체 대기를 받지 않는다** — 0원 건과 is_free 회원만 예외(결정 A).
  *      거절은 `register_transfer` RPC가 FOR UPDATE 락 안에서 한다
  *      ('waitlist_card_only'). 라우트에서 미리 세면 동시 신청에 진다.
  *   2. `pending_transfer`로 신청이 생기면 **신청 완료 알림톡을 보낸다.**
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
   }
 
   // 신청 완료 알림톡 — `pending_transfer`로 자리를 잡은 건에만 보낸다 (2026-10-09 승인).
-  // 대기(`waitlisted`)에는 보내지 않는다. 그쪽은 0원 건만 남고 성격이 다른 소식이다.
+  // 대기(`waitlisted`)에는 보내지 않는다. 그쪽은 0원 건·is_free 회원만 남고 성격이 다른 소식이다.
   //
   // ⚠️ `after()`로 감싼다 — `void`로 띄우면 Vercel 람다가 응답 뒤 freeze되어 유실·지연된다
   //    (2026-08-17 Preview 실측 13분 지연).
