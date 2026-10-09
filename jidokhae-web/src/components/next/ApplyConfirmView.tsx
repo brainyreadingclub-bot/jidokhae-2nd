@@ -4,6 +4,7 @@ import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import MeetingInfoRows, { type InfoRow } from '@/components/next/MeetingInfoRows'
 import RefundNotice from '@/components/next/RefundNotice'
 import BackLink from '@/components/next/BackLink'
+import { isWaitlistCardOnly } from '@/lib/waitlist-rules'
 
 /**
  * 신청 확인 (승인 시안 07) — **결제 전에** 무엇을·언제·얼마·어디로 입금·환불은 어떻게를
@@ -34,6 +35,11 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
   const transferOnly = data.paymentMode === 'transfer_only'
   const hasBank = Boolean(data.bankName && data.bankAccount && data.bankHolder)
 
+  // 대기 신청은 카드만 받는다 (2026-10-09 대표님 결정). 0원 건은 예외 — 받을 돈이 없다.
+  // `displayFee`를 보는 이유는 이 숫자가 그대로 `paid_amount`가 되고
+  // 서버(`register_transfer`)도 그 값으로 거절을 판정하기 때문이다.
+  const waitlistCardOnly = isWaitlistCardOnly(isWaitlist, data.displayFee)
+
   return (
     <div style={{ paddingBottom: 'calc(8rem + env(safe-area-inset-bottom, 0px))' }}>
       <div className="pt-1">
@@ -54,7 +60,7 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
 
       {/* 입금 안내 — 계좌이체만 열려 있을 때는 미리 보여준다.
           카드가 함께 열려 있으면 다음 화면에서 수단을 고르므로 여기서 단정하지 않는다. */}
-      {transferOnly && hasBank && (
+      {transferOnly && hasBank && !waitlistCardOnly && (
         <section className="mt-6">
           <h3 className="text-[13.5px] font-bold tracking-tight text-tg-600">입금 안내</h3>
           <div className="mt-2 rounded-[18px] bg-tg-100 px-4 py-4">
@@ -70,10 +76,16 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
           </div>
         </section>
       )}
-      {!transferOnly && (
+      {waitlistCardOnly ? (
         <p className="mt-5 text-[13px] leading-relaxed text-tg-600">
-          결제 수단은 다음 화면에서 고를 수 있어요.
+          대기 신청은 카드 결제로만 가능해요.
         </p>
+      ) : (
+        !transferOnly && (
+          <p className="mt-5 text-[13px] leading-relaxed text-tg-600">
+            결제 수단은 다음 화면에서 고를 수 있어요.
+          </p>
+        )
       )}
 
       <RefundNotice meetingType={m.meeting_type} meetingDate={m.date} showHeading />
