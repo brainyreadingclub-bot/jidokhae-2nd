@@ -3,7 +3,7 @@ import { requireCurator } from '@/lib/curator-route'
 
 /**
  * 발제문 관리. 권한 = 큐레이터(admin·editor·is_staff, 2026-08-17 결정).
- * POST 등록(여러 개 한 번에) / PATCH 수정 / DELETE 삭제.
+ * POST 등록(여러 개 한 번에) / PATCH 수정 / DELETE 삭제(하나 또는 「되돌리기」 여러 개).
  *
  * 2026-10-09: 등록은 「작성 중」(published_at = null)으로만 들어가고 **알림을 보내지 않는다.**
  * 회원에게 보이고 알림이 가는 것은 「공개하기」(api/admin/topics/publish) 한 번뿐이다.
@@ -175,14 +175,24 @@ export async function DELETE(request: NextRequest) {
   try {
     const ctx = await requireCurator(request)
     if ('error' in ctx) return ctx.error
-    const { id } = await request.json()
-    if (!id) {
+    const { id, ids } = await request.json()
+    // ids = 「되돌리기」 — 방금 붙여넣기로 만든 발제를 한꺼번에 지운다. 작성 중인 것만 지운다
+    const undoIds = Array.isArray(ids)
+      ? ids.filter((v: unknown): v is string => typeof v === 'string')
+      : []
+    if (!id && undoIds.length === 0) {
       return NextResponse.json(
         { status: 'error', message: 'id가 필요해요' },
         { status: 400 },
       )
     }
-    const { error } = await ctx.admin.from('discussion_topics').delete().eq('id', id)
+    const { error } = id
+      ? await ctx.admin.from('discussion_topics').delete().eq('id', id)
+      : await ctx.admin
+          .from('discussion_topics')
+          .delete()
+          .in('id', undoIds)
+          .is('published_at', null)
     if (error) {
       return NextResponse.json(
         { status: 'error', message: '잠시 후 다시 시도해 주세요' },

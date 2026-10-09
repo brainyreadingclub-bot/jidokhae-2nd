@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/admin'
+import { countTopicsByMeeting, type TopicCounts } from '@/lib/topic-status'
 import type {
   DiscussionTopic,
   TopicAnswer,
@@ -87,3 +88,21 @@ export const getAnswersWithMeta = cache(
     }))
   },
 )
+
+/**
+ * 🔒 운영자 화면 전용 — 모임별 작성 중/공개 개수. **작성 중을 포함해 센다.**
+ * 회원 화면에서 부르지 말 것 (회원 쪽은 getTopicsWithStats가 공개된 것만 준다).
+ */
+export async function getTopicCountsForAdmin(
+  meetingIds: string[],
+): Promise<Map<string, TopicCounts>> {
+  if (meetingIds.length === 0) return new Map()
+  const supabase = createServiceClient()
+  const { data } = await supabase
+    .from('discussion_topics')
+    .select('meeting_id, published_at')
+    .in('meeting_id', meetingIds)
+  return countTopicsByMeeting(
+    (data ?? []) as { meeting_id: string; published_at: string | null }[],
+  )
+}

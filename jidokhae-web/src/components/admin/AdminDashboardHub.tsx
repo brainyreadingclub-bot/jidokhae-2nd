@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import AdminTopicTodo from '@/components/admin/AdminTopicTodo'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import {
@@ -76,6 +77,9 @@ export default async function AdminDashboardHub() {
           오늘의 운영 현황
         </h1>
       </div>
+
+      {/* 발제문 할 일 — 다가오는 토론모임 중 발제문 없음·작성 중만 */}
+      <AdminTopicTodo kstToday={kstToday} />
 
       {/* 긴급 알림 */}
       {hasUrgent && (
