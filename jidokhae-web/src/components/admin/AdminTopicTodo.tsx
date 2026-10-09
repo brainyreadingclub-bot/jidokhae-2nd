@@ -2,7 +2,12 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getDaysUntil } from '@/lib/kst'
 import { getTopicCountsForAdmin } from '@/lib/discussion'
-import { NO_TOPICS, needsTopicAction, topicStatusLabel } from '@/lib/topic-status'
+import {
+  NO_TOPICS,
+  needsTopicAction,
+  topicStatusLabel,
+  type TopicCounts,
+} from '@/lib/topic-status'
 
 /**
  * 운영자 첫 화면 「발제문」 할 일 줄 (2026-10-09 시안 A).
@@ -35,14 +40,26 @@ export default async function AdminTopicTodo({ kstToday }: { kstToday: string })
   )
 
   const todo = rows
-    .map((m) => ({ ...m, c: counts.get(m.id) ?? NO_TOPICS }))
-    .filter((m) => needsTopicAction(m.c))
-  if (todo.length === 0) return null
+    .map((m) => ({ ...m, counts: counts.get(m.id) ?? NO_TOPICS, applicants: applicants.get(m.id) ?? 0 }))
+    .filter((m) => needsTopicAction(m.counts))
+  return <TopicTodoRows rows={todo} kstToday={kstToday} />
+}
 
+export type TopicTodoRow = {
+  id: string
+  title: string
+  date: string
+  counts: TopicCounts
+  applicants: number
+}
+
+/** 그리기만 — 조회는 위 AdminTopicTodo */
+export function TopicTodoRows({ rows, kstToday }: { rows: TopicTodoRow[]; kstToday: string }) {
+  if (rows.length === 0) return null
   return (
     <div className="mb-6 space-y-2">
-      {todo.map((m) => {
-        const empty = m.c.draft === 0 && m.c.published === 0
+      {rows.map((m) => {
+        const empty = m.counts.draft === 0 && m.counts.published === 0
         return (
           <Link
             key={m.id}
@@ -61,11 +78,11 @@ export default async function AdminTopicTodo({ kstToday }: { kstToday: string })
                 {m.title}
               </span>
               <span className="flex-none whitespace-nowrap text-xs text-neutral-600">
-                · 신청 {applicants.get(m.id) ?? 0}명 · 모임까지 {getDaysUntil(m.date, kstToday)}일
+                · 신청 {m.applicants}명 · 모임까지 {getDaysUntil(m.date, kstToday)}일
               </span>
             </span>
             <span className="order-3 flex-1 whitespace-nowrap text-sm font-extrabold text-neutral-900 lg:order-none lg:flex-none">
-              {topicStatusLabel(m.c)}
+              {topicStatusLabel(m.counts)}
             </span>
             <span className="order-4 inline-flex h-8 flex-none items-center rounded-[9px] bg-primary-600 px-3 text-xs font-bold text-white lg:order-none">
               {empty ? '등록하기' : '이어서 하기'}
