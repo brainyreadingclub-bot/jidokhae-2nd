@@ -109,7 +109,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
     }
 
     const fee = parseInt(values.fee, 10)
-    if (isNaN(fee) || fee < 0) return setError('참가비는 0원 이상이어야 합니다')
+    if (isNaN(fee) || fee < 0) return setError('참가비는 0 이상이어야 합니다')
 
     setIsSubmitting(true)
 
@@ -349,7 +349,7 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
             style={inputStyle}
           />
         </Field>
-        <Field label="참가비 (원)" required>
+        <Field label="참가비" required>
           <input
             type="text"
             inputMode="numeric"

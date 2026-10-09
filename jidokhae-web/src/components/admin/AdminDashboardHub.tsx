@@ -151,11 +151,11 @@ export default async function AdminDashboardHub() {
         <Kpi
           label="이번 달 순매출"
           value={formatFee(revenue.netRevenue)}
-          unit="원"
+          unit=""
           subtext={
             revenueDelta >= 0
-              ? `+${formatFee(revenueDelta)}원 vs 전월`
-              : `${formatFee(revenueDelta)}원 vs 전월`
+              ? `+${formatFee(revenueDelta)} vs 전월`
+              : `${formatFee(revenueDelta)} vs 전월`
           }
           subtextVariant={revenueDelta >= 0 ? 'up' : 'down'}
         />
@@ -277,7 +277,7 @@ function Kpi({
         style={{ fontFamily: 'var(--font-display)' }}
       >
         {value}
-        <span className="ml-1 text-sm font-semibold text-primary-500">{unit}</span>
+        {unit && <span className="ml-1 text-sm font-semibold text-primary-500">{unit}</span>}
       </div>
       <div className={`mt-2 text-xs font-medium ${subtextColor}`} style={{ fontFamily: 'var(--font-mono)' }}>
         {subtext}

@@ -302,7 +302,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
                   <span className="text-sm text-primary-800 whitespace-nowrap shrink-0">
                     {row.isStaffDiscount ? (
                       <span>
-                        <span className="text-neutral-800 font-bold">{formatFee(row.paidAmount)}원</span>
+                        <span className="text-neutral-800 font-bold">{formatFee(row.paidAmount)}</span>
                         <span
                           className="ml-1 text-[10px] font-bold text-primary-600 rounded px-1 py-0.5"
                           style={{ backgroundColor: 'var(--color-primary-50)', border: '1px solid var(--color-primary-200)' }}
@@ -311,7 +311,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
                         </span>
                       </span>
                     ) : (
-                      <span>{formatFee(row.paidAmount)}원</span>
+                      <span>{formatFee(row.paidAmount)}</span>
                     )}
                   </span>
                 </div>
@@ -429,7 +429,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
                   <td className="px-3 py-2.5 text-right text-primary-800 whitespace-nowrap">
                     {row.isStaffDiscount ? (
                       <span>
-                        <span className="text-neutral-800 font-bold">{formatFee(row.paidAmount)}원</span>
+                        <span className="text-neutral-800 font-bold">{formatFee(row.paidAmount)}</span>
                         <span
                           className="ml-1 text-[10px] font-bold text-primary-600 rounded px-1 py-0.5"
                           style={{ backgroundColor: 'var(--color-primary-50)', border: '1px solid var(--color-primary-200)' }}
@@ -438,7 +438,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
                         </span>
                       </span>
                     ) : (
-                      <span>{formatFee(row.paidAmount)}원</span>
+                      <span>{formatFee(row.paidAmount)}</span>
                     )}
                   </td>
                   {/* 닉네임 */}
@@ -516,7 +516,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
                     <div className="min-w-0 text-xs">
                       <span className="font-medium text-neutral-600">{depositName}</span>
                       <span className="mx-1.5 text-neutral-300">·</span>
-                      <span className="text-neutral-500">{formatFee(row.paidAmount)}원</span>
+                      <span className="text-neutral-500">{formatFee(row.paidAmount)}</span>
                       {row.realName && (
                         <>
                           <span className="mx-1.5 text-neutral-300">·</span>
