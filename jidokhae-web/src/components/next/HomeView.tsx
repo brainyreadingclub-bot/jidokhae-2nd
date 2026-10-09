@@ -2,6 +2,7 @@ import Link from 'next/link'
 import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec, BoxWhite, RowItem, Chevron } from '@/components/next/TossUI'
 import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
+import { highResCoverUrl } from '@/lib/book-cover'
 
 /**
  * 홈 탭 표현 (전면개편 스펙 §2 — "지금 나 뭐 해야 하지?").
@@ -193,9 +194,10 @@ export default function HomeView({ data }: { data: HomeData }) {
               href="/talk"
               className="flex items-center gap-3.5"
             >
+              {/* src는 highResCoverUrl 경유 필수 — 생 thumbnail은 120px라 뭉개진다 (lib/book-cover.ts) */}
               {promo.thumbnail && (
                 <img
-                  src={promo.thumbnail}
+                  src={highResCoverUrl(promo.thumbnail) ?? promo.thumbnail}
                   alt={promo.title}
                   width={60}
                   height={90}

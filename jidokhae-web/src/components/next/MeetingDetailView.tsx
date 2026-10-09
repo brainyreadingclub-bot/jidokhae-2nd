@@ -3,6 +3,7 @@ import { formatKoreanDate, formatKoreanTime, formatPaidAmount, formatDDay } from
 import type { MeetingDetailData } from '@/lib/meeting-detail'
 import { hasStickyAction } from '@/lib/meeting-detail'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
+import { highResCoverUrl } from '@/lib/book-cover'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
@@ -85,9 +86,10 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
 
       {isDiscussion && data.book ? (
         <div className="mt-4 flex gap-4">
+          {/* src는 highResCoverUrl 경유 필수 — 생 thumbnail은 120px라 뭉개진다 (lib/book-cover.ts) */}
           {data.book.thumbnail ? (
             <img
-              src={data.book.thumbnail}
+              src={highResCoverUrl(data.book.thumbnail) ?? data.book.thumbnail}
               alt={data.book.title}
               width={96}
               height={144}
