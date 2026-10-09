@@ -4,7 +4,7 @@
 --
 -- 되돌아가는 곳
 --   register_transfer       → migration-staff-discount-discussion-guard.sql 정의
---                             (계좌이체 대기 다시 허용)
+--                             (계좌이체 대기 다시 전부 허용 — 0원·is_free 예외 구분도 사라진다)
 --   promote_next_waitlisted → migration-bank-transfer-functions.sql 정의
 --                             (반환 2컬럼, payment_method만 보고 분기)
 --

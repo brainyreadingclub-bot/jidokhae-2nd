@@ -1,6 +1,6 @@
 -- ============================================================
--- 대기 신청은 카드만 받는다 + 0원 건은 자리가 나면 바로 확정
--- 결정: 2026-10-09 (대표님)
+-- 대기 신청은 카드만 받는다 (예외: 0원 건 · is_free 회원) + 0원 건은 자리가 나면 바로 확정
+-- 결정: 2026-10-09 (대표님). is_free 예외는 같은 날 밤 결정 A로 추가
 -- ============================================================
 --
 -- 왜
@@ -10,11 +10,21 @@
 --   단 **받을 돈이 없는 건(0원)은 예외** — 입금 확인 단계가 애초에 없으므로
 --   계좌이체로도 줄을 설 수 있고, 자리가 나면 **바로 `confirmed`**로 올린다.
 --
---   🔴 판정은 사람(`profiles.is_free`)이 아니라 **그 신청 건의 `paid_amount`**로 한다.
---   사람 속성은 나중에 바뀌지만 그 건에 돈이 걸렸는지는 그 건이 안다.
+--   🔴 **대기 허용**과 **승격 결과**는 판정 근거가 다르다.
+--
+--   (가) 계좌이체 대기 허용 = 그 건 `paid_amount = 0` **OR** 신청자 `profiles.is_free = true`
+--        (2026-10-09 밤 결정 A). 왜 is_free가 들어가나 — 운영자의 유료 모임 신청 건은
+--        prod 실측(6월~) `paid_amount`가 0인 적이 없다(정가 또는 스텝 반값). 0은 무료
+--        모임뿐이다. 그래서 0원 예외만으로는 is_free 운영자의 계좌이체 대기를 막는다
+--        (7월에 실제로 3건 있었다). is_free는 입금 자체가 없는 사람이라 「돈 안 낸 채
+--        줄에 선다」는 차단 이유가 해당하지 않는다.
+--   (나) 바로 확정 승격 = **그 건 `paid_amount = 0`만.** is_free라도 금액이 걸린 건은
+--        종전대로 `pending_transfer`(입금 확인 중)로 올린다 — `confirmed`로 올리면 받지 않은
+--        참가비가 매출 집계(confirmed paid_amount)에 잡힌다. is_free의 pending_transfer는
+--        정산 목록에서 이미 빠진다(settlement.ts · dashboard.ts). 그래서 승격 알림톡도 종전처럼 없다.
 --
 -- 바꾸는 것 둘
---   1. register_transfer      — 대기로 INSERT하려는 순간 0원이 아니면 거절
+--   1. register_transfer      — 대기로 INSERT하려는 순간 0원도 is_free도 아니면 거절
 --                               (신규 반환값 'waitlist_card_only')
 --   2. promote_next_waitlisted — transfer + paid_amount = 0 이면 confirmed로 승격
 --                               + 반환에 promoted_confirmed BOOLEAN 추가
@@ -42,6 +52,11 @@
 --   저장소 어떤 마이그레이션에도 이 두 함수의 GRANT/REVOKE가 없다(Supabase 기본 권한에
 --   기대 왔다). 새로 만든 함수도 같은 기본 권한을 받지만, 앱이 실제로 부르는
 --   service_role 실행 권한은 아래에서 **명시적으로** 다시 준다.
+--   2026-10-09 관리자가 prod에서 읽은 실행 전 값(두 함수 모두):
+--     {=X/postgres, anon=X/postgres, authenticated=X/postgres, service_role=X/postgres} 형태(부여자 표기는 다를 수 있다) —
+--     PUBLIC·anon·authenticated·service_role 전부 EXECUTE. 새로 만든 함수는 Postgres 기본
+--     (PUBLIC EXECUTE) + Supabase 기본 권한(anon·authenticated·service_role)을 다시 받으므로
+--     **같은 값으로 돌아와야 정상이다.** 다르면 손으로 맞춘다.
 --   실행 전·후에 같은 조회로 권한이 같은지 대조한다:
 --     select p.proname, p.proacl from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 --     where n.nspname = 'public' and p.proname in ('register_transfer','promote_next_waitlisted');
@@ -76,6 +91,7 @@ DECLARE
   v_is_discount BOOLEAN;
   v_user_role TEXT;
   v_user_is_staff BOOLEAN;
+  v_user_is_free BOOLEAN;
   v_slot_count INTEGER;
   v_max_slots INTEGER;
 BEGIN
@@ -130,7 +146,7 @@ BEGIN
   FROM public.registrations
   WHERE meeting_id = p_meeting_id AND status IN ('confirmed', 'pending_transfer');
 
-  -- 5. 여석 → pending_transfer, 초과 → (0원만) waitlisted
+  -- 5. 여석 → pending_transfer, 초과 → (0원 또는 is_free만) waitlisted
   IF v_count < v_capacity THEN
     INSERT INTO public.registrations (user_id, meeting_id, status, payment_method, paid_amount, is_staff_discount)
     VALUES (p_user_id, p_meeting_id, 'pending_transfer', 'transfer', p_paid_amount, v_is_discount);
@@ -139,7 +155,12 @@ BEGIN
     -- 🔴 대기 신청은 카드만 받는다 (2026-10-09 대표님 결정).
     -- 정원 판정이 FOR UPDATE 락 안에 있어야 동시 신청에 지지 않으므로
     -- 라우트에서 미리 세지 않고 **여기서** 거절한다. INSERT하지 않는다.
-    IF COALESCE(p_paid_amount, 0) <> 0 THEN
+    -- 예외 둘 — 그 건이 0원이거나, 신청자가 is_free(입금 자체가 없는 사람, 결정 A).
+    -- 화면이 넘긴 값을 믿지 않고 **신청하는 이 순간 DB에서** 읽는다.
+    SELECT is_free INTO v_user_is_free
+    FROM public.profiles WHERE id = p_user_id;
+
+    IF COALESCE(p_paid_amount, 0) <> 0 AND NOT COALESCE(v_user_is_free, false) THEN
       RETURN 'waitlist_card_only';
     END IF;
 
@@ -203,6 +224,8 @@ BEGIN
   --    계좌이체 + 금액 있음 → pending_transfer (종전과 같다)
   --
   --    🔴 금액 판정은 `profiles.is_free`가 아니라 **이 건의 paid_amount**다.
+  --       is_free라도 paid_amount > 0이면 pending_transfer — 받지 않은 참가비가
+  --       confirmed 매출로 잡히지 않게 한다 (머리말 (나), 결정 A에서도 유지).
   v_to_confirmed := (v_payment_method <> 'transfer')
                     OR (v_payment_method IS NULL)
                     OR (COALESCE(v_paid_amount, 0) = 0);
@@ -237,7 +260,7 @@ COMMIT;
 -- register_transfer:
 --   'pending_transfer' / 'waitlisted' / 'not_found' / 'not_active'
 --   / 'already_registered' / 'discount_not_eligible' / 'staff_slot_full' : 기존
---   'waitlist_card_only' : (신규) 정원 마감 + 0원이 아닌 계좌이체 대기 시도 → INSERT 없음
+--   'waitlist_card_only' : (신규) 정원 마감 + 0원도 is_free도 아닌 계좌이체 대기 시도 → INSERT 없음
 --
 -- promote_next_waitlisted:
 --   (promoted_id, promoted_user_id, promoted_confirmed) 또는 0행
