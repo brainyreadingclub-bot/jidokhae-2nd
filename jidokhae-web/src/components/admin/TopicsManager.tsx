@@ -473,10 +473,12 @@ function TopicRow({
         {t.quote && (
           <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-700">
             “{t.quote}”
-            {/* 쪽수 없음은 오류가 아니다(선택 칸) — 회색으로만 알린다 */}
-            <span className="ml-1 whitespace-nowrap text-neutral-500">
-              {t.quote_page ? `${t.quote_page}쪽` : '쪽수 없음'}
-            </span>
+            {/* 쪽수 없음은 오류가 아니다(선택 칸) — 작성 중에만 회색으로 알린다 */}
+            {(t.quote_page || t.published_at === null) && (
+              <span className="ml-1 whitespace-nowrap text-neutral-500">
+                {t.quote_page ? `${t.quote_page}쪽` : '쪽수 없음'}
+              </span>
+            )}
           </p>
         )}
         <p className="mt-1 text-[13px] leading-relaxed text-neutral-800">{t.question}</p>
@@ -699,26 +701,28 @@ function TopicsPreview({
             <div className="h-[480px] overflow-hidden rounded-[22px] bg-white px-5 text-tg-900 ring-1 ring-surface-300">
               <p className="flex h-12 items-center text-[17px] font-extrabold tracking-tight text-brand-deep">지독해</p>
               <p className="mt-2 text-[15px] font-extrabold tracking-tight">발제문</p>
-              {topics.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setSelected(t.id)}
-                  className="flex min-h-[56px] w-full items-center gap-3 border-t border-tg-100 py-3 text-left first:border-t-0"
-                >
-                  <span className="flex h-7 w-7 flex-none items-center justify-center rounded-[9px] bg-tg-100 text-xs font-extrabold text-tg-700">
-                    {t.topic_no}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] font-bold tracking-tight">
-                      {t.title || '(제목 없음)'}
+              <div>
+                {topics.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setSelected(t.id)}
+                    className="flex min-h-[56px] w-full items-center gap-3 border-t border-tg-100 py-3 text-left first:border-t-0"
+                  >
+                    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-[9px] bg-tg-100 text-xs font-extrabold text-tg-700">
+                      {t.topic_no}
                     </span>
-                    <span className="mt-0.5 block truncate text-xs text-tg-600">
-                      {t.question || '(질문 없음)'}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] font-bold tracking-tight">
+                        {t.title || '(제목 없음)'}
+                      </span>
+                      <span className="mt-0.5 block truncate text-xs text-tg-600">
+                        {t.question || '(질문 없음)'}
+                      </span>
                     </span>
-                  </span>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           {sel && (
