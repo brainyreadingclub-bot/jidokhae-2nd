@@ -213,7 +213,8 @@ const legacy: ActionSkin = {
  * 전면개편 설계서 §3 · §10.
  */
 const toss: ActionSkin = {
-  stickyOuterStyle: { paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px))' },
+  // 하단 탭 높이는 globals.css `--next-nav-bar` 한 곳 (값 56px — 예전 리터럴과 같다)
+  stickyOuterStyle: { paddingBottom: 'calc(var(--next-nav-bar) + env(safe-area-inset-bottom, 0px))' },
   stickyInnerStyle: {
     backgroundColor: '#FFFFFF',
     boxShadow: '0 -2px 10px rgba(25, 31, 40, 0.06)',

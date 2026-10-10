@@ -38,7 +38,8 @@ export default async function NextLayout({
         </Link>
         {user && <NotificationBell userId={user.id} />}
       </header>
-      <main className="mx-auto max-w-screen-sm px-5 pb-24">{children}</main>
+      {/* 하단 탭 높이(안전영역 포함) + 39px — 안전영역 0이면 예전 pb-24(96px)와 같다 */}
+      <main className="mx-auto max-w-screen-sm px-5 pb-[calc(var(--next-nav-space)+39px)]">{children}</main>
       <NextNav />
     </div>
   )

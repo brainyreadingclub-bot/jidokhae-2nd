@@ -20,7 +20,8 @@ export default function NextNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-tg-100 bg-white">
-      <div className="mx-auto flex h-14 max-w-screen-sm items-center justify-around px-2">
+      {/* 높이는 globals.css --next-nav-bar 한 곳 — 본문 여백·하단 버튼이 같은 값을 쓴다 */}
+      <div className="mx-auto flex h-[var(--next-nav-bar)] max-w-screen-sm items-center justify-around px-2">
         {tabs.map((tab) => {
           // 정확 일치 또는 하위 경로만 — 단순 startsWith는 /meet가 /me에 걸린다
           const isActive =

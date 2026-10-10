@@ -93,8 +93,8 @@ export default function LiveMode({
         )}
       </div>
 
-      {/* 넘김 바 */}
-      <div className="sticky bottom-16 mt-6 flex items-center gap-3 bg-white py-2">
+      {/* 넘김 바 — 하단 탭(안전영역 포함) 위 7px. 안전영역 0이면 예전 bottom-16(64px)과 같다 */}
+      <div className="sticky bottom-[calc(var(--next-nav-space)+7px)] mt-6 flex items-center gap-3 bg-white py-2">
         <button
           type="button"
           aria-label="이전 발제"

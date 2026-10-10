@@ -229,7 +229,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
            금액·입금처·환불 규정을 결제 **전에** 보여주는 자리다 (시안 07). */
         <div
           className="fixed bottom-0 left-0 right-0 z-40"
-          style={{ paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px))' }}
+          style={{ paddingBottom: 'calc(var(--next-nav-bar) + env(safe-area-inset-bottom, 0px))' }}
         >
           <div
             className="mx-auto max-w-screen-sm px-5 py-3"
