@@ -5,7 +5,7 @@ import { isCurator } from '@/lib/curator'
 
 /**
  * API Route 전용 큐레이터(admin·editor·is_staff) 검사.
- * 발제 등록·수정·삭제(api/admin/topics)와 공개하기(api/admin/topics/publish)가 함께 쓴다.
+ * 발제 등록·수정·삭제(api/admin/topics)가 쓴다.
  * 라우트 파일은 핸들러 외의 export를 못 하므로 lib에 둔다.
  */
 export type CuratorContext =

@@ -9,6 +9,11 @@ export type DiscussionTopic = {
   author_id: string
   /** null = 작성 중(회원에게 안 보임). 「공개하기」가 채운다 — migration-topics-publish.sql */
   published_at: string | null
+  /**
+   * null = 신청자에게 아직 안 알림. DB 예약 작업이 묶어서 알린 뒤 채운다 — migration-topics-notify.sql.
+   * 선택(?)인 이유: 그 SQL을 돌리기 전에는 칸이 없다
+   */
+  notified_at?: string | null
   created_at: string
   updated_at: string
 }

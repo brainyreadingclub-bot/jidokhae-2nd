@@ -131,7 +131,7 @@ export default function AdminMeetingOverview({
               ) : tc.published > 0 ? (
                 '신청자에게 보이고 있어요'
               ) : (
-                `공개하면 신청자 ${confirmedCount}명에게 알림이 한 번 가요`
+                `등록하면 바로 보이고, 신청자 ${confirmedCount}명에게 한 번에 알려요`
               )}
             </p>
             <Link

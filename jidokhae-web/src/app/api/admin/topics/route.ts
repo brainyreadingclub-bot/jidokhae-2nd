@@ -3,14 +3,15 @@ import { requireCurator } from '@/lib/curator-route'
 
 /**
  * 발제문 관리. 권한 = 큐레이터(admin·editor·is_staff, 2026-08-17 결정).
- * POST 등록(여러 개 한 번에) / PATCH 수정 / DELETE 삭제(하나 또는 「되돌리기」 여러 개).
+ * POST 등록 / PATCH 수정 / DELETE 삭제.
  *
- * 2026-10-09: 등록은 「작성 중」(published_at = null)으로만 들어가고 **알림을 보내지 않는다.**
- * 회원에게 보이고 알림이 가는 것은 「공개하기」(api/admin/topics/publish) 한 번뿐이다.
- * 공개된 발제를 고쳐도 알림은 다시 가지 않는다.
+ * 2026-10-10 (1차): 운영자가 하나씩 써서 **등록하면 바로 공개**(published_at = now()).
+ * 이 라우트는 **알림을 보내지 않는다.** 신청자 알림은 DB 예약 작업이 묶어서 보낸다 —
+ * 마지막 등록 후 10분 동안 추가 등록이 없으면 그 모임 신청자에게 「발제 N개가 올라왔어요」 한 번
+ * (`supabase/migration-topics-notify.sql`의 flush_topic_notifications, 1분마다).
+ * 고치기(PATCH)는 published_at을 건드리지 않아 알림이 다시 가지 않는다.
  */
 
-const MAX_TOPICS_PER_REQUEST = 20
 const MAX_TITLE = 200
 const MAX_TEXT = 2000
 
@@ -30,7 +31,7 @@ function optStr(v: unknown): string | null {
   return s === '' ? null : s
 }
 
-/** 입력 정리. 작성 중이라 제목·질문 중 하나는 비어도 되지만 둘 다 비면 거절 */
+/** 입력 정리. 제목·질문은 필수(바로 공개되므로 빈 칸 발제가 회원에게 나가면 안 된다) */
 function normalizeTopic(raw: unknown): TopicInput | null {
   if (!raw || typeof raw !== 'object') return null
   const r = raw as Record<string, unknown>
@@ -40,7 +41,7 @@ function normalizeTopic(raw: unknown): TopicInput | null {
     quote_page: optStr(r.quote_page),
     question: str(r.question),
   }
-  if (t.title === '' && t.question === '') return null
+  if (t.title === '' || t.question === '') return null
   if (
     t.title.length > MAX_TITLE ||
     t.question.length > MAX_TEXT ||
@@ -58,17 +59,10 @@ export async function POST(request: NextRequest) {
     if ('error' in ctx) return ctx.error
     const body = await request.json()
     const meetingId = typeof body.meeting_id === 'string' ? body.meeting_id : ''
-    // { topics: [...] } — 붙여넣기로 나눈 여러 개. 하나만 보내도 같은 모양
-    const rawTopics: unknown[] = Array.isArray(body.topics) ? body.topics : [body]
-    const topics = rawTopics.map(normalizeTopic)
-    if (
-      !meetingId ||
-      topics.length === 0 ||
-      topics.length > MAX_TOPICS_PER_REQUEST ||
-      topics.some((t) => t === null)
-    ) {
+    const topic = normalizeTopic(body)
+    if (!meetingId || !topic) {
       return NextResponse.json(
-        { status: 'error', message: '필수 항목을 확인해 주세요' },
+        { status: 'error', message: '제목과 질문을 채워 주세요' },
         { status: 400 },
       )
     }
@@ -86,7 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 번호는 서버가 매긴다 — 그 모임의 기존 발제 뒤로 이어 붙인다.
-    // 여러 행을 한 번의 insert로 넣어 전부 들어가거나 하나도 안 들어간다.
     // 두 사람이 동시에 넣어 번호가 겹치면 unique(meeting_id, topic_no)가 막는다 → 한 번 더 시도
     for (let attempt = 0; attempt < 2; attempt++) {
       const { data: last } = await ctx.admin
@@ -95,20 +88,19 @@ export async function POST(request: NextRequest) {
         .eq('meeting_id', meetingId)
         .order('topic_no', { ascending: false })
         .limit(1)
-      const start = (last?.[0]?.topic_no ?? 0) + 1
-      const rows = (topics as TopicInput[]).map((t, i) => ({
-        meeting_id: meetingId,
-        topic_no: start + i,
-        ...t,
-        author_id: ctx.user.id,
-        published_at: null,
-      }))
       const { data, error } = await ctx.admin
         .from('discussion_topics')
-        .insert(rows)
+        .insert({
+          meeting_id: meetingId,
+          topic_no: (last?.[0]?.topic_no ?? 0) + 1,
+          ...topic,
+          author_id: ctx.user.id,
+          published_at: new Date().toISOString(),
+        })
         .select('id, topic_no')
+        .single()
       if (!error && data) {
-        return NextResponse.json({ status: 'success', data: { topics: data } })
+        return NextResponse.json({ status: 'success', data })
       }
       if ((error as { code?: string } | null)?.code !== '23505') break
     }
@@ -130,8 +122,7 @@ export async function PATCH(request: NextRequest) {
     if ('error' in ctx) return ctx.error
     const body = await request.json()
     const t = normalizeTopic(body)
-    // 저장은 제목·질문이 다 있어야 한다 — 공개된 발제가 빈 칸이 되면 안 된다
-    if (!body.id || !t || t.title === '' || t.question === '') {
+    if (!body.id || !t) {
       return NextResponse.json(
         { status: 'error', message: '제목과 질문을 채워 주세요' },
         { status: 400 },
@@ -144,6 +135,7 @@ export async function PATCH(request: NextRequest) {
         { status: 400 },
       )
     }
+    // published_at·notified_at은 건드리지 않는다 — 고쳐도 알림이 다시 가지 않는다
     const { error } = await ctx.admin
       .from('discussion_topics')
       .update({
@@ -175,24 +167,15 @@ export async function DELETE(request: NextRequest) {
   try {
     const ctx = await requireCurator(request)
     if ('error' in ctx) return ctx.error
-    const { id, ids } = await request.json()
-    // ids = 「되돌리기」 — 방금 붙여넣기로 만든 발제를 한꺼번에 지운다. 작성 중인 것만 지운다
-    const undoIds = Array.isArray(ids)
-      ? ids.filter((v: unknown): v is string => typeof v === 'string')
-      : []
-    if (!id && undoIds.length === 0) {
+    const { id } = await request.json()
+    if (!id) {
       return NextResponse.json(
         { status: 'error', message: 'id가 필요해요' },
         { status: 400 },
       )
     }
-    const { error } = id
-      ? await ctx.admin.from('discussion_topics').delete().eq('id', id)
-      : await ctx.admin
-          .from('discussion_topics')
-          .delete()
-          .in('id', undoIds)
-          .is('published_at', null)
+    // 알림 전에 지운 발제는 알림 개수에서 빠진다 — 예약 작업이 보낼 때 다시 센다
+    const { error } = await ctx.admin.from('discussion_topics').delete().eq('id', id)
     if (error) {
       return NextResponse.json(
         { status: 'error', message: '잠시 후 다시 시도해 주세요' },
