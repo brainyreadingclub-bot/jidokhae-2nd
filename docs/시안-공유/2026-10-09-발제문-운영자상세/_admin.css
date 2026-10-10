@@ -1,0 +1,85 @@
+/* 운영자 화면 시안 공용 — 토큰은 origin/main jidokhae-web/src/app/globals.css 값을 그대로 옮겼다 (새 토큰 없음) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;800&display=swap');
+
+:root{
+  --p50:#F3FAF6; --p100:#E3F2EC; --p200:#CDE9DB; --p300:#8FCBB0; --p400:#3E9A78;
+  --p500:#127A5A; --p600:#0d5c43; --p700:#0B4B37; --p800:#0A3A2B; --p900:#072A20;
+  --a50:#FFF1EC; --a100:#FADFD5; --a200:#FBC3B0; --a300:#F79B7C; --a500:#F4552A; --a600:#D8431C; --a700:#B23516;
+  --n50:#F9FAFB; --n100:#F0F2F5; --n200:#E5E8EB; --n300:#D4D8DE; --n400:#B0B8C1;
+  --n500:#8B95A1; --n600:#6B7684; --n700:#5A6B7A; --n800:#333D48; --n900:#191F28;
+  --s50:#FFFFFF; --s100:#F9FAFB; --s200:#F0F2F5; --s300:#E5E8EB;
+  --error:#B5403A;
+  --r-sm:6px; --r-md:12px; --r-lg:16px;
+  --sans:'Pretendard Variable',Pretendard,-apple-system,'Malgun Gothic',sans-serif;
+  --display:'Noto Serif KR',Georgia,serif;
+  /* 회원(next) 토스 스킨 — 미리보기용 */
+  --tg50:#F9FAFB; --tg100:#F2F4F6; --tg200:#E5E8EB; --tg300:#D1D6DB; --tg400:#B0B8C1;
+  --tg500:#8B95A1; --tg600:#6B7684; --tg700:#4E5968; --tg800:#333D4B; --tg900:#191F28;
+  --brand:#0FA873; --brand-deep:#0C8A5F; --brand-bg:#E8F7F1; --warnx:#FF6B3D;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--s50)}
+body{position:relative;min-height:100vh}
+body{font-family:var(--sans);color:var(--n900);word-break:keep-all;-webkit-font-smoothing:antialiased;font-size:14px}
+button{font-family:inherit;cursor:pointer;border:0;background:none}
+a{color:inherit;text-decoration:none}
+
+/* ── 레이아웃 = (admin)/layout.tsx ── */
+.side{position:absolute;top:0;bottom:0;left:0;width:220px;background:var(--p900);color:var(--s100);display:flex;flex-direction:column}
+.side .brand{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.side .brand b{font-size:18px;font-weight:700;letter-spacing:-.02em}
+.side .brand small{display:block;margin-top:2px;font-size:10px;font-weight:600;letter-spacing:.18em;color:var(--n400)}
+.side nav{padding:12px 0;flex:1}
+.side .grp{padding:12px 20px 4px;font-size:10px;font-weight:600;letter-spacing:.18em;color:var(--n400)}
+.side .it{display:block;padding:10px 20px;font-size:13px;color:rgba(249,250,251,.75);border-left:2px solid transparent}
+.side .it.on{background:rgba(255,255,255,.06);color:#fff;font-weight:700;border-left-color:var(--p300)}
+.main{margin-left:220px;min-height:100vh}
+.cap{max-width:1400px}
+.mhead{display:none}
+/* 페이지 여백 = 모임 상세 기준: px-5 pt-6 pb-10 lg:px-10 lg:pt-10 */
+.page{padding:40px 40px 40px}
+
+@media (max-width:1023px){
+  .side{display:none}
+  .main{margin-left:0}
+  .mhead{display:flex;position:sticky;top:0;z-index:30;height:56px;align-items:center;gap:12px;padding:0 16px;background:var(--s50);border-bottom:1px solid var(--s300)}
+  .mhead .burger{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--p800)}
+  .mhead b{font-size:15px;font-weight:700;color:var(--p900)}
+  .mhead small{font-size:10px;font-weight:600;letter-spacing:.18em;color:var(--p500);margin-left:6px}
+  .page{padding:24px 20px 40px}
+}
+
+/* ── 공통 조각 ── */
+.crumb{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--p500);margin-bottom:16px}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700}
+.pill.region{background:var(--p50);color:var(--p700)}
+.pill.type{background:var(--n100);color:var(--n700)}
+.h1{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--p900);line-height:1.3}
+@media (max-width:1023px){.h1{font-size:24px}}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.18em;color:var(--p500)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--r-md);font-size:13px;font-weight:700;height:40px;padding:0 16px;white-space:nowrap}
+.btn.primary{background:var(--p600);color:#fff}
+.btn.primary:disabled,.btn.primary.off{background:var(--n200);color:var(--n500)}
+.btn.line{border:1px solid var(--s300);color:var(--p700);background:#fff}
+.btn.sm{height:32px;padding:0 12px;font-size:12px;border-radius:9px}
+.btn.danger{background:var(--error);color:#fff}
+
+.lab{display:block;font-size:12px;font-weight:700;color:var(--n800);margin-bottom:6px}
+.lab .req{color:var(--a500);margin-left:2px}
+.lab .opt{font-weight:500;color:var(--n500);margin-left:4px}
+.inp{width:100%;border:1px solid var(--n300);border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;color:var(--n900);background:#fff;line-height:1.55;resize:vertical}
+.inp:focus{outline:none;border-color:var(--p500)}
+.inp.miss{border-color:var(--a300,#F79B7C);background:var(--a50)}
+.help{font-size:12px;color:var(--n600);line-height:1.6;margin-top:6px}
+
+/* 모달 */
+.dim{position:fixed;inset:0;background:rgba(7,42,32,.42);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:var(--r-lg);width:100%;max-width:400px;padding:24px;box-shadow:0 12px 32px rgba(18,122,90,.12),0 4px 8px rgba(18,122,90,.06)}
+.modal h3{font-size:17px;font-weight:800;color:var(--n900);letter-spacing:-.02em}
+.modal p{margin-top:10px;font-size:14px;line-height:1.65;color:var(--n700)}
+.modal .row{display:flex;gap:8px;margin-top:20px}
+.modal .row .btn{flex:1;height:44px}
+
+.hide{display:none!important}

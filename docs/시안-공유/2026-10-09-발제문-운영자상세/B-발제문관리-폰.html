@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B. 발제문 관리 — 폰 390 (#fresh · #pasted · #split · #edit · #publish)</title>
+<link rel="stylesheet" href="_admin.css">
+<style>
+html{scrollbar-width:none}html::-webkit-scrollbar{display:none}
+html,body{width:100%;overflow-x:hidden}
+.st.pub{background:var(--p50);color:var(--p700)}
+.ans{margin-top:4px;font-size:12px;color:var(--n600)}
+.sheet .row .del{flex:1;background:var(--error);color:#fff}
+/* 상태 전환: s-○○ 클래스 중 하나라도 현재 상태면 보인다 (아래 스크립트) */
+.off-state{display:none!important}
+body[data-state=edit] .no-edit,body[data-state=fresh] .no-fresh,body[data-state=pasted] .no-fresh{display:none!important}
+.page{padding:20px 20px 120px}  /* 아래 고정 바 높이만큼 비움 */
+.head .pills{display:flex;gap:6px;margin-bottom:6px}
+.head .h1{font-size:24px}
+.head .sub{margin-top:4px;font-size:13px;color:var(--p600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.stat{margin-top:16px;padding:12px 0;border-top:1px solid var(--s300);border-bottom:1px solid var(--s300);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stat .t{font-size:14px;color:var(--n700)}
+.stat .t b{color:var(--n900);font-weight:800}
+.stat .pv{flex:none;font-size:13px;font-weight:700;color:var(--p600);min-height:44px;display:flex;align-items:center}
+
+.colh{margin-top:20px;font-size:15px;font-weight:800;color:var(--n900);display:flex;justify-content:space-between;align-items:baseline}
+.colh small{font-size:12px;font-weight:500;color:var(--n600)}
+.help{margin-top:4px}
+textarea.paste{margin-top:10px;min-height:260px;font-size:13px;line-height:1.7}
+.pasted textarea.paste{min-height:420px}
+.alt{display:flex;justify-content:center;margin-top:14px}
+.alt a{font-size:13px;font-weight:700;color:var(--p600);min-height:44px;display:flex;align-items:center}
+.rules{margin-top:12px;font-size:12px;color:var(--n600);line-height:1.75}
+.rules b{color:var(--n800)}
+.fold{margin-top:16px;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 14px;border:1px solid var(--s300);border-radius:var(--r-md);font-size:13px;font-weight:700;color:var(--n800)}
+.fold span{font-weight:500;color:var(--n600);font-size:12px}
+
+.notice{margin-top:12px;display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:var(--s200);font-size:12.5px;color:var(--n800);line-height:1.55}
+.notice a{flex:none;font-weight:700;color:var(--p600)}
+
+.tp{display:flex;gap:10px;padding:14px 0;border-top:1px solid var(--s300)}
+.tp:first-child{border-top:0}
+.no{flex:none;width:26px;height:26px;border-radius:8px;background:var(--n100);color:var(--n700);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.tb{min-width:0;flex:1}
+.tt{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tt b{font-size:14.5px;font-weight:800;color:var(--n900)}
+.st{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--n100);color:var(--n700)}
+.tq{margin-top:6px;font-size:13px;color:var(--n700);line-height:1.6}
+.tq .pg{color:var(--n500);margin-left:4px;white-space:nowrap}
+.tquest{margin-top:4px;font-size:13px;color:var(--n800);line-height:1.6}
+.req-miss{margin-top:4px;font-size:13px;font-weight:600;color:var(--a600)}
+.more{flex:none;width:44px;height:44px;margin:-10px -10px 0 0;display:flex;align-items:center;justify-content:center;color:var(--n600)}
+
+.edit{background:var(--s100);border-radius:var(--r-md);padding:16px;margin:6px 0}
+.edit .eh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13px;font-weight:800;color:var(--n800)}
+.edit .eh a{font-size:13px;font-weight:600;color:var(--error);min-height:44px;display:flex;align-items:center}
+.edit .grid{display:grid;grid-template-columns:64px 1fr;gap:10px}
+.edit .f{margin-top:14px}
+.edit .num{text-align:center;padding:10px 4px}
+.edit .pgw{width:120px}
+.edit .inp{font-size:16px} /* iOS 확대 방지 */
+.edit .miss-msg{margin-top:6px;font-size:12px;font-weight:600;color:var(--a600)}
+
+.add1{margin-top:12px;height:44px}
+
+/* 🔴 아래 고정 바 — 엄지 자리. 지금 할 일 하나만 크게 */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:1px solid var(--s300);padding:10px 20px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px}
+.dock .dt{min-width:0;flex:1;font-size:12.5px;color:var(--n700);line-height:1.45}
+.dock .dt b{display:block;font-size:14px;color:var(--n900);font-weight:800}
+.dock .dt .w{color:var(--a600);font-weight:600}
+.dock .btn{height:52px;padding:0 20px;font-size:15px;border-radius:14px;flex:none}
+.dock .btn.wide{flex:1}
+.dock .btn.half{flex:1}
+
+/* 공개 확인 — 아래에서 올라오는 시트(엄지 자리) */
+.sheet-dim{position:fixed;inset:0;background:rgba(7,42,32,.42);z-index:60;display:flex;align-items:flex-end}
+.sheet{width:100%;background:#fff;border-radius:20px 20px 0 0;padding:22px 20px calc(16px + env(safe-area-inset-bottom))}
+.sheet .grab{width:36px;height:4px;border-radius:4px;background:var(--n300);margin:-8px auto 16px}
+.sheet h3{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.sheet p{margin-top:8px;font-size:14px;line-height:1.65;color:var(--n700)}
+.sheet .cap2{margin-top:16px;font-size:11px;font-weight:700;color:var(--n500)}
+.sheet .noti{margin-top:6px;display:flex;gap:10px;padding:12px;border-radius:12px;background:var(--s200)}
+.sheet .noti b{display:block;font-size:13px;font-weight:700;color:var(--n900)}
+.sheet .noti span{display:block;margin-top:2px;font-size:12px;color:var(--n600)}
+.sheet .row{display:flex;gap:8px;margin-top:20px}
+.sheet .row .btn{height:52px;font-size:15px;border-radius:14px}
+.sheet .row .c{flex:0 0 34%}
+.sheet .row .o{flex:1}
+</style>
+</head>
+<body data-active="모임 관리" data-default="fresh">
+<div class="main">
+  <div class="mhead"></div>
+  <div class="cap"><div class="page">
+
+    <div class="head">
+      <a class="crumb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>모임 상세</a>
+      <div class="pills"><span class="pill region">포항</span><span class="pill type">토론</span></div>
+      <h1 class="h1">발제문</h1>
+      <p class="sub">실연당한 사람들을 위한 일곱 시 조찬모임 · 10월 27일 (화)</p>
+    </div>
+
+    <div class="stat">
+      <span class="t s-fresh s-pasted"><b>발제문 없음</b></span>
+      <span class="t s-split s-edit"><b>작성 중 5개</b> · 회원에게 안 보여요</span>
+      <span class="t s-publish s-ready"><b>작성 중 5개</b> · 회원에게 안 보여요</span>
+      <span class="t s-pubdel"><b>공개됨 5개</b></span>
+      <a class="pv no-fresh">회원 화면 미리보기</a>
+    </div>
+
+    <!-- 붙여넣기: 발제가 없을 때는 처음부터 열어 둔다 (이 화면에 온 이유가 그것뿐이라) -->
+    <section class="s-fresh s-pasted">
+      <div class="colh">카톡 발제문 붙여넣기</div>
+      <p class="help">카톡에 쓴 발제문을 통째로 붙여넣으면 번호별로 나눠 드려요.</p>
+      <label class="lab" style="margin-top:14px" for="p1">발제문 전체</label>
+      <textarea id="p1" class="inp paste s-fresh"></textarea>
+      <textarea class="inp paste s-pasted" style="min-height:430px" spellcheck="false">📚 10/27 토론모임 발제문
+
+1. 사랑과 관념
+"사랑은 변할 수 있다. 그러나 사랑에 대한 관념은 그러기가 쉽지 않다." (p.289)
+사랑에 관해 나만의 관념이 있었나요? 책에서 가장 와닿았던 사랑 관련 문장과 새롭게 발견한 나의 관념 혹은 떠오른 생각에 대해 나눠봐요.
+
+2) 도덕, 연애, 결혼 그리고 사랑
+사랑은 그저 사랑일 뿐일까요? 도덕과 제도 테두리 속에서 성숙을 더해가는 것일까요?
+
+3. 사랑이 실종된 현대
+사랑은 힘을 잃은 것일까요? 아니면 다가오기 전에 너무 많은 허들을 두는 것일까요?
+
+4. 질투
+「질투는 사랑의 크기가 아니라 그가 느끼는 약점의 크기를 나타낸다」
+어떻게 읽으셨나요?
+
+5. 사람이 사랑을 이기지 못한다</textarea>
+      <div class="rules s-fresh">
+        · <b>1.</b> <b>1)</b> <b>①</b>처럼 번호로 시작하는 줄에서 발제가 나뉘어요<br>
+        · 따옴표 줄은 인용문, <b>p.289</b>·<b>289쪽</b>은 쪽수로 옮겨요<br>
+        · 나머지는 모두 질문에 들어가요 — 버리는 줄은 없어요
+      </div>
+      <div class="alt s-fresh"><a>하나씩 직접 쓰기</a></div>
+    </section>
+
+    <!-- 발제가 생긴 뒤에는 붙여넣기를 접는다 -->
+    <div class="fold s-split s-edit s-publish s-ready s-pubdel">카톡 발제문 더 붙여넣기 <span>열기 ▾</span></div>
+
+    <section class="s-split s-edit s-publish s-ready s-pubdel">
+      <div class="colh">발제 목록</div>
+      <div class="notice s-split"><span>발제 5개로 나눴어요. 첫 줄(「📚 10/27 토론모임 발제문」)은 넣지 않았어요.</span><a>되돌리기</a></div>
+      <ul style="list-style:none;margin-top:6px">
+        <li class="tp">
+          <span class="no">1</span>
+          <div class="tb"><div class="tt"><b>사랑과 관념</b><span class="st">작성 중</span></div>
+            <p class="tq">“사랑은 변할 수 있다. 그러나 사랑에 대한 관념은 그러기가 쉽지 않다.”<span class="pg">289쪽</span></p>
+            <p class="tquest">사랑에 관해 나만의 관념이 있었나요? 책에서 가장 와닿았던 사랑 관련 문장과…</p><p class="ans s-pubdel">답변 2개</p></div>
+          <a class="more" aria-label="수정·삭제"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+        </li>
+        <li class="tp">
+          <span class="no">2</span>
+          <div class="tb"><div class="tt"><b>도덕, 연애, 결혼 그리고 사랑</b><span class="st">작성 중</span></div>
+            <p class="tquest">사랑은 그저 사랑일 뿐일까요? 도덕과 제도 테두리 속에서 성숙을 더해가는 것일까요?</p></div>
+          <a class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+        </li>
+        <li class="tp">
+          <span class="no">3</span>
+          <div class="tb"><div class="tt"><b>사랑이 실종된 현대</b><span class="st">작성 중</span></div>
+            <p class="tquest">사랑은 힘을 잃은 것일까요? 아니면 다가오기 전에 너무 많은 허들을 두는 것일까요?</p></div>
+          <a class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+        </li>
+        <li class="tp">
+          <span class="no">4</span>
+          <div class="tb"><div class="tt"><b>질투</b><span class="st">작성 중</span></div>
+            <p class="tq">“질투는 사랑의 크기가 아니라 그가 느끼는 약점의 크기를 나타낸다”<span class="pg">· 쪽수 없음</span></p>
+            <p class="tquest">어떻게 읽으셨나요?</p></div>
+          <a class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+        </li>
+        <!-- 5번: 나눈 직후엔 접힌 채 빨간 표시 / 누르면 그 자리에서 펼쳐 수정 -->
+        <li class="tp s-split" id="t5">
+          <span class="no">5</span>
+          <div class="tb"><div class="tt"><b>사람이 사랑을 이기지 못한다</b><span class="st">작성 중</span></div>
+            <p class="req-miss">질문이 비어 있어요 — 눌러서 채우기</p></div>
+          <a class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+        </li>
+        <li class="tp s-publish s-ready s-pubdel">
+          <span class="no">5</span>
+          <div class="tb"><div class="tt"><b>사람이 사랑을 이기지 못한다</b><span class="st">작성 중</span></div>
+            <p class="tquest">사랑이 성숙해진 걸까요, 다루는 내가 성숙해진 걸까요?</p></div>
+          <a class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></a>
+        </li>
+        <li class="edit s-edit" id="e5">
+          <div class="eh">발제 5 고치는 중 <a>삭제</a></div>
+          <div class="grid">
+            <div><label class="lab">번호</label><input class="inp num" value="5"></div>
+            <div><label class="lab">제목<span class="req">*</span></label><input class="inp" value="사람이 사랑을 이기지 못한다"></div>
+          </div>
+          <div class="f"><label class="lab">인용문<span class="opt">선택</span></label><textarea class="inp" rows="2"></textarea></div>
+          <div class="f"><label class="lab">쪽수<span class="opt">선택</span></label><input class="inp pgw" inputmode="numeric"></div>
+          <div class="f"><label class="lab">질문<span class="req">*</span></label><textarea class="inp" rows="3">사랑이 성숙해진 걸까요, 다루는 내가 성숙해진 걸까요?</textarea></div>
+        </li>
+      </ul>
+      <button class="btn line add1 no-edit">＋ 발제 하나 추가</button>
+    </section>
+
+  </div></div>
+</div>
+
+<!-- 아래 고정 바: 상태마다 지금 할 일 하나 -->
+<div class="dock s-pasted"><div class="dt"><b>발제 5개를 찾았어요</b>나누기 전에 확인할 수 있어요</div><button class="btn primary">번호별로 나누기</button></div>
+<div class="dock s-split"><div class="dt"><b>작성 중 5개</b><span class="w">질문이 빈 발제 1개</span></div><button class="btn primary off" disabled>공개하기</button></div>
+<div class="dock s-edit"><button class="btn line half">취소</button><button class="btn primary half">저장</button></div>
+<div class="dock s-publish s-ready"><div class="dt"><b>작성 중 5개</b>신청자 3명에게 알림 1번</div><button class="btn primary">공개하기</button></div>
+
+<div class="sheet-dim s-publish">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>발제 5개를 공개할까요?</h3>
+    <p>신청자 <b>3명</b>에게 앱 알림이 <b>한 번</b> 가요. 공개한 뒤에도 고칠 수 있고, 고쳐도 알림은 다시 가지 않아요.</p>
+    <p class="cap2">회원 알림함에 이렇게 떠요</p>
+    <div class="noti"><span style="font-size:18px;margin:0">📖</span><div><b>발제문 5개가 올라왔어요</b><span>실연당한 사람들을 위한 일곱 시 조찬모임</span></div></div>
+    <div class="row"><button class="btn line c">취소</button><button class="btn primary o">공개하기</button></div>
+  </div>
+</div>
+
+
+<div class="dock s-pubdel"><div class="dt"><b>공개됨 5개</b>신청자 3명에게 알림을 보냈어요</div><button class="btn primary off" disabled>모두 공개됨</button></div>
+<div class="sheet-dim s-pubdel">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>1번 발제 「사랑과 관념」을 삭제할까요?</h3>
+    <p>이미 공개된 발제예요. 회원 화면에서도 사라지고, 달린 <b>답변 2개</b>와 그 답글·공감도 함께 지워져요. 되돌릴 수 없어요.</p>
+    <div class="row"><button class="btn line c">취소</button><button class="btn del">삭제</button></div>
+  </div>
+</div>
+<script src="_chrome.js"></script>
+<script>
+  var st=document.body.getAttribute('data-state')
+  document.querySelectorAll('[class*="s-"]').forEach(function(el){var cs=[].filter.call(el.classList,function(c){return /^s-/.test(c)});if(cs.length&&cs.indexOf('s-'+st)<0)el.classList.add('off-state')})
+  if (st === 'pubdel') document.querySelectorAll('.st').forEach(function(b){ b.textContent='공개됨'; b.classList.add('pub') })
+  if (st === 'ready') window.scrollTo(0, 420)
+  setTimeout(function(){
+    var de=document.documentElement, over=[]
+    document.querySelectorAll('body *').forEach(function(el){ var r=el.getBoundingClientRect(); if (r.width>0 && r.right>window.innerWidth+0.5) over.push(el.tagName+'.'+el.className) })
+    console.log('CHECK '+st+' w='+window.innerWidth+' scrollW='+de.scrollWidth+' clientW='+de.clientWidth+' over='+over.length+(over.length?' '+over.slice(0,5).join(' | '):''))
+  }, 0)
+  // 수정 중 장면은 그 발제 위치로 스크롤
+  if (location.hash === '#edit') { var e = document.getElementById('e5'); window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - 70) }
+</script>
+</body>
+</html>

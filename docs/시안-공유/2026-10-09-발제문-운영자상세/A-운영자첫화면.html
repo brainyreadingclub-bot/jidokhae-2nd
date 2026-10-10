@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A. 운영자 첫 화면 — 발제문 할 일 (2026-10-09 시안)</title>
+<link rel="stylesheet" href="_admin.css">
+<style>
+.hub-h{margin-bottom:24px}
+.hub-h .h1{margin-top:4px}
+
+/* 새 줄 — 기존 「긴급」 줄과 같은 문법(태그 + 내용 + 오른쪽 행동), 색만 중립 */
+.todo{margin-bottom:24px;display:flex;flex-direction:column;gap:8px}
+.trow{display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px solid var(--s300);border-radius:var(--r-md);background:#fff}
+.trow .tag{flex:none;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--p600)}
+.trow .what{min-width:0;flex:1;display:flex;align-items:baseline;gap:10px}
+.trow .when{flex:none;font-size:13px;font-weight:700;color:var(--n800)}
+.trow .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600;color:var(--n900)}
+.trow .cnt{flex:none;font-size:13px;color:var(--n700);white-space:nowrap}
+.trow .cnt b{font-size:14px;font-weight:800;color:var(--n900)}
+.trow .cnt .d{color:var(--n500);margin-left:6px}
+.trow .go{flex:none}
+.trow .meta{flex:none;font-size:12px;color:var(--n600);white-space:nowrap}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.kpi{border:1px solid var(--s300);border-radius:var(--r-md);padding:16px}
+.kpi .l{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--p500)}
+.kpi .v{margin-top:4px;font-family:var(--display);font-size:30px;font-weight:800;color:var(--p900)}
+.kpi .v small{font-family:var(--sans);font-size:14px;font-weight:600;color:var(--p500);margin-left:4px}
+.kpi .s{margin-top:8px;font-size:12px;color:var(--n600)}
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.card{border:1px solid var(--s300);border-radius:var(--r-md);padding:20px}
+.card h2{font-family:var(--display);font-size:14px;font-weight:700;color:var(--p800)}
+.card p{margin-top:12px;font-size:12px;color:var(--p500)}
+.q{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.q span{border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;border:1px solid var(--s300);color:var(--p700)}
+.q span.p{background:var(--p700);color:#fff;border-color:var(--p700)}
+
+body[data-state=todo] .s-draft,body[data-state=todo] .s-mixed,body[data-state=todo] .s-cont{display:none}
+body[data-state=draft] .s-todo,body[data-state=draft] .s-mixed{display:none}
+body[data-state=mixed] .s-todo,body[data-state=mixed] .s-draft-only{display:none}
+
+@media (max-width:1023px){
+  .kpis,.two{grid-template-columns:1fr}
+  .trow{flex-wrap:wrap;gap:6px 10px;padding:12px 14px}
+  .trow .what{flex-basis:100%;order:2;flex-direction:column;gap:2px}
+  .trow .tag{order:1}
+  .trow .cnt{order:3;flex:1}
+  .trow .go{order:4}
+  .trow .t{white-space:normal;font-size:14px}
+}
+</style>
+</head>
+<body data-active="대시보드" data-default="todo">
+<div class="main">
+  <div class="mhead"></div>
+  <div class="cap"><div class="page">
+
+    <div class="hub-h">
+      <div class="eyebrow">대시보드 · 2026년 10월 9일 (금)</div>
+      <h1 class="h1">오늘의 운영 현황</h1>
+    </div>
+
+    <!-- 🆕 발제문이 없거나 작성 중인 발제가 있는 다가오는 토론모임마다 한 줄 -->
+    <div class="todo">
+      <a class="trow">
+        <span class="tag">발제문</span>
+        <span class="what">
+          <span class="when">10/27 (화)</span>
+          <span class="t">실연당한 사람들을 위한 일곱 시 조찬모임</span>
+          <span class="meta">· 신청 3명 · 모임까지 18일</span>
+        </span>
+        <span class="cnt"><b class="s-todo">발제문 없음</b><b class="s-draft s-draft-only">작성 중 3개</b><b class="s-mixed">공개됨 3개 · 작성 중 2개</b></span>
+        <span class="btn primary sm go s-todo">등록하기</span>
+        <span class="btn primary sm go s-cont">이어서 하기</span>
+      </a>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">이번 주 모임</div><div class="v">—<small>건</small></div><div class="s">평균 신청률 —</div></div>
+      <div class="kpi"><div class="l">신규 회원 (이번 달)</div><div class="v">—<small>명</small></div><div class="s">총 —명</div></div>
+      <div class="kpi"><div class="l">이번 달 순매출</div><div class="v">—</div><div class="s">— vs 전월</div></div>
+    </div>
+
+    <div class="two">
+      <div class="card"><h2>이번 주 모임</h2><p>(기존 그대로)</p></div>
+      <div class="card"><h2>바로가기</h2>
+        <div class="q"><span class="p">＋ 새 모임</span><span>모임 관리</span><span>회원 관리</span><span>사이트 설정</span></div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+<script src="_chrome.js"></script>
+</body>
+</html>

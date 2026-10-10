@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C. 운영자 모임 상세 — 지금(#now) · 개선(#new) · 삭제 확인(#delete) (2026-10-09 시안)</title>
+<link rel="stylesheet" href="_admin.css">
+<style>
+body[data-state=now] .v-new{display:none}
+body:not([data-state=now]) .v-now{display:none}
+body:not([data-state=delete]) .v-delete{display:none}
+body[data-state=mixed] .t-none{display:none}
+body:not([data-state=mixed]) .t-mixed{display:none}
+
+/* ════ 지금 — (admin)/admin/meetings/[id]/page.tsx + AdminMeetingSection.tsx 그대로 ════ */
+.now-info{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px;color:var(--p600);margin-bottom:4px}
+.now-topic{display:inline-flex;margin-bottom:8px;border-radius:8px;background:var(--p50);padding:6px 12px;font-size:12px;font-weight:700;color:var(--p700)}
+.now-link{margin-bottom:24px;font-size:12px;color:rgba(18,122,90,.8)}
+.now-link u{text-underline-offset:2px}
+.now-box{margin-top:32px;border-radius:var(--r-lg);padding:16px;background:var(--s100)}
+.now-box h2{font-size:14px;font-weight:700;color:var(--p800);margin-bottom:16px}
+.now-edit{display:block;width:100%;border-radius:var(--r-md);background:var(--p600);padding:12px 0;text-align:center;font-size:14px;font-weight:500;color:#fff}
+.now-del{display:block;width:100%;margin-top:12px;padding:10px 0;text-align:center;font-size:13px;color:var(--n400)}
+.now-sum{margin:24px 0 20px;display:grid;grid-template-columns:repeat(3,1fr);text-align:center;border:1px solid var(--s300);border-radius:var(--r-md);background:#fff;padding:12px 16px}
+.now-sum div div:first-child{font-size:12px;color:var(--p500);margin-bottom:4px}
+.now-sum div div:last-child{font-size:14px;font-weight:700;color:var(--p800)}
+.now-h3{font-size:12px;font-weight:700;color:var(--p500);margin-bottom:12px}
+.now-card{border-radius:var(--r-md);padding:12px;background:#fff;border:1px solid var(--s200);margin-bottom:8px}
+.now-card .r1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.now-card .nm{font-size:14px;font-weight:500;color:var(--p800)}
+.badge{display:inline-flex;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;background:var(--p50);color:var(--p700);border:1px solid var(--p100)}
+.now-card .pm{font-size:10px;color:var(--p400);margin-left:6px}
+.now-card .r2{margin-top:6px;font-size:12px;color:var(--p500)}
+
+/* ════ 개선 ════ */
+.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.topline .crumb{margin-bottom:0}
+.topline .acts{display:flex;gap:6px}
+.pills{display:flex;gap:6px;margin-bottom:8px}
+.info{display:flex;align-items:baseline;white-space:nowrap;overflow:hidden;margin-top:8px;font-size:14px;color:var(--p600)}
+.info > span{flex:none;margin-right:14px}
+.info > span.place{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.info > span:last-child{margin-right:0}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px}
+.stat{border:1px solid var(--s300);border-radius:var(--r-lg);padding:20px 22px;display:flex;flex-direction:column}
+.stat .l{font-size:13px;font-weight:700;color:var(--n700)}
+.stat .big{margin-top:6px;font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--n900);line-height:1.1}
+.stat .big small{font-size:20px;font-weight:700;color:var(--n500)}
+.stat .s{margin-top:6px;font-size:13px;color:var(--n600)}
+.stat .s b{color:var(--p600);font-weight:700}
+.stat .btn{margin-top:16px;align-self:flex-start;height:44px;padding:0 20px;font-size:14px}
+.cap-bar{margin-top:14px;height:6px;border-radius:9px;background:var(--n100);overflow:hidden}
+.cap-bar i{display:block;height:100%;width:30%;background:var(--p500);border-radius:9px}
+.stat .foot{margin-top:auto;padding-top:16px;font-size:12px;color:var(--n500)}
+
+.sec{margin-top:40px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sec-h h2{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--n900)}
+.sec-h h2 span{margin-left:6px;font-size:14px;font-weight:600;color:var(--n600)}
+.sec-h small{font-size:12px;color:var(--n600)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;font-weight:700;color:var(--n600);padding:10px 12px;border-bottom:1px solid var(--s300)}
+.tbl td{padding:14px 12px;border-bottom:1px solid var(--s200);color:var(--n800)}
+.tbl td.r,.tbl th.r{text-align:right}
+.tbl .nm{font-weight:600;color:var(--n900)}
+.tbl .sub{color:var(--n500);font-size:12px;margin-left:4px}
+.mlist{display:none}
+.sum{margin-top:14px;font-size:13px;color:var(--n600)}
+.sum b{color:var(--n800);font-weight:700}
+.sum .sep{color:var(--n400);margin:0 8px}
+
+.danger{margin-top:72px;padding-top:24px;border-top:1px solid var(--s300);display:flex;align-items:center;justify-content:space-between;gap:16px}
+.danger b{display:block;font-size:14px;font-weight:700;color:var(--error)}
+.danger p{margin-top:4px;font-size:13px;color:var(--n600);line-height:1.6}
+.btn.del-solid{background:var(--error);color:#fff}
+.btn.del-line{border:1px solid var(--error);color:var(--error);background:#fff}
+
+.modal .money{margin-top:14px;display:flex;justify-content:space-between;padding:12px 14px;border-radius:12px;background:var(--s200);font-size:13px;color:var(--n700)}
+.modal .money b{color:var(--n900)}
+.modal .f{margin-top:16px}
+
+@media (max-width:1023px){
+  .stats{grid-template-columns:1fr;gap:12px;margin-top:24px}
+  .stat{padding:18px}
+  .stat .big{font-size:30px}
+  .info{font-size:13px}
+  .info > span{margin-right:10px}
+  .tbl{display:none}
+  .mlist{display:block}
+  .mrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--s200)}
+  .mrow .nm{font-size:14px;font-weight:600;color:var(--n900)}
+  .mrow .meta{margin-top:2px;font-size:12px;color:var(--n500)}
+  .danger{flex-direction:column;align-items:stretch;margin-top:56px}
+  .danger .btn{width:100%;height:44px}
+}
+</style>
+</head>
+<body data-active="모임 관리" data-default="new">
+<div class="main">
+  <div class="mhead"></div>
+  <div class="cap"><div class="page">
+
+  <!-- ═════════════ 지금 ═════════════ -->
+  <div class="v-now">
+    <a class="crumb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>모임 관리로 돌아가기</a>
+    <div class="pills"><span class="pill region">포항</span></div>
+    <h1 class="h1" style="margin-bottom:8px">실연당한 사람들을 위한 일곱 시 조찬모임</h1>
+    <div class="now-info"><span>10월 27일 (화) 오후 7:00</span><span>· 공간 지그시 1711호</span><span>· 정원 10명</span><span>· 참가비 25,000원</span></div>
+    <a class="now-topic">발제문 관리 →</a>
+    <div class="now-link">회원 페이지에서 보기 · <u>/meetings/b8a0726f</u></div>
+    <div class="now-box">
+      <h2>운영자 관리</h2>
+      <a class="now-edit">수정</a>
+      <a class="now-del">삭제</a>
+      <div class="now-sum">
+        <div><div>총 결제</div><div>75,000원</div></div>
+        <div><div>환불</div><div>0원</div></div>
+        <div><div>순매출</div><div>75,000원</div></div>
+      </div>
+      <div class="now-h3">신청자 목록 (3명 확정)</div>
+      <div class="now-card"><div class="r1"><span class="nm">박서연 (밑줄긋기)</span><span><span class="badge">결제완료</span><span class="pm">카드</span></span></div><div class="r2">10/6 · 25,000원</div></div>
+      <div class="now-card"><div class="r1"><span class="nm">이도윤 (새벽책장)</span><span><span class="badge">결제완료</span><span class="pm">카드</span></span></div><div class="r2">10/4 · 25,000원</div></div>
+      <div class="now-card"><div class="r1"><span class="nm">김하늘 (초록고래)</span><span><span class="badge">결제완료</span><span class="pm">카드</span></span></div><div class="r2">10/2 · 25,000원</div></div>
+    </div>
+  </div>
+
+  <!-- ═════════════ 개선 ═════════════ -->
+  <div class="v-new">
+    <div class="topline">
+      <a class="crumb"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>모임 관리</a>
+      <div class="acts">
+        <a class="btn line sm">회원 화면 보기</a>
+        <a class="btn line sm">수정</a>
+      </div>
+    </div>
+    <div class="pills"><span class="pill region">포항</span><span class="pill type">토론</span></div>
+    <h1 class="h1">실연당한 사람들을 위한 일곱 시 조찬모임</h1>
+    <div class="info" title="10월 27일 (화) 오후 7:00 · 공간 지그시 1711호 · 참가비 25,000">
+      <span>· 10월 27일 (화) 오후 7:00</span>
+      <span class="place">· 공간 지그시 1711호</span>
+      <span>· 참가비 25,000</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="l">발제문</div>
+        <div class="big t-none">없음</div>
+        <div class="s t-none">공개하면 신청자 3명에게 알림이 한 번 가요</div>
+        <a class="btn primary t-none">발제문 등록하기</a>
+        <div class="big t-mixed">공개됨 3개</div>
+        <div class="s t-mixed"><b style="color:var(--a600)">작성 중 2개</b> · 공개 전이라 회원에게 안 보여요</div>
+        <a class="btn primary t-mixed">이어서 하기</a>
+      </div>
+      <div class="stat">
+        <div class="l">신청</div>
+        <div class="big">3<small>/10</small></div>
+        <div class="s"><b>남은 7자리</b> · 대기 0명</div>
+        <div class="cap-bar"><i></i></div>
+        <div class="foot">신청 마감 10월 20일 (화)</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>신청자<span>3명</span></h2><small>최근 신청 순</small></div>
+      <table class="tbl">
+        <thead><tr><th>이름</th><th>신청일</th><th>결제</th><th class="r">상태</th></tr></thead>
+        <tbody>
+          <tr><td><span class="nm">박서연</span><span class="sub">밑줄긋기</span></td><td>10/6</td><td>카드 · 25,000</td><td class="r"><span class="badge">결제완료</span></td></tr>
+          <tr><td><span class="nm">이도윤</span><span class="sub">새벽책장</span></td><td>10/4</td><td>카드 · 25,000</td><td class="r"><span class="badge">결제완료</span></td></tr>
+          <tr><td><span class="nm">김하늘</span><span class="sub">초록고래</span></td><td>10/2</td><td>카드 · 25,000</td><td class="r"><span class="badge">결제완료</span></td></tr>
+        </tbody>
+      </table>
+      <div class="mlist">
+        <div class="mrow"><div><div class="nm">박서연 <span class="sub" style="color:var(--n500);font-weight:500;font-size:12px">밑줄긋기</span></div><div class="meta">10/6 · 카드 · 25,000</div></div><span class="badge">결제완료</span></div>
+        <div class="mrow"><div><div class="nm">이도윤 <span class="sub" style="color:var(--n500);font-weight:500;font-size:12px">새벽책장</span></div><div class="meta">10/4 · 카드 · 25,000</div></div><span class="badge">결제완료</span></div>
+        <div class="mrow"><div><div class="nm">김하늘 <span class="sub" style="color:var(--n500);font-weight:500;font-size:12px">초록고래</span></div><div class="meta">10/2 · 카드 · 25,000</div></div><span class="badge">결제완료</span></div>
+      </div>
+      <p class="sum">총 결제 <b>75,000</b><span class="sep">·</span>환불 <b>0</b><span class="sep">·</span>순매출 <b>75,000</b></p>
+    </div>
+
+    <div class="danger">
+      <div>
+        <b>모임 삭제</b>
+        <p>신청자 3명에게 참가비가 전액 환불되고, 되돌릴 수 없어요.</p>
+      </div>
+      <a class="btn del-line">모임 삭제</a>
+    </div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- 삭제 확인 -->
+<div class="dim v-delete">
+  <div class="modal">
+    <h3>이 모임을 삭제할까요?</h3>
+    <p>신청자 <b>3명</b>에게 참가비가 <b>전액 환불</b>돼요. 삭제한 모임은 되돌릴 수 없어요.</p>
+    <div class="money"><span>환불할 금액</span><b>75,000</b></div>
+    <div class="f">
+      <label class="lab" for="cf">확인을 위해 「삭제」라고 입력해 주세요</label>
+      <input id="cf" class="inp" value="삭제">
+    </div>
+    <div class="row"><button class="btn line">취소</button><button class="btn del-solid">삭제하고 환불하기</button></div>
+  </div>
+</div>
+
+<script src="_chrome.js"></script>
+</body>
+</html>
