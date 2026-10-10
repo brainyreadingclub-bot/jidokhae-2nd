@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { requireCurator } from '@/lib/curator-route'
+import {
+  normalizeTopicInput,
+  classifySaveFailure,
+  SAVE_FAILURE_MESSAGE,
+} from '@/lib/topic-input'
 
 /**
  * 발제문 관리. 권한 = 큐레이터(admin·editor·is_staff, 2026-08-17 결정).
@@ -12,54 +17,13 @@ import { requireCurator } from '@/lib/curator-route'
  * 고치기(PATCH)는 published_at을 건드리지 않아 알림이 다시 가지 않는다.
  */
 
-const MAX_TITLE = 200
-const MAX_TEXT = 2000
-
-type TopicInput = {
-  title: string
-  quote: string | null
-  quote_page: string | null
-  question: string
-}
-
-function str(v: unknown): string {
-  return typeof v === 'string' ? v.trim() : ''
-}
-
-function optStr(v: unknown): string | null {
-  const s = str(v)
-  return s === '' ? null : s
-}
-
-/** 입력 정리. 제목·질문은 필수(바로 공개되므로 빈 칸 발제가 회원에게 나가면 안 된다) */
-function normalizeTopic(raw: unknown): TopicInput | null {
-  if (!raw || typeof raw !== 'object') return null
-  const r = raw as Record<string, unknown>
-  const t: TopicInput = {
-    title: str(r.title),
-    quote: optStr(r.quote),
-    quote_page: optStr(r.quote_page),
-    question: str(r.question),
-  }
-  if (t.title === '' || t.question === '') return null
-  if (
-    t.title.length > MAX_TITLE ||
-    t.question.length > MAX_TEXT ||
-    (t.quote?.length ?? 0) > MAX_TEXT ||
-    (t.quote_page?.length ?? 0) > 20
-  ) {
-    return null
-  }
-  return t
-}
-
 export async function POST(request: NextRequest) {
   try {
     const ctx = await requireCurator(request)
     if ('error' in ctx) return ctx.error
     const body = await request.json()
     const meetingId = typeof body.meeting_id === 'string' ? body.meeting_id : ''
-    const topic = normalizeTopic(body)
+    const topic = normalizeTopicInput(body)
     if (!meetingId || !topic) {
       return NextResponse.json(
         { status: 'error', message: '제목과 질문을 채워 주세요' },
@@ -121,7 +85,7 @@ export async function PATCH(request: NextRequest) {
     const ctx = await requireCurator(request)
     if ('error' in ctx) return ctx.error
     const body = await request.json()
-    const t = normalizeTopic(body)
+    const t = normalizeTopicInput(body)
     if (!body.id || !t) {
       return NextResponse.json(
         { status: 'error', message: '제목과 질문을 채워 주세요' },
@@ -135,8 +99,11 @@ export async function PATCH(request: NextRequest) {
         { status: 400 },
       )
     }
-    // published_at·notified_at은 건드리지 않는다 — 고쳐도 알림이 다시 가지 않는다
-    const { error } = await ctx.admin
+    // published_at·notified_at은 건드리지 않는다 — 고쳐도 알림이 다시 가지 않는다.
+    // expected_updated_at(연 시각)을 주면 그 시각 그대로일 때만 저장한다 — 발제자와 동시에 고쳐도
+    // 덮어쓰지 않는다(2차, 대표님 6번). 공개된 발제도 운영자는 고칠 수 있다
+    const expected = typeof body.expected_updated_at === 'string' ? body.expected_updated_at : null
+    let q = ctx.admin
       .from('discussion_topics')
       .update({
         ...t,
@@ -144,6 +111,8 @@ export async function PATCH(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', body.id)
+    if (expected) q = q.eq('updated_at', expected)
+    const { data: updated, error } = await q.select('id')
     if (error) {
       const dup = (error as { code?: string }).code === '23505'
       return NextResponse.json(
@@ -152,6 +121,18 @@ export async function PATCH(request: NextRequest) {
           message: dup ? '같은 번호의 발제가 이미 있어요' : '잠시 후 다시 시도해 주세요',
         },
         { status: dup ? 409 : 500 },
+      )
+    }
+    if (!updated || updated.length === 0) {
+      const { data: row } = await ctx.admin
+        .from('discussion_topics')
+        .select('published_at, updated_at')
+        .eq('id', body.id)
+        .maybeSingle()
+      const code = classifySaveFailure(row, { forbidPublished: false })
+      return NextResponse.json(
+        { status: 'error', code, message: SAVE_FAILURE_MESSAGE[code] },
+        { status: 409 },
       )
     }
     return NextResponse.json({ status: 'success' })

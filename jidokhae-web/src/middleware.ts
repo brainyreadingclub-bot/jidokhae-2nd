@@ -45,6 +45,12 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // 발제자 링크 — 로그인 없이 쓰는 화면과 그 API. 권한은 주소의 토큰을 서버(service_role)가 검사한다
+  // (src/lib/presenter-link-server.ts). '/t/'까지 봐야 '/talk'가 걸리지 않는다
+  if (pathname.startsWith('/t/') || pathname.startsWith('/api/presenter/')) {
+    return supabaseResponse
+  }
+
   // SNS crawler metadata routes + PWA icons/manifest: must be publicly accessible
   if (
     pathname.startsWith('/opengraph-image') ||

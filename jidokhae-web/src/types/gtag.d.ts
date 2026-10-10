@@ -5,7 +5,7 @@ interface GtagEventParams {
 interface Window {
   gtag?: (
     command: 'config' | 'event' | 'js' | 'set',
-    targetOrName: string | Date,
+    targetOrName: string | Date | GtagEventParams,
     params?: GtagEventParams,
   ) => void
   dataLayer?: Record<string, unknown>[]
