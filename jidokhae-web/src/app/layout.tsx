@@ -73,7 +73,9 @@ export default function RootLayout({
           <RouteChangeTracker />
         </Suspense>
         <Analytics />
-        <SpeedInsights />
+        {/* 무료 단계 한도(팀 전체 30일 10,000건)를 넘으면 기록이 최소 14일 멈춘다.
+            30%만 보내 한도 절반(5,000) 아래에 머문다 — 근거는 docs/agent-team/조사/2026-10-11-도쿄이전-반영계획.md */}
+        <SpeedInsights sampleRate={0.3} />
         {GA_ID && (
           <>
             <Script
