@@ -90,6 +90,26 @@ body.single .phone.tall{height:auto;min-height:100vh}
 .fine{margin-top:34px;padding-bottom:22px;font-size:12.5px;line-height:1.65;color:var(--tg-600)}
 .fine u{text-underline-offset:3px;text-decoration-color:var(--tg-300);font-weight:700;color:var(--tg-700)}
 
+
+/* 동의 체크 (버튼 영역 안) */
+.agree{display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:8px}
+.box{width:22px;height:22px;flex:none;border-radius:7px;border:2px solid var(--tg-300);display:flex;align-items:center;justify-content:center}
+.box.on{background:var(--brand);border-color:var(--brand)}
+.agree .l{flex:1;font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--tg-800)}
+.agree .more{flex:none;font-size:13px;font-weight:700;color:var(--tg-600);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--tg-300)}
+.cta.soft{background:var(--tg-100);color:var(--tg-700)}
+/* 바텀시트 */
+.dim{position:absolute;inset:0;background:rgba(25,31,40,.42);display:flex;flex-direction:column;justify-content:flex-end;z-index:20}
+.sheet{background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 18px}
+.sheet .grab{width:38px;height:4px;border-radius:9px;background:var(--tg-200);margin:0 auto 14px}
+.sheet h3{font-size:19px;font-weight:800;letter-spacing:-.03em}
+.sheet .hs{margin-top:12px;font-size:13px;line-height:1.6;color:var(--tg-600)}
+.sum{margin-top:10px}
+.sum .r{display:flex;gap:14px;padding:12px 0;border-top:1px solid var(--tg-100)}
+.sum .r:first-child{border-top:0}
+.sum dt{width:78px;flex:none;font-size:14px;color:var(--tg-600)}
+.sum dd{flex:1;font-size:14px;line-height:1.55;font-weight:600;color:var(--tg-900)}
+
 /* 홈 */
 .hi{margin-top:12px;font-size:21px;font-weight:800;line-height:1.3;letter-spacing:-.03em}
 .sec{margin-top:24px;margin-bottom:4px;font-size:13.5px;font-weight:700;color:var(--tg-600);letter-spacing:-.02em}
@@ -132,7 +152,7 @@ body.single .phone.tall{height:auto;min-height:100vh}
 <body>
 <div class="gal">
 <h1 class="gal-title">첫 가입 설문 — 회원 화면 (폰)</h1>
-<p class="gal-sub">한 장씩 보려면 주소 끝에 #s01 ~ #s08 을 붙인다. 가짜 닉네임만 썼다. 오늘 = 10월 12일(월). 선택지는 전부 「제안」이다.</p>
+<p class="gal-sub">한 장씩 보려면 주소 끝에 #s01 ~ #s11 (#s03b 포함) 을 붙인다. 가짜 닉네임만 썼다. 오늘 = 10월 12일(월). 선택지는 전부 「제안」이다.</p>
 
 <section class="scr" id="s01"><p class="cap"><b>01</b>프로필 저장 직후 · 첫 화면(스크롤 전)</p>
 <div class="phone"><div class="body" data-survey="empty" data-saved="1"></div><div class="foot" data-foot="off"></div></div></section>
@@ -140,11 +160,36 @@ body.single .phone.tall{height:auto;min-height:100vh}
 <section class="scr" id="s02"><p class="cap"><b>02</b>설문 비어 있음 · 작은 화면(360×640)에서 스크롤</p>
 <div class="phone"><div class="body" data-survey="empty" data-saved="1"></div><div class="foot" data-foot="off"></div></div></section>
 
-<section class="scr" id="s03"><p class="cap"><b>03</b>일부 고른 상태 (「기타」 칸 열림)</p>
+<section class="scr" id="s03"><p class="cap"><b>03</b>일부 고른 상태 · 동의 체크 전 (저장 꺼짐)</p>
+<div class="phone"><div class="body" data-survey="some" data-saved="1"></div><div class="foot" data-foot="uncheck"></div></div></section>
+
+<section class="scr" id="s03b"><p class="cap"><b>03b</b>일부 고른 상태 · 동의 체크 후 (저장 켜짐)</p>
 <div class="phone"><div class="body" data-survey="some" data-saved="1"></div><div class="foot" data-foot="on"></div></div></section>
 
-<section class="scr" id="s04"><p class="cap"><b>04</b>저장 실패 · 고른 답은 그대로</p>
+<section class="scr" id="s04"><p class="cap"><b>04</b>저장 실패 · 고른 답·체크는 그대로</p>
 <div class="phone"><div class="body" data-survey="some" data-saved="1" data-scroll="end"></div><div class="foot" data-foot="err"></div></div></section>
+
+<section class="scr" id="s09"><p class="cap"><b>09</b>동의 「자세히」 · 시트 열림 (닫힘 = 03)</p>
+<div class="phone"><div class="body" data-survey="some" data-saved="1"></div><div class="foot" data-foot="uncheck"></div>
+  <div class="dim"><div class="sheet">
+    <div class="grab"></div>
+    <h3>가입 설문 정보 수집·이용 (선택)</h3>
+    <dl class="sum">
+      <div class="r"><dt>모으는 것</dt><dd>관심 분야, 주로 시간 되는 때, 알게 된 경로(「기타」에 쓴 내용 포함), 가입한 이유</dd></div>
+      <div class="r"><dt>쓰는 곳</dt><dd>모임 주제·요일·시간대를 정하고, 어디서 알게 됐는지 살펴볼 때 써요</dd></div>
+      <div class="r"><dt>보관</dt><dd>탈퇴하거나 직접 지울 때까지. 그때 바로 지워요</dd></div>
+      <div class="r"><dt>안 해도 돼요</dt><dd>동의하지 않을 수 있어요. 그러면 설문만 저장되지 않고, 모임 신청 등 다른 이용에는 영향이 없어요</dd></div>
+    </dl>
+    <p class="hs">답은 운영진만 봐요. 전체 내용은 개인정보처리방침에 있어요.</p>
+    <span class="cta soft" style="margin-top:14px">닫기</span>
+  </div></div>
+</div></section>
+
+<section class="scr" id="s10"><p class="cap"><b>10</b>맨 아래까지 스크롤 · 비어 있음 (390×844 / 360×640)</p>
+<div class="phone"><div class="body" data-survey="empty" data-saved="1" data-scroll="end"></div><div class="foot" data-foot="off"></div></div></section>
+
+<section class="scr" id="s11"><p class="cap"><b>11</b>맨 아래까지 스크롤 · 고르고 체크한 상태 (버튼 영역이 가장 높을 때)</p>
+<div class="phone"><div class="body" data-survey="some" data-saved="1" data-scroll="end"></div><div class="foot" data-foot="on"></div></div></section>
 
 <!-- s05 건너뛰기 뒤 -->
 <section class="scr" id="s05"><p class="cap"><b>05</b>「건너뛰기」 뒤 도착 · 홈</p>
@@ -242,17 +287,25 @@ body.single .phone.tall{height:auto;min-height:100vh}
     if (s.route === '기타') r += '<div class="etc">' + s.etc + '<small>' + s.etc.length + '/20</small></div>'
     h += blk('어떻게 알게 됐어요?', '하나만', r)
     h += blk('가입한 이유', '여러 개', chips(REASON, s.reason))
-    h += '<p class="fine">선택해서 알려주는 정보예요. 고르지 않아도 모임 신청에는 아무 영향이 없어요. 고른 답은 나&nbsp;탭에서 고치거나 지울 수 있어요. <u>개인정보처리방침</u></p>'
+    h += '<p class="fine">선택해서 알려주는 정보예요. 고르지 않아도, 동의하지 않아도 모임 신청에는 아무 영향이 없어요. 고른 답은 나&nbsp;탭에서 고치거나 지울 수 있어요. <u>개인정보처리방침</u></p>'
     el.innerHTML = h
   })
 
   document.querySelectorAll('[data-foot]').forEach(function (el) {
     var k = el.getAttribute('data-foot')
     if (k === 'edit') { el.innerHTML = '<span class="cta off">저장하기</span>'; return }
+    // 동의 줄은 하나라도 골랐을 때만 나타난다(off = 아무것도 안 고름)
+    var agree = ''
+    if (k !== 'off') {
+      var on = k !== 'uncheck'
+      agree = '<div class="agree"><span class="box' + (on ? ' on' : '') + '">' + (on ? CHECK : '') + '</span>' +
+        '<span class="l">설문 답 수집·이용에 동의해요 (선택)</span><span class="more">자세히</span></div>'
+    }
     var err = k === 'err'
       ? '<p class="err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>저장하지 못했어요. 고른 답은 그대로 있으니 한 번 더 눌러 주세요.</p>'
       : ''
-    el.innerHTML = err + '<span class="cta' + (k === 'off' ? ' off' : '') + '">' + (err ? '다시 저장하기' : '저장하기') + '</span><button class="skip">건너뛰기</button>'
+    var off = k === 'off' || k === 'uncheck'
+    el.innerHTML = agree + err + '<span class="cta' + (off ? ' off' : '') + '">' + (err ? '다시 저장하기' : '저장하기') + '</span><button class="skip">건너뛰기</button>'
   })
 
   document.querySelectorAll('[data-home]').forEach(function (el) {
