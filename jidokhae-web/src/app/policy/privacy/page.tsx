@@ -139,16 +139,16 @@ export default async function PrivacyPolicyPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="border border-neutral-200 px-2 py-1.5">Supabase Inc. (AWS)</td>
-                  <td className="border border-neutral-200 px-2 py-1.5">미국</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">Supabase Inc. (미국 법인, 저장: AWS 도쿄 리전)</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">일본(도쿄)</td>
                   <td className="border border-neutral-200 px-2 py-1.5">회원 정보, 모임 신청/결제 내역</td>
                   <td className="border border-neutral-200 px-2 py-1.5">클라우드 데이터베이스 호스팅</td>
                   <td className="border border-neutral-200 px-2 py-1.5">회원 탈퇴 시까지</td>
                 </tr>
                 <tr>
-                  <td className="border border-neutral-200 px-2 py-1.5">Vercel Inc.</td>
-                  <td className="border border-neutral-200 px-2 py-1.5">미국</td>
-                  <td className="border border-neutral-200 px-2 py-1.5">서비스 접속 로그, 쿠키</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">Vercel Inc. (미국 법인)</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">일본(도쿄) — 서버 함수 실행<br />미국 등 — 접속 기록</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">서비스 접속 로그, 쿠키, 서버 처리 과정에서 거치는 회원 정보(이름·닉네임·전화번호·모임 신청/결제 내역)</td>
                   <td className="border border-neutral-200 px-2 py-1.5">웹 호스팅 및 서버리스 함수 실행</td>
                   <td className="border border-neutral-200 px-2 py-1.5">서비스 이용 기간</td>
                 </tr>
