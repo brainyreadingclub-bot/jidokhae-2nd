@@ -73,7 +73,7 @@ tr.click td:first-child{font-weight:700;color:var(--p700)}
 <!-- ════════════ A1 목록 ════════════ -->
 <div class="v-list">
   <div class="topline">
-    <div><p class="eyebrow">운영</p><h1 class="h1" style="margin-top:6px">모임 후기</h1><p class="lede">정기모임 다음 날 알림톡으로 받는다. 표정·아쉬운 점은 운영진만 본다.</p></div>
+    <div><p class="eyebrow">운영</p><h1 class="h1" style="margin-top:6px">모임 후기</h1><p class="lede">정기모임 다음 날 알림톡으로 받는다. 표정·아쉬운 점은 총괄운영자만 본다(이 메뉴는 admin 전용).</p></div>
     <div class="filters"><span class="seg on">전체</span><span class="seg">경주</span><span class="seg">포항</span><span class="seg">대구</span><span class="seg">최근 30일 ▾</span></div>
   </div>
 
@@ -140,15 +140,15 @@ tr.click td:first-child{font-weight:700;color:var(--p700)}
   </div>
 
   <div class="sec">
-    <div class="sec-h"><h2>한 줄 소감<span>5개</span></h2><span class="h">공개 = 회원이 「모임 소개에 공개해도 좋아요」를 켠 것</span></div>
+    <div class="sec-h"><h2>한 줄 소감<span>5개</span></h2><span class="h">공개 = 회원이 「모임 소개에 공개해도 좋아요」를 켠 것 · 운영자가 내린 소감은 회원이 다시 공개할 수 없다</span></div>
     <table class="quote">
-      <thead><tr><th>닉네임</th><th>표정</th><th>소감</th><th>공개</th></tr></thead>
+      <thead><tr><th>닉네임</th><th>표정</th><th>소감</th><th>공개</th><th></th></tr></thead>
       <tbody>
-        <tr><td><b>초록고래</b></td><td>최고였어요</td><td class="tx">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.</td><td><span class="pub on">공개 중</span></td></tr>
-        <tr><td><b>여름귤</b></td><td>최고였어요</td><td class="tx">혼자였으면 덮었을 책을 끝까지 읽게 됐어요.</td><td><span class="pub on">공개 중</span></td></tr>
-        <tr><td><b>밤산책</b></td><td>좋았어요</td><td class="tx">마지막 30분이 조금 늘어졌어요. 이야깃거리가 하나 더 있었으면 좋겠어요.</td><td><span class="pub off">운영진만</span></td></tr>
-        <tr><td><b>문장수집가</b></td><td>좋았어요</td><td class="tx">카페 음악이 조금 커서 끝자리에선 잘 안 들렸어요.</td><td><span class="pub off">운영진만</span></td></tr>
-        <tr><td><b>고요한숲</b></td><td>무난했어요</td><td class="tx">다음엔 더 얇은 책이면 좋겠어요.</td><td><span class="pub off">공개 내림 · 10월 15일</span></td></tr>
+        <tr><td><b>초록고래</b></td><td>최고였어요</td><td class="tx">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.</td><td><span class="pub on">공개 중</span></td><td style="text-align:right"><button class="btn line sm">내리기</button></td></tr>
+        <tr><td><b>여름귤</b></td><td>최고였어요</td><td class="tx">혼자였으면 덮었을 책을 끝까지 읽게 됐어요.</td><td><span class="pub on">공개 중</span></td><td style="text-align:right"><button class="btn line sm">내리기</button></td></tr>
+        <tr><td><b>밤산책</b></td><td>좋았어요</td><td class="tx">마지막 30분이 조금 늘어졌어요. 이야깃거리가 하나 더 있었으면 좋겠어요.</td><td><span class="pub off">운영자만</span></td><td></td></tr>
+        <tr><td><b>문장수집가</b></td><td>좋았어요</td><td class="tx">카페 음악이 조금 커서 끝자리에선 잘 안 들렸어요.</td><td><span class="pub off">운영자만</span></td><td></td></tr>
+        <tr><td><b>고요한숲</b></td><td>무난했어요</td><td class="tx">다음엔 더 얇은 책이면 좋겠어요.</td><td><span class="pub off">회원이 내림 · 10월 15일</span></td><td></td></tr>
       </tbody>
     </table>
   </div>

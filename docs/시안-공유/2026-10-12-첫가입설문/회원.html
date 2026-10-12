@@ -92,8 +92,8 @@ body.single .phone.tall{height:auto;min-height:100vh}
 
 
 /* 동의 체크 (버튼 영역 안) */
-.agree{display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:8px}
-.box{width:22px;height:22px;flex:none;border-radius:7px;border:2px solid var(--tg-300);display:flex;align-items:center;justify-content:center}
+.agree{display:flex;align-items:flex-start;gap:10px;min-height:44px;margin-bottom:8px}
+.box{width:22px;height:22px;flex:none;margin-top:1px;border-radius:7px;border:2px solid var(--tg-300);display:flex;align-items:center;justify-content:center}
 .box.on{background:var(--brand);border-color:var(--brand)}
 .agree .l{flex:1;font-size:14px;font-weight:700;letter-spacing:-.02em;color:var(--tg-800)}
 .agree .more{flex:none;font-size:13px;font-weight:700;color:var(--tg-600);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--tg-300)}
@@ -109,6 +109,26 @@ body.single .phone.tall{height:auto;min-height:100vh}
 .sum .r:first-child{border-top:0}
 .sum dt{width:78px;flex:none;font-size:14px;color:var(--tg-600)}
 .sum dd{flex:1;font-size:14px;line-height:1.55;font-weight:600;color:var(--tg-900)}
+
+
+/* 신청 완료(지금 화면 RegistrationDoneView 그대로) */
+.dn-t{padding:12px 0 8px;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.dn-ic{margin:32px auto 0;width:70px;height:70px;border-radius:99px;background:var(--brand-bg);display:flex;align-items:center;justify-content:center}
+.dn-h{margin-top:20px;text-align:center;font-size:24px;font-weight:800;letter-spacing:-.03em}
+.dn-m{margin-top:8px;text-align:center;font-size:15px;line-height:1.6;color:var(--tg-600)}
+.dn-amt{margin-top:28px;border-radius:18px;background:var(--tg-100);padding:16px;text-align:center}
+.dn-amt small{display:block;font-size:13px;font-weight:600;color:var(--tg-600)}
+.dn-amt b{display:block;margin-top:4px;font-size:22px;font-weight:800}
+.cta.soft.g{background:var(--brand-bg);color:var(--brand-deep)}
+.agree .l small{display:block;margin-top:2px;font-size:12.5px;font-weight:500;line-height:1.5;color:var(--tg-600)}
+/* 홈 — 다음 모임 큰 숫자(HomeView nextMeeting) */
+.nm-card{margin-top:10px;border-radius:20px;background:#fff;padding:16px;box-shadow:var(--shadow-toss-card);display:flex;align-items:center;gap:14px}
+.nm-card .big{font-size:31px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.nm-card .big i{font-style:normal;font-size:15px;font-weight:700;color:var(--tg-400)}
+.nm-card .tt{flex:1;min-width:0}
+.nm-card .tt b{display:block;font-size:14px;font-weight:700}
+.nm-card .tt small{display:block;margin-top:2px;font-size:12px;color:var(--tg-600)}
+.nm-card .cv-r{color:var(--tg-300)}
 
 /* 홈 */
 .hi{margin-top:12px;font-size:21px;font-weight:800;line-height:1.3;letter-spacing:-.03em}
@@ -151,10 +171,25 @@ body.single .phone.tall{height:auto;min-height:100vh}
 </head>
 <body>
 <div class="gal">
-<h1 class="gal-title">첫 가입 설문 — 회원 화면 (폰)</h1>
-<p class="gal-sub">한 장씩 보려면 주소 끝에 #s01 ~ #s11 (#s03b 포함) 을 붙인다. 가짜 닉네임만 썼다. 오늘 = 10월 12일(월). 선택지는 전부 「제안」이다.</p>
+<h1 class="gal-title">첫 신청 뒤 설문 — 회원 화면 (폰) · 3차</h1>
+<p class="gal-sub">한 장씩 보려면 주소 끝에 #s00 ~ #s11 (#s03b 포함) 을 붙인다. 가짜 닉네임만 썼다. 오늘 = 10월 12일(월), 첫 신청 = 10월 14일(수) 경주 정기모임(카드 결제).</p>
 
-<section class="scr" id="s01"><p class="cap"><b>01</b>프로필 저장 직후 · 첫 화면(스크롤 전)</p>
+<section class="scr" id="s00"><p class="cap"><b>00</b>지금의 「신청 완료」 화면 (그대로 · 두 버튼을 누르면 01로)</p>
+<div class="phone">
+  <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
+  <div class="body">
+    <p class="dn-t">신청 완료</p>
+    <div class="dn-ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0FA873" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2 class="dn-h">신청됐어요</h2>
+    <p class="dn-m">10월 14일 (수) 오후 7:00<br>우연히책방 · 경주</p>
+    <div class="dn-amt"><small>결제 금액</small><b>10,000</b></div>
+    <span class="cta soft g" style="margin-top:32px">모임 다시 보기</span>
+    <span class="cta soft" style="margin-top:10px">홈으로</span>
+  </div>
+  <div class="nav"><i class="on"><em></em><span>홈</span></i><i><em></em><span>모임</span></i><i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i></div>
+</div></section>
+
+<section class="scr" id="s01"><p class="cap"><b>01</b>첫 신청 완료 다음 · 설문 진입(스크롤 전)</p>
 <div class="phone"><div class="body" data-survey="empty" data-saved="1"></div><div class="foot" data-foot="off"></div></div></section>
 
 <section class="scr" id="s02"><p class="cap"><b>02</b>설문 비어 있음 · 작은 화면(360×640)에서 스크롤</p>
@@ -173,14 +208,14 @@ body.single .phone.tall{height:auto;min-height:100vh}
 <div class="phone"><div class="body" data-survey="some" data-saved="1"></div><div class="foot" data-foot="uncheck"></div>
   <div class="dim"><div class="sheet">
     <div class="grab"></div>
-    <h3>가입 설문 정보 수집·이용 (선택)</h3>
+    <h3>설문 정보 수집·이용 (선택)</h3>
     <dl class="sum">
-      <div class="r"><dt>모으는 것</dt><dd>관심 분야, 주로 시간 되는 때, 알게 된 경로(「기타」에 쓴 내용 포함), 가입한 이유</dd></div>
-      <div class="r"><dt>쓰는 곳</dt><dd>모임 주제·요일·시간대를 정하고, 어디서 알게 됐는지 살펴볼 때 써요</dd></div>
+      <div class="r"><dt>모으는 것</dt><dd>관심 분야, 주로 시간 되는 때, 알게 된 경로(「기타」에 쓴 내용 포함)</dd></div>
+      <div class="r"><dt>쓰는 곳</dt><dd>모임을 열 때 주제·요일·시간대를 정하는 데, 그리고 어디서 알게 됐는지 살펴보는 데 써요</dd></div>
       <div class="r"><dt>보관</dt><dd>탈퇴하거나 직접 지울 때까지. 그때 바로 지워요</dd></div>
       <div class="r"><dt>안 해도 돼요</dt><dd>동의하지 않을 수 있어요. 그러면 설문만 저장되지 않고, 모임 신청 등 다른 이용에는 영향이 없어요</dd></div>
     </dl>
-    <p class="hs">답은 운영진만 봐요. 전체 내용은 개인정보처리방침에 있어요.</p>
+    <p class="hs">답은 총괄운영자만 봐요. 전체 내용은 개인정보처리방침에 있어요.</p>
     <span class="cta soft" style="margin-top:14px">닫기</span>
   </div></div>
 </div></section>
@@ -192,7 +227,7 @@ body.single .phone.tall{height:auto;min-height:100vh}
 <div class="phone"><div class="body" data-survey="some" data-saved="1" data-scroll="end"></div><div class="foot" data-foot="on"></div></div></section>
 
 <!-- s05 건너뛰기 뒤 -->
-<section class="scr" id="s05"><p class="cap"><b>05</b>「건너뛰기」 뒤 도착 · 홈</p>
+<section class="scr" id="s05"><p class="cap"><b>05</b>「건너뛰기」 뒤 도착 · 홈 (00에서 「홈으로」를 눌렀던 경우)</p>
 <div class="phone">
   <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
   <div class="body" data-home></div>
@@ -201,7 +236,7 @@ body.single .phone.tall{height:auto;min-height:100vh}
 </div></section>
 
 <!-- s06 제출 뒤 -->
-<section class="scr" id="s06"><p class="cap"><b>06</b>「저장하기」 뒤 도착 · 홈</p>
+<section class="scr" id="s06"><p class="cap"><b>06</b>「저장하기」 뒤 도착 · 홈 (00에서 「홈으로」를 눌렀던 경우)</p>
 <div class="phone">
   <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
   <div class="body" data-home></div>
@@ -242,10 +277,9 @@ body.single .phone.tall{height:auto;min-height:100vh}
   // ── 선택지 (전부 「제안」) ──
   var INTEREST = ['소설','에세이','시','인문·철학','역사','사회·정치','경제·경영','과학','심리','예술','자기계발','고전']
   var ROUTE = ['친구·지인 소개','인스타그램','당근','네이버 검색·블로그','카카오톡 오픈채팅','다른 모임 앱','모임 장소(책방)에서','기타']
-  var REASON = ['책을 꾸준히 읽고 싶어서','읽은 책 이야기를 나누고 싶어서','새로운 사람을 만나고 싶어서','혼자라면 안 읽을 책을 읽어보려고','가까운 곳에 갈 만한 모임이 필요해서','생각을 말로 정리해보고 싶어서']
   var STATES = {
-    empty: { interest: [], time: [], route: null, etc: '', reason: [] },
-    some:  { interest: ['소설','에세이','인문·철학'], time: ['평일 저녁','주말 오후'], route: '기타', etc: '북토크 행사에서', reason: [] },
+    empty: { interest: [], time: [], route: null, etc: '' },
+    some:  { interest: ['소설','에세이','인문·철학'], time: ['평일 저녁','주말 오후'], route: '기타', etc: '북토크 행사에서' },
     edit:  { interest: ['소설','에세이','인문·철학'], time: ['평일 저녁','주말 오후'] }
   }
   function chips(list, sel) {
@@ -271,23 +305,22 @@ body.single .phone.tall{height:auto;min-height:100vh}
   document.querySelectorAll('[data-survey]').forEach(function (el) {
     var key = el.getAttribute('data-survey'), s = STATES[key], h = ''
     if (key === 'edit') {
-      h += '<p class="qs" style="margin-top:14px">바뀌면 언제든 고쳐 주세요. 답은 운영진만 봐요.</p>'
+      h += '<p class="qs" style="margin-top:14px">바뀌면 언제든 고쳐 주세요. 답은 총괄운영자만 봐요.</p>'
       h += blk('관심 있는 분야', '여러 개', chips(INTEREST, s.interest))
       h += blk('주로 시간 되는 때', '여러 개', grid(s.time))
-      h += '<button class="clear">답 모두 지우기</button><p class="clear-h">가입할 때 고른 「알게 된 경로」·「가입한 이유」도 함께 지워져요.</p>'
+      h += '<button class="clear">답 모두 지우기</button><p class="clear-h">처음에 고른 「알게 된 경로」도 함께 지워져요.</p>'
       el.innerHTML = h
       return
     }
-    if (el.getAttribute('data-saved')) h += '<p class="saved"><i>' + CHECK + '</i>프로필을 저장했어요</p>'
-    h += '<h1 class="q">초록고래님,<br>조금만 더 알려주세요</h1>'
-    h += '<p class="qs">전부 골라도, 하나도 안 골라도 괜찮아요.<br>모임을 꾸릴 때 참고하고, 답은 운영진만 봐요.</p>'
+    if (el.getAttribute('data-saved')) h += '<p class="saved"><i>' + CHECK + '</i>10월 14일 경주 정기모임 신청 완료</p>'
+    h += '<h1 class="q">초록고래님,<br>세 가지만 알려주실래요?</h1>'
+    h += '<p class="qs">되는 시간과 관심 분야에 맞춰 모임을 열 때 참고할게요.<br>전부 골라도, 하나도 안 골라도 괜찮아요.</p>'
     h += blk('관심 있는 분야', '여러 개', chips(INTEREST, s.interest))
     h += blk('주로 시간 되는 때', '여러 개', grid(s.time))
     var r = chips(ROUTE, s.route ? [s.route] : [])
     if (s.route === '기타') r += '<div class="etc">' + s.etc + '<small>' + s.etc.length + '/20</small></div>'
     h += blk('어떻게 알게 됐어요?', '하나만', r)
-    h += blk('가입한 이유', '여러 개', chips(REASON, s.reason))
-    h += '<p class="fine">선택해서 알려주는 정보예요. 고르지 않아도, 동의하지 않아도 모임 신청에는 아무 영향이 없어요. 고른 답은 나&nbsp;탭에서 고치거나 지울 수 있어요. <u>개인정보처리방침</u></p>'
+    h += '<p class="fine">선택해서 알려주는 정보예요. 고르지 않아도, 동의하지 않아도 방금 한 신청과 앞으로의 신청에 아무 영향이 없어요. 고른 답은 나&nbsp;탭에서 고치거나 지울 수 있어요. <u>개인정보처리방침</u></p>'
     el.innerHTML = h
   })
 
@@ -299,7 +332,7 @@ body.single .phone.tall{height:auto;min-height:100vh}
     if (k !== 'off') {
       var on = k !== 'uncheck'
       agree = '<div class="agree"><span class="box' + (on ? ' on' : '') + '">' + (on ? CHECK : '') + '</span>' +
-        '<span class="l">설문 답 수집·이용에 동의해요 (선택)</span><span class="more">자세히</span></div>'
+        '<span class="l">설문 답 수집·이용에 동의해요 (선택)<small>관심 분야·시간·경로를 모임 기획에 쓰고, 총괄운영자만 봐요</small></span><span class="more">자세히</span></div>'
     }
     var err = k === 'err'
       ? '<p class="err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>저장하지 못했어요. 고른 답은 그대로 있으니 한 번 더 눌러 주세요.</p>'
@@ -309,12 +342,11 @@ body.single .phone.tall{height:auto;min-height:100vh}
   })
 
   document.querySelectorAll('[data-home]').forEach(function (el) {
+    // 첫 신청을 마친 뒤의 홈 — HomeView: firstTime=false(신청 1건) · nextMeeting 큰 숫자 카드
     el.innerHTML =
-      '<h1 class="hi">초록고래님,<br>곧 이런 모임이 있어요</h1>' +
-      '<div class="sec">가장 가까운 모임</div>' +
-      '<div class="nr"><div class="d">10월 14일 (수) 오후 7:00</div><div class="t">10월 둘째 주 경주 정기모임</div>' +
-      '<div class="m">우연히책방 · 참가비 10,000</div><div class="b">모임 자세히 보기</div></div>' +
-      '<div class="other">다른 일정도 보기 ›</div>'
+      '<h1 class="hi">초록고래님,<br>오늘도 읽어볼까요</h1>' +
+      '<div class="nm-card"><span class="big">2<i>일</i></span><span class="tt"><b>10월 둘째 주 경주 정기모임까지</b>' +
+      '<small>10월 14일 (수) 오후 7:00 · 우연히책방</small></span><span class="cv-r">›</span></div>'
   })
 
   function sync() {
