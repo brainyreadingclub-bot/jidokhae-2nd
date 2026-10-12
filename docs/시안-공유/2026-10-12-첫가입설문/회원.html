@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>첫 가입 설문 — 회원 화면 시안 (2026-10-12)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+/* 토큰 = jidokhae-web/src/app/globals.css 「next_ui 토스 스킨 토큰」 그대로. 새 토큰 없음 */
+:root{
+  --tg-50:#F9FAFB; --tg-100:#F2F4F6; --tg-200:#E5E8EB; --tg-300:#D1D6DB;
+  --tg-400:#B0B8C1; --tg-500:#8B95A1; --tg-600:#6B7684; --tg-700:#4E5968;
+  --tg-800:#333D4B; --tg-900:#191F28;
+  --brand:#0FA873; --brand-deep:#0C8A5F; --brand-bg:#E8F7F1;
+  --warnx:#FF6B3D; --warnx-bg:#FFF0EA;
+  --shadow-toss-card:0 2px 12px rgba(25,31,40,.07);
+  --sans:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9ECEF;font-family:var(--sans);color:var(--tg-900);word-break:keep-all;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;border:0;background:none;color:inherit}
+
+/* 갤러리(#all) */
+.gal{display:flex;flex-wrap:wrap;align-items:flex-start;gap:36px 28px;padding:40px 28px 120px;max-width:1500px;margin:0 auto}
+.gal-title{width:100%;font-size:26px;font-weight:800;letter-spacing:-.03em}
+.gal-sub{width:100%;margin-top:-24px;font-size:14px;line-height:1.8;color:var(--tg-700)}
+.scr{flex:none}
+.scr > .cap{margin-bottom:10px;font-size:14px;font-weight:800;letter-spacing:-.02em;width:390px}
+.scr > .cap b{color:var(--tg-500);margin-right:6px}
+
+/* 폰 */
+.phone{width:390px;height:844px;background:#fff;position:relative;overflow:hidden;border-radius:14px;box-shadow:0 10px 30px rgba(25,31,40,.13);display:flex;flex-direction:column}
+.phone.tall{height:auto}
+/* 한 장 모드(#s01 등) — 뷰포트를 꽉 채운다. 360 확인은 창 폭만 바꾼다 */
+body.single{background:#fff}
+body.single .gal{padding:0;gap:0;display:block}
+body.single .gal-title,body.single .gal-sub,body.single .scr > .cap{display:none}
+body.single .scr{display:none}
+body.single .scr.on{display:block}
+body.single .phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}
+body.single .phone.tall{height:auto;min-height:100vh}
+
+.body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 20px}
+.body::-webkit-scrollbar{display:none}
+.phone.tall .body{overflow:visible;flex:none}
+
+/* 머리 */
+.nx-head{height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 20px}
+.nx-wm{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--brand-deep)}
+.bell{color:var(--tg-600);width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.fl-head{height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 12px}
+.fl-head .bk{width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--tg-800)}
+.fl-head .t{flex:1;font-size:16px;font-weight:700;letter-spacing:-.02em}
+
+/* 하단 탭 */
+.nav{flex:none;height:56px;background:#fff;border-top:1px solid var(--tg-100);display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.nav i{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tg-400);font-style:normal}
+.nav i.on{color:var(--tg-900)}
+.nav i span{font-size:10px;font-weight:600;letter-spacing:-.02em}
+.nav i.on span{font-weight:700}
+.nav i em{display:block;width:18px;height:18px;border-radius:5px;background:currentColor;opacity:.32}
+.nav i.on em{opacity:1}
+
+/* 하단 버튼 */
+.foot{flex:none;padding:10px 20px 14px;background:#fff;box-shadow:0 -1px 0 var(--tg-100)}
+.cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;border-radius:14px;background:var(--brand);color:#fff;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.cta.off{background:var(--tg-100);color:var(--tg-400)}
+.skip{display:flex;align-items:center;justify-content:center;width:100%;margin-top:4px;min-height:42px;font-size:14px;font-weight:700;color:var(--tg-600)}
+.err{margin-bottom:10px;display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.55;font-weight:600;color:var(--warnx)}
+.err svg{flex:none;margin-top:2px}
+
+/* 설문 */
+.saved{margin-top:28px;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--brand-deep)}
+.saved i{width:18px;height:18px;border-radius:99px;background:var(--brand);display:flex;align-items:center;justify-content:center}
+.q{margin-top:12px;font-size:23px;font-weight:800;line-height:1.36;letter-spacing:-.03em}
+.qs{margin-top:8px;font-size:14px;line-height:1.65;color:var(--tg-600)}
+.blk{margin-top:30px}
+.blk-h{display:flex;align-items:baseline;gap:8px}
+.blk-h b{font-size:16px;font-weight:800;letter-spacing:-.02em}
+.blk-h span{font-size:13px;font-weight:600;color:var(--tg-600)}
+.chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;display:inline-flex;align-items:center;padding:0 14px;border-radius:12px;background:var(--tg-100);font-size:14px;font-weight:600;color:var(--tg-700);letter-spacing:-.02em}
+.chip.on{background:var(--brand-bg);color:var(--brand-deep);font-weight:800}
+.tgrid{margin-top:12px;display:grid;grid-template-columns:44px 1fr 1fr 1fr;gap:8px;align-items:center}
+.tgrid .rl{font-size:14px;font-weight:700;color:var(--tg-700)}
+.tgrid .chip{justify-content:center;padding:0}
+.etc{margin-top:10px;height:46px;border-radius:12px;background:var(--tg-100);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:14.5px;color:var(--tg-900)}
+.etc.ph{color:var(--tg-400)}
+.etc small{font-size:12px;color:var(--tg-600);font-variant-numeric:tabular-nums}
+.fine{margin-top:34px;padding-bottom:22px;font-size:12.5px;line-height:1.65;color:var(--tg-600)}
+.fine u{text-underline-offset:3px;text-decoration-color:var(--tg-300);font-weight:700;color:var(--tg-700)}
+
+/* 홈 */
+.hi{margin-top:12px;font-size:21px;font-weight:800;line-height:1.3;letter-spacing:-.03em}
+.sec{margin-top:24px;margin-bottom:4px;font-size:13.5px;font-weight:700;color:var(--tg-600);letter-spacing:-.02em}
+.nr{margin-top:10px;border-radius:20px;background:#fff;padding:16px;box-shadow:var(--shadow-toss-card)}
+.nr .d{font-size:10.5px;font-weight:800;color:var(--brand)}
+.nr .t{margin-top:3px;font-size:16px;font-weight:800;letter-spacing:-.03em}
+.nr .m{margin-top:4px;font-size:12px;line-height:1.5;color:var(--tg-600)}
+.nr .b{margin-top:13px;height:46px;border-radius:14px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
+.other{margin-top:12px;height:40px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:var(--tg-600)}
+/* 토스트 = 지금 서재의 LibraryToast 자리·모양(하단 탭 위 76px, 어두운 띠) */
+.toast{position:absolute;left:16px;right:16px;bottom:76px;border-radius:12px;background:var(--tg-800);color:#fff;padding:13px 16px;font-size:14px;line-height:1.5;font-weight:600;letter-spacing:-.02em;display:flex;gap:10px;align-items:center;box-shadow:0 8px 20px rgba(25,31,40,.22)}
+.toast b{flex:none;margin-left:auto;color:#8FE0C0;font-weight:800}
+
+/* 나 탭 */
+.me-top{margin-top:16px;display:flex;align-items:center;gap:12px}
+.me-top .av{width:48px;height:48px;border-radius:17px;background:var(--brand-bg);color:var(--brand-deep);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800}
+.me-top b{display:block;font-size:16px;font-weight:800}
+.me-top small{display:block;font-size:11px;color:var(--tg-600)}
+.cnt2{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;border-radius:18px;background:var(--tg-100);overflow:hidden}
+.cnt2 div{padding:16px 0;text-align:center}
+.cnt2 div + div{border-left:1px solid var(--tg-200)}
+.cnt2 b{display:block;font-size:23px;font-weight:800;color:var(--brand-deep)}
+.cnt2 small{display:block;margin-top:4px;font-size:11px;font-weight:700;color:var(--tg-600)}
+.ri{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 0;border-top:1px solid var(--tg-100)}
+.ri:first-child{border-top:0}
+.ri .ic{width:40px;height:40px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--brand-bg)}
+.ri .ic.b{background:#EDF3FF}.ri .ic.y{background:#FFF6E0}
+.ri .tt{flex:1;min-width:0}
+.ri .tt b{display:block;font-size:14px;font-weight:700;letter-spacing:-.02em}
+.ri .tt small{display:block;margin-top:2px;font-size:12px;color:var(--tg-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ri .cv-r{flex:none;color:var(--tg-300);font-size:16px}
+.ri.mark{margin:0 -10px;padding:12px 10px;border-radius:14px;outline:2px dashed var(--brand);outline-offset:-2px}
+.acc{margin-top:28px;font-size:11.5px;line-height:1.9;color:var(--tg-600)}
+
+/* 고치기 */
+.clear{margin-top:30px;display:block;font-size:14px;font-weight:700;color:var(--tg-600);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--tg-300)}
+.clear-h{margin-top:4px;font-size:12.5px;line-height:1.6;color:var(--tg-600);padding-bottom:22px}
+</style>
+</head>
+<body>
+<div class="gal">
+<h1 class="gal-title">첫 가입 설문 — 회원 화면 (폰)</h1>
+<p class="gal-sub">한 장씩 보려면 주소 끝에 #s01 ~ #s08 을 붙인다. 가짜 닉네임만 썼다. 오늘 = 10월 12일(월). 선택지는 전부 「제안」이다.</p>
+
+<section class="scr" id="s01"><p class="cap"><b>01</b>프로필 저장 직후 · 첫 화면(스크롤 전)</p>
+<div class="phone"><div class="body" data-survey="empty" data-saved="1"></div><div class="foot" data-foot="off"></div></div></section>
+
+<section class="scr" id="s02"><p class="cap"><b>02</b>설문 비어 있음 · 작은 화면(360×640)에서 스크롤</p>
+<div class="phone"><div class="body" data-survey="empty" data-saved="1"></div><div class="foot" data-foot="off"></div></div></section>
+
+<section class="scr" id="s03"><p class="cap"><b>03</b>일부 고른 상태 (「기타」 칸 열림)</p>
+<div class="phone"><div class="body" data-survey="some" data-saved="1"></div><div class="foot" data-foot="on"></div></div></section>
+
+<section class="scr" id="s04"><p class="cap"><b>04</b>저장 실패 · 고른 답은 그대로</p>
+<div class="phone"><div class="body" data-survey="some" data-saved="1" data-scroll="end"></div><div class="foot" data-foot="err"></div></div></section>
+
+<!-- s05 건너뛰기 뒤 -->
+<section class="scr" id="s05"><p class="cap"><b>05</b>「건너뛰기」 뒤 도착 · 홈</p>
+<div class="phone">
+  <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
+  <div class="body" data-home></div>
+  <div class="toast">나중에 나 탭에서 채울 수 있어요</div>
+  <div class="nav"><i class="on"><em></em><span>홈</span></i><i><em></em><span>모임</span></i><i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i></div>
+</div></section>
+
+<!-- s06 제출 뒤 -->
+<section class="scr" id="s06"><p class="cap"><b>06</b>「저장하기」 뒤 도착 · 홈</p>
+<div class="phone">
+  <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
+  <div class="body" data-home></div>
+  <div class="toast">알려주셔서 고마워요</div>
+  <div class="nav"><i class="on"><em></em><span>홈</span></i><i><em></em><span>모임</span></i><i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i></div>
+</div></section>
+
+<!-- s07 나 탭 -->
+<section class="scr" id="s07"><p class="cap"><b>07</b>나 탭 · 고칠 자리 (점선 = 새로 생기는 줄)</p>
+<div class="phone">
+  <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
+  <div class="body">
+    <div class="me-top"><span class="av">초</span><span><b>초록고래</b><small>2026년 10월부터 · 경주</small></span></div>
+    <div class="cnt2"><div><b>0</b><small>서재</small></div><div><b>0</b><small>발제 답변</small></div></div>
+    <div class="sec">내 활동</div>
+    <div>
+      <div class="ri"><span class="ic b">🧾</span><span class="tt"><b>신청 내역</b><small>내 모임 신청과 취소</small></span><span class="cv-r">›</span></div>
+      <div class="ri"><span class="ic">🔔</span><span class="tt"><b>알림</b></span><span class="cv-r">›</span></div>
+      <div class="ri"><span class="ic y">⚙️</span><span class="tt"><b>프로필 · 설정</b><small>닉네임 · 연락처 · 지역</small></span><span class="cv-r">›</span></div>
+      <div class="ri mark"><span class="ic">🧩</span><span class="tt"><b>관심 분야 · 시간</b><small>소설 외 2개 · 평일 저녁 외 1개</small></span><span class="cv-r">›</span></div>
+    </div>
+    <p class="acc">이용약관 · 개인정보처리방침 · 환불 정책<br>로그아웃</p>
+  </div>
+  <div class="nav"><i><em></em><span>홈</span></i><i><em></em><span>모임</span></i><i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i class="on"><em></em><span>나</span></i></div>
+</div></section>
+
+<!-- s08 고치기 -->
+<section class="scr" id="s08"><p class="cap"><b>08</b>나 탭 › 관심 분야 · 시간 (고치기 · 바꾸기 전이라 저장 꺼짐)</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">관심 분야 · 시간</span></div>
+  <div class="body" data-survey="edit"></div>
+  <div class="foot" data-foot="edit"></div>
+</div></section>
+
+</div>
+<script>
+(function () {
+  // ── 선택지 (전부 「제안」) ──
+  var INTEREST = ['소설','에세이','시','인문·철학','역사','사회·정치','경제·경영','과학','심리','예술','자기계발','고전']
+  var ROUTE = ['친구·지인 소개','인스타그램','당근','네이버 검색·블로그','카카오톡 오픈채팅','다른 모임 앱','모임 장소(책방)에서','기타']
+  var REASON = ['책을 꾸준히 읽고 싶어서','읽은 책 이야기를 나누고 싶어서','새로운 사람을 만나고 싶어서','혼자라면 안 읽을 책을 읽어보려고','가까운 곳에 갈 만한 모임이 필요해서','생각을 말로 정리해보고 싶어서']
+  var STATES = {
+    empty: { interest: [], time: [], route: null, etc: '', reason: [] },
+    some:  { interest: ['소설','에세이','인문·철학'], time: ['평일 저녁','주말 오후'], route: '기타', etc: '북토크 행사에서', reason: [] },
+    edit:  { interest: ['소설','에세이','인문·철학'], time: ['평일 저녁','주말 오후'] }
+  }
+  function chips(list, sel) {
+    return '<div class="chips">' + list.map(function (x) {
+      return '<span class="chip' + (sel.indexOf(x) >= 0 ? ' on' : '') + '">' + x + '</span>'
+    }).join('') + '</div>'
+  }
+  function grid(sel) {
+    var h = '<div class="tgrid">'
+    ;['평일','주말'].forEach(function (d) {
+      h += '<span class="rl">' + d + '</span>'
+      ;['오전','오후','저녁'].forEach(function (t) {
+        h += '<span class="chip' + (sel.indexOf(d + ' ' + t) >= 0 ? ' on' : '') + '">' + t + '</span>'
+      })
+    })
+    return h + '</div>'
+  }
+  function blk(title, hint, inner) {
+    return '<div class="blk"><div class="blk-h"><b>' + title + '</b><span>' + hint + '</span></div>' + inner + '</div>'
+  }
+  var CHECK = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+
+  document.querySelectorAll('[data-survey]').forEach(function (el) {
+    var key = el.getAttribute('data-survey'), s = STATES[key], h = ''
+    if (key === 'edit') {
+      h += '<p class="qs" style="margin-top:14px">바뀌면 언제든 고쳐 주세요. 답은 운영진만 봐요.</p>'
+      h += blk('관심 있는 분야', '여러 개', chips(INTEREST, s.interest))
+      h += blk('주로 시간 되는 때', '여러 개', grid(s.time))
+      h += '<button class="clear">답 모두 지우기</button><p class="clear-h">가입할 때 고른 「알게 된 경로」·「가입한 이유」도 함께 지워져요.</p>'
+      el.innerHTML = h
+      return
+    }
+    if (el.getAttribute('data-saved')) h += '<p class="saved"><i>' + CHECK + '</i>프로필을 저장했어요</p>'
+    h += '<h1 class="q">초록고래님,<br>조금만 더 알려주세요</h1>'
+    h += '<p class="qs">전부 골라도, 하나도 안 골라도 괜찮아요.<br>모임을 꾸릴 때 참고하고, 답은 운영진만 봐요.</p>'
+    h += blk('관심 있는 분야', '여러 개', chips(INTEREST, s.interest))
+    h += blk('주로 시간 되는 때', '여러 개', grid(s.time))
+    var r = chips(ROUTE, s.route ? [s.route] : [])
+    if (s.route === '기타') r += '<div class="etc">' + s.etc + '<small>' + s.etc.length + '/20</small></div>'
+    h += blk('어떻게 알게 됐어요?', '하나만', r)
+    h += blk('가입한 이유', '여러 개', chips(REASON, s.reason))
+    h += '<p class="fine">선택해서 알려주는 정보예요. 고르지 않아도 모임 신청에는 아무 영향이 없어요. 고른 답은 나&nbsp;탭에서 고치거나 지울 수 있어요. <u>개인정보처리방침</u></p>'
+    el.innerHTML = h
+  })
+
+  document.querySelectorAll('[data-foot]').forEach(function (el) {
+    var k = el.getAttribute('data-foot')
+    if (k === 'edit') { el.innerHTML = '<span class="cta off">저장하기</span>'; return }
+    var err = k === 'err'
+      ? '<p class="err"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>저장하지 못했어요. 고른 답은 그대로 있으니 한 번 더 눌러 주세요.</p>'
+      : ''
+    el.innerHTML = err + '<span class="cta' + (k === 'off' ? ' off' : '') + '">' + (err ? '다시 저장하기' : '저장하기') + '</span><button class="skip">건너뛰기</button>'
+  })
+
+  document.querySelectorAll('[data-home]').forEach(function (el) {
+    el.innerHTML =
+      '<h1 class="hi">초록고래님,<br>곧 이런 모임이 있어요</h1>' +
+      '<div class="sec">가장 가까운 모임</div>' +
+      '<div class="nr"><div class="d">10월 14일 (수) 오후 7:00</div><div class="t">10월 둘째 주 경주 정기모임</div>' +
+      '<div class="m">우연히책방 · 참가비 10,000</div><div class="b">모임 자세히 보기</div></div>' +
+      '<div class="other">다른 일정도 보기 ›</div>'
+  })
+
+  function sync() {
+    var h = location.hash.slice(1)
+    document.body.classList.toggle('single', !!h && h !== 'all')
+    document.querySelectorAll('.scr').forEach(function (s) { s.classList.toggle('on', s.id === h) })
+    document.querySelectorAll('[data-scroll=end]').forEach(function (b) { b.scrollTop = b.scrollHeight })
+  }
+  sync(); window.addEventListener('hashchange', sync)
+  window.addEventListener('load', sync)
+})()
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>운영자 — 회원 관리 · 회원 상세의 가입 설문 (2026-10-12 시안)</title>
+<link rel="stylesheet" href="_admin.css">
+<style>
+.lede{margin-top:4px;font-size:14px;color:var(--n500)}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;margin-top:24px;align-items:start}
+.search{height:42px;border:1px solid var(--s300);border-radius:var(--r-md);display:flex;align-items:center;padding:0 14px;font-size:14px;color:var(--n500)}
+.flt{display:flex;gap:8px;margin-top:12px}
+.flt span{border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;background:var(--n100);color:var(--n600)}
+.gh{display:flex;align-items:center;gap:8px;margin:22px 0 8px}
+.gh i{flex:1;height:1px;background:var(--s300)}
+.gh span{font-size:12px;font-weight:700;color:var(--n500)}
+.list{border:1px solid var(--s300);border-radius:var(--r-md);overflow:hidden}
+.mr{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--s200)}
+.mr:last-child{border-bottom:0}
+.mr.sel{background:var(--p50);box-shadow:inset 3px 0 0 var(--p500)}
+.mr .nm{flex:1;min-width:0}
+.mr .nm b{font-size:14px;font-weight:600;color:var(--p800)}
+.mr .nm small{display:block;margin-top:2px;font-size:12px;color:var(--n600)}
+.mr .sv{flex:none;font-size:12px;color:var(--n500);width:52px;text-align:right}
+.mr .sv.y{color:var(--p600);font-weight:700}
+.badge{flex:none;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;background:var(--n100);color:var(--n500);border:1px solid var(--n200)}
+.blur{display:inline-block;width:42px;height:10px;border-radius:4px;background:var(--n200);vertical-align:middle;margin-right:6px}
+
+.panel{border:1px solid var(--s300);border-radius:var(--r-lg);padding:22px 24px;position:sticky;top:24px}
+.panel .top{display:flex;align-items:center;justify-content:space-between}
+.panel .top b{font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--n900)}
+.panel .x{color:var(--n500);font-size:20px}
+.kv{margin-top:14px;display:grid;grid-template-columns:72px 1fr;row-gap:8px;font-size:13.5px}
+.kv dt{color:var(--n600)}
+.kv dd{color:var(--n900);font-weight:600}
+.svh{margin-top:24px;padding-top:20px;border-top:1px solid var(--s300);display:flex;align-items:baseline;justify-content:space-between}
+.svh h3{font-size:15px;font-weight:800;color:var(--n900)}
+.svh span{font-size:12.5px;color:var(--n600)}
+.qa{margin-top:14px}
+.qa .k{font-size:12px;font-weight:700;color:var(--n600)}
+.qa .v{margin-top:6px;font-size:14px;line-height:1.6;color:var(--n900)}
+.qa .v.none{color:var(--n500)}
+.tg{display:inline-flex;margin:0 6px 6px 0;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700;background:var(--p50);color:var(--p700)}
+.tm{display:grid;grid-template-columns:40px repeat(3,52px);gap:5px;margin-top:6px;font-size:12px;align-items:center}
+.tm .h{color:var(--n500);text-align:center}
+.tm .r{color:var(--n700);font-weight:700}
+.tm .c{height:26px;border-radius:7px;background:var(--n100)}
+.tm .c.on{background:var(--p400)}
+.who{margin-top:20px;font-size:12px;line-height:1.6;color:var(--n600);background:var(--n50);border-radius:10px;padding:10px 12px}
+</style>
+</head>
+<body data-active="회원 관리">
+<div class="main">
+  <div class="mhead"></div>
+  <div class="page cap">
+    <div class="eyebrow">회원</div>
+    <h1 class="h1" style="margin-top:4px">회원 관리</h1>
+    <p class="lede">회원 목록과 역할, 스텝 자격을 관리합니다.</p>
+
+    <div class="wrap">
+      <div>
+        <div class="search">닉네임 또는 실명 검색</div>
+        <div class="flt"><span>프로필 미완성</span><span>전화번호 없음</span></div>
+        <div class="gh"><i></i><span>회원</span><i></i></div>
+        <div class="list">
+          <div class="mr sel"><span class="nm"><b><span class="blur"></span>(초록고래)</b><small>경주 · 2026.10.12 가입</small></span><span class="sv y">설문 답함</span><span class="badge">회원 ↕</span></div>
+          <div class="mr"><span class="nm"><b><span class="blur"></span>(오후세시)</b><small>포항 · 2026.10.11 가입</small></span><span class="sv">건너뜀</span><span class="badge">회원 ↕</span></div>
+          <div class="mr"><span class="nm"><b><span class="blur"></span>(파란연필)</b><small>경주, 포항 · 2026.10.09 가입</small></span><span class="sv y">설문 답함</span><span class="badge">회원 ↕</span></div>
+          <div class="mr"><span class="nm"><b><span class="blur"></span>(문장수집가)</b><small>포항 · 2026.09.21 가입</small></span><span class="sv">—</span><span class="badge">회원 ↕</span></div>
+          <div class="mr"><span class="nm"><b><span class="blur"></span>(늦은밤독서)</b><small>경주 · 2026.08.30 가입</small></span><span class="sv">—</span><span class="badge">회원 ↕</span></div>
+          <div class="mr"><span class="nm"><b><span class="blur"></span>(책먹는하마)</b><small>경주 · 2026.07.14 가입</small></span><span class="sv">—</span><span class="badge">회원 ↕</span></div>
+        </div>
+        <p class="help" style="margin-top:10px">「—」 = 설문이 생기기 전에 가입한 회원(묻지 않았다). 행을 누르면 오른쪽에 회원 상세가 열린다고 가정했다. 실명 자리는 시안에서 회색으로 가렸다.</p>
+      </div>
+
+      <aside class="panel">
+        <div class="top"><b>초록고래</b><span class="x">×</span></div>
+        <dl class="kv">
+          <dt>지역</dt><dd>경주</dd>
+          <dt>가입</dt><dd>2026년 10월 12일</dd>
+          <dt>신청</dt><dd>아직 없음</dd>
+        </dl>
+
+        <div class="svh"><h3>가입 설문</h3><span>10월 12일 답함</span></div>
+        <div class="qa"><div class="k">관심 있는 분야</div><div class="v"><span class="tg">소설</span><span class="tg">에세이</span><span class="tg">인문·철학</span></div></div>
+        <div class="qa"><div class="k">주로 시간 되는 때</div>
+          <div class="tm">
+            <span></span><span class="h">오전</span><span class="h">오후</span><span class="h">저녁</span>
+            <span class="r">평일</span><span class="c"></span><span class="c"></span><span class="c on"></span>
+            <span class="r">주말</span><span class="c"></span><span class="c on"></span><span class="c"></span>
+          </div>
+        </div>
+        <div class="qa"><div class="k">어떻게 알게 됐나</div><div class="v">기타 — 북토크 행사에서</div></div>
+        <div class="qa"><div class="k">가입한 이유</div><div class="v none">답하지 않음</div></div>
+
+        <p class="who">총괄운영자(admin)에게만 보이는 칸이에요. 운영진(editor) 화면에는 이 칸과 목록의 「설문」 표시가 없어요. 회원이 나 탭에서 답을 지우면 여기서도 사라져요.</p>
+      </aside>
+    </div>
+  </div>
+</div>
+<script src="_chrome.js"></script>
+</body>
+</html>
