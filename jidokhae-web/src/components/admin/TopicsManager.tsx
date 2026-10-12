@@ -133,6 +133,8 @@ export default function TopicsManager({
       router.refresh()
     } catch (e) {
       setError((e as Error).message)
+      // 다른 운영자가 먼저 공개했으면 서버는 「공개할 발제가 없어요」 — 목록을 새로 받아 낡은 작성 중을 지운다
+      router.refresh()
     } finally {
       setBusy(false)
       setPublishOpen(false)

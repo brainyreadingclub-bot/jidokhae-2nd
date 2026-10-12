@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const count = (updated ?? []).length
     if (count === 0) {
       return NextResponse.json(
-        { status: 'error', message: '공개할 발제가 없어요' },
+        { status: 'error', message: '공개할 발제가 없어요 — 이미 공개됐을 수 있어요' },
         { status: 400 },
       )
     }
