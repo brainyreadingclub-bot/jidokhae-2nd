@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>모임 후기 — 회원 화면 시안 (2026-10-12)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+/* 토큰 = origin/main jidokhae-web/src/app/globals.css 「next_ui 토스 스킨 토큰」 그대로. 새 토큰 없음 */
+:root{
+  --tg-50:#F9FAFB; --tg-100:#F2F4F6; --tg-200:#E5E8EB; --tg-300:#D1D6DB;
+  --tg-400:#B0B8C1; --tg-500:#8B95A1; --tg-600:#6B7684; --tg-700:#4E5968;
+  --tg-800:#333D4B; --tg-900:#191F28;
+  --brand:#0FA873; --brand-deep:#0C8A5F; --brand-bg:#E8F7F1;
+  --warnx:#FF6B3D; --warnx-bg:#FFF0EA;
+  --shadow-toss-card:0 2px 12px rgba(25,31,40,.07);
+  --sans:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9ECEF;font-family:var(--sans);color:var(--tg-900);word-break:keep-all;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;border:0;background:none;color:inherit}
+
+/* 갤러리 모드(#all) */
+.gal{display:flex;flex-wrap:wrap;gap:36px 28px;padding:40px 28px 120px;max-width:1500px;margin:0 auto}
+.gal-title{width:100%;font-size:26px;font-weight:800;letter-spacing:-.03em}
+.gal-sub{width:100%;margin-top:-24px;font-size:14px;line-height:1.8;color:var(--tg-700)}
+.scr{flex:none}
+.scr > .cap{margin-bottom:10px;font-size:14px;font-weight:800;letter-spacing:-.02em;width:390px}
+.scr > .cap b{color:var(--tg-500);margin-right:6px}
+
+/* 폰 */
+.phone{width:390px;height:844px;background:#fff;position:relative;overflow:hidden;border-radius:14px;box-shadow:0 10px 30px rgba(25,31,40,.13);display:flex;flex-direction:column}
+.phone.gray{background:var(--tg-50)}
+/* 한 장 모드(#s01 등) — 뷰포트를 꽉 채운다. 360 폭 확인은 창 폭만 바꾼다 */
+body.single{background:#fff}
+body.single .gal{padding:0;gap:0;display:block}
+body.single .gal-title,body.single .gal-sub,body.single .scr > .cap{display:none}
+body.single .scr{display:none}
+body.single .scr.on{display:block}
+body.single .phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}
+
+/* 머리 */
+.nx-head{height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 20px}
+.nx-wm{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--brand-deep)}
+.bell{color:var(--tg-600);width:36px;height:36px;display:flex;align-items:center;justify-content:center;position:relative}
+.bell .dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:9px;background:var(--warnx)}
+.fl-head{height:52px;flex:none;display:flex;align-items:center;gap:4px;padding:0 12px}
+.fl-head .bk{width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--tg-800)}
+.fl-head .t{flex:1;font-size:16px;font-weight:700;letter-spacing:-.02em;color:var(--tg-900)}
+.fl-head .step{font-size:13px;font-weight:700;color:var(--tg-500);padding-right:8px;font-variant-numeric:tabular-nums}
+.prog{height:3px;background:var(--tg-100);flex:none;margin:0 20px;border-radius:3px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--brand);border-radius:3px}
+
+.body{flex:1;min-height:0;overflow:hidden;padding:0 20px}
+.body.pad-nav{padding-bottom:70px}
+
+/* 하단 탭 */
+.nav{flex:none;height:56px;background:#fff;border-top:1px solid var(--tg-100);display:flex;align-items:center;justify-content:space-around;padding:0 8px}
+.nav i{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tg-400);font-style:normal}
+.nav i.on{color:var(--tg-900)}
+.nav i span{font-size:10px;font-weight:600;letter-spacing:-.02em}
+.nav i.on span{font-weight:700}
+.nav i em{display:block;width:18px;height:18px;border-radius:5px;background:currentColor;opacity:.32}
+.nav i.on em{opacity:1}
+
+/* 하단 버튼 */
+.foot{flex:none;padding:10px 20px 18px;background:#fff}
+.cta{display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;border-radius:14px;background:var(--brand);color:#fff;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.cta.off{background:var(--tg-100);color:var(--tg-400)}
+.cta.soft{background:var(--tg-100);color:var(--tg-700)}
+.skip{display:block;width:100%;margin-top:4px;min-height:40px;font-size:14px;font-weight:700;color:var(--tg-600)}
+.err{margin-bottom:10px;display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.55;font-weight:600;color:var(--warnx)}
+
+/* 질문 머리 */
+.q{margin-top:22px;font-size:23px;font-weight:800;line-height:1.36;letter-spacing:-.03em}
+.qs{margin-top:8px;font-size:14px;line-height:1.65;color:var(--tg-600)}
+.mt{margin-top:7px;font-size:13px;font-weight:700;color:var(--brand-deep)}
+
+/* 표정 */
+.faces{margin-top:34px;display:flex;justify-content:space-between}
+.fc{width:58px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.fc svg{width:52px;height:52px;display:block}
+.fc span{font-size:12px;font-weight:600;color:var(--tg-600);letter-spacing:-.03em;white-space:nowrap}
+.fc.on span{color:var(--tg-900);font-weight:800}
+.miss{margin:26px auto 0;display:block;font-size:14px;font-weight:700;color:var(--tg-600);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--tg-300)}
+
+/* 아쉬운 점 */
+.sub-q{margin-top:30px;font-size:16px;font-weight:800;letter-spacing:-.02em}
+.sub-qs{margin-top:4px;font-size:13px;color:var(--tg-600)}
+.chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:38px;display:inline-flex;align-items:center;padding:0 13px;border-radius:12px;background:var(--tg-100);font-size:13.5px;font-weight:600;color:var(--tg-700);letter-spacing:-.02em}
+.chip.on{background:var(--brand-bg);color:var(--brand-deep);font-weight:800}
+
+/* 입력 */
+.ta{margin-top:22px;border-radius:16px;background:var(--tg-100);padding:14px 16px 12px;min-height:120px;display:flex;flex-direction:column}
+.ta p{flex:1;font-size:15px;line-height:1.65;color:var(--tg-900)}
+.ta p.ph{color:var(--tg-400)}
+.ta .cnt{align-self:flex-end;font-size:12px;color:var(--tg-500);font-variant-numeric:tabular-nums}
+.chk{margin-top:16px;display:flex;gap:11px;align-items:flex-start}
+.box{width:22px;height:22px;flex:none;border-radius:7px;border:2px solid var(--tg-300);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.box.on{background:var(--brand);border-color:var(--brand)}
+.chk .l{font-size:15px;font-weight:700;letter-spacing:-.02em}
+.chk .h{margin-top:3px;font-size:13px;line-height:1.6;color:var(--tg-600)}
+.prev{margin-top:14px;border-radius:14px;background:var(--tg-50);padding:12px 14px}
+.prev .k{font-size:12px;font-weight:700;color:var(--tg-500)}
+.quote{margin-top:6px;font-size:14px;line-height:1.6;color:var(--tg-800)}
+.quote .by{display:block;margin-top:3px;font-size:12px;font-weight:700;color:var(--tg-600)}
+
+/* 사람 행 */
+.rows{margin-top:16px}
+.row{display:flex;align-items:center;gap:12px;min-height:60px;border-top:1px solid var(--tg-100)}
+.row:first-child{border-top:0}
+.av{width:38px;height:38px;flex:none;border-radius:13px;background:var(--tg-100);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--tg-700)}
+.av.g{background:var(--brand-bg);color:var(--brand-deep)}
+.row .nm{flex:1;min-width:0}
+.row .nm b{display:block;font-size:15px;font-weight:700;letter-spacing:-.02em}
+.row .nm small{display:block;margin-top:2px;font-size:13px;font-weight:700;color:var(--brand-deep)}
+.row .nm small.gr{color:var(--tg-600);font-weight:500}
+.sbtn{flex:none;min-height:34px;padding:0 13px;border-radius:10px;background:var(--tg-100);font-size:13px;font-weight:700;color:var(--tg-700);display:inline-flex;align-items:center}
+.sbtn.g{background:var(--brand-bg);color:var(--brand-deep)}
+.note{margin-top:14px;font-size:12.5px;line-height:1.6;color:var(--tg-600)}
+
+/* 바텀시트 */
+.dim{position:absolute;inset:0;background:rgba(25,31,40,.42);display:flex;flex-direction:column;justify-content:flex-end;z-index:20}
+.sheet{background:#fff;border-radius:22px 22px 0 0;padding:10px 20px 18px}
+.sheet .grab{width:38px;height:4px;border-radius:9px;background:var(--tg-200);margin:0 auto 14px}
+.sheet h3{font-size:19px;font-weight:800;letter-spacing:-.03em}
+.sheet .hs{margin-top:5px;font-size:13px;line-height:1.6;color:var(--tg-600)}
+.opts{margin-top:12px}
+.opt{display:flex;align-items:center;gap:12px;min-height:52px;font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--tg-800)}
+.rd{width:22px;height:22px;flex:none;border-radius:99px;border:2px solid var(--tg-300)}
+.opt.on{font-weight:800;color:var(--tg-900)}
+.opt.on .rd{border:7px solid var(--brand)}
+
+/* 책 */
+.search{margin-top:22px;height:48px;border-radius:14px;background:var(--tg-100);display:flex;align-items:center;gap:9px;padding:0 14px;font-size:15px;color:var(--tg-900)}
+.search svg{color:var(--tg-500);flex:none}
+.bk-row{display:flex;gap:13px;align-items:center;padding:11px 0;border-top:1px solid var(--tg-100)}
+.bk-row:first-child{border-top:0}
+.cv{width:44px;height:64px;flex:none;border-radius:4px;background:var(--tg-200);display:flex;align-items:flex-end;padding:4px;font-size:8px;font-weight:700;color:var(--tg-600);line-height:1.2;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.cv.a{background:#C9D6CF}.cv.b{background:#D8CFC4}.cv.c{background:#C7CEDB}
+.bk-row .tx{flex:1;min-width:0}
+.bk-row .tx b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.02em}
+.bk-row .tx small{display:block;margin-top:3px;font-size:12.5px;color:var(--tg-600)}
+.ck{width:24px;height:24px;flex:none;border-radius:99px;border:2px solid var(--tg-300)}
+.ck.on{background:var(--brand);border-color:var(--brand);display:flex;align-items:center;justify-content:center}
+
+/* 완료·요약 */
+.done-ic{margin-top:64px;width:56px;height:56px;border-radius:99px;background:var(--brand);display:flex;align-items:center;justify-content:center}
+.sum{margin-top:28px}
+.sum .r{display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--tg-100)}
+.sum .r:first-child{border-top:0}
+.sum .k{width:76px;flex:none;font-size:14px;color:var(--tg-600)}
+.sum .v{flex:1;font-size:14px;line-height:1.55;font-weight:600;color:var(--tg-900)}
+.sum .v small{display:block;margin-top:2px;font-size:12.5px;font-weight:500;color:var(--tg-600)}
+
+/* 홈 */
+.hi{margin-top:12px;font-size:21px;font-weight:800;line-height:1.3;letter-spacing:-.03em}
+.sec{margin-top:24px;margin-bottom:4px;font-size:13.5px;font-weight:700;color:var(--tg-600);letter-spacing:-.02em;display:flex;justify-content:space-between}
+.ri{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 0;border-top:1px solid var(--tg-100)}
+.ri:first-child{border-top:0}
+.ri .ic{width:40px;height:40px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--brand-bg)}
+.ri .ic.b{background:#EDF3FF}.ri .ic.y{background:#FFF6E0}
+.ri .tt{flex:1;min-width:0}
+.ri .tt b{display:block;font-size:14px;font-weight:700;letter-spacing:-.02em}
+.ri .tt small{display:block;margin-top:2px;font-size:12px;color:var(--tg-600)}
+.ri .cv-r{flex:none;color:var(--tg-300);font-size:16px}
+.card{margin-top:10px;border-radius:20px;background:#fff;padding:16px;box-shadow:var(--shadow-toss-card);display:flex;align-items:center;gap:14px}
+.card .big{font-size:31px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.card .big i{font-style:normal;font-size:15px;font-weight:700;color:var(--tg-400)}
+.card .tt b{display:block;font-size:14px;font-weight:700}
+.card .tt small{display:block;margin-top:2px;font-size:12px;color:var(--tg-600)}
+
+/* 나 탭 */
+.me-top{margin-top:16px;display:flex;align-items:center;gap:12px}
+.me-top .av{width:48px;height:48px;border-radius:17px;font-size:18px}
+.me-top b{display:block;font-size:16px;font-weight:800}
+.me-top small{display:block;font-size:11px;color:var(--tg-600)}
+.cnt2{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;border-radius:18px;background:var(--tg-100);overflow:hidden}
+.cnt2 div{padding:16px 0;text-align:center}
+.cnt2 div + div{border-left:1px solid var(--tg-200)}
+.cnt2 b{display:block;font-size:23px;font-weight:800;color:var(--brand-deep)}
+.cnt2 small{display:block;margin-top:4px;font-size:11px;font-weight:700;color:var(--tg-600)}
+.new{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:var(--brand-bg);color:var(--brand-deep);font-size:10.5px;font-weight:800;vertical-align:1px}
+
+/* 내가 남긴 후기 */
+.rv{padding:16px 0;border-top:1px solid var(--tg-100)}
+.rv:first-child{border-top:0}
+.rv .mh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rv .mh b{font-size:14px;font-weight:800;letter-spacing:-.02em}
+.rv .tag{font-size:12px;font-weight:700;color:var(--tg-600);flex:none}
+.rv .tag.g{color:var(--brand-deep)}
+.rv .tx{margin-top:7px;font-size:14.5px;line-height:1.6;color:var(--tg-800)}
+.rv .act{margin-top:10px;display:flex;gap:8px}
+.rv .none{margin-top:6px;font-size:13px;color:var(--tg-500)}
+
+/* 알림함 */
+.nt{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--tg-100)}
+.nt.un{border-top:0;border-radius:14px;background:var(--brand-bg);padding:12px;margin:4px 0}
+.nt .e{width:36px;height:36px;flex:none;border-radius:12px;background:var(--tg-100);display:flex;align-items:center;justify-content:center;font-size:14px}
+.nt.un .e{background:#fff}
+.nt b{display:block;font-size:13px;font-weight:700;line-height:1.4;letter-spacing:-.02em}
+.nt small{display:block;margin-top:2px;font-size:12px;color:var(--tg-600);line-height:1.5}
+.nt i{display:block;margin-top:2px;font-style:normal;font-size:11px;color:var(--tg-600)}
+
+/* 받은 칭찬 */
+.pg-t{margin-top:12px;font-size:22px;font-weight:800;letter-spacing:-.03em}
+.pg-s{margin-top:6px;font-size:13.5px;line-height:1.6;color:var(--tg-600)}
+.grp{margin-top:26px;font-size:13.5px;font-weight:700;color:var(--tg-600)}
+.pr{display:flex;gap:12px;align-items:center;padding:13px 0;border-top:1px solid var(--tg-100)}
+.pr:first-of-type{border-top:0}
+.pr .w{font-size:15.5px;font-weight:700;line-height:1.5;letter-spacing:-.02em}
+.pr .f{display:block;margin-top:2px;font-size:12.5px;font-weight:500;color:var(--tg-600)}
+.empty{margin-top:40px;text-align:center;padding:0 12px}
+.empty .ei{width:52px;height:52px;margin:0 auto;border-radius:17px;background:var(--tg-100);display:flex;align-items:center;justify-content:center;font-size:22px}
+.empty b{display:block;margin-top:14px;font-size:16px;font-weight:800}
+.empty p{margin-top:6px;font-size:13.5px;line-height:1.65;color:var(--tg-600)}
+
+/* 모임 소개 */
+.back{display:flex;align-items:center;gap:6px;height:36px;font-size:14px;font-weight:700;color:var(--tg-700)}
+.dh1{margin-top:8px;font-size:24px;font-weight:800;line-height:1.3;letter-spacing:-.03em}
+.desc{margin-top:14px;border-radius:18px;background:var(--tg-100);padding:14px 16px;font-size:14px;line-height:1.7;color:var(--tg-700)}
+.ir{display:flex;align-items:center;gap:13px;min-height:52px}
+.ir .ic{width:36px;height:36px;flex:none;border-radius:12px;background:var(--tg-100);display:flex;align-items:center;justify-content:center;color:var(--tg-600)}
+.ir .k{width:44px;flex:none;font-size:13px;color:var(--tg-600)}
+.ir .v{font-size:14.5px;font-weight:700}
+.voice{padding:13px 0;border-top:1px solid var(--tg-100)}
+.voice:first-of-type{border-top:0}
+.voice p{font-size:14.5px;line-height:1.62;color:var(--tg-800)}
+.voice span{display:block;margin-top:4px;font-size:12px;font-weight:600;color:var(--tg-600)}
+.more{display:inline-block;margin-top:4px;font-size:13px;font-weight:700;color:var(--tg-600)}
+.stk{flex:none;padding:12px 20px;background:#fff;box-shadow:0 -2px 10px rgba(25,31,40,.06);display:flex;gap:16px;align-items:center}
+.stk .amt{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.stk .seat{font-size:12px;font-weight:700;color:var(--tg-600)}
+.stk .cta{flex:1}
+
+/* 카톡 인앱 링크 닫힘 등 */
+.ctr{text-align:center}
+</style>
+</head>
+<body>
+<div class="gal">
+<h1 class="gal-title">모임 후기 — 회원 화면 (폰)</h1>
+<p class="gal-sub">한 장씩 보려면 주소 끝에 #s01 ~ #s19 를 붙인다. 가짜 닉네임만 썼다. 모임 = 10월 14일(수) 경주 정기모임, 알림톡 10월 15일 오전 10시, 칭찬 전달 10월 18일.</p>
+
+<!-- ═════════ s01 홈 — 할 일에 후기 행 (알림톡을 놓친 사람의 안전망) ═════════ -->
+<section class="scr" id="s01"><p class="cap"><b>01</b>홈 · 할 일에 「모임 후기」</p>
+<div class="phone">
+  <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
+  <div class="body">
+    <h1 class="hi">초록고래님,<br>오늘도 읽어볼까요</h1>
+    <div class="card"><span class="big">6<i>일</i></span><span class="tt"><b>10월 21일 경주 정기모임까지</b><small>10월 21일 (수) 오후 7:00 · 우연히책방</small></span></div>
+    <div class="sec">할 일</div>
+    <div>
+      <div class="ri"><span class="ic">💬</span><span class="tt"><b>10월 14일 모임, 어땠어요?</b><small>표정 하나면 돼요 · 10월 17일까지</small></span><span class="cv-r">›</span></div>
+    </div>
+  </div>
+  <div class="nav"><i class="on"><em></em><span>홈</span></i><i><em></em><span>모임</span></i><i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i></div>
+</div></section>
+
+<!-- ═════════ s02 ① 표정 — 고르기 전 ═════════ -->
+<section class="scr" id="s02"><p class="cap"><b>02</b>① 표정 · 고르기 전</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">1 / 4</span></div>
+  <div class="prog"><i style="width:25%"></i></div>
+  <div class="body">
+    <p class="mt" style="margin-top:22px">10월 14일 (수) 경주 정기모임</p>
+    <h1 class="q" style="margin-top:6px">그날 모임,<br>어땠어요?</h1>
+    <p class="qs">표정은 운영진만 봐요. 다음 모임을 꾸릴 때 참고할게요.</p>
+    <div class="faces">
+      <div class="fc" data-v="1"><span>별로였어요</span></div>
+      <div class="fc" data-v="2"><span>아쉬웠어요</span></div>
+      <div class="fc" data-v="3"><span>무난했어요</span></div>
+      <div class="fc" data-v="4"><span>좋았어요</span></div>
+      <div class="fc" data-v="5"><span>최고였어요</span></div>
+    </div>
+    <button class="miss">이 모임에 못 갔어요</button>
+  </div>
+  <div class="foot"><span class="cta off">다음</span></div>
+</div></section>
+
+<!-- ═════════ s03 ① 낮은 점수 → 아쉬운 점 ═════════ -->
+<section class="scr" id="s03"><p class="cap"><b>03</b>① 낮은 점수 · 「무엇이 아쉬웠나요?」</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">1 / 4</span></div>
+  <div class="prog"><i style="width:25%"></i></div>
+  <div class="body">
+    <p class="mt" style="margin-top:22px">10월 14일 (수) 경주 정기모임</p>
+    <h1 class="q" style="margin-top:6px">그날 모임,<br>어땠어요?</h1>
+    <p class="qs">표정은 운영진만 봐요. 다음 모임을 꾸릴 때 참고할게요.</p>
+    <div class="faces">
+      <div class="fc" data-v="1"><span>별로였어요</span></div>
+      <div class="fc on" data-v="2"><span>아쉬웠어요</span></div>
+      <div class="fc" data-v="3"><span>무난했어요</span></div>
+      <div class="fc" data-v="4"><span>좋았어요</span></div>
+      <div class="fc" data-v="5"><span>최고였어요</span></div>
+    </div>
+    <p class="sub-q">무엇이 아쉬웠나요?</p>
+    <p class="sub-qs">여러 개 골라도 돼요 · 운영진만 봐요</p>
+    <div class="chips">
+      <span class="chip on">이야기할 시간이 짧았어요</span>
+      <span class="chip">몇 사람 이야기가 길었어요</span>
+      <span class="chip">진행이 매끄럽지 않았어요</span>
+      <span class="chip">대화에 끼기 어려웠어요</span>
+      <span class="chip on">공간이 불편했어요</span>
+      <span class="chip">책이 잘 안 맞았어요</span>
+      <span class="chip">시간·장소 안내가 헷갈렸어요</span>
+      <span class="chip">기타</span>
+    </div>
+  </div>
+  <div class="foot"><span class="cta">다음</span></div>
+</div></section>
+
+<!-- ═════════ s04 「못 갔어요」 → 끝 ═════════ -->
+<section class="scr" id="s04"><p class="cap"><b>04</b>「못 갔어요」 누른 뒤</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span></div>
+  <div class="body">
+    <div class="done-ic" style="background:var(--tg-100)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B7684" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <h1 class="q">알려주셔서 고마워요</h1>
+    <p class="qs">10월 14일 경주 정기모임은 후기 없이 넘어갈게요.<br>다음 모임에서 만나요.</p>
+  </div>
+  <div class="foot"><span class="cta soft">홈으로</span><button class="skip">잘못 눌렀어요 · 후기 남기기</button></div>
+</div></section>
+
+<!-- ═════════ s05 ② 한 줄 소감 — 기본(공개 꺼짐) ═════════ -->
+<section class="scr" id="s05"><p class="cap"><b>05</b>② 한 줄 소감 · 공개 체크 꺼짐(기본)</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">2 / 4</span></div>
+  <div class="prog"><i style="width:50%"></i></div>
+  <div class="body">
+    <h1 class="q">한 줄로 남겨볼까요?</h1>
+    <p class="qs">안 써도 괜찮아요.</p>
+    <div class="ta"><p class="ph">그날 기억에 남은 것 한 줄</p><span class="cnt">0 / 100</span></div>
+    <div class="chk"><span class="box"></span><div><p class="l">모임 소개에 공개해도 좋아요</p><p class="h">체크하지 않으면 운영진만 봐요.</p></div></div>
+  </div>
+  <div class="foot"><span class="cta off">다음</span><button class="skip">건너뛰기</button></div>
+</div></section>
+
+<!-- ═════════ s06 ② 한 줄 소감 — 공개 켬 ═════════ -->
+<section class="scr" id="s06"><p class="cap"><b>06</b>② 한 줄 소감 · 공개 체크 켬</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">2 / 4</span></div>
+  <div class="prog"><i style="width:50%"></i></div>
+  <div class="body">
+    <h1 class="q">한 줄로 남겨볼까요?</h1>
+    <p class="qs">안 써도 괜찮아요.</p>
+    <div class="ta"><p>같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.</p><span class="cnt">33 / 100</span></div>
+    <div class="chk"><span class="box on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><div><p class="l">모임 소개에 공개해도 좋아요</p><p class="h">닉네임과 함께 경주 정기모임 소개에 보여요. <span style="white-space:nowrap">나 › 내가 남긴 후기</span>에서 언제든 내릴 수 있어요.</p></div></div>
+    <div class="prev"><p class="k">이렇게 보여요</p><p class="quote">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.<span class="by">초록고래 · 10월 14일 모임</span></p></div>
+  </div>
+  <div class="foot"><span class="cta">다음</span><button class="skip">건너뛰기</button></div>
+</div></section>
+
+<!-- ═════════ s07 ③ 칭찬 — 사람 고르기 ═════════ -->
+<section class="scr" id="s07"><p class="cap"><b>07</b>③ 칭찬 · 함께한 사람 목록</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">3 / 4</span></div>
+  <div class="prog"><i style="width:75%"></i></div>
+  <div class="body">
+    <h1 class="q">함께한 분께<br>칭찬 한마디 보낼까요?</h1>
+    <p class="qs">받은 분만 볼 수 있어요. 모임 4일 뒤인 10월 18일에 내 닉네임과 함께 전해져요.</p>
+    <div class="rows">
+      <div class="row"><span class="av g">책</span><span class="nm"><b>책읽는너구리</b><small>질문이 좋았어요</small></span><span class="sbtn">바꾸기</span></div>
+      <div class="row"><span class="av">밤</span><span class="nm"><b>밤산책</b></span><span class="sbtn">칭찬하기</span></div>
+      <div class="row"><span class="av">여</span><span class="nm"><b>여름귤</b></span><span class="sbtn">칭찬하기</span></div>
+      <div class="row"><span class="av">문</span><span class="nm"><b>문장수집가</b></span><span class="sbtn">칭찬하기</span></div>
+      <div class="row"><span class="av">고</span><span class="nm"><b>고요한숲</b></span><span class="sbtn">칭찬하기</span></div>
+      <div class="row"><span class="av">파</span><span class="nm"><b>파란연필</b></span><span class="sbtn">칭찬하기</span></div>
+      <div class="row"><span class="av">오</span><span class="nm"><b>오후세시</b></span><span class="sbtn">칭찬하기</span></div>
+    </div>
+  </div>
+  <div class="foot"><span class="cta">다음</span><button class="skip">건너뛰기</button></div>
+</div></section>
+
+<!-- ═════════ s08 ③ 칭찬 — 문구 고르기 시트(열림) ═════════ -->
+<section class="scr" id="s08"><p class="cap"><b>08</b>③ 칭찬 · 문구 고르기 (시트 열림)</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">3 / 4</span></div>
+  <div class="prog"><i style="width:75%"></i></div>
+  <div class="body">
+    <h1 class="q">함께한 분께<br>칭찬 한마디 보낼까요?</h1>
+    <p class="qs">받은 분만 볼 수 있어요. 모임 4일 뒤인 10월 18일에 내 닉네임과 함께 전해져요.</p>
+    <div class="rows">
+      <div class="row"><span class="av g">책</span><span class="nm"><b>책읽는너구리</b><small>질문이 좋았어요</small></span><span class="sbtn">바꾸기</span></div>
+      <div class="row"><span class="av">밤</span><span class="nm"><b>밤산책</b></span><span class="sbtn">칭찬하기</span></div>
+      <div class="row"><span class="av">여</span><span class="nm"><b>여름귤</b></span><span class="sbtn">칭찬하기</span></div>
+    </div>
+  </div>
+  <div class="foot"><span class="cta">다음</span><button class="skip">건너뛰기</button></div>
+  <div class="dim"><div class="sheet">
+    <div class="grab"></div>
+    <h3>밤산책님께</h3>
+    <p class="hs">하나만 고를 수 있어요.</p>
+    <div class="opts">
+      <div class="opt"><span class="rd"></span>이야기를 잘 들어줬어요</div>
+      <div class="opt on"><span class="rd"></span>덕분에 새로운 시각을 얻었어요</div>
+      <div class="opt"><span class="rd"></span>질문이 좋았어요</div>
+      <div class="opt"><span class="rd"></span>분위기를 편하게 만들어줬어요</div>
+      <div class="opt"><span class="rd"></span>다음에도 같이 이야기하고 싶어요</div>
+    </div>
+    <span class="cta" style="margin-top:10px">고르기</span>
+  </div></div>
+</div></section>
+
+<!-- ═════════ s09 ④ 책 담기 ═════════ -->
+<section class="scr" id="s09"><p class="cap"><b>09</b>④ 그날 읽은 책 담기</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">4 / 4</span></div>
+  <div class="prog"><i style="width:100%"></i></div>
+  <div class="body">
+    <h1 class="q">그날 읽은 책,<br>서재에 담을까요?</h1>
+    <p class="qs">담은 책은 서재 탭에 쌓여요.</p>
+    <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>작별하지</div>
+    <div style="margin-top:8px">
+      <div class="bk-row"><span class="cv a">작별하지 않는다</span><span class="tx"><b>작별하지 않는다</b><small>한강 · 문학동네</small></span><span class="ck on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+      <div class="bk-row"><span class="cv b">작별</span><span class="tx"><b>작별 인사</b><small>김영하 · 복복서가</small></span><span class="ck"></span></div>
+      <div class="bk-row"><span class="cv c">작별의 의식</span><span class="tx"><b>작별의 의식</b><small>시몬 드 보부아르 · 현암사</small></span><span class="ck"></span></div>
+    </div>
+  </div>
+  <div class="foot"><span class="cta">후기 마치기</span><button class="skip">책은 건너뛰고 마치기</button></div>
+</div></section>
+
+<!-- ═════════ s10 완료 ═════════ -->
+<section class="scr" id="s10"><p class="cap"><b>10</b>후기 마침</p>
+<div class="phone">
+  <div class="fl-head"><span class="t" style="padding-left:8px">모임 후기</span></div>
+  <div class="body">
+    <div class="done-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <h1 class="q">후기를 남겼어요</h1>
+    <p class="qs">10월 14일 경주 정기모임</p>
+    <div class="sum">
+      <div class="r"><span class="k">한 줄 소감</span><span class="v">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.<small>모임 소개에 공개 중 · <span style="white-space:nowrap">나 › 내가 남긴 후기</span>에서 내릴 수 있어요</small></span></div>
+      <div class="r"><span class="k">칭찬</span><span class="v">책읽는너구리 · 밤산책<small>10월 18일에 전해져요</small></span></div>
+      <div class="r"><span class="k">서재</span><span class="v">작별하지 않는다<small>서재에 담았어요</small></span></div>
+    </div>
+  </div>
+  <div class="foot"><span class="cta">홈으로</span></div>
+</div></section>
+
+<!-- ═════════ s11 이미 남긴 모임 다시 열기 ═════════ -->
+<section class="scr" id="s11"><p class="cap"><b>11</b>이미 남긴 후기 · 다시 들어왔을 때</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span></div>
+  <div class="body">
+    <h1 class="q" style="margin-top:30px">이 모임 후기는<br>이미 남겼어요</h1>
+    <p class="qs">10월 14일 경주 정기모임</p>
+    <div class="sum">
+      <div class="r"><span class="k">한 줄 소감</span><span class="v">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.<small>모임 소개에 공개 중</small></span></div>
+      <div class="r"><span class="k">칭찬</span><span class="v">책읽는너구리 · 밤산책<small>보낸 칭찬은 바꿀 수 없어요</small></span></div>
+    </div>
+  </div>
+  <div class="foot"><span class="cta soft">공개 설정 바꾸기</span><button class="skip">홈으로</button></div>
+</div></section>
+
+<!-- ═════════ s12 후기 받는 기간이 지남 ═════════ -->
+<section class="scr" id="s12"><p class="cap"><b>12</b>후기 받는 기간이 지났을 때</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span></div>
+  <div class="body">
+    <h1 class="q" style="margin-top:30px">후기 받는 기간이<br>끝났어요</h1>
+    <p class="qs">10월 14일 경주 정기모임 후기는 10월 17일까지 받았어요. 다음 모임 뒤에 다시 여쭤볼게요.</p>
+  </div>
+  <div class="foot"><span class="cta soft">홈으로</span></div>
+</div></section>
+
+<!-- ═════════ s13 저장 실패 ═════════ -->
+<section class="scr" id="s13"><p class="cap"><b>13</b>저장 실패 (마치기 눌렀을 때)</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">모임 후기</span><span class="step">4 / 4</span></div>
+  <div class="prog"><i style="width:100%"></i></div>
+  <div class="body">
+    <h1 class="q">그날 읽은 책,<br>서재에 담을까요?</h1>
+    <p class="qs">담은 책은 서재 탭에 쌓여요.</p>
+    <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>작별하지</div>
+    <div style="margin-top:8px">
+      <div class="bk-row"><span class="cv a">작별하지 않는다</span><span class="tx"><b>작별하지 않는다</b><small>한강 · 문학동네</small></span><span class="ck on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+      <div class="bk-row"><span class="cv b">작별</span><span class="tx"><b>작별 인사</b><small>김영하 · 복복서가</small></span><span class="ck"></span></div>
+    </div>
+  </div>
+  <div class="foot"><p class="err"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>저장하지 못했어요. 쓴 내용은 그대로 있으니 다시 눌러 주세요.</p><span class="cta">다시 저장하기</span></div>
+</div></section>
+
+<!-- ═════════ s14 나 탭 ═════════ -->
+<section class="scr" id="s14"><p class="cap"><b>14</b>나 탭 · 받은 칭찬 · 내가 남긴 후기</p>
+<div class="phone">
+  <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
+  <div class="body">
+    <div class="me-top"><span class="av g">초</span><div><b>초록고래</b><small>2026년 3월부터 · 경주</small></div></div>
+    <div class="cnt2"><div><b>14</b><small>서재</small></div><div><b>6</b><small>발제 답변</small></div></div>
+    <div class="sec">내 활동</div>
+    <div>
+      <div class="ri"><span class="ic b">🧾</span><span class="tt"><b>신청 내역</b><small>내 모임 신청과 취소</small></span><span class="cv-r">›</span></div>
+      <div class="ri"><span class="ic">👏</span><span class="tt"><b>받은 칭찬<span class="new">새로 옴</span></b><small>함께한 분들이 남긴 말</small></span><span class="cv-r">›</span></div>
+      <div class="ri"><span class="ic">💬</span><span class="tt"><b>내가 남긴 후기</b><small>한 줄 소감 · 공개 설정</small></span><span class="cv-r">›</span></div>
+      <div class="ri"><span class="ic">🔔</span><span class="tt"><b>알림</b></span><span class="cv-r">›</span></div>
+      <div class="ri"><span class="ic y">⚙️</span><span class="tt"><b>프로필 · 설정</b><small>닉네임 · 연락처 · 지역</small></span><span class="cv-r">›</span></div>
+    </div>
+  </div>
+  <div class="nav"><i><em></em><span>홈</span></i><i><em></em><span>모임</span></i><i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i class="on"><em></em><span>나</span></i></div>
+</div></section>
+
+<!-- ═════════ s15 내가 남긴 후기 — 공개 철회 자리 ═════════ -->
+<section class="scr" id="s15"><p class="cap"><b>15</b>내가 남긴 후기 · 공개를 내리는 자리</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">내가 남긴 후기</span></div>
+  <div class="body">
+    <p class="pg-s" style="margin-top:8px">공개한 소감은 닉네임과 함께 그 지역 정기모임 소개에 보여요. 표정과 아쉬운 점은 운영진만 봐요.</p>
+    <div style="margin-top:14px">
+      <div class="rv"><div class="mh"><b>10월 14일 경주 정기모임</b><span class="tag g">공개 중</span></div><p class="tx">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.</p><div class="act"><span class="sbtn">공개 그만하기</span></div></div>
+      <div class="rv"><div class="mh"><b>10월 7일 경주 정기모임</b><span class="tag">운영진만</span></div><p class="tx">처음엔 어색했는데 두 시간이 금방 갔어요.</p><div class="act"><span class="sbtn g">공개하기</span></div></div>
+      <div class="rv"><div class="mh"><b>9월 30일 경주 정기모임</b><span class="tag">소감 없음</span></div><p class="none">표정만 남겼어요.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════ s16 공개 그만하기 확인 시트 ═════════ -->
+<section class="scr" id="s16"><p class="cap"><b>16</b>공개 그만하기 · 확인 시트 (열림)</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">내가 남긴 후기</span></div>
+  <div class="body">
+    <p class="pg-s" style="margin-top:8px">공개한 소감은 닉네임과 함께 그 지역 정기모임 소개에 보여요. 표정과 아쉬운 점은 운영진만 봐요.</p>
+    <div style="margin-top:14px">
+      <div class="rv"><div class="mh"><b>10월 14일 경주 정기모임</b><span class="tag g">공개 중</span></div><p class="tx">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.</p><div class="act"><span class="sbtn">공개 그만하기</span></div></div>
+      <div class="rv"><div class="mh"><b>10월 7일 경주 정기모임</b><span class="tag">운영진만</span></div><p class="tx">처음엔 어색했는데 두 시간이 금방 갔어요.</p></div>
+    </div>
+  </div>
+  <div class="dim"><div class="sheet">
+    <div class="grab"></div>
+    <h3>모임 소개에서 내릴까요?</h3>
+    <p class="hs">바로 모임 소개에서 사라지고, 운영진만 보는 소감으로 남아요. 다시 공개할 수도 있어요.</p>
+    <span class="cta" style="margin-top:20px">내리기</span>
+    <button class="skip">그대로 두기</button>
+  </div></div>
+</div></section>
+
+<!-- ═════════ s17 알림함 — 칭찬 도착 (앱 알림) ═════════ -->
+<section class="scr" id="s17"><p class="cap"><b>17</b>알림함 · 칭찬 도착 (앱 알림, 알림톡 아님)</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">알림</span></div>
+  <div class="body">
+    <div style="margin-top:4px">
+      <div class="nt un"><span class="e">👏</span><span><b>10월 14일 모임에서 칭찬이 왔어요</b><small>함께한 분들이 남긴 말을 확인해 보세요</small><i>방금</i></span></div>
+      <div class="nt"><span class="e">📖</span><span><b>새 발제문이 올라왔어요</b><small>발제 2 · 기억은 누구의 것인가</small><i>2일 전</i></span></div>
+      <div class="nt"><span class="e">✓</span><span><b>모임 신청이 확정됐어요</b><i>4일 전</i></span></div>
+      <div class="nt"><span class="e">💬</span><span><b>여름귤님이 내 답변에 답글을 남겼어요</b><small>저도 그 장면에서 한참 멈춰 있었어요</small><i>1주 전</i></span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════ s18 받은 칭찬 ═════════ -->
+<section class="scr" id="s18"><p class="cap"><b>18</b>받은 칭찬</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">받은 칭찬</span></div>
+  <div class="body">
+    <p class="pg-s" style="margin-top:6px">나만 볼 수 있어요.</p>
+    <p class="grp">10월 14일 경주 정기모임</p>
+    <div>
+      <div class="pr"><span class="av">밤</span><span><span class="w">덕분에 새로운 시각을 얻었어요</span><span class="f">밤산책</span></span></div>
+      <div class="pr"><span class="av">문</span><span><span class="w">질문이 좋았어요</span><span class="f">문장수집가</span></span></div>
+      <div class="pr"><span class="av">여</span><span><span class="w">다음에도 같이 이야기하고 싶어요</span><span class="f">여름귤</span></span></div>
+    </div>
+    <p class="grp">9월 30일 경주 정기모임</p>
+    <div>
+      <div class="pr"><span class="av">고</span><span><span class="w">이야기를 잘 들어줬어요</span><span class="f">고요한숲</span></span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ═════════ s19 받은 칭찬 — 빈 상태 ═════════ -->
+<section class="scr" id="s19"><p class="cap"><b>19</b>받은 칭찬 · 아직 없을 때</p>
+<div class="phone">
+  <div class="fl-head"><span class="bk"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg></span><span class="t">받은 칭찬</span></div>
+  <div class="body">
+    <div class="empty" style="margin-top:120px"><div class="ei">👏</div><b>함께한 분들의 말이 여기 모여요</b><p>모임이 끝나고 4일 뒤에 한꺼번에 전해져요.<br>나만 볼 수 있어요.</p></div>
+  </div>
+</div></section>
+
+<!-- ═════════ s20 모임 소개에 보이는 공개 소감 ═════════ -->
+<section class="scr" id="s20"><p class="cap"><b>20</b>모임 소개 · 공개한 한 줄 소감</p>
+<div class="phone">
+  <div class="nx-head"><span class="nx-wm">지독해</span><span class="bell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span></div>
+  <div class="body">
+    <span class="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>모임</span>
+    <h1 class="dh1">10월 21일 경주 정기모임</h1>
+    <div class="desc">각자 읽고 싶은 책을 들고 와서 이야기 나눠요. 처음 오셔도 괜찮아요.</div>
+    <div style="margin-top:10px">
+      <div class="ir"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><span class="k">일시</span><span class="v">10월 21일 (수) 오후 7:00</span></div>
+      <div class="ir"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><span class="k">장소</span><span class="v">우연히책방</span></div>
+    </div>
+    <div class="sec" style="margin-top:22px"><span>지난 모임에서 남긴 한 줄</span></div>
+    <div>
+      <div class="voice"><p>같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.</p><span>초록고래 · 10월 14일 모임</span></div>
+      <div class="voice"><p>혼자였으면 덮었을 책을 끝까지 읽게 됐어요.</p><span>오후세시 · 10월 14일 모임</span></div>
+      <div class="voice"><p>처음 왔는데 아무도 재촉하지 않아서 편했어요.</p><span>파란연필 · 10월 7일 모임</span></div>
+    </div>
+    <span class="more">더 보기 ›</span>
+  </div>
+  <div class="stk"><div><div class="amt">10,000</div><div class="seat">5명 모집 중</div></div><span class="cta">신청하기</span></div>
+  <div class="nav"><i><em></em><span>홈</span></i><i class="on"><em></em><span>모임</span></i><i><em></em><span>이야기</span></i><i><em></em><span>서재</span></i><i><em></em><span>나</span></i></div>
+</div></section>
+
+</div>
+<script>
+// 표정 SVG — 5단계. 고른 것은 그린 면, 나머지는 회색 면
+(function () {
+  var mouth = {
+    1: '<path d="M16 35 Q26 26 36 35" fill="none" stroke-width="2.8" stroke-linecap="round"/>',
+    2: '<path d="M17 34 Q26 29.5 35 34" fill="none" stroke-width="2.8" stroke-linecap="round"/>',
+    3: '<path d="M17.5 32 H34.5" fill="none" stroke-width="2.8" stroke-linecap="round"/>',
+    4: '<path d="M17 29.5 Q26 37 35 29.5" fill="none" stroke-width="2.8" stroke-linecap="round"/>',
+    5: '<path d="M15.5 28.5 Q26 42 36.5 28.5 Z" stroke-width="2.4" stroke-linejoin="round"/>'
+  }
+  document.querySelectorAll('.fc').forEach(function (el) {
+    var v = el.getAttribute('data-v'), on = el.classList.contains('on')
+    var bg = on ? '#0FA873' : '#F2F4F6', fg = on ? '#FFFFFF' : '#8B95A1'
+    var m = mouth[v].replace('<path', '<path stroke="' + fg + '"' + (v === '5' ? ' fill="' + fg + '"' : ''))
+    el.insertAdjacentHTML('afterbegin',
+      '<svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="26" fill="' + bg + '"/>' +
+      '<circle cx="19" cy="21" r="2.6" fill="' + fg + '"/><circle cx="33" cy="21" r="2.6" fill="' + fg + '"/>' + m + '</svg>')
+  })
+  function sync() {
+    var h = location.hash.slice(1)
+    document.body.classList.toggle('single', !!h && h !== 'all')
+    document.querySelectorAll('.scr').forEach(function (s) { s.classList.toggle('on', s.id === h) })
+  }
+  sync(); window.addEventListener('hashchange', sync)
+})()
+</script>
+</body>
+</html>

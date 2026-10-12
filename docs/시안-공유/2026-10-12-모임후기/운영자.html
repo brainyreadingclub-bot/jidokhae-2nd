@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>운영자 — 모임 후기 · 목록(#list) · 한 모임(#detail) · 아직 없음(#empty) (2026-10-12 시안)</title>
+<link rel="stylesheet" href="_admin.css">
+<style>
+body:not([data-state=list]) .v-list{display:none}
+body:not([data-state=detail]) .v-detail{display:none}
+body:not([data-state=empty]) .v-empty{display:none}
+
+.lede{margin-top:6px;font-size:14px;color:var(--n600)}
+.topline{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.filters{display:flex;gap:6px}
+.seg{height:34px;padding:0 14px;border-radius:9px;border:1px solid var(--s300);background:#fff;font-size:13px;font-weight:600;color:var(--n700);display:inline-flex;align-items:center}
+.seg.on{background:var(--p600);border-color:var(--p600);color:#fff}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
+.kpi{border:1px solid var(--s300);border-radius:var(--r-lg);padding:18px 20px}
+.kpi .l{font-size:13px;font-weight:700;color:var(--n700)}
+.kpi .big{margin-top:6px;font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .big small{font-size:17px;font-weight:700;color:var(--n500)}
+.kpi .s{margin-top:6px;font-size:12.5px;color:var(--n600);line-height:1.55}
+
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+th{text-align:left;font-size:12px;font-weight:700;color:var(--n600);padding:10px 12px;border-bottom:1px solid var(--s300);white-space:nowrap}
+td{padding:13px 12px;border-bottom:1px solid var(--s200);vertical-align:top;color:var(--n800)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.click td:first-child{font-weight:700;color:var(--p700)}
+.mut{color:var(--n500)}
+.low{color:var(--n900);font-weight:800}
+.st{display:inline-flex;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700;background:var(--n100);color:var(--n700);white-space:nowrap}
+.st.open{background:var(--p50);color:var(--p700)}
+
+.sec{margin-top:40px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.sec-h h2{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--n900)}
+.sec-h h2 span{margin-left:6px;font-size:14px;font-weight:600;color:var(--n600)}
+.sec-h .h{font-size:12.5px;color:var(--n500)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px}
+.panel{border:1px solid var(--s300);border-radius:var(--r-lg);padding:20px 22px}
+.panel h3{font-size:14px;font-weight:800;color:var(--n900)}
+.panel .sub{margin-top:3px;font-size:12.5px;color:var(--n500)}
+.bars{margin-top:14px}
+.bar{display:grid;grid-template-columns:86px 1fr 34px;align-items:center;gap:12px;height:30px;font-size:13px}
+.bar .k{color:var(--n700);white-space:nowrap}
+.bars.wide .bar{grid-template-columns:180px 1fr 34px}
+.bar .tr{height:8px;border-radius:9px;background:var(--n100);overflow:hidden}
+.bar .tr i{display:block;height:100%;border-radius:9px;background:var(--n400)}
+.bar.hi .tr i{background:var(--p500)}
+.bar .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.avg{display:flex;align-items:baseline;gap:8px;margin-top:10px}
+.avg b{font-size:28px;font-weight:800;letter-spacing:-.03em}
+.avg span{font-size:13px;color:var(--n600)}
+
+.quote td.tx{line-height:1.6;color:var(--n900);width:52%}
+.pub{font-size:12px;font-weight:700;white-space:nowrap}
+.pub.on{color:var(--p600)}
+.pub.off{color:var(--n500)}
+.yes{color:var(--p600);font-weight:700}
+
+.emptybox{margin-top:28px;border:1px dashed var(--n300);border-radius:var(--r-lg);padding:36px;text-align:center}
+.emptybox b{font-size:15px;font-weight:800;color:var(--n800)}
+.emptybox p{margin-top:6px;font-size:13px;color:var(--n600);line-height:1.6}
+.foot-note{margin-top:28px;font-size:12.5px;color:var(--n500)}
+</style>
+</head>
+<body data-active="모임 후기" data-default="list">
+<div class="main"><header class="mhead"></header><div class="cap"><div class="page">
+
+<!-- ════════════ A1 목록 ════════════ -->
+<div class="v-list">
+  <div class="topline">
+    <div><p class="eyebrow">운영</p><h1 class="h1" style="margin-top:6px">모임 후기</h1><p class="lede">정기모임 다음 날 알림톡으로 받는다. 표정·아쉬운 점은 운영진만 본다.</p></div>
+    <div class="filters"><span class="seg on">전체</span><span class="seg">경주</span><span class="seg">포항</span><span class="seg">대구</span><span class="seg">최근 30일 ▾</span></div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><p class="l">표정 평균</p><p class="big">4.2 <small>/ 5</small></p><p class="s">후기를 남긴 사람 기준 · 「못 갔어요」 제외</p></div>
+    <div class="kpi"><p class="l">후기 남긴 비율</p><p class="big">28 <small>/ 42명</small></p><p class="s">참여(확정 + 입금 대기) 중 표정을 고른 사람</p></div>
+    <div class="kpi"><p class="l">첫 모임 회원 · 14일 안 재신청</p><p class="big">2 <small>/ 7명</small></p><p class="s">재신청한 사람 ÷ 첫 모임 회원 · 기한이 남은 사람 포함</p></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><h2>모임별<span>4건</span></h2><span class="h">행을 누르면 그 모임 후기로</span></div>
+    <table>
+      <thead><tr><th>모임</th><th>받는 기간</th><th class="num">참여</th><th class="num">후기</th><th class="num">못 갔어요</th><th class="num">표정 평균</th><th class="num">낮은 표정</th><th>많이 나온 아쉬운 점</th><th class="num">첫 모임</th><th class="num">공개 소감</th></tr></thead>
+      <tbody>
+        <tr class="click"><td>10월 14일 (수) 경주 정기모임</td><td><span class="st open">10월 17일까지</span></td><td class="num">12</td><td class="num">9</td><td class="num">1</td><td class="num">4.1</td><td class="num low">1</td><td>이야기할 시간이 짧았어요</td><td class="num">3</td><td class="num">2</td></tr>
+        <tr class="click"><td>10월 12일 (일) 대구 정기모임</td><td><span class="st open">10월 15일까지</span></td><td class="num">6</td><td class="num">0</td><td class="num">0</td><td class="num mut">—</td><td class="num">0</td><td class="mut">—</td><td class="num">2</td><td class="num">0</td></tr>
+        <tr class="click"><td>10월 7일 (수) 경주 정기모임</td><td><span class="st">마감</span></td><td class="num">12</td><td class="num">10</td><td class="num">0</td><td class="num">4.2</td><td class="num low">2</td><td>공간이 불편했어요</td><td class="num">1</td><td class="num">3</td></tr>
+        <tr class="click"><td>10월 5일 (일) 포항 정기모임</td><td><span class="st">마감</span></td><td class="num">12</td><td class="num">9</td><td class="num">2</td><td class="num">4.4</td><td class="num">0</td><td class="mut">—</td><td class="num">1</td><td class="num">0</td></tr>
+      </tbody>
+    </table>
+    <p class="foot-note">낮은 표정 = 「별로였어요」·「아쉬웠어요」. 칭찬은 받은 사람만 보고, 운영자 화면에도 개수를 두지 않는다.</p>
+  </div>
+</div>
+
+<!-- ════════════ A2 한 모임 ════════════ -->
+<div class="v-detail">
+  <span class="crumb">‹ 모임 후기</span>
+  <div class="pills"><span class="pill region">경주</span><span class="pill type">정기모임</span></div>
+  <h1 class="h1">10월 14일 (수) 경주 정기모임</h1>
+  <p class="lede">참여 12명 · 후기 9명 · 못 갔어요 1명 · 아직 안 남김 2명 · <b style="color:var(--p600)">10월 17일까지 받는 중</b></p>
+
+  <div class="two">
+    <div class="panel">
+      <h3>표정</h3><p class="sub">후기를 남긴 9명</p>
+      <div class="avg"><b>4.1</b><span>/ 5</span></div>
+      <div class="bars">
+        <div class="bar hi"><span class="k">최고였어요</span><span class="tr"><i style="width:44%"></i></span><span class="n">4</span></div>
+        <div class="bar hi"><span class="k">좋았어요</span><span class="tr"><i style="width:33%"></i></span><span class="n">3</span></div>
+        <div class="bar"><span class="k">무난했어요</span><span class="tr"><i style="width:11%"></i></span><span class="n">1</span></div>
+        <div class="bar"><span class="k">아쉬웠어요</span><span class="tr"><i style="width:11%"></i></span><span class="n">1</span></div>
+        <div class="bar"><span class="k">별로였어요</span><span class="tr"><i style="width:0"></i></span><span class="n mut">0</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>무엇이 아쉬웠나요</h3><p class="sub">낮은 표정을 고른 1명 · 여러 개 고를 수 있음</p>
+      <div class="bars wide" style="margin-top:22px">
+        <div class="bar"><span class="k">이야기할 시간이 짧았어요</span><span class="tr"><i style="width:100%"></i></span><span class="n">1</span></div>
+        <div class="bar"><span class="k">대화에 끼기 어려웠어요</span><span class="tr"><i style="width:100%"></i></span><span class="n">1</span></div>
+      </div>
+      <p class="sub" style="margin-top:14px">나머지 선택지는 0건이라 접어 둠 · 「기타」에 쓴 말은 아래 소감 표에 함께 나온다</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><h2>첫 모임 회원<span>3명</span></h2><span class="h">재신청 기한 = 모임 14일 뒤(10월 28일)까지 · 취소한 신청도 신청으로 센다</span></div>
+    <table>
+      <thead><tr><th>닉네임</th><th>표정</th><th>아쉬운 점</th><th>한 줄 소감</th><th>14일 안 재신청</th></tr></thead>
+      <tbody>
+        <tr><td><b>여름귤</b></td><td>최고였어요</td><td class="mut">—</td><td>혼자였으면 덮었을 책을 끝까지 읽게 됐어요.</td><td class="yes">했어요 · 10월 21일 경주</td></tr>
+        <tr><td><b>파란연필</b></td><td class="low">아쉬웠어요</td><td>이야기할 시간이 짧았어요 · 대화에 끼기 어려웠어요</td><td class="mut">—</td><td>아직 · 13일 남음</td></tr>
+        <tr><td><b>새벽서재</b></td><td class="mut">안 남김</td><td class="mut">—</td><td class="mut">—</td><td>아직 · 13일 남음</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><h2>한 줄 소감<span>5개</span></h2><span class="h">공개 = 회원이 「모임 소개에 공개해도 좋아요」를 켠 것</span></div>
+    <table class="quote">
+      <thead><tr><th>닉네임</th><th>표정</th><th>소감</th><th>공개</th></tr></thead>
+      <tbody>
+        <tr><td><b>초록고래</b></td><td>최고였어요</td><td class="tx">같은 문장을 읽고도 다들 다른 데서 멈췄다는 게 신기했어요.</td><td><span class="pub on">공개 중</span></td></tr>
+        <tr><td><b>여름귤</b></td><td>최고였어요</td><td class="tx">혼자였으면 덮었을 책을 끝까지 읽게 됐어요.</td><td><span class="pub on">공개 중</span></td></tr>
+        <tr><td><b>밤산책</b></td><td>좋았어요</td><td class="tx">마지막 30분이 조금 늘어졌어요. 이야깃거리가 하나 더 있었으면 좋겠어요.</td><td><span class="pub off">운영진만</span></td></tr>
+        <tr><td><b>문장수집가</b></td><td>좋았어요</td><td class="tx">카페 음악이 조금 커서 끝자리에선 잘 안 들렸어요.</td><td><span class="pub off">운영진만</span></td></tr>
+        <tr><td><b>고요한숲</b></td><td>무난했어요</td><td class="tx">다음엔 더 얇은 책이면 좋겠어요.</td><td><span class="pub off">공개 내림 · 10월 15일</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="foot-note">칭찬은 이 화면에 없다 — 받은 사람만 본다.</p>
+</div>
+
+<!-- ════════════ A3 아직 후기 없음 ════════════ -->
+<div class="v-empty">
+  <span class="crumb">‹ 모임 후기</span>
+  <div class="pills"><span class="pill region">대구</span><span class="pill type">정기모임</span></div>
+  <h1 class="h1">10월 12일 (일) 대구 정기모임</h1>
+  <p class="lede">참여 6명 · 후기 0명 · <b style="color:var(--p600)">10월 15일까지 받는 중</b></p>
+  <div class="emptybox"><b>아직 남긴 후기가 없어요</b><p>알림톡은 10월 13일 오전 10시에 나갔다. 받는 기간이 끝나면 이 모임은 「마감」으로 바뀐다.</p></div>
+  <div class="sec">
+    <div class="sec-h"><h2>첫 모임 회원<span>2명</span></h2><span class="h">재신청 기한 = 10월 26일</span></div>
+    <table>
+      <thead><tr><th>닉네임</th><th>표정</th><th>아쉬운 점</th><th>한 줄 소감</th><th>14일 안 재신청</th></tr></thead>
+      <tbody>
+        <tr><td><b>단풍잎</b></td><td class="mut">안 남김</td><td class="mut">—</td><td class="mut">—</td><td>아직 · 11일 남음</td></tr>
+        <tr><td><b>조용한파도</b></td><td class="mut">안 남김</td><td class="mut">—</td><td class="mut">—</td><td>아직 · 11일 남음</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div></div></div>
+<script src="_chrome.js"></script>
+</body>
+</html>
