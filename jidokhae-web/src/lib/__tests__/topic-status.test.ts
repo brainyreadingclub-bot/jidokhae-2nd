@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { topicStatusLabel, needsTopicAction, countTopicsByMeeting } from '@/lib/topic-status'
+import { topicStatusLabel, needsTopicAction, countTopicsByMeeting, isTopicPublishLate } from '@/lib/topic-status'
 import { formatKSTDateTime } from '@/lib/kst'
 
 describe('topicStatusLabel', () => {
@@ -35,5 +35,22 @@ describe('formatKSTDateTime — 공개 시각 표시', () => {
   it('UTC를 KST로 바꿔 보여준다 (날짜가 넘어가는 경우 포함)', () => {
     expect(formatKSTDateTime('2026-10-09T13:40:00Z')).toBe('10월 9일 22:40')
     expect(formatKSTDateTime('2026-10-09T15:05:00Z')).toBe('10월 10일 00:05')
+  })
+})
+
+describe('isTopicPublishLate — 공개 안 한 발제 경고 (D-3부터)', () => {
+  const draft = { draft: 1, published: 2 }
+  it('작성 중이 있고 모임까지 3일 이하(당일 포함)면 띄운다', () => {
+    expect(isTopicPublishLate(draft, 3)).toBe(true)
+    expect(isTopicPublishLate(draft, 1)).toBe(true)
+    expect(isTopicPublishLate(draft, 0)).toBe(true)
+  })
+  it('4일 이상 남았거나 지난 모임이면 안 띄운다', () => {
+    expect(isTopicPublishLate(draft, 4)).toBe(false)
+    expect(isTopicPublishLate(draft, -1)).toBe(false)
+  })
+  it('작성 중이 없으면 안 띄운다', () => {
+    expect(isTopicPublishLate({ draft: 0, published: 3 }, 1)).toBe(false)
+    expect(isTopicPublishLate({ draft: 0, published: 0 }, 1)).toBe(false)
   })
 })

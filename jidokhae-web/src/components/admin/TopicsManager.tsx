@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { topicStatusLabel } from '@/lib/topic-status'
+import { isTopicPublishLate, topicStatusLabel } from '@/lib/topic-status'
 import type { DiscussionTopic } from '@/types/discussion'
 
 /**
- * 발제문 관리 — 1차 (2026-10-10 대표님 확정, 시안 `docs/설계/mockups/2026-10-10-발제문-새방식/`).
- * 운영자가 하나씩 직접 써서 **등록하면 바로 공개**된다. 신청자 알림은 이 화면이 보내지 않는다 —
- * 마지막 등록 후 10분 동안 추가 등록이 없으면 DB 예약 작업이 「발제 N개가 올라왔어요」를 한 번 보낸다
- * (`supabase/migration-topics-notify.sql`). 고쳐도 알림은 다시 가지 않는다.
- * 「작성 중」·공개하기·발제자 링크는 2차다 — 여기 넣지 않는다.
+ * 발제문 관리 — 1차 (2026-10-10 시안 `docs/설계/mockups/2026-10-10-발제문-새방식/`, 2026-10-12 알림 방식 변경).
+ * 운영자가 하나씩 직접 써서 등록하면 **「작성 중」으로 저장**된다(회원에게 안 보임).
+ * 목록 위 「발제 공개하기」 → 확인 창 → 작성 중 전부 공개 + 신청자 알림 한 번(api/admin/topics/publish).
+ * 공개 뒤에 고치면 알림 없음. 공개 뒤 새로 쓴 발제는 다시 작성 중 → 또 공개하면 그것만 + 알림 한 번.
+ * 작성 중이 남은 채 모임 사흘 전(D-3)이 되면 「공개 안 한 발제가 있어요」를 띄운다.
+ * 발제자 링크는 2차다 — 여기 넣지 않는다(2차도 같은 작성 중 → 공개하기 흐름에 들어온다).
  *
  * 폰: 화면 아래 고정 바에 지금 할 일 하나(발제 쓰기 / 발제 추가 / 취소·등록). 목록 수정·삭제는 44px 「⋮」.
  *     확인 창은 아래에서 올라오는 시트. 큰 화면(lg~)은 제자리 버튼 + 가운데 창(ModalOverlay 문법).
@@ -27,6 +28,8 @@ type Props = {
   answerCounts: Record<string, number>
   applicantCount: number
   lastPublishedLabel: string | null
+  /** 모임일 − 오늘(한국 날짜). 「공개 안 한 발제가 있어요」 판정 */
+  daysUntil: number
 }
 
 /** 'new' = 새로 쓰기, 그 밖의 문자열 = 고치는 발제 id */
@@ -59,6 +62,7 @@ export default function TopicsManager({
   answerCounts,
   applicantCount,
   lastPublishedLabel,
+  daysUntil,
 }: Props) {
   const router = useRouter()
   const [editing, setEditing] = useState<Editing>(null)
@@ -67,11 +71,20 @@ export default function TopicsManager({
   const [previewOpen, setPreviewOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [publishOpen, setPublishOpen] = useState(false)
+  /** 저장·공개 직후 한 번 — 그 결과(회원에게 보이나, 알림이 갔나)를 그 자리에서 말한다 */
+  const [savedNote, setSavedNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!savedNote) return
+    const t = setTimeout(() => setSavedNote(null), 6000)
+    return () => clearTimeout(t)
+  }, [savedNote])
 
   const published = topics.filter((t) => t.published_at !== null)
-  const counts = { draft: 0, published: published.length }
-  // 아직 신청자에게 안 알린 발제 — notified_at 칸이 생기기 전(SQL 실행 전)에는 undefined라 세지 않는다
-  const pending = published.filter((t) => t.notified_at === null).length
+  const drafts = topics.length - published.length
+  const counts = { draft: drafts, published: published.length }
+  const late = isTopicPublishLate(counts, daysUntil)
   const nextNo = (topics.at(-1)?.topic_no ?? 0) + 1
   const noTopics = topics.length === 0
   const editTopic = editing && editing !== 'new' ? topics.find((t) => t.id === editing) : undefined
@@ -99,6 +112,33 @@ export default function TopicsManager({
     }
   }
 
+  async function confirmPublish() {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/topics/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meeting_id: meetingId }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (json.status !== 'success') throw new Error(json.message ?? '잠시 후 다시 시도해 주세요')
+      const n = Number(json.data?.published ?? drafts)
+      setSavedNote(
+        applicantCount > 0
+          ? `발제 ${n}개를 공개했어요 · 신청자 ${applicantCount}명에게 알림을 한 번 보냈어요`
+          : `발제 ${n}개를 공개했어요 · 신청자가 없어 알림은 가지 않았어요`,
+      )
+      router.refresh()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+      setPublishOpen(false)
+    }
+  }
+
   // ── 쓰기·고치기 화면 ──
   if (editing !== null && (editing === 'new' || editTopic)) {
     return (
@@ -106,9 +146,15 @@ export default function TopicsManager({
         meetingId={meetingId}
         topic={editTopic}
         nextNo={nextNo}
-        applicantCount={applicantCount}
-        onDone={() => {
+        onDone={(kind) => {
           setEditing(null)
+          setSavedNote(
+            kind === 'created'
+              ? '작성 중으로 저장했어요 · 「발제 공개하기」를 눌러야 회원에게 보여요'
+              : kind === 'edited-published'
+                ? '고쳤어요 · 고쳐도 알림은 다시 가지 않아요'
+                : '고쳤어요 · 아직 공개 전이라 회원에게 안 보여요',
+          )
           router.refresh()
         }}
         onCancel={() => setEditing(null)}
@@ -130,12 +176,10 @@ export default function TopicsManager({
 
   // ── 목록 ──
   const pendingNote =
-    pending > 0
-      ? applicantCount > 0
-        ? `알림 대기 ${pending}개 — 마지막 등록 10분 뒤 신청자 ${applicantCount}명에게 한 번에 가요`
-        : `알림 대기 ${pending}개 — 아직 신청자가 없어 알림은 가지 않아요`
+    drafts > 0
+      ? `작성 중 ${drafts}개 — 공개하기 전에는 회원에게 안 보여요`
       : published.length > 0 && lastPublishedLabel
-        ? `마지막 등록 ${lastPublishedLabel} · 고쳐도 알림은 다시 가지 않아요`
+        ? `마지막 공개 ${lastPublishedLabel} · 고쳐도 알림은 다시 가지 않아요`
         : null
 
   return (
@@ -170,6 +214,33 @@ export default function TopicsManager({
         </div>
       </div>
 
+      {late && (
+        <p role="alert" className="mb-4 rounded-[10px] bg-accent-50 px-3.5 py-2.5 text-[13px] font-bold text-accent-700">
+          공개 안 한 발제가 있어요 · {daysUntil === 0 ? '오늘 모임이에요' : `모임까지 ${daysUntil}일`}
+        </p>
+      )}
+
+      {drafts > 0 && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 rounded-[var(--radius-md)] border border-surface-300 bg-white px-4 py-3">
+          <p className="min-w-0 break-keep text-[13px] leading-relaxed text-neutral-700">
+            <b className="font-extrabold text-neutral-900">작성 중 {drafts}개</b> · 공개하면 신청자에게 알림이 한 번 가요
+          </p>
+          <button
+            type="button"
+            onClick={() => setPublishOpen(true)}
+            className={`w-full lg:w-auto ${btnBigPrimary}`}
+          >
+            발제 공개하기
+          </button>
+        </div>
+      )}
+
+      {savedNote && (
+        <p role="status" className="mb-4 rounded-[10px] bg-primary-50 px-3.5 py-2.5 text-xs font-semibold text-primary-700">
+          {savedNote}
+        </p>
+      )}
+
       {error && (
         <p className="mb-4 rounded-[10px] bg-accent-50 px-3.5 py-2.5 text-xs font-semibold text-accent-700">
           {error}
@@ -178,9 +249,9 @@ export default function TopicsManager({
 
       {noTopics ? (
         <p className="mt-7 text-center text-[13px] leading-relaxed text-neutral-600">
-          직접 써서 등록하면 바로 회원에게 보여요
+          써서 등록하면 「작성 중」으로 저장돼요
           <br />
-          신청자 알림은 마지막 등록 10분 뒤 한 번에 가요
+          「발제 공개하기」를 누르면 회원에게 보이고, 신청자에게 알림이 한 번 가요
         </p>
       ) : (
         <ul className="max-w-3xl">
@@ -211,7 +282,7 @@ export default function TopicsManager({
                 {topicStatusLabel(counts)}
               </b>
               <span className="block truncate">
-                {pending > 0 ? `알림 대기 ${pending}개 · 10분 뒤 한 번에` : '고쳐도 알림은 다시 안 가요'}
+                {drafts > 0 ? '공개 전이라 회원에게 안 보여요' : '고쳐도 알림은 다시 안 가요'}
               </span>
             </div>
             <button type="button" onClick={() => setEditing('new')} className={`flex-none ${btnBigPrimary}`}>
@@ -264,6 +335,34 @@ export default function TopicsManager({
           onCancel={() => setDeleteFor(null)}
           onConfirm={confirmDelete}
         />
+      )}
+
+      {publishOpen && (
+        <Sheet onClose={() => !busy && setPublishOpen(false)}>
+          <h3 className="text-[17px] font-extrabold leading-snug tracking-tight text-neutral-900">
+            발제를 공개할까요?
+          </h3>
+          <p className="mt-2 break-keep text-sm leading-relaxed text-neutral-700">
+            작성 중 <b className="text-neutral-900">{drafts}개</b>를 공개하고 신청자에게 알림 한 번 보내요.
+          </p>
+          <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-neutral-600">
+            {applicantCount > 0 ? `지금 신청자 ${applicantCount}명` : '지금은 신청자가 없어 실제로 가는 알림은 없어요'}
+            {' · '}공개한 뒤에 고쳐도 알림은 다시 가지 않아요
+          </p>
+          <div className="mt-5 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPublishOpen(false)}
+              disabled={busy}
+              className={`flex-[0_0_34%] lg:flex-1 ${btnBigLine}`}
+            >
+              취소
+            </button>
+            <button type="button" onClick={confirmPublish} disabled={busy} className={`flex-1 ${btnBigPrimary}`}>
+              {busy ? '공개하는 중…' : '공개하기'}
+            </button>
+          </div>
+        </Sheet>
       )}
 
       {previewOpen && <TopicsPreview topics={topics} onClose={() => setPreviewOpen(false)} />}
@@ -384,7 +483,14 @@ function TopicRow({
         {t.topic_no}
       </span>
       <div className="min-w-0 flex-1">
-        <b className="block break-keep text-[14.5px] font-extrabold tracking-tight text-neutral-900">{t.title}</b>
+        <b className="block break-keep text-[14.5px] font-extrabold tracking-tight text-neutral-900">
+          {t.title}
+          {t.published_at === null && (
+            <span className="ml-1.5 inline-block rounded-md bg-neutral-100 px-1.5 py-0.5 align-[2px] text-[11px] font-bold text-neutral-700">
+              작성 중
+            </span>
+          )}
+        </b>
         {t.quote && (
           <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-neutral-700">
             “{t.quote}”
@@ -397,8 +503,7 @@ function TopicRow({
           {t.question}
         </p>
         <p className="mt-1 text-xs text-neutral-600">
-          답변 {answerCount}개
-          {t.notified_at === null && ' · 알림 대기'}
+          {t.published_at === null ? '회원에게 안 보여요' : `답변 ${answerCount}개`}
         </p>
       </div>
       {/* 폰: ⋮ 하나 (44px, 좌우 음수 마진 없음 — 오른쪽 여백을 지킨다) */}
@@ -433,7 +538,6 @@ function TopicForm({
   meetingId,
   topic,
   nextNo,
-  applicantCount,
   onDone,
   onCancel,
   onDelete,
@@ -442,8 +546,7 @@ function TopicForm({
   meetingId: string
   topic?: DiscussionTopic
   nextNo: number
-  applicantCount: number
-  onDone: () => void
+  onDone: (kind: 'created' | 'edited-published' | 'edited-draft') => void
   onCancel: () => void
   onDelete?: () => void
   deleteSheet: React.ReactNode
@@ -484,7 +587,7 @@ function TopicForm({
         setError(json.message ?? '잠시 후 다시 시도해 주세요')
         return
       }
-      onDone()
+      onDone(!topic ? 'created' : topic.published_at !== null ? 'edited-published' : 'edited-draft')
     } finally {
       setBusy(false)
     }
@@ -495,11 +598,11 @@ function TopicForm({
     'w-full rounded-[var(--radius-md)] border border-surface-300 bg-white px-3 py-2.5 text-base leading-relaxed text-neutral-900 focus:border-primary-500 focus:outline-none lg:text-sm'
   const labelCls = 'mb-1.5 block text-xs font-bold text-primary-700'
   const saveLabel = busy ? '저장 중…' : topic ? '저장' : '등록하기'
-  const note = topic
-    ? '고쳐도 알림은 다시 가지 않아요'
-    : applicantCount > 0
-      ? `등록하면 바로 회원에게 보여요. 신청자 ${applicantCount}명에게는 마지막 등록 10분 뒤 한 번에 알려요`
-      : '등록하면 바로 회원에게 보여요'
+  const note = !topic
+    ? '등록하면 「작성 중」으로 저장돼요. 「발제 공개하기」를 누르기 전에는 회원에게 안 보여요'
+    : topic.published_at !== null
+      ? '공개된 발제예요. 고쳐도 알림은 다시 가지 않아요'
+      : '아직 공개 전이라 회원에게 안 보여요'
 
   return (
     <div className="max-w-2xl pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
@@ -635,7 +738,7 @@ function TopicsPreview({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-[17px] font-extrabold tracking-tight text-neutral-900">회원 화면 미리보기</h3>
-            <p className="mt-1 text-[13px] text-neutral-600">신청자에게 이렇게 보여요.</p>
+            <p className="mt-1 text-[13px] text-neutral-600">공개하면 신청자에게 이렇게 보여요. 작성 중도 함께 보여 드려요.</p>
           </div>
           <button
             type="button"

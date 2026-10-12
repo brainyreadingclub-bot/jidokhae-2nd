@@ -4,6 +4,7 @@ import { getDaysUntil } from '@/lib/kst'
 import { getTopicCountsForAdmin } from '@/lib/discussion'
 import {
   NO_TOPICS,
+  isTopicPublishLate,
   needsTopicAction,
   topicStatusLabel,
   type TopicCounts,
@@ -60,6 +61,8 @@ export function TopicTodoRows({ rows, kstToday }: { rows: TopicTodoRow[]; kstTod
     <div className="mb-6 space-y-2">
       {rows.map((m) => {
         const empty = m.counts.draft === 0 && m.counts.published === 0
+        const days = getDaysUntil(m.date, kstToday)
+        const late = isTopicPublishLate(m.counts, days)
         return (
           <Link
             key={m.id}
@@ -78,11 +81,14 @@ export function TopicTodoRows({ rows, kstToday }: { rows: TopicTodoRow[]; kstTod
                 {m.title}
               </span>
               <span className="flex-none whitespace-nowrap text-xs text-neutral-600">
-                · 신청 {m.applicants}명 · 모임까지 {getDaysUntil(m.date, kstToday)}일
+                · 신청 {m.applicants}명 · 모임까지 {days}일
               </span>
             </span>
             <span className="order-3 flex-1 whitespace-nowrap text-sm font-extrabold text-neutral-900 lg:order-none lg:flex-none">
               {topicStatusLabel(m.counts)}
+              {late && (
+                <span className="ml-2 text-xs font-bold text-accent-600">공개 안 한 발제가 있어요</span>
+              )}
             </span>
             <span className="order-4 inline-flex h-8 flex-none items-center rounded-[9px] bg-primary-600 px-3 text-xs font-bold text-white lg:order-none">
               {empty ? '등록하기' : '이어서 하기'}

@@ -5,11 +5,11 @@ import { requireCurator } from '@/lib/curator-route'
  * 발제문 관리. 권한 = 큐레이터(admin·editor·is_staff, 2026-08-17 결정).
  * POST 등록 / PATCH 수정 / DELETE 삭제.
  *
- * 2026-10-10 (1차): 운영자가 하나씩 써서 **등록하면 바로 공개**(published_at = now()).
- * 이 라우트는 **알림을 보내지 않는다.** 신청자 알림은 DB 예약 작업이 묶어서 보낸다 —
- * 마지막 등록 후 10분 동안 추가 등록이 없으면 그 모임 신청자에게 「발제 N개가 올라왔어요」 한 번
- * (`supabase/migration-topics-notify.sql`의 flush_topic_notifications, 1분마다).
- * 고치기(PATCH)는 published_at을 건드리지 않아 알림이 다시 가지 않는다.
+ * 2026-10-12 (1차, 대표님): 운영자가 하나씩 써서 등록하면 **「작성 중」으로 저장**(published_at = null).
+ * 회원에게는 안 보인다. 공개와 신청자 알림은 `topics/publish`(「발제 공개하기」)가 한 번에 한다.
+ * 이 라우트는 **알림을 보내지 않는다.** 고치기(PATCH)는 published_at·notified_at을 건드리지 않아
+ * 공개된 발제를 고쳐도 알림이 다시 가지 않는다.
+ * (2026-10-10의 「등록 = 바로 공개 + 10분 묶음 알림」은 이 방식으로 바뀌었다 — 예약 작업은 끈다)
  */
 
 const MAX_TITLE = 200
@@ -31,7 +31,7 @@ function optStr(v: unknown): string | null {
   return s === '' ? null : s
 }
 
-/** 입력 정리. 제목·질문은 필수(바로 공개되므로 빈 칸 발제가 회원에게 나가면 안 된다) */
+/** 입력 정리. 제목·질문은 필수 — 공개하기가 작성 중 전부를 한 번에 내보내므로 빈 칸 발제가 섞이면 안 된다 */
 function normalizeTopic(raw: unknown): TopicInput | null {
   if (!raw || typeof raw !== 'object') return null
   const r = raw as Record<string, unknown>
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
           topic_no: (last?.[0]?.topic_no ?? 0) + 1,
           ...topic,
           author_id: ctx.user.id,
-          published_at: new Date().toISOString(),
+          // published_at·notified_at은 비워 둔다 = 작성 중 (공개하기가 채운다)
         })
         .select('id, topic_no')
         .single()
@@ -174,7 +174,6 @@ export async function DELETE(request: NextRequest) {
         { status: 400 },
       )
     }
-    // 알림 전에 지운 발제는 알림 개수에서 빠진다 — 예약 작업이 보낼 때 다시 센다
     const { error } = await ctx.admin.from('discussion_topics').delete().eq('id', id)
     if (error) {
       return NextResponse.json(

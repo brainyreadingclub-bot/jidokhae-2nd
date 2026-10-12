@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatFee, shiftDate } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatFee, getDaysUntil, getKSTToday, shiftDate } from '@/lib/kst'
 import { DISCUSSION_APPLY_CLOSE_DAYS } from '@/lib/discussion-rules'
-import { NO_TOPICS, type TopicCounts } from '@/lib/topic-status'
+import { NO_TOPICS, isTopicPublishLate, type TopicCounts } from '@/lib/topic-status'
 import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
 import DeleteMeetingButton from '@/components/meetings/DeleteMeetingButton'
 import type { Meeting } from '@/types/meeting'
@@ -43,6 +43,7 @@ export default function AdminMeetingOverview({
   const refundTransferCount = refundable.filter((r) => r.payment_method === 'transfer').length
 
   const tc = topicCounts ?? NO_TOPICS
+  const topicLate = isTopicPublishLate(tc, getDaysUntil(meeting.date, getKSTToday()))
   const id = meeting.id
   const infoLine = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatFee(meeting.fee)}`
 
@@ -131,9 +132,12 @@ export default function AdminMeetingOverview({
               ) : tc.published > 0 ? (
                 '신청자에게 보이고 있어요'
               ) : (
-                `등록하면 바로 보이고, 신청자 ${confirmedCount}명에게 한 번에 알려요`
+                `써서 「발제 공개하기」를 누르면 신청자 ${confirmedCount}명에게 알림이 한 번 가요`
               )}
             </p>
+            {topicLate && (
+              <p className="mt-1.5 text-[13px] font-bold text-accent-600">공개 안 한 발제가 있어요</p>
+            )}
             <Link
               href={`/admin/meetings/${id}/topics`}
               className={`mt-4 self-start ${

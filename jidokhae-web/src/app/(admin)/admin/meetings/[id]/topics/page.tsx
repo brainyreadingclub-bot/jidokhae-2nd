@@ -1,14 +1,14 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/admin'
-import { formatKoreanDate, formatKSTDateTime } from '@/lib/kst'
+import { formatKoreanDate, formatKSTDateTime, getDaysUntil, getKSTToday } from '@/lib/kst'
 import TopicsManager from '@/components/admin/TopicsManager'
 import type { DiscussionTopic } from '@/types/discussion'
 import type { Meeting } from '@/types/meeting'
 
 /**
  * 발제문 관리 (admin·editor — (admin) 레이아웃이 역할 검사). 2026-10-09 시안 B.
- * 붙여넣기 → 번호별로 나눠 「작성 중」 저장 → 「공개하기」 한 번 → 신청자 알림 한 번.
+ * 하나씩 써서 「작성 중」 저장 → 「발제 공개하기」 한 번 → 신청자 알림 한 번 (2026-10-12).
  * 스텝(is_staff)의 진입은 2단계에서 별도 경로로 — API는 이미 큐레이터를 허용한다.
  * 🔒 작성 중 발제를 읽는 화면이다 — service_role로 전부 읽는다(회원 화면은 공개된 것만).
  */
@@ -105,6 +105,7 @@ export default async function AdminTopicsPage({
         answerCounts={answerCounts}
         applicantCount={applicantCount}
         lastPublishedLabel={lastPublished ? formatKSTDateTime(lastPublished) : null}
+        daysUntil={getDaysUntil(m.date, getKSTToday())}
       />
     </div>
   )

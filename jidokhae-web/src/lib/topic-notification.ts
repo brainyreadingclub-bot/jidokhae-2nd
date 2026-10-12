@@ -2,11 +2,10 @@
  * `topic_posted` 인앱 알림 문구 (알림함 NotificationList).
  *
  * payload가 두 모양이다 — **옛 알림도 알림함에 그대로 남아 있으므로 둘 다 읽는다.**
- *   - 새 (2026-10-10~, 묶음 알림): { meeting_id, meeting_title, count, more }
- *       DB 함수 flush_topic_notifications(supabase/migration-topics-notify.sql)가 만든다 —
- *       마지막 등록 후 10분 동안 추가 등록이 없으면 그동안 올라온 발제를 한 번에 알린다.
- *       → 「발제 N개가 올라왔어요」 / 그 모임에 이미 알린 발제가 있으면 「발제 N개가 더 올라왔어요」
- *       🔴 키 이름을 바꾸면 SQL 함수의 jsonb_build_object도 같이 바꾼다
+ *   - 새 (묶음 알림): { meeting_id, meeting_title, count, more }
+ *       「발제 공개하기」(api/admin/topics/publish, 2026-10-12)가 만든다 — 작성 중 N개를 한 번에 공개하고 한 번 알린다.
+ *       → 「발제 N개가 올라왔어요」 / 그 모임에 이미 공개된 발제가 있었으면 「발제 N개가 더 올라왔어요」
+ *       (2026-10-10~12에는 DB 예약 작업 flush_topic_notifications가 같은 모양으로 만들었다 — 꺼졌다)
  *   - 옛 (발제 1건 등록 = 알림 1건): { meeting_id, topic_no, title }
  *       → 「새 발제문이 올라왔어요」 + 「발제 N · 제목」
  */

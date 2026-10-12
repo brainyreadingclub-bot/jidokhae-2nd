@@ -32,3 +32,14 @@ export function countTopicsByMeeting(
   }
   return map
 }
+
+/** 「공개 안 한 발제가 있어요」를 띄우는 기준 — 모임 사흘 전(D-3)부터 (2026-10-12 대표님) */
+export const TOPIC_PUBLISH_WARN_DAYS = 3
+
+/**
+ * 작성 중 발제가 남아 있는데 모임이 사흘 안으로 다가왔나 (모임 당일 포함, 지난 모임은 제외).
+ * daysUntil = 모임일 − 오늘(한국 날짜, getDaysUntil).
+ */
+export function isTopicPublishLate(c: TopicCounts, daysUntil: number): boolean {
+  return c.draft > 0 && daysUntil >= 0 && daysUntil <= TOPIC_PUBLISH_WARN_DAYS
+}
