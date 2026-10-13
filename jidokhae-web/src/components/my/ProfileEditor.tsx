@@ -35,6 +35,21 @@ export default function ProfileEditor({ nickname, realName, phone, region, email
   const [saving, setSaving] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  // 저장을 누르는 순간 보기 화면에 새 값을 먼저 보여 준다. 실패하면 편집 화면으로 되돌린다.
+  // 서버 값(props)이 새로 오면 비운다
+  type Shown = { nickname: string; phone: string | null; region: string[] | null; email: string | null }
+  const [optimistic, setOptimistic] = useState<Shown | null>(null)
+  const [prevProps, setPrevProps] = useState({ nickname, phone, region, email })
+  if (
+    prevProps.nickname !== nickname ||
+    prevProps.phone !== phone ||
+    prevProps.region !== region ||
+    prevProps.email !== email
+  ) {
+    setPrevProps({ nickname, phone, region, email })
+    setOptimistic(null)
+  }
+  const view: Shown = optimistic ?? { nickname, phone, region, email }
 
   const [form, setForm] = useState({
     nickname,
@@ -45,10 +60,10 @@ export default function ProfileEditor({ nickname, realName, phone, region, email
 
   function startEdit() {
     setForm({
-      nickname,
-      phone: phone ? formatPhone(phone) : '',
-      regions: region || [],
-      email: email || '',
+      nickname: view.nickname,
+      phone: view.phone ? formatPhone(view.phone) : '',
+      regions: view.region || [],
+      email: view.email || '',
     })
     setApiError(null)
     setEditing(true)
@@ -60,33 +75,49 @@ export default function ProfileEditor({ nickname, realName, phone, region, email
   }
 
   async function handleSave() {
+    if (saving) return
+    const payload = {
+      nickname: form.nickname.trim(),
+      phone: form.phone.replace(/\D/g, ''),
+      region: form.regions,
+      email: form.email.trim() || null,
+    }
+    // 누르는 순간 보기 화면으로 — 새 값을 먼저 보여 준다
     setSaving(true)
     setApiError(null)
+    setSaved(false)
+    setOptimistic({
+      nickname: payload.nickname,
+      phone: payload.phone || null,
+      region: payload.region,
+      email: payload.email,
+    })
+    setEditing(false)
+    // 실패하면 편집 화면으로 돌아가 쓴 값 그대로 두고 이유를 보여 준다
+    const rollback = (message: string) => {
+      setOptimistic(null)
+      setEditing(true)
+      setApiError(message)
+      setSaving(false)
+    }
     try {
       const res = await fetch('/api/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nickname: form.nickname.trim(),
-          phone: form.phone.replace(/\D/g, ''),
-          region: form.regions,
-          email: form.email.trim() || null,
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok || data.status !== 'success') {
-        setApiError(data.message || '저장에 실패했습니다')
-        setSaving(false)
+        rollback(data.message || '저장에 실패했습니다')
         return
       }
-      setEditing(false)
       setSaving(false)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
+      // 화면은 이미 바뀌었다 — 닉네임 변경 잠금 등 서버가 정하는 값을 뒤에서 새로 받는다
       router.refresh()
     } catch {
-      setApiError('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
-      setSaving(false)
+      rollback('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
     }
   }
 
@@ -99,11 +130,11 @@ export default function ProfileEditor({ nickname, realName, phone, region, email
   // ── 보기 모드 ──
   if (!editing) {
     const rows: { label: string; value: string; locked?: boolean }[] = [
-      { label: '닉네임', value: nickname },
+      { label: '닉네임', value: view.nickname },
       { label: '실명', value: realName || '-', locked: true },
-      { label: '전화', value: phone ? formatPhone(phone) : '-' },
-      { label: '지역', value: region && region.length > 0 ? region.join(', ') : '-' },
-      { label: '이메일', value: email || '-' },
+      { label: '전화', value: view.phone ? formatPhone(view.phone) : '-' },
+      { label: '지역', value: view.region && view.region.length > 0 ? view.region.join(', ') : '-' },
+      { label: '이메일', value: view.email || '-' },
     ]
     return (
       <section>
@@ -125,7 +156,8 @@ export default function ProfileEditor({ nickname, realName, phone, region, email
         <div className="mt-3 flex justify-end">
           <button
             onClick={startEdit}
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors"
+            disabled={saving}
+            className="disabled:opacity-40 inline-flex items-center gap-1.5 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 20h9" />
@@ -134,6 +166,7 @@ export default function ProfileEditor({ nickname, realName, phone, region, email
             수정하기
           </button>
         </div>
+        {saving && <p className="mt-2 text-right text-caption text-neutral-500">저장 중...</p>}
         {saved && <p className="mt-2 text-right text-caption text-primary-600">저장되었습니다</p>}
       </section>
     )
