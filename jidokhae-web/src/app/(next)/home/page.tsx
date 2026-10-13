@@ -6,6 +6,7 @@ import { listAppNotifications } from '@/lib/app-notifications'
 import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
 import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
+import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import HomeView, { type HomeData } from '@/components/next/HomeView'
 import WhatsNewSheet from '@/components/next/WhatsNewSheet'
 import type { Meeting } from '@/types/meeting'
@@ -93,8 +94,39 @@ export default async function NextHomePage() {
   //    없는 기존 회원이 홈에서 「지금은 조용해요」만 보고 있었다. 켜는 날 대부분이 이 상태다.
   //    인사 문구는 이 카드를 따라가지 않는다 — 그쪽은 `firstTime`이 가른다 (HomeView 참조).
   //    쿼리를 더 치지 않는다. 위에서 이미 불러온 upcoming에서 고르는 것뿐이다.
+  // ⑥ 다가오는 정기모임 최대 3건 (2026-10-13 시안) — 「가장 가까운 모임」 1건을 대신한다.
+  //    회원 권한(anon + RLS) 클라이언트로 읽은 upcoming에서 고른다 — 쿼리 1건(인원 수)만 추가.
+  //    내가 신청한 모임(confirmed·pending_transfer·waitlisted = 취소 제외)은 뺀다.
+  const regularPicks = upcoming
+    .filter((m) => m.meeting_type === 'regular' && !myRegMap.has(m.id))
+    .slice(0, 3)
+  const { data: counts } = regularPicks.length > 0
+    ? await supabase.rpc('get_confirmed_counts', { meeting_ids: regularPicks.map((m) => m.id) })
+    : { data: [] }
+  const countMap = new Map(
+    ((counts ?? []) as { meeting_id: string; confirmed_count: number }[]).map((c) => [
+      c.meeting_id,
+      Number(c.confirmed_count),
+    ]),
+  )
+  const upcomingRegular: HomeData['upcoming'] = regularPicks.map((m) => {
+    const count = countMap.get(m.id) ?? 0
+    const left = m.capacity - count
+    // 3자리 이하일 때만 말한다. 신청자 3명 미만 마스킹(visibility.ts)도 그대로 지킨다
+    const seatsLeft =
+      left <= 0 ? 0 : left <= 3 && !shouldMaskConfirmedCount(count, m.capacity, false) ? left : null
+    return {
+      id: m.id,
+      date: m.date,
+      time: m.time,
+      region: m.region ?? '',
+      venueName: m.location ?? '',
+      seatsLeft,
+    }
+  })
+
   let nearest: HomeData['nearest'] = null
-  if (!mine) {
+  if (!mine && upcomingRegular.length === 0) {
     const myRegions = profile?.region ?? []
     // upcoming은 date·time 오름차순 — 지역이 겹치는 첫 건, 없으면 날짜순 첫 건.
     // 대기 중인 모임은 뺀다 — 이미 줄을 선 모임을 「가장 가까운 모임」으로 다시 권유하지
@@ -170,7 +202,7 @@ export default async function NextHomePage() {
   return (
     <>
       <WhatsNewSheet />
-      <HomeView data={{ nickname, firstTime, reply, nextMeeting, nearest, promo, todo }} />
+      <HomeView data={{ nickname, firstTime, reply, nextMeeting, nearest, upcoming: upcomingRegular, promo, todo }} />
     </>
   )
 }
