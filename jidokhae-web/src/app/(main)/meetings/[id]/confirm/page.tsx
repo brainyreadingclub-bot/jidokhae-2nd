@@ -5,6 +5,7 @@ import { getSiteSettings } from '@/lib/site-settings'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { loadRegistrationSummary } from '@/lib/registration-summary'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
+import { showsDepositGuide } from '@/lib/transfer-rules'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -32,8 +33,12 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
     isPendingTransfer,
   })
 
+  // 0원 모임은 받을 돈이 없다 — `type=pending_transfer`로 와도 입금 안내를 띄우지 않는다 (2026-10-13).
+  // SQL(migration-free-transfer-confirmed.sql) 전에는 0원도 pending_transfer로 들어오므로 화면이 먼저 막는다
+  const showDeposit = showsDepositGuide(type, typedMeeting?.fee)
+
   // Fetch bank info for pending_transfer
-  const settings = isPendingTransfer ? await getSiteSettings() : null
+  const settings = showDeposit ? await getSiteSettings() : null
 
   return (
     <div className="px-5 pt-8">
@@ -62,7 +67,7 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
           {isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
         </h1>
         <p className="mt-2 text-sm text-neutral-500">
-          {isPendingTransfer
+          {showDeposit
             ? '아래 계좌로 입금해주세요'
             : isWaitlisted
               ? '취소자 발생 시 자동으로 참여가 확정됩니다'
@@ -121,7 +126,7 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
       )}
 
       {/* Bank info for pending transfer */}
-      {isPendingTransfer && settings && (
+      {showDeposit && settings && (
         <div className="mt-4 px-1">
           <BankInfoCard
             bankName={settings.bank_name ?? ''}

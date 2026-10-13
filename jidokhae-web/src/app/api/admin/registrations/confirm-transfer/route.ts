@@ -80,6 +80,8 @@ export async function POST(request: NextRequest) {
         .eq('id', registrationId)
         .eq('status', 'confirmed')
         .eq('payment_method', 'transfer')
+        // 0원 신청은 입금이 없으므로 「입금 대기」로 되돌릴 대상이 아니다 (2026-10-13 — 처음부터 confirmed로 들어간다)
+        .gt('paid_amount', 0)
         .select('id')
 
       if (data && data.length > 0) confirmed++

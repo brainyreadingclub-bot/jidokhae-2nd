@@ -15,6 +15,7 @@ import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 import { getActionSkin, type SkinName } from '@/components/meetings/actionButtonSkin'
 import { trackEvent } from '@/lib/analytics'
 import { isWaitlistCardOnly } from '@/lib/waitlist-rules'
+import { isNoTransferNeeded, transferDoneHref } from '@/lib/transfer-rules'
 
 type Props = {
   buttonState: ButtonState
@@ -107,6 +108,9 @@ export default function MeetingActionButton({
   // 🔴 이건 겉 막이다. 실제 방어선은 RPC다 — 정원 판정이 FOR UPDATE 락 안에 있어야
   // 동시 신청에 지지 않는다 (migration-waitlist-card-only.sql).
   const waitlistCardOnly = isWaitlistCardOnly(buttonState.type === 'join_waitlist', effectiveFee, isFree)
+  // 0원 모임 — 계좌이체 단계에서 입금 안내를 숨긴다. 서버(register_transfer)도 같은 조건(참가비 0 · 신청 금액 0)으로
+  // 바로 신청 완료로 넣는다 (2026-10-13)
+  const noTransferNeeded = isNoTransferNeeded(meetingFee, effectiveFee)
   const s = getActionSkin(skin)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -796,7 +800,8 @@ export default function MeetingActionButton({
                   )}
                 </div>
 
-                {bankName && bankAccount && bankHolder && (
+                {/* 0원 모임은 받을 돈이 없다 — 계좌·입금자명을 보여 주면 입금하라는 말이 된다 (2026-10-13) */}
+                {!noTransferNeeded && bankName && bankAccount && bankHolder && (
                   <BankInfoCard
                     bankName={bankName}
                     bankAccount={bankAccount}
@@ -805,7 +810,7 @@ export default function MeetingActionButton({
                   />
                 )}
 
-                {depositorName && (
+                {!noTransferNeeded && depositorName && (
                   <CopyableDepositorName depositorName={depositorName} skin={skin} />
                 )}
 
@@ -819,10 +824,10 @@ export default function MeetingActionButton({
                         body: JSON.stringify({ meetingId }),
                       })
                       const data = await res.json()
-                      if (data.status === 'pending_transfer') {
-                        router.replace(`/meetings/${meetingId}/confirm?type=pending_transfer`)
-                      } else if (data.status === 'waitlisted') {
-                        router.replace(`/meetings/${meetingId}/confirm?type=waitlisted`)
+                      // 'confirmed' = 0원 모임 — 처음부터 신청 완료(2026-10-13), 입금 안내 없는 완료 화면
+                      const doneHref = transferDoneHref(meetingId, data.status)
+                      if (doneHref) {
+                        router.replace(doneHref)
                       } else if (data.status === 'already_registered') {
                         setRegisterPhase('transfer')
                         showToast('이미 신청한 모임입니다')
@@ -838,7 +843,7 @@ export default function MeetingActionButton({
                   className={`mt-5 ${s.btnPrimary}`}
                   style={s.btnPrimaryStyle}
                 >
-                  입금 완료
+                  {noTransferNeeded ? '신청하기' : '입금 완료'}
                 </button>
               </>
             )}

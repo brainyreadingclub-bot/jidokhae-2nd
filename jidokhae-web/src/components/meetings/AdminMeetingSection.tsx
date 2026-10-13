@@ -271,7 +271,8 @@ export default function AdminMeetingSection({
     if (reg.status === 'pending_transfer') {
       return <DepositToggle registrationId={reg.id} isDeposited={false} />
     }
-    if (reg.status === 'confirmed' && reg.payment_method === 'transfer') {
+    // 0원 confirmed는 확인할 입금이 없다 — 체크를 풀면 「입금 대기」로 되돌아가 버린다 (2026-10-13)
+    if (reg.status === 'confirmed' && reg.payment_method === 'transfer' && (reg.paid_amount ?? 0) > 0) {
       return <DepositToggle registrationId={reg.id} isDeposited={true} />
     }
     // Phase 3 M7 Step 2.6: 계좌이체 취소 건의 환불 완료 토글
@@ -425,7 +426,7 @@ export default function AdminMeetingSection({
                     {reg.status === 'pending_transfer' && (
                       <DepositToggle registrationId={reg.id} isDeposited={false} />
                     )}
-                    {reg.status === 'confirmed' && reg.payment_method === 'transfer' && (
+                    {reg.status === 'confirmed' && reg.payment_method === 'transfer' && (reg.paid_amount ?? 0) > 0 && (
                       <DepositToggle registrationId={reg.id} isDeposited={true} />
                     )}
                     {getAmountSubtext(reg)}
