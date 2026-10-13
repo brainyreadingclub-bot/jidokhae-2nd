@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 권장 환불액 — 토글 누른 시점이 아니라 취소 시점 기준으로 계산 (회원 입장 일관성).
-    // 토론모임은 7/3 규칙 (calculateRefundByType이 분기).
+    // 토론모임은 14/7 규칙 (calculateRefundByType이 분기).
     const meetingData = reg.meetings as unknown as { date: string; meeting_type: string | null } | null
     if (!meetingData) {
       return NextResponse.json(

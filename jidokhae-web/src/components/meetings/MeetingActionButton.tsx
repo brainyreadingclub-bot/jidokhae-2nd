@@ -28,7 +28,7 @@ type Props = {
   /** 본인 `profiles.is_free` — 유료 대기에서도 계좌이체를 보여준다 (결정 A, 2026-10-09) */
   isFree?: boolean
   meetingDate: string
-  /** 환불 규칙 분기용 (discussion = 7/3, 그 외 3/2) */
+  /** 환불 규칙 분기용 (discussion = 14/7, 그 외 3/2) */
   meetingType?: string | null
   userId: string
   registrationId?: string
@@ -305,7 +305,6 @@ export default function MeetingActionButton({
   const showStickyButton =
     (buttonState.type === 'register') ||
     (buttonState.type === 'full') ||
-    (buttonState.type === 'apply_closed') ||
     (buttonState.type === 'discussion_locked') ||
     (buttonState.type === 'discussion_paused') ||
     (buttonState.type === 'cancel' && cancelPhase === 'idle') ||
@@ -339,12 +338,6 @@ export default function MeetingActionButton({
           {buttonState.type === 'full' && (
             <button disabled className={s.btnDisabled}>
               마감
-            </button>
-          )}
-
-          {buttonState.type === 'apply_closed' && (
-            <button disabled className={s.btnDisabled}>
-              신청 마감 · 모임 7일 전까지 신청할 수 있어요
             </button>
           )}
 

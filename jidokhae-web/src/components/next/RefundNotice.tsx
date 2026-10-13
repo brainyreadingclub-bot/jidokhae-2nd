@@ -1,5 +1,5 @@
 import { formatMonthDay } from '@/lib/kst'
-import { getRefundScheduleByType, getFullRefundDeadline } from '@/lib/refund'
+import { getRefundScheduleByType } from '@/lib/refund'
 
 /**
  * 결제 **전**에 보이는 환불 안내 (승인 시안 07 「신청 확인」·09 「토론모임 상세」).
@@ -8,7 +8,7 @@ import { getRefundScheduleByType, getFullRefundDeadline } from '@/lib/refund'
  * 회원은 조건을 모른 채 돈을 보냈다. 이 블록이 그것을 신청 전으로 옮긴다.
  *
  * ⚠️ 비율·날짜를 손으로 적지 않는다 — `lib/refund.ts`의 규칙 상수에서 계산한다.
- * 토론 7/3, 정기 3/2가 두 곳에 적히면 다음에 한쪽만 고쳐진다 (PR #64가 고친 사고).
+ * 토론 14/7, 정기 3/2가 두 곳에 적히면 다음에 한쪽만 고쳐진다 (PR #64가 고친 사고).
  */
 export default function RefundNotice({
   meetingType,
@@ -38,9 +38,10 @@ export default function RefundNotice({
             </b>
             {half && `, ${formatMonthDay(half.date)}까지 50%`}, 이후는 어려워요.
           </p>
-          {/* 신청 마감·환불 100% 경계·책 주문 마감이 한 날짜다 (2026-08-17 결정) */}
-          <p className="mt-1 text-[13px] leading-relaxed text-tg-600 break-keep">
-            책 주문 마감도 같은 날({formatMonthDay(getFullRefundDeadline(meetingType, meetingDate))})이에요.
+          {/* 「책 주문 마감도 같은 날」 줄은 2026-10-13에 뺐다 — 책 주문 마감을 서비스에 두지 않고,
+              D-7 신청 마감도 폐지됐다(대표님 결정). 0% 구간에도 취소는 된다는 점은 정기모임과 같은 문장으로 */}
+          <p className="mt-1 text-[13px] leading-relaxed text-tg-600">
+            취소는 언제든 하실 수 있어요.
           </p>
         </>
       ) : (

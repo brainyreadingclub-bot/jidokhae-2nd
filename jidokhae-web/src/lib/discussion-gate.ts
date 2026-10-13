@@ -7,7 +7,8 @@
  * 🔴 플래그 OFF가 막는 것은 **새로 들어오는 것뿐이다.**
  *    이미 결제한 회원의 조회·취소·환불은 플래그와 무관하게 항상 살아 있다 —
  *    끈 상태에서 취소가 막히면 환불 경로 자체가 사라진다.
- *    (검토문서/2026-08-22-토론자격-판정규칙.md §2-2, D-7 선례와 같은 규칙)
+ *    (검토문서/2026-08-22-토론자격-판정규칙.md §2-2. 원래 D-7 마감 선례와 같은 규칙이었다 —
+ *    D-7은 2026-10-13에 폐지됐지만 이 규칙은 그대로다)
  */
 
 import { cache } from 'react'
@@ -113,6 +114,19 @@ export type DiscussionBlock = 'paused' | 'not_eligible'
  * (환불 7/3 미배선 사고의 모양).
  *
  * 반환값이 null이 아니면 **새 신청을 거절**한다. 이미 만들어진 신청에는 쓰지 않는다.
+ *
+ * ⚠️ 신청 행을 만드는 경로는 **넷**이고, 그중 셋에만 이 관문이 걸려 있다 (2026-08-22 실측):
+ *
+ *   1. `lib/payment.ts`                        카드 (confirm 라우트 + PortOne 웹훅 공통)  ✅ 걸림
+ *   2. `api/registrations/transfer/route.ts`   계좌이체                                   ✅ 걸림
+ *   3. `lib/meeting-detail.ts`                 화면 버튼 (두 스킨 공용, 실질 방어선)      ✅ 걸림
+ *   4. `api/webhooks/tosspayments/route.ts`    레거시 토스 웹훅 — `payment.ts`를 안 거치고
+ *                                              `confirm_registration`을 직접 부른다        ❌ **안 걸림**
+ *
+ * 4번은 토스 직연동 중단으로 죽은 경로다(`status==='DONE'`인 실결제가 존재할 수 없어 통과 불가).
+ * 그래서 관문을 더 달지 않기로 했다(관리자 2026-08-22). **되살린다면 반드시 `payment.ts`를 경유시킬 것** —
+ * 지금 그대로 살리면 참여 자격·격리 플래그가 빠진 상태로 신청이 만들어진다.
+ * (이 표는 원래 `discussion-rules.ts`의 D-7 마감 함수에 있었다. D-7 폐지(2026-10-13)로 여기로 옮겼다)
  */
 export async function getDiscussionApplyBlock(
   meetingType: string | null | undefined,

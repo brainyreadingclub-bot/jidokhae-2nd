@@ -9,7 +9,6 @@
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getPayment, cancelPayment } from '@/lib/portone'
 import { calculateFee, isStaffDiscountableMeetingType } from '@/lib/pricing'
-import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 import { getDiscussionApplyBlock, DISCUSSION_BLOCK_MESSAGE } from '@/lib/discussion-gate'
 
 /**
@@ -104,14 +103,10 @@ export async function processPaymentConfirmation(
     return { status: 'error', message: '신청할 수 없는 모임입니다' }
   }
 
-  // 토론모임 D-7 신청 마감 강제 (2026-08-17 결정) — 마감 후 결제는 취소 후 거절.
-  // 화면 버튼은 이미 막지만, 딥링크·공유 URL·마감 직전 결제창 체류 경로를 서버에서 차단.
-  if (meeting.meeting_type === 'discussion' && !isDiscussionApplyOpen(meeting.date)) {
-    await safeCancel(paymentId, '토론모임 신청 마감(D-7) 이후 결제')
-    return { status: 'error', message: '신청이 마감된 모임입니다. 결제는 자동 취소됩니다' }
-  }
+  // 토론모임 D-7 신청 마감은 2026-10-13에 폐지됐다(대표님 결정) — 정기모임처럼 정원까지 받고
+  // 차면 대기(RPC가 FOR UPDATE 락 안에서 판정). 그래서 여기에 날짜 관문이 없다.
 
-  // 토론모임 참여 자격 + 격리 플래그 — D-7과 같은 자리. 화면 버튼이 실질 방어선이고
+  // 토론모임 참여 자격 + 격리 플래그 — 토론 전용으로 남은 유일한 관문. 화면 버튼이 실질 방어선이고
   // 여기는 딥링크·공유 URL·결제창 체류 같은 우회 경로의 안전망이다.
   // ⚠️ 여기 도달했을 때는 이미 승인된 결제라 safeCancel로 되돌린다(회원에게 결제→취소가 연달아 간다).
   //    그래서 검증 기준은 "화면 버튼이 확실히 잠기는가"다.

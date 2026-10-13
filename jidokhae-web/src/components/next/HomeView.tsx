@@ -45,7 +45,7 @@ export type HomeData = {
     venueName: string
     fee: number
   } | null
-  /** 토론 홍보 — 미신청 + 신청 열림일 때만 (마감 후엔 문구 전환) */
+  /** 토론 홍보 — 미신청일 때. `open`은 정기모임과 같은 기준(당일까지 열림) — D-7 마감은 2026-10-13 폐지 */
   promo: {
     meetingId: string
     title: string

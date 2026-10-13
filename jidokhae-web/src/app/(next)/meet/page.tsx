@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/auth'
 import { getKSTToday, getDaysUntil } from '@/lib/kst'
-import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import { getProfile } from '@/lib/profile'
@@ -106,7 +105,6 @@ export default async function NextMeetPage({
         date: d.date,
         time: d.time,
         venueName: d.location,
-        open: isDiscussionApplyOpen(d.date, kstToday),
         thumbnail: d.books?.thumbnail ?? null,
         authors: d.books?.authors ?? null,
         locked,

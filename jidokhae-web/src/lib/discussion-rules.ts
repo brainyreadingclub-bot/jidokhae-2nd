@@ -1,35 +1,30 @@
 /**
  * 토론모임 규칙 (순수 함수).
- * 신청 마감 = D-7 = 환불 100% 경계 = 책 주문 마감 (세 날짜 통일, 2026-08-17 확정)
- * 날짜 단위 계산 — 기존 환불 계산과 동일하게 시간 무관.
+ *
+ * 2026-10-13 대표님 결정으로 **D-7 신청 마감을 폐지했다.** 토론모임도 정기모임처럼
+ * 정원이 찰 때까지 받고, 차면 대기로 받는다. 책 주문 마감은 서비스에 두지 않는다.
+ * (옛 결정: 2026-08-17 "신청 마감 = D-7 = 환불 100% 경계 = 책 주문 마감")
+ *
+ * 환불 규칙은 `lib/refund.ts`의 `calculateRefundByType`이 단일 진입점이다 — 여기 두지 않는다.
  */
 
-import { getKSTToday, getDaysUntil } from '@/lib/kst'
-
-export const DISCUSSION_APPLY_CLOSE_DAYS = 7
+import { getKSTToday, getMeetingTiming } from '@/lib/kst'
 
 /**
- * D-7일 23:59까지 신청 가능. daysUntil >= 7 이면 열림.
+ * 토론모임 카드의 「신청 열림」 표시 — 정기모임과 같은 기준으로 **모임 당일까지 열림**,
+ * 지난 모임은 닫힘 (`getButtonState`의 `before_or_today`와 같은 경계).
+ * 정원이 찬 경우는 「닫힘」이 아니다 — 정기모임처럼 상세에서 대기 신청으로 이어진다.
  *
- * ⚠️ **"3중 강제"라는 기존 표현은 경로 수로는 정확하지 않다** (2026-08-22 실측으로 정정).
- * 신청 행을 만드는 경로는 **넷**이고, 그중 셋에만 이 규칙이 걸려 있다:
- *
- *   1. `lib/payment.ts`                        카드 (confirm 라우트 + PortOne 웹훅 공통)  ✅ 걸림
- *   2. `api/registrations/transfer/route.ts`   계좌이체                                   ✅ 걸림
- *   3. `lib/meeting-detail.ts`                 화면 버튼 (두 스킨 공용, 실질 방어선)      ✅ 걸림
- *   4. `api/webhooks/tosspayments/route.ts`    레거시 토스 웹훅 — `payment.ts`를 안 거치고
- *                                              `confirm_registration`을 직접 부른다        ❌ **안 걸림**
- *
- * 4번은 토스 직연동 중단으로 죽은 경로다(`status==='DONE'`인 실결제가 존재할 수 없어 통과 불가).
- * 그래서 게이트를 더 달지 않기로 했다(관리자 2026-08-22). **되살린다면 반드시 `payment.ts`를 경유시킬 것** —
- * 지금 그대로 살리면 D-7·참여 자격·격리 플래그가 통째로 빠진 상태로 신청이 만들어진다.
- * 같은 표가 참여 자격(`lib/discussion-gate.ts`)에도 그대로 적용된다.
+ * ⚠️ 이 함수는 **화면 표시용**이다. 신청 생성 경로(`payment.ts` · transfer 라우트 ·
+ * `meeting-detail.ts` 버튼)에는 토론 전용 날짜 관문이 더는 없다 — 정기모임과 같은 규칙을 탄다.
+ * 토론 전용으로 남은 관문은 **참여 자격 + 격리 플래그**(`lib/discussion-gate.ts`) 하나다.
+ * 그 관문이 걸린 경로 표(레거시 토스 웹훅 제외 등)는 `discussion-gate.ts`를 본다.
  */
 export function isDiscussionApplyOpen(
   meetingDate: string,
   kstToday: string = getKSTToday(),
 ): boolean {
-  return getDaysUntil(meetingDate, kstToday) >= DISCUSSION_APPLY_CLOSE_DAYS
+  return getMeetingTiming(meetingDate, kstToday) === 'before_or_today'
 }
 
 /**

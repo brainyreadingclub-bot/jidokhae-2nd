@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatFee, getDaysUntil, getKSTToday, shiftDate } from '@/lib/kst'
-import { DISCUSSION_APPLY_CLOSE_DAYS } from '@/lib/discussion-rules'
+import { formatKoreanDate, formatKoreanTime, formatFee, getDaysUntil, getKSTToday } from '@/lib/kst'
 import { NO_TOPICS, isTopicPublishLate, type TopicCounts } from '@/lib/topic-status'
 import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
 import DeleteMeetingButton from '@/components/meetings/DeleteMeetingButton'
@@ -167,11 +166,6 @@ export default function AdminMeetingOverview({
           <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
             <i className="block h-full rounded-full bg-primary-500" style={{ width: `${fillPct}%` }} />
           </div>
-          {isDiscussion && (
-            <p className="mt-auto pt-4 text-xs text-neutral-500">
-              신청 마감 {formatKoreanDate(shiftDate(meeting.date, -DISCUSSION_APPLY_CLOSE_DAYS))}
-            </p>
-          )}
         </div>
       </div>
 
