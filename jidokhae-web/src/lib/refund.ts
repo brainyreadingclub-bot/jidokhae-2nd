@@ -164,3 +164,47 @@ export function getRefundScheduleByType(
     date: shiftDate(meetingDate, -r.daysBeforeMeeting),
   }))
 }
+
+// ─── 계좌이체 취소 건의 「권장 환불액」 ───
+// 「환불 완료」 토글(mark-refunded)이 장부에 적는 값이고, 운영자 신청자 표의 「환불 N」 표시도 이 값이다.
+// 두 곳이 각자 계산하면 표시와 기록이 갈린다 — 그래서 한 함수로 묶었다.
+
+/**
+ * 회원 사정이 아니라 **운영 쪽 사정으로 닫힌** 취소 — 날짜와 상관없이 전액이다.
+ * - `meeting_deleted` — CLAUDE.md 「Deletion refund: Always 100%」. 종전에는 이 자리가 환불 규정으로
+ *   계산돼 모임 직전에 삭제하면 0이 적혔다 (설계서 §8-2에서 발견)
+ * - `presenter_swap` — 돈 낸 회원을 발제자로 바꾸며 닫은 신청 (대표님 확정 ④ 「취소 + 전액 환불」)
+ */
+export const FULL_REFUND_CANCEL_TYPES: readonly string[] = ['meeting_deleted', 'presenter_swap']
+
+export function recommendedTransferRefund(input: {
+  cancelType: string | null | undefined
+  meetingType: string | null | undefined
+  meetingDate: string
+  paidAmount: number
+  /** 취소한 날 (KST "YYYY-MM-DD") — 토글 누른 날이 아니다 */
+  cancelDate: string
+}): number {
+  if (input.cancelType && FULL_REFUND_CANCEL_TYPES.includes(input.cancelType)) {
+    return Math.max(0, input.paidAmount)
+  }
+  return calculateRefundByType(input.meetingType, input.meetingDate, input.paidAmount, input.cancelDate)
+    .refundAmount
+}
+
+/**
+ * 계좌이체 신청을 닫을 때 적는 `refunded_amount` — 🔴 **0과 NULL은 뜻이 반대다.**
+ * - 0    = 받은 돈 없음 (입금 전 `pending_transfer` · 0원 신청). 할 일 없음
+ * - null = 입금된 건이라 운영자가 손으로 돌려줘야 함 → 정산 「환불 대기」
+ *
+ * 회원 취소(cancel.ts)·모임 삭제(delete route)가 같은 규칙을 쓴다. 종전에는 둘 다 `isPending ? 0 : null`이라
+ * **0원 confirmed가 NULL로** 적혔다 — `is null`로 세는 집계가 「돌려줄 돈 있음」으로 센다 (2026-10-13 발견).
+ */
+export function transferCloseRefundedAmount(input: {
+  wasPendingTransfer: boolean
+  paidAmount: number | null
+}): 0 | null {
+  if (input.wasPendingTransfer) return 0
+  if ((input.paidAmount ?? 0) <= 0) return 0
+  return null
+}

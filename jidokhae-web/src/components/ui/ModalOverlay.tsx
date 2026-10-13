@@ -5,9 +5,11 @@ import { useEffect, useRef } from 'react'
 type Props = {
   children: React.ReactNode
   onClose?: () => void
+  /** 창 폭 — 기본은 좁은 확인 창. 목록을 담는 창(발제자 고르기)만 넓힌다 */
+  widthClass?: string
 }
 
-export default function ModalOverlay({ children, onClose }: Props) {
+export default function ModalOverlay({ children, onClose, widthClass = 'max-w-sm' }: Props) {
   const modalRef = useRef<HTMLDivElement>(null)
   const prevFocusRef = useRef<HTMLElement | null>(null)
 
@@ -40,7 +42,7 @@ export default function ModalOverlay({ children, onClose }: Props) {
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="relative w-full max-w-sm rounded-[var(--radius-lg)] p-6 animate-[scaleIn_0.2s_ease-out] outline-none"
+        className={`relative w-full ${widthClass} rounded-[var(--radius-lg)] p-6 animate-[scaleIn_0.2s_ease-out] outline-none`}
         style={{
           backgroundColor: 'var(--color-surface-50)',
           boxShadow: 'var(--shadow-elevated)',

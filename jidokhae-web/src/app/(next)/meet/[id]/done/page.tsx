@@ -4,6 +4,7 @@ import { getProfile } from '@/lib/profile'
 import { getUser } from '@/lib/auth'
 import { getSiteSettings } from '@/lib/site-settings'
 import RegistrationDoneView from '@/components/next/RegistrationDoneView'
+import { showsDepositGuide } from '@/lib/transfer-rules'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -40,7 +41,9 @@ export default async function NextRegistrationDonePage({ params, searchParams }:
         region: meeting.region ?? null,
         amount: paidAmount ?? meeting.fee ?? null,
         meetingFee: meeting.fee,
-        kind: isPendingTransfer
+        // 0원 모임은 받을 돈이 없다 — pending_transfer로 와도 「신청 완료」로 그린다 (2026-10-13).
+        // SQL 전에는 0원도 pending_transfer로 들어오므로 화면이 먼저 막는다
+        kind: showsDepositGuide(type, meeting.fee)
           ? 'pending_transfer'
           : type === 'waitlisted'
             ? 'waitlisted'

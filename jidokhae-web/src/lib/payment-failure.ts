@@ -30,6 +30,8 @@ export type PaymentFailureSource =
   | 'webhook'
   /** 브라우저 redirect → POST /api/registrations/confirm (1차 경로) */
   | 'confirm'
+  /** 운영자 발제자 지정 — 돈 낸 회원의 카드 전액 환불 뒤 전환 (2026-10-13) */
+  | 'presenter'
 
 /**
  * 무엇이 실패했나.
@@ -69,6 +71,13 @@ export type PaymentFailureStage =
    * ⚠️ Layer 1(시간이 떨어진 정상 재요청)은 **여기 남기지 않는다.** 섞으면 단서가 사라진다.
    */
   | 'duplicate_call_blocked'
+  /**
+   * 🔴 발제자 지정에서 **카드 전액 환불은 끝났는데 발제자 전환(RPC)이 안 됐다.**
+   * 회원은 돈을 돌려받았고 신청(confirmed)은 그대로 남아 있다 — 「돈도 신청도 없음」은 아니다.
+   * 운영자가 다시 누르면 PortOne 없이 전환만 마무리된다. 그 전까지 장부는
+   * 「confirmed인데 PortOne 취소됨」이라 대조 도구(reconcile-payments) 검사 3이 잡는다.
+   */
+  | 'presenter_swap_db_failed'
 
 export type PaymentFailureInput = {
   source: PaymentFailureSource

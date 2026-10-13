@@ -8,6 +8,12 @@
  *   2. `pending_transfer`로 신청이 생기면 **신청 완료 알림톡을 보낸다.**
  *      그전까지 계좌이체 신청에는 알림톡이 **아예 없었다** — 카드 경로
  *      (`api/registrations/confirm`)에만 있었다.
+ *
+ * 2026-10-13 (대표님 확정) — **0원 모임 신청은 처음부터 `confirmed`**(RPC 반환 'confirmed').
+ *   받을 돈이 없으니 확인할 입금도 없다. 알림톡은 pending_transfer와 같은 방식으로 보낸다.
+ *   🔴 SQL(`migration-free-transfer-confirmed.sql`) 전이면 RPC가 여전히 'pending_transfer'를 돌려준다 —
+ *   이 라우트는 둘 다 처리하므로 **코드가 먼저 나가도 된다.** 반대(SQL 먼저)는 옛 화면이 'confirmed'를
+ *   몰라 「신청 처리에 실패했습니다」를 띄운다 → 순서는 코드 → SQL.
  */
 
 import { NextResponse, after, type NextRequest } from 'next/server'
@@ -16,6 +22,7 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import { getDisplayFee } from '@/lib/staff-slot'
 import { getDiscussionApplyBlock, DISCUSSION_BLOCK_MESSAGE } from '@/lib/discussion-gate'
 import { sendRegistrationConfirmNotification } from '@/lib/notification'
+import { isSeatedTransferResult } from '@/lib/transfer-rules'
 
 export async function POST(request: NextRequest) {
   try {
@@ -166,22 +173,25 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // 신청 완료 알림톡 — `pending_transfer`로 자리를 잡은 건에만 보낸다 (2026-10-09 승인).
+  // 신청 완료 알림톡 — 자리를 잡은 건(`pending_transfer` · 0원 `confirmed`)에만 보낸다 (2026-10-09 승인, 10-13 0원 추가).
   // 대기(`waitlisted`)에는 보내지 않는다. 그쪽은 0원 건·is_free 회원만 남고 성격이 다른 소식이다.
   //
   // ⚠️ `after()`로 감싼다 — `void`로 띄우면 Vercel 람다가 응답 뒤 freeze되어 유실·지연된다
   //    (2026-08-17 Preview 실측 13분 지연).
   // 알림은 부가 기능이라 실패해도 신청은 유효하다. 중복 차단은
   // `idx_notifications_confirm_unique`(registration_id 단위)가 맡는다.
-  if (result === 'pending_transfer') {
+  // 중복 차단 인덱스는 `type = 'registration_confirm'`만 조건으로 건다(registration status와 무관) —
+  // confirmed로 들어간 0원 건도 같은 방식으로 1회만 나간다.
+  if (isSeatedTransferResult(result)) {
     // RPC는 status 문자열만 돌려준다 — 알림톡은 registration_id가 필요해 되찾는다.
     // 위 중복 체크가 통과한 건이라 이 회원·이 모임에 살아 있는 건은 방금 만든 1건뿐이다.
+    // 🔴 찾는 status를 RPC가 돌려준 값과 맞춘다 — 'confirmed'인데 pending_transfer로 찾으면 못 찾아 알림톡이 빠진다
     const { data: created } = await admin
       .from('registrations')
       .select('id')
       .eq('user_id', user.id)
       .eq('meeting_id', meetingId)
-      .eq('status', 'pending_transfer')
+      .eq('status', result)
       .order('created_at', { ascending: false })
       .limit(1)
 
@@ -197,7 +207,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // pending_transfer 또는 waitlisted
+  // confirmed(0원) · pending_transfer · waitlisted
   return NextResponse.json({ status: result })
   } catch (error) {
     console.error('[transfer] 예기치 않은 오류:', error)

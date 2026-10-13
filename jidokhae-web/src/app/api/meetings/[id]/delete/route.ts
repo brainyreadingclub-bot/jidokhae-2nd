@@ -8,6 +8,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { cancelPayment, getPayment } from '@/lib/portone'
+import { transferCloseRefundedAmount } from '@/lib/refund'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -102,7 +103,10 @@ export async function POST(request: NextRequest, { params }: Params) {
           .update({
             status: isPending ? 'cancelled' : isWaitlisted ? 'waitlist_refunded' : 'cancelled',
             cancel_type: isPending ? 'meeting_deleted' : isWaitlisted ? 'waitlist_auto_refunded' : 'meeting_deleted',
-            refunded_amount: (isPending || isWaitlisted) ? 0 : null,
+            // 0 = 받은 돈 없음 / null = 운영자 손 환불 대기. 0원 confirmed는 받은 돈이 없다 (2026-10-13)
+            refunded_amount: isWaitlisted
+              ? 0
+              : transferCloseRefundedAmount({ wasPendingTransfer: isPending, paidAmount: reg.paid_amount }),
             cancelled_at: new Date().toISOString(),
           })
           .eq('id', reg.id)

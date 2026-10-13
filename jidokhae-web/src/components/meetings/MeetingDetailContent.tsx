@@ -91,6 +91,7 @@ export default async function MeetingDetailContent({ id }: { id: string }) {
         pendingTransferRegistrationId={d.pendingTransferRegistrationId}
         paymentMode={d.paymentMode}
         registrationPaymentMethod={d.myPaymentMethod}
+        isPresenter={d.isPresenter}
         supportContact={d.supportContact}
         waitlistPaymentMethod={d.waitlistPaymentMethod}
         bankName={d.bankName}

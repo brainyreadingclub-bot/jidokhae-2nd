@@ -15,6 +15,7 @@ import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 import { getActionSkin, type SkinName } from '@/components/meetings/actionButtonSkin'
 import { trackEvent } from '@/lib/analytics'
 import { isWaitlistCardOnly } from '@/lib/waitlist-rules'
+import { isNoTransferNeeded, registerEntry, showsCardOption, transferDoneHref } from '@/lib/transfer-rules'
 
 type Props = {
   buttonState: ButtonState
@@ -37,7 +38,9 @@ type Props = {
   waitlistPaidAmount?: number | null
   pendingTransferRegistrationId?: string
   paymentMode?: string
-  registrationPaymentMethod?: 'card' | 'transfer'
+  registrationPaymentMethod?: 'card' | 'transfer' | 'none'
+  /** 본인이 이 모임 발제자(0원 신청 완료) — 취소 버튼 대신 한 줄 안내 (대표님 확정 ⑥, 2026-10-13) */
+  isPresenter?: boolean
   supportContact?: string
   waitlistPaymentMethod?: 'card' | 'transfer'
   bankName?: string
@@ -90,6 +93,7 @@ export default function MeetingActionButton({
   listHref = '/',
   registerLabel,
   regularListHref = '/',
+  isPresenter = false,
 }: Props) {
   // 결제 처리에 사용할 실제 금액 — 미지정 시 정가 fallback
   const effectiveFee = displayFee ?? meetingFee
@@ -104,6 +108,9 @@ export default function MeetingActionButton({
   // 🔴 이건 겉 막이다. 실제 방어선은 RPC다 — 정원 판정이 FOR UPDATE 락 안에 있어야
   // 동시 신청에 지지 않는다 (migration-waitlist-card-only.sql).
   const waitlistCardOnly = isWaitlistCardOnly(buttonState.type === 'join_waitlist', effectiveFee, isFree)
+  // 0원 모임 — 계좌이체 단계에서 입금 안내를 숨긴다. 서버(register_transfer)도 같은 조건(참가비 0 · 신청 금액 0)으로
+  // 바로 신청 완료로 넣는다 (2026-10-13)
+  const noTransferNeeded = isNoTransferNeeded(meetingFee, effectiveFee)
   const s = getActionSkin(skin)
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -127,9 +134,27 @@ export default function MeetingActionButton({
     if (loading) return
     setLoading(true)
 
+    const entry = registerEntry(paymentMode, effectiveFee)
+
+    // 0원 — 계좌이체(= 바로 신청 완료) 한 길뿐이라 고르는 창 없이 그 단계로 (2026-10-13).
+    // payment_mode보다 먼저 본다: card_only에서도 0원 회원이 카드 결제창으로 가지 않게
+    if (entry === 'transfer') {
+      trackEvent('begin_checkout', {
+        item_id: meetingId,
+        item_name: meetingTitle,
+        value: 0,
+        currency: 'KRW',
+        registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
+        payment_method: 'transfer',
+      })
+      setRegisterPhase('transfer')
+      setLoading(false)
+      return
+    }
+
     // both / transfer_only: 결제 방법 선택 모달 표시
     // 'both'면 카드+계좌이체 둘 다 활성, 'transfer_only'면 카드는 "준비 중"으로 비활성
-    if (paymentMode === 'transfer_only' || paymentMode === 'both') {
+    if (entry === 'method') {
       trackEvent('begin_checkout', {
         item_id: meetingId,
         item_name: meetingTitle,
@@ -223,9 +248,13 @@ export default function MeetingActionButton({
   }
 
   // --- Cancel flow ---
-  const refundInfo = paidAmount
+  // 🔴 `paidAmount ? … : null`이면 0원 신청은 취소 창이 아예 열리지 않았다 — 「취소하기」를 눌러도
+  //    아무 일도 안 일어나던 결함 (0원 정기모임 회원, 설계서 §8-1). 0이어도 창을 연다.
+  const refundInfo = paidAmount != null
     ? calculateRefundByType(meetingType, meetingDate, paidAmount)
     : null
+  // 0원 신청 — 돌려받을 돈이 없다. 환불 비율·「환불 불가 기간」을 보여 주면 틀린 말이 된다
+  const nothingToRefund = paidAmount === 0
 
   async function handleCancelConfirm() {
     if (!registrationId) return
@@ -364,7 +393,12 @@ export default function MeetingActionButton({
             </button>
           )}
 
-          {buttonState.type === 'cancel' && cancelPhase === 'idle' && (
+          {/* 발제자 본인 — 스스로 빠지면 운영자가 모른다. 빼기는 운영자가 한다 (서버도 막는다: cancel.ts) */}
+          {buttonState.type === 'cancel' && cancelPhase === 'idle' && isPresenter && (
+            <p className={s.note}>참석이 어려우면 운영자에게 알려 주세요</p>
+          )}
+
+          {buttonState.type === 'cancel' && cancelPhase === 'idle' && !isPresenter && (
             <button
               onClick={() => setCancelPhase('info')}
               className={s.btnGhost}
@@ -454,6 +488,8 @@ export default function MeetingActionButton({
                     : '영업일 기준 3~5일 내 환불됩니다'}
                 </span>
               </>
+            ) : nothingToRefund ? (
+              '취소되었습니다'
             ) : (
               registrationPaymentMethod === 'transfer'
                 ? '취소가 접수되었습니다'
@@ -535,24 +571,32 @@ export default function MeetingActionButton({
               <span className={s.infoLabel}>결제 금액</span>
               <span className={s.infoValue}>{formatPaidAmount(paidAmount ?? 0, meetingFee)}</span>
             </div>
-            <div className="mt-2 flex justify-between text-sm">
-              <span className={s.infoLabel}>환불 비율</span>
-              <span className={s.infoValue}>{refundInfo.refundRate}%</span>
-            </div>
+            {!nothingToRefund && (
+              <div className="mt-2 flex justify-between text-sm">
+                <span className={s.infoLabel}>환불 비율</span>
+                <span className={s.infoValue}>{refundInfo.refundRate}%</span>
+              </div>
+            )}
             <div
               className="mt-2 pt-2 flex justify-between text-sm"
               style={s.infoDividerStyle}
             >
-              <span className={s.infoTotalLabel}>환불 예정 금액</span>
-              <span className={s.infoTotalValue}>{formatFee(refundInfo.refundAmount)}</span>
+              <span className={s.infoTotalLabel}>
+                {nothingToRefund ? '돌려받을 금액' : '환불 예정 금액'}
+              </span>
+              <span className={s.infoTotalValue}>
+                {nothingToRefund ? '없음' : formatFee(refundInfo.refundAmount)}
+              </span>
             </div>
           </div>
-          {refundInfo.refundRate === 0 && (
+          {!nothingToRefund && refundInfo.refundRate === 0 && (
             <p className={`mt-3 ${s.warnText}`}>
               환불 불가 기간입니다. 취소 시 환불 금액이 없습니다.
             </p>
           )}
-          <div className={s.ruleText}>{getRefundRuleTextByType(meetingType)}</div>
+          {!nothingToRefund && (
+            <div className={s.ruleText}>{getRefundRuleTextByType(meetingType)}</div>
+          )}
           {registrationPaymentMethod === 'transfer' && refundInfo.refundAmount > 0 && supportContact && (
             <div className={s.supportBox} style={s.supportBoxStyle}>
               <p className={s.supportText}>{supportContact}</p>
@@ -579,14 +623,18 @@ export default function MeetingActionButton({
           <h3 className={`${s.modalTitle} text-center`}>
             취소를 확정하시겠습니까?
           </h3>
-          <p className={`${s.modalBody} text-center`}>
-            환불 금액:{' '}
-            <span className={s.panelStrong}>{formatFee(refundInfo.refundAmount)}</span>
-            {refundInfo.refundRate < 100 && (
-              <span className={s.modalMuted}> ({refundInfo.refundRate}%)</span>
-            )}
-          </p>
-          {refundInfo.refundAmount === 0 && (
+          {nothingToRefund ? (
+            <p className={`${s.modalBody} text-center`}>낸 참가비가 없어 돌려받을 금액은 없어요.</p>
+          ) : (
+            <p className={`${s.modalBody} text-center`}>
+              환불 금액:{' '}
+              <span className={s.panelStrong}>{formatFee(refundInfo.refundAmount)}</span>
+              {refundInfo.refundRate < 100 && (
+                <span className={s.modalMuted}> ({refundInfo.refundRate}%)</span>
+              )}
+            </p>
+          )}
+          {!nothingToRefund && refundInfo.refundAmount === 0 && (
             <p className={`mt-1 ${s.warnText}`}>
               환불 금액이 0원입니다. 그래도 취소하시겠습니까?
             </p>
@@ -676,8 +724,8 @@ export default function MeetingActionButton({
                   </div>
                 )}
                 <div className="mt-5 space-y-3">
-                  {/* 카드결제 — 'both' 모드면 활성, 'transfer_only' 모드면 비활성 */}
-                  {paymentMode === 'both' ? (
+                  {/* 카드결제 — 'both' 모드면 활성, 'transfer_only' 모드면 비활성. 0원이면 아예 없다 (2026-10-13) */}
+                  {!showsCardOption(effectiveFee) ? null : paymentMode === 'both' ? (
                     <button
                       onClick={handleCardPayment}
                       className={s.optionCard}
@@ -741,12 +789,15 @@ export default function MeetingActionButton({
             {/* Transfer Details */}
             {registerPhase === 'transfer' && (
               <>
-                <button onClick={() => setRegisterPhase('method')} className={s.backBtn}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                  뒤로
-                </button>
+                {/* 0원은 고르는 창을 건너뛰고 왔다 — 돌아갈 선택지가 없으니 「뒤로」를 숨긴다 */}
+                {!noTransferNeeded && (
+                  <button onClick={() => setRegisterPhase('method')} className={s.backBtn}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    뒤로
+                  </button>
+                )}
 
                 <div className="text-center mb-4">
                   <p className={s.transferTitle}>{meetingTitle}</p>
@@ -770,7 +821,8 @@ export default function MeetingActionButton({
                   )}
                 </div>
 
-                {bankName && bankAccount && bankHolder && (
+                {/* 0원 모임은 받을 돈이 없다 — 계좌·입금자명을 보여 주면 입금하라는 말이 된다 (2026-10-13) */}
+                {!noTransferNeeded && bankName && bankAccount && bankHolder && (
                   <BankInfoCard
                     bankName={bankName}
                     bankAccount={bankAccount}
@@ -779,7 +831,7 @@ export default function MeetingActionButton({
                   />
                 )}
 
-                {depositorName && (
+                {!noTransferNeeded && depositorName && (
                   <CopyableDepositorName depositorName={depositorName} skin={skin} />
                 )}
 
@@ -793,10 +845,10 @@ export default function MeetingActionButton({
                         body: JSON.stringify({ meetingId }),
                       })
                       const data = await res.json()
-                      if (data.status === 'pending_transfer') {
-                        router.replace(`/meetings/${meetingId}/confirm?type=pending_transfer`)
-                      } else if (data.status === 'waitlisted') {
-                        router.replace(`/meetings/${meetingId}/confirm?type=waitlisted`)
+                      // 'confirmed' = 0원 모임 — 처음부터 신청 완료(2026-10-13), 입금 안내 없는 완료 화면
+                      const doneHref = transferDoneHref(meetingId, data.status)
+                      if (doneHref) {
+                        router.replace(doneHref)
                       } else if (data.status === 'already_registered') {
                         setRegisterPhase('transfer')
                         showToast('이미 신청한 모임입니다')
@@ -812,7 +864,7 @@ export default function MeetingActionButton({
                   className={`mt-5 ${s.btnPrimary}`}
                   style={s.btnPrimaryStyle}
                 >
-                  입금 완료
+                  {noTransferNeeded ? '신청하기' : '입금 완료'}
                 </button>
               </>
             )}

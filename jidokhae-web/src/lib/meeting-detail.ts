@@ -8,6 +8,7 @@ import { getDiscussionApplyBlock } from '@/lib/discussion-gate'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
 import { getDisplayFee } from '@/lib/staff-slot'
+import { isPresenterRow } from '@/lib/presenter-rules'
 import type { Meeting } from '@/types/meeting'
 
 /**
@@ -64,7 +65,13 @@ export type MeetingDetailData = {
   supportContact: string
   myRegistrationId?: string
   myPaidAmount?: number | null
-  myPaymentMethod?: 'card' | 'transfer'
+  myPaymentMethod?: 'card' | 'transfer' | 'none'
+  /**
+   * 본인 신청이 발제자 행인가 (운영자가 지정한 0원 신청 완료). **본인 화면에서 취소 버튼 자리에
+   * 한 줄 안내를 띄우는 데만 쓴다** — 다른 회원에게는 일반 신청자와 똑같이 보인다(명단·카운트 무변경).
+   * 진짜 방어선은 cancel.ts의 `presenter_locked`다
+   */
+  isPresenter: boolean
   waitlistRegistrationId?: string
   waitlistPaidAmount?: number | null
   waitlistPaymentMethod?: 'card' | 'transfer'
@@ -236,6 +243,7 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
     myRegistrationId: myReg?.id,
     myPaidAmount: myReg?.paid_amount,
     myPaymentMethod: myReg?.payment_method,
+    isPresenter: myReg ? isPresenterRow(myReg) : false,
     waitlistRegistrationId: myWaitlistReg?.id,
     waitlistPaidAmount: myWaitlistReg?.paid_amount,
     waitlistPaymentMethod: myWaitlistReg?.payment_method,
