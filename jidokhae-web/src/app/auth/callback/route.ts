@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   // 검증은 '/\evil.com' 백슬래시 우회와 /auth 순환을 막지 못했다.
   const next = safeNextPath(
     searchParams.get('next') ?? request.cookies.get(NEXT_COOKIE)?.value,
+    AFTER_LOGIN_PATH,
   )
 
   // User cancelled auth or provider error → return to login (no error page)
