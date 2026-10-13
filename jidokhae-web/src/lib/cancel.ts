@@ -6,12 +6,15 @@
 
 import { createServiceClient } from '@/lib/supabase/admin'
 import { cancelPayment, getPayment } from '@/lib/portone'
-import { calculateRefundByType } from '@/lib/refund'
+import { calculateRefundByType, transferCloseRefundedAmount } from '@/lib/refund'
 import { getKSTToday } from '@/lib/kst'
+import { isPresenterRow } from '@/lib/presenter-rules'
 
 export type CancelResult =
   | { status: 'success'; refundedAmount: number; refundRate: number; meetingId: string }
   | { status: 'already_cancelled' }
+  /** 발제자 행 — 본인이 취소할 수 없다. 빼는 것은 운영자가 한다 (대표님 확정 ⑥, 2026-10-13) */
+  | { status: 'presenter_locked'; message: string }
   | { status: 'error'; message: string }
 
 export async function processUserCancel(
@@ -37,6 +40,12 @@ export async function processUserCancel(
     return { status: 'already_cancelled' }
   }
 
+  // 2-b. 발제자 행은 본인 취소를 막는다 — 화면만 막으면 딥링크·옛 화면으로 들어온다.
+  //      본인이 빠지면 운영자가 알림 없이 발제자를 잃는다. 빼기는 운영자 화면에서만 (설계서 §9-3)
+  if (isPresenterRow(reg)) {
+    return { status: 'presenter_locked', message: '참석이 어려우면 운영자에게 알려 주세요' }
+  }
+
   // 3. Must be confirmed or pending_transfer to cancel
   if (reg.status !== 'confirmed' && reg.status !== 'pending_transfer') {
     return { status: 'error', message: '취소할 수 없는 상태입니다' }
@@ -57,12 +66,17 @@ export async function processUserCancel(
   // 5a. 계좌이체 분기: TossPayments API 호출 없이 DB만 업데이트
   if (reg.payment_method === 'transfer') {
     const isPending = reg.status === 'pending_transfer'
+    // 🔴 0과 NULL은 뜻이 반대다 — 0 = 받은 돈 없음 / NULL = 운영자 손 환불 대기.
+    //    0원 confirmed(0원 모임)는 받은 돈이 없으므로 0이다. 종전에는 NULL로 적혀
+    //    `is null`로 세는 집계가 「돌려줄 돈 있음」으로 셌다 (설계서 §2-2 · §8, 2026-10-13)
+    const closeRefunded = transferCloseRefundedAmount({ wasPendingTransfer: isPending, paidAmount })
+    const noMoneyReceived = closeRefunded === 0
     const { data: updated } = await supabase
       .from('registrations')
       .update({
         status: 'cancelled',
         cancel_type: 'user_cancelled',
-        refunded_amount: isPending ? 0 : null, // pending: 미입금(0), confirmed: 운영자 수동 환불 대기(null)
+        refunded_amount: closeRefunded, // 받은 돈 없음(0) / 입금된 confirmed: 운영자 수동 환불 대기(null)
         cancelled_at: new Date().toISOString(),
       })
       .eq('id', registrationId)
@@ -75,8 +89,8 @@ export async function processUserCancel(
 
     return {
       status: 'success',
-      refundedAmount: isPending ? 0 : refundAmount,
-      refundRate: isPending ? 0 : refundRate,
+      refundedAmount: noMoneyReceived ? 0 : refundAmount,
+      refundRate: noMoneyReceived ? 0 : refundRate,
       meetingId: reg.meeting_id,
     }
   }

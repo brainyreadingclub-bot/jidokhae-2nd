@@ -265,6 +265,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
           pendingTransferRegistrationId={data.pendingTransferRegistrationId}
           paymentMode={data.paymentMode}
           registrationPaymentMethod={data.myPaymentMethod}
+          isPresenter={data.isPresenter}
           supportContact={data.supportContact}
           waitlistPaymentMethod={data.waitlistPaymentMethod}
           bankName={data.bankName}

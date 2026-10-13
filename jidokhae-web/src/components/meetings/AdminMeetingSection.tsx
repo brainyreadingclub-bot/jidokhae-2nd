@@ -1,7 +1,8 @@
 import DepositToggle from '@/components/admin/DepositToggle'
 import RefundToggle from '@/components/admin/RefundToggle'
 import { getKSTToday, formatFee, toKSTDate } from '@/lib/kst'
-import { calculateRefundByType } from '@/lib/refund'
+import { recommendedTransferRefund } from '@/lib/refund'
+import { isPresenterRow } from '@/lib/presenter-rules'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
@@ -16,6 +17,13 @@ const CANCEL_TYPE_LABELS: Record<string, string> = {
   meeting_deleted: '모임 삭제',
   waitlist_user_cancelled: '대기 취소',
   waitlist_auto_refunded: '자동 환불',
+  presenter_swap: '발제자로 바꿈',
+  presenter_removed: '발제자에서 뺌',
+}
+
+/** 살아 있는 발제자 행 — 운영자 화면에만 「발제자」로 보인다 (회원 화면은 일반 신청자와 같다) */
+function isLivePresenter(reg: RegistrationWithProfile): boolean {
+  return reg.status === 'confirmed' && isPresenterRow(reg)
 }
 
 function formatDate(dateStr: string): string {
@@ -50,8 +58,20 @@ export default function AdminMeetingSection({
     .filter((r) => r.status === 'cancelled' && r.refunded_amount)
     .reduce((sum, r) => sum + (r.refunded_amount ?? 0), 0)
   const netRevenue = totalPaid - totalRefunded
+  const hasPresenter = registrations.some(isLivePresenter)
 
-  function getStatusBadge(status: string) {
+  function getStatusBadge(reg: RegistrationWithProfile) {
+    const status = reg.status
+    if (isLivePresenter(reg)) {
+      return (
+        <span
+          className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-neutral-700"
+          style={{ backgroundColor: 'var(--color-surface-200)', border: '1px solid var(--color-surface-300)' }}
+        >
+          발제자
+        </span>
+      )
+    }
     if (status === 'pending_transfer') {
       return (
         <span
@@ -121,13 +141,15 @@ export default function AdminMeetingSection({
   function getTransferCancelInfo(reg: RegistrationWithProfile): {
     label: string
     refundText: string | null
+    /** 발제자로 바꾸며 닫은 건만 — 「환불 필요」의 이유를 한 줄로 */
+    reasonText: string | null
     phone: string | null
   } | null {
     if (reg.status !== 'cancelled' || reg.payment_method !== 'transfer') return null
 
     // 미입금 취소: pending_transfer → cancelled (refunded_amount = 0)
     if (reg.refunded_amount === 0) {
-      return { label: '미입금 취소', refundText: null, phone: null }
+      return { label: '미입금 취소', refundText: null, reasonText: null, phone: null }
     }
 
     // 입금 확인 후 취소: confirmed → cancelled (refunded_amount = null)
@@ -135,15 +157,19 @@ export default function AdminMeetingSection({
       const cancelDate = reg.cancelled_at
         ? toKSTDate(new Date(reg.cancelled_at))
         : getKSTToday()
-      const { refundAmount } = calculateRefundByType(
+      // 토글(mark-refunded)이 실제로 적는 값과 같은 함수 — 모임 삭제·발제자 전환은 날짜와 상관없이 전액
+      const refundAmount = recommendedTransferRefund({
+        cancelType: reg.cancel_type,
         meetingType,
         meetingDate,
-        reg.paid_amount ?? 0,
+        paidAmount: reg.paid_amount ?? 0,
         cancelDate,
-      )
+      })
       return {
         label: '환불 필요',
         refundText: `${formatFee(refundAmount)}`,
+        reasonText:
+          reg.cancel_type === 'presenter_swap' ? `(${CANCEL_TYPE_LABELS.presenter_swap})` : null,
         phone: reg.profiles?.phone ?? null,
       }
     }
@@ -185,6 +211,9 @@ export default function AdminMeetingSection({
             <div className="text-xs text-accent-600 font-medium">{transferInfo.label}</div>
             {transferInfo.refundText && (
               <div className="text-xs text-primary-400">환불 {transferInfo.refundText}</div>
+            )}
+            {transferInfo.reasonText && (
+              <div className="text-xs text-primary-400">{transferInfo.reasonText}</div>
             )}
             {transferInfo.phone && (
               <div className="text-xs text-primary-400">{transferInfo.phone}</div>
@@ -268,6 +297,7 @@ export default function AdminMeetingSection({
       if (transferInfo) {
         const parts: string[] = [transferInfo.label]
         if (transferInfo.refundText) parts.push(`환불 ${transferInfo.refundText}`)
+        if (transferInfo.reasonText) parts.push(transferInfo.reasonText)
         if (transferInfo.phone) parts.push(transferInfo.phone)
         if (reg.cancelled_at) parts.push(formatDate(reg.cancelled_at))
         return parts.join('  ')
@@ -304,7 +334,7 @@ export default function AdminMeetingSection({
                   {getDisplayName(reg)}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {getStatusBadge(reg.status)}
+                  {getStatusBadge(reg)}
                   {getPaymentMethodLabel(reg.payment_method) && (
                     <span className="text-[10px] text-primary-400">
                       {getPaymentMethodLabel(reg.payment_method)}
@@ -316,6 +346,7 @@ export default function AdminMeetingSection({
               <div className="flex items-center justify-between mt-1.5">
                 <div className="text-xs text-primary-500">
                   {formatDate(reg.created_at)}
+                  {isLivePresenter(reg) && ' 지정'}
                   {reg.paid_amount ? (
                     <span className="text-primary-500/70"> · {formatFee(reg.paid_amount)}</span>
                   ) : null}
@@ -384,7 +415,7 @@ export default function AdminMeetingSection({
                 <td className="px-4 py-3 text-right">
                   <div className="flex flex-col items-end gap-1">
                     <div className="flex items-center gap-1.5">
-                      {getStatusBadge(reg.status)}
+                      {getStatusBadge(reg)}
                       {getPaymentMethodLabel(reg.payment_method) && (
                         <span className="text-[10px] text-primary-400">
                           {getPaymentMethodLabel(reg.payment_method)}
@@ -417,6 +448,7 @@ export default function AdminMeetingSection({
             신청자
             <span className="ml-1.5 text-sm font-semibold text-neutral-600">
               {confirmedCount}명
+              {hasPresenter ? ' · 발제자 포함' : ''}
               {confirmedRegs.length > confirmedCount
                 ? ` · 취소 ${confirmedRegs.length - confirmedCount}명`
                 : ''}

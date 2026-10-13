@@ -3,6 +3,8 @@ import { formatKoreanDate, formatKoreanTime, formatFee, getDaysUntil, getKSTToda
 import { NO_TOPICS, isTopicPublishLate, type TopicCounts } from '@/lib/topic-status'
 import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
 import DeleteMeetingButton from '@/components/meetings/DeleteMeetingButton'
+import PresenterPanel, { type PresenterApplicant } from '@/components/admin/PresenterPanel'
+import { isPresenterRow, firstWaitlistedGoesConfirmed } from '@/lib/presenter-rules'
 import type { Meeting } from '@/types/meeting'
 import type { RegistrationWithProfile } from '@/types/registration'
 
@@ -33,13 +35,38 @@ export default function AdminMeetingOverview({
   // 삭제 시 돌려줄 돈이 있는 사람 — api/meetings/[id]/delete가 쓰는 값과 맞춘다:
   //   confirmed(카드 = 자동 환불 / 계좌이체 = refunded_amount null → 운영자 손 환불)
   //   waitlisted 카드(자동 환불). 계좌이체 대기·pending_transfer는 refunded_amount 0 = 받은 돈 없음
+  //   🔴 받은 돈이 0인 건(0원 모임·발제자)은 뺀다 — 「손 환불 N명」에 0원 계좌이체가 세어지던 자리 (2026-10-13)
   const refundable = registrations.filter(
     (r) =>
-      r.status === 'confirmed' ||
-      (r.status === 'waitlisted' && r.payment_method !== 'transfer'),
+      (r.paid_amount ?? 0) > 0 &&
+      (r.status === 'confirmed' ||
+        (r.status === 'waitlisted' && r.payment_method !== 'transfer')),
   )
   const refundAmount = refundable.reduce((sum, r) => sum + (r.paid_amount ?? 0), 0)
   const refundTransferCount = refundable.filter((r) => r.payment_method === 'transfer').length
+
+  // 발제자 (토론모임만) — 판정은 payment_method='none' (isPresenterRow 주석: SQL 실행 전에도 안 깨지게)
+  const presenterReg = registrations.find((r) => r.status === 'confirmed' && isPresenterRow(r)) ?? null
+  const seenUsers = new Set<string>()
+  const applicants: PresenterApplicant[] = []
+  for (const r of registrations) {
+    if (r === presenterReg) continue
+    if (r.status !== 'confirmed' && r.status !== 'pending_transfer' && r.status !== 'waitlisted') continue
+    if (seenUsers.has(r.user_id)) continue
+    seenUsers.add(r.user_id)
+    applicants.push({
+      userId: r.user_id,
+      nickname: r.profiles?.nickname || '(이름 없음)',
+      realName: r.profiles?.real_name ?? null,
+      status: r.status,
+      paymentMethod: r.payment_method,
+    })
+  }
+  const firstWaitlistedReg =
+    registrations
+      .filter((r) => r.status === 'waitlisted')
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))[0] ?? null
+  const presenterLocked = meeting.status !== 'active' || meeting.date < getKSTToday()
 
   const tc = topicCounts ?? NO_TOPICS
   const topicLate = isTopicPublishLate(tc, getDaysUntil(meeting.date, getKSTToday()))
@@ -167,6 +194,34 @@ export default function AdminMeetingOverview({
             <i className="block h-full rounded-full bg-primary-500" style={{ width: `${fillPct}%` }} />
           </div>
         </div>
+        {isDiscussion && (
+          <PresenterPanel
+            meetingId={id}
+            capacity={meeting.capacity}
+            seatedCount={confirmedCount}
+            isAdmin={isAdmin}
+            locked={presenterLocked}
+            presenter={
+              presenterReg
+                ? {
+                    registrationId: presenterReg.id,
+                    nickname: presenterReg.profiles?.nickname || '(이름 없음)',
+                    realName: presenterReg.profiles?.real_name ?? null,
+                  }
+                : null
+            }
+            applicants={applicants}
+            waitlistedCount={waitlistedCount}
+            firstWaitlisted={
+              firstWaitlistedReg
+                ? {
+                    nickname: firstWaitlistedReg.profiles?.nickname || '(이름 없음)',
+                    goesConfirmed: firstWaitlistedGoesConfirmed(firstWaitlistedReg),
+                  }
+                : null
+            }
+          />
+        )}
       </div>
 
       <AdminMeetingSection

@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const httpStatus = result.status === 'error' ? 500 : 200
+  const httpStatus =
+    result.status === 'error' ? 500 : result.status === 'presenter_locked' ? 409 : 200
   return NextResponse.json(result, { status: httpStatus })
 }

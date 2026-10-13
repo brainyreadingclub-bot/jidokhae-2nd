@@ -37,7 +37,9 @@ type Props = {
   waitlistPaidAmount?: number | null
   pendingTransferRegistrationId?: string
   paymentMode?: string
-  registrationPaymentMethod?: 'card' | 'transfer'
+  registrationPaymentMethod?: 'card' | 'transfer' | 'none'
+  /** 본인이 이 모임 발제자(0원 신청 완료) — 취소 버튼 대신 한 줄 안내 (대표님 확정 ⑥, 2026-10-13) */
+  isPresenter?: boolean
   supportContact?: string
   waitlistPaymentMethod?: 'card' | 'transfer'
   bankName?: string
@@ -90,6 +92,7 @@ export default function MeetingActionButton({
   listHref = '/',
   registerLabel,
   regularListHref = '/',
+  isPresenter = false,
 }: Props) {
   // 결제 처리에 사용할 실제 금액 — 미지정 시 정가 fallback
   const effectiveFee = displayFee ?? meetingFee
@@ -223,9 +226,13 @@ export default function MeetingActionButton({
   }
 
   // --- Cancel flow ---
-  const refundInfo = paidAmount
+  // 🔴 `paidAmount ? … : null`이면 0원 신청은 취소 창이 아예 열리지 않았다 — 「취소하기」를 눌러도
+  //    아무 일도 안 일어나던 결함 (0원 정기모임 회원, 설계서 §8-1). 0이어도 창을 연다.
+  const refundInfo = paidAmount != null
     ? calculateRefundByType(meetingType, meetingDate, paidAmount)
     : null
+  // 0원 신청 — 돌려받을 돈이 없다. 환불 비율·「환불 불가 기간」을 보여 주면 틀린 말이 된다
+  const nothingToRefund = paidAmount === 0
 
   async function handleCancelConfirm() {
     if (!registrationId) return
@@ -364,7 +371,12 @@ export default function MeetingActionButton({
             </button>
           )}
 
-          {buttonState.type === 'cancel' && cancelPhase === 'idle' && (
+          {/* 발제자 본인 — 스스로 빠지면 운영자가 모른다. 빼기는 운영자가 한다 (서버도 막는다: cancel.ts) */}
+          {buttonState.type === 'cancel' && cancelPhase === 'idle' && isPresenter && (
+            <p className={s.note}>참석이 어려우면 운영자에게 알려 주세요</p>
+          )}
+
+          {buttonState.type === 'cancel' && cancelPhase === 'idle' && !isPresenter && (
             <button
               onClick={() => setCancelPhase('info')}
               className={s.btnGhost}
@@ -454,6 +466,8 @@ export default function MeetingActionButton({
                     : '영업일 기준 3~5일 내 환불됩니다'}
                 </span>
               </>
+            ) : nothingToRefund ? (
+              '취소되었습니다'
             ) : (
               registrationPaymentMethod === 'transfer'
                 ? '취소가 접수되었습니다'
@@ -535,24 +549,32 @@ export default function MeetingActionButton({
               <span className={s.infoLabel}>결제 금액</span>
               <span className={s.infoValue}>{formatPaidAmount(paidAmount ?? 0, meetingFee)}</span>
             </div>
-            <div className="mt-2 flex justify-between text-sm">
-              <span className={s.infoLabel}>환불 비율</span>
-              <span className={s.infoValue}>{refundInfo.refundRate}%</span>
-            </div>
+            {!nothingToRefund && (
+              <div className="mt-2 flex justify-between text-sm">
+                <span className={s.infoLabel}>환불 비율</span>
+                <span className={s.infoValue}>{refundInfo.refundRate}%</span>
+              </div>
+            )}
             <div
               className="mt-2 pt-2 flex justify-between text-sm"
               style={s.infoDividerStyle}
             >
-              <span className={s.infoTotalLabel}>환불 예정 금액</span>
-              <span className={s.infoTotalValue}>{formatFee(refundInfo.refundAmount)}</span>
+              <span className={s.infoTotalLabel}>
+                {nothingToRefund ? '돌려받을 금액' : '환불 예정 금액'}
+              </span>
+              <span className={s.infoTotalValue}>
+                {nothingToRefund ? '없음' : formatFee(refundInfo.refundAmount)}
+              </span>
             </div>
           </div>
-          {refundInfo.refundRate === 0 && (
+          {!nothingToRefund && refundInfo.refundRate === 0 && (
             <p className={`mt-3 ${s.warnText}`}>
               환불 불가 기간입니다. 취소 시 환불 금액이 없습니다.
             </p>
           )}
-          <div className={s.ruleText}>{getRefundRuleTextByType(meetingType)}</div>
+          {!nothingToRefund && (
+            <div className={s.ruleText}>{getRefundRuleTextByType(meetingType)}</div>
+          )}
           {registrationPaymentMethod === 'transfer' && refundInfo.refundAmount > 0 && supportContact && (
             <div className={s.supportBox} style={s.supportBoxStyle}>
               <p className={s.supportText}>{supportContact}</p>
@@ -579,14 +601,18 @@ export default function MeetingActionButton({
           <h3 className={`${s.modalTitle} text-center`}>
             취소를 확정하시겠습니까?
           </h3>
-          <p className={`${s.modalBody} text-center`}>
-            환불 금액:{' '}
-            <span className={s.panelStrong}>{formatFee(refundInfo.refundAmount)}</span>
-            {refundInfo.refundRate < 100 && (
-              <span className={s.modalMuted}> ({refundInfo.refundRate}%)</span>
-            )}
-          </p>
-          {refundInfo.refundAmount === 0 && (
+          {nothingToRefund ? (
+            <p className={`${s.modalBody} text-center`}>낸 참가비가 없어 돌려받을 금액은 없어요.</p>
+          ) : (
+            <p className={`${s.modalBody} text-center`}>
+              환불 금액:{' '}
+              <span className={s.panelStrong}>{formatFee(refundInfo.refundAmount)}</span>
+              {refundInfo.refundRate < 100 && (
+                <span className={s.modalMuted}> ({refundInfo.refundRate}%)</span>
+              )}
+            </p>
+          )}
+          {!nothingToRefund && refundInfo.refundAmount === 0 && (
             <p className={`mt-1 ${s.warnText}`}>
               환불 금액이 0원입니다. 그래도 취소하시겠습니까?
             </p>
