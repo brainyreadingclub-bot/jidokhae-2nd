@@ -65,7 +65,7 @@ export default function TopicThread({
       <div className="mt-3 rounded-[16px] bg-tg-100 p-4">
         {topic.quote && (
           <>
-            <p className="text-[13.5px] font-bold leading-relaxed tracking-tight text-tg-900">
+            <p className="whitespace-pre-line break-words text-[13.5px] font-bold leading-relaxed tracking-tight text-tg-900">
               “{topic.quote}”
             </p>
             {topic.quote_page && (
@@ -73,7 +73,7 @@ export default function TopicThread({
             )}
           </>
         )}
-        <p className="mt-2.5 text-[12.5px] leading-relaxed text-tg-700">{topic.question}</p>
+        <p className="mt-2.5 whitespace-pre-line break-words text-[12.5px] leading-relaxed text-tg-700">{topic.question}</p>
       </div>
 
       {/* 내 답변 */}
