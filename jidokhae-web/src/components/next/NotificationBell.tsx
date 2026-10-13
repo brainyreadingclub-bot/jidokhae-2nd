@@ -4,7 +4,14 @@ import { unreadCount } from '@/lib/app-notifications'
 /** 상단 벨 — 미읽음 있으면 주황 점 (Server Component) */
 export default async function NotificationBell({ userId }: { userId: string }) {
   const unread = await unreadCount(userId)
+  return <BellLink unread={unread} />
+}
 
+/**
+ * 벨 모양만. 레이아웃이 미읽음 수를 기다리지 않도록 Suspense 대기 화면으로도 쓴다
+ * (2026-10-13 — 머리가 알림 수 조회를 기다리느라 모든 새 화면의 첫 그림이 늦었다).
+ */
+export function BellLink({ unread }: { unread: number }) {
   return (
     <Link
       href="/me/notifications"

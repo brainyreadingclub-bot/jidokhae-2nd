@@ -13,9 +13,15 @@ import type {
  * 쓰기는 전부 API Route — 여기는 읽기만.
  */
 
-/** meeting의 **공개된** 발제 목록 + 답변 수 + 내 답변 여부 (작성 중은 회원 화면에 안 나간다) */
-export const getTopicsWithStats = cache(
-  async (meetingId: string, userId: string | null): Promise<TopicWithStats[]> => {
+export type TopicAnswerRow = Pick<TopicAnswer, 'topic_id' | 'user_id'>
+
+/**
+ * meeting의 **공개된** 발제 + 그 발제들의 답변(누가 어느 발제에 썼나).
+ * 답변 행을 그대로 돌려주는 이유 — 이야기 탭이 진행률(답한 신청자 수)을 세려고 같은 조회를
+ * 한 번 더 하고 있었다(2026-10-13 속도 점검). 한 번 읽어 두 곳에 쓴다.
+ */
+export const getTopicsAndAnswers = cache(
+  async (meetingId: string): Promise<{ topics: DiscussionTopic[]; answers: TopicAnswerRow[] }> => {
     const supabase = createServiceClient()
     const { data: topics } = await supabase
       .from('discussion_topics')
@@ -23,7 +29,7 @@ export const getTopicsWithStats = cache(
       .eq('meeting_id', meetingId)
       .not('published_at', 'is', null)
       .order('topic_no')
-    if (!topics || topics.length === 0) return []
+    if (!topics || topics.length === 0) return { topics: [], answers: [] }
 
     const topicIds = (topics as DiscussionTopic[]).map((t) => t.id)
     const { data: answers } = await supabase
@@ -31,14 +37,33 @@ export const getTopicsWithStats = cache(
       .select('topic_id, user_id')
       .in('topic_id', topicIds)
 
-    const answerRows = (answers ?? []) as Pick<TopicAnswer, 'topic_id' | 'user_id'>[]
-    return (topics as DiscussionTopic[]).map((t) => ({
-      ...t,
-      answer_count: answerRows.filter((a) => a.topic_id === t.id).length,
-      my_answered: userId
-        ? answerRows.some((a) => a.topic_id === t.id && a.user_id === userId)
-        : false,
-    }))
+    return {
+      topics: topics as DiscussionTopic[],
+      answers: (answers ?? []) as TopicAnswerRow[],
+    }
+  },
+)
+
+/** 발제마다 답변 수 + 내 답변 여부를 붙인다 (순수 계산) */
+export function withTopicStats(
+  topics: DiscussionTopic[],
+  answers: TopicAnswerRow[],
+  userId: string | null,
+): TopicWithStats[] {
+  return topics.map((t) => ({
+    ...t,
+    answer_count: answers.filter((a) => a.topic_id === t.id).length,
+    my_answered: userId
+      ? answers.some((a) => a.topic_id === t.id && a.user_id === userId)
+      : false,
+  }))
+}
+
+/** meeting의 **공개된** 발제 목록 + 답변 수 + 내 답변 여부 (작성 중은 회원 화면에 안 나간다) */
+export const getTopicsWithStats = cache(
+  async (meetingId: string, userId: string | null): Promise<TopicWithStats[]> => {
+    const { topics, answers } = await getTopicsAndAnswers(meetingId)
+    return withTopicStats(topics, answers, userId)
   },
 )
 
