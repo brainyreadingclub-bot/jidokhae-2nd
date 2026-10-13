@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C. 이미 신청한 회원을 발제자로 — 확인 창 (#card 카드 · #transfer 계좌이체 입금 완료 · #pending 입금 전) — 2026-10-13 시안</title>
+<link rel="stylesheet" href="_admin.css">
+<link rel="stylesheet" href="_detail.css">
+</head>
+<body data-active="모임 관리">
+<div class="main">
+  <div class="mhead"></div>
+  <div id="memo" class="memo"></div>
+  <div class="cap"><div class="page" id="app"></div></div>
+</div>
+<div id="sheet"></div>
+<script src="_chrome.js"></script>
+<script>
+function acts(label) {
+  return '<div class="acts"><button class="btn line cancel">취소</button><button class="btn primary">' + label + '</button></div>'
+}
+window.DEFAULT_STATE = 'card'
+window.STATES = {
+  card: {
+    page: 'none',
+    sheet: '<h3>밑줄긋기님을 발제자로 바꿀까요?</h3>' +
+      '<p class="p">밑줄긋기님의 <b>25,000</b>을 <b>카드 결제 취소로 바로 환불</b>하고, 참가비 없는 발제자로 바꿔요.</p>' +
+      '<div class="money">' +
+        '<div><span>낸 참가비 · 카드</span><b>25,000</b></div>' +
+        '<div><span>돌려줄 금액<span class="how">자동 환불</span></span><b>25,000</b></div>' +
+      '</div>' +
+      '<p class="p2">자리는 그대로예요 · 알림톡은 가지 않아요</p>' +
+      acts('환불하고 바꾸기'),
+  },
+  transfer: {
+    page: 'none',
+    sheet: '<h3>새벽책장님을 발제자로 바꿀까요?</h3>' +
+      '<p class="p">새벽책장님의 <b>25,000</b>을 환불하고 발제자로 바꿔요. 계좌이체라 <b>자동 환불이 안 돼요</b> — 정산 「환불 대기」에 올라가요.</p>' +
+      '<div class="money">' +
+        '<div><span>낸 참가비 · 계좌이체</span><b>25,000</b></div>' +
+        '<div><span>돌려줄 금액<span class="how">직접 이체 · 보낸 뒤 「환불 완료」 체크</span></span><b>25,000</b></div>' +
+      '</div>' +
+      '<p class="p2">자리는 그대로예요 · 알림톡은 가지 않아요</p>' +
+      acts('바꾸고 환불 대기에 올리기'),
+  },
+  pending: {
+    page: 'none',
+    sheet: '<h3>모서리님을 발제자로 바꿀까요?</h3>' +
+      '<p class="p">모서리님은 아직 입금 전이라 <b>돌려줄 돈이 없어요</b>. 바로 참가비 없는 발제자로 바꿔요.</p>' +
+      '<div class="money">' +
+        '<div><span>받은 돈<span class="how">입금 대기 25,000 — 이제 안 받아요</span></span><b>0</b></div>' +
+        '<div><span>돌려줄 금액</span><b>0</b></div>' +
+      '</div>' +
+      '<p class="p2">정산 「입금 확인 대기」에서 빠져요 · 알림톡은 가지 않아요</p>' +
+      acts('발제자로 바꾸기'),
+  },
+}
+</script>
+<script src="_page.js"></script>
+</body>
+</html>

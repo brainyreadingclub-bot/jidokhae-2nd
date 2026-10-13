@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B. 발제자 고르기 창 (#pick 처음 · #typed 검색 · #nores 결과 없음 · #pickfull 정원 참 · #confirm 지정 확인) — 2026-10-13 시안</title>
+<link rel="stylesheet" href="_admin.css">
+<link rel="stylesheet" href="_detail.css">
+</head>
+<body data-active="모임 관리">
+<div class="main">
+  <div class="mhead"></div>
+  <div id="memo" class="memo"></div>
+  <div class="cap"><div class="page" id="app"></div></div>
+</div>
+<div id="sheet"></div>
+<script src="_chrome.js"></script>
+<script>
+function row(nick, real, right, cls) {
+  return '<button class="prow' + (cls ? ' ' + cls : '') + '"><span class="n"><b>' + nick + '</b><small>' + real + '</small></span><span class="r">' + (right || '') + '</span></button>'
+}
+var ok = function (m) { return '<span class="badge ok">결제완료</span><span class="pm">' + m + '</span>' }
+var pend = '<span class="badge pend">입금 대기</span><span class="pm">이체</span>'
+var noq = '<span class="pill noq">자격 없음</span>'
+var head = '<h3>발제자 지정</h3>'
+var close = '<button class="pclose">닫기</button>'
+
+window.DEFAULT_STATE = 'pick'
+window.STATES = {
+  pick: {
+    page: 'none', pick: true,
+    sheet: head +
+      '<input class="srch" placeholder="닉네임 또는 실명 검색">' +
+      '<div class="plist">' +
+        '<div class="pgrp">이 모임 신청자<span>3</span></div>' +
+        row('밑줄긋기', '박서연', ok('카드')) +
+        row('새벽책장', '이도윤', ok('이체')) +
+        row('모서리', '정유나', pend) +
+        '<p class="phint">신청 안 한 회원은 닉네임이나 실명으로 찾아요</p>' +
+      '</div>' + close,
+  },
+  typed: {
+    page: 'none', pick: true,
+    sheet: head +
+      '<input class="srch on" value="책">' +
+      '<div class="plist">' +
+        '<div class="pgrp">이 모임 신청자<span>1</span></div>' +
+        row('새벽책장', '이도윤', ok('이체')) +
+        '<div class="pgrp">신청 안 한 회원<span>2</span></div>' +
+        row('책먹는여우', '최민준', '') +
+        row('책갈피', '송하린', noq) +
+        '<p class="phint">자격 없음 — 정기모임에 와 본 적 없는 회원이에요. 지정은 할 수 있어요</p>' +
+      '</div>' + close,
+  },
+  nores: {
+    page: 'none', pick: true,
+    sheet: head +
+      '<input class="srch on" value="가나다">' +
+      '<div class="plist"><p class="pempty">「가나다」와 맞는 회원이 없어요</p></div>' + close,
+  },
+  pickfull: {
+    page: 'full', pick: true,
+    sheet: '<h3>신청자 중에서 발제자 지정</h3>' +
+      '<p class="p2">정원이 차서 이미 신청한 분만 고를 수 있어요. 자리는 그대로예요</p>' +
+      '<input class="srch" placeholder="닉네임 또는 실명 검색">' +
+      '<div class="plist">' +
+        '<div class="pgrp">이 모임 신청자<span>10</span></div>' +
+        row('초록고래', '김하늘', ok('카드')) +
+        row('첫문장', '배수아', ok('카드')) +
+        row('여백', '문가온', ok('카드')) +
+        row('연필깎이', '장도현', ok('이체')) +
+        row('북극곰', '서지안', ok('카드')) +
+        row('활자중독', '윤태오', ok('카드')) +
+        row('느린산책', '오세린', ok('카드')) +
+        row('밑줄긋기', '박서연', ok('카드')) +
+        row('새벽책장', '이도윤', ok('이체')) +
+        row('모서리', '정유나', pend) +
+      '</div>' + close,
+  },
+  confirm: {
+    page: 'none',
+    sheet: '<h3>책갈피님을 발제자로 지정할까요?</h3>' +
+      '<p class="p">참가비 없이 <b>신청 완료</b>로 정원 한 자리를 차지해요. 다른 신청자처럼 전날 알림과 발제 공개 알림을 받고, 답변도 쓸 수 있어요.</p>' +
+      '<div class="money"><div><span>남은 자리</span><b>7 → 6</b></div></div>' +
+      '<p class="p2">정기모임에 와 본 적 없는 회원이에요(자격 없음) · 지정했다는 알림톡은 가지 않아요</p>' +
+      '<div class="acts"><button class="btn line cancel">취소</button><button class="btn primary">지정하기</button></div>',
+  },
+}
+</script>
+<script src="_page.js"></script>
+</body>
+</html>

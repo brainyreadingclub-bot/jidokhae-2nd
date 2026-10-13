@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A. 운영자 모임 상세 — 발제자 칸 (#none 미지정 · #set 지정됨 · #converted 이체 회원을 바꾼 뒤 · #full 정원 참) — 2026-10-13 시안</title>
+<link rel="stylesheet" href="_admin.css">
+<link rel="stylesheet" href="_detail.css">
+</head>
+<body data-active="모임 관리">
+<div class="main">
+  <div class="mhead"></div>
+  <div id="memo" class="memo"></div>
+  <div class="cap"><div class="page" id="app"></div></div>
+</div>
+<div id="sheet"></div>
+<script src="_chrome.js"></script>
+<script>
+window.DEFAULT_STATE = 'none'
+window.STATES = {
+  none: { page: 'none' },
+  set: { page: 'set', memo: '시안 메모 — 「발제자」 표시는 운영자 화면에만 있다' },
+  converted: { page: 'converted', memo: '시안 메모 — 계좌이체로 낸 새벽책장님을 발제자로 바꾼 뒤. 옛 신청은 「취소됨 · 환불 필요」로 남는다' },
+  full: { page: 'full' },
+}
+</script>
+<script src="_page.js"></script>
+</body>
+</html>

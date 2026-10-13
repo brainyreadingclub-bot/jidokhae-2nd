@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D. 발제자 빼기 확인 창 (#wait 대기자 있음 · #nowait 대기자 없음) — 2026-10-13 시안</title>
+<link rel="stylesheet" href="_admin.css">
+<link rel="stylesheet" href="_detail.css">
+</head>
+<body data-active="모임 관리">
+<div class="main">
+  <div class="mhead"></div>
+  <div id="memo" class="memo"></div>
+  <div class="cap"><div class="page" id="app"></div></div>
+</div>
+<div id="sheet"></div>
+<script src="_chrome.js"></script>
+<script>
+var acts = '<div class="acts"><button class="btn line cancel">취소</button><button class="btn big-danger">빼기</button></div>'
+window.DEFAULT_STATE = 'wait'
+window.STATES = {
+  wait: {
+    page: 'fullSet',
+    sheet: '<h3>초록고래님을 발제자에서 뺄까요?</h3>' +
+      '<p class="p">초록고래님의 신청도 함께 취소돼 자리가 다시 열려요. <b>대기 1번 책먹는여우님이 바로 확정</b>돼요.</p>' +
+      '<div class="money"><div><span>대기</span><b>2 → 1명</b></div></div>' +
+      '<p class="p2">참가비 없이 들어온 자리라 돌려줄 돈은 없어요 · 책먹는여우님에게는 확정 알림톡이 가요 · 초록고래님이 다시 오려면 직접 신청해야 해요</p>' +
+      acts,
+  },
+  nowait: {
+    page: 'set',
+    sheet: '<h3>초록고래님을 발제자에서 뺄까요?</h3>' +
+      '<p class="p">초록고래님의 신청도 함께 취소돼 자리가 다시 열려요. 다른 회원이 신청할 수 있어요.</p>' +
+      '<div class="money"><div><span>남은 자리</span><b>6 → 7</b></div></div>' +
+      '<p class="p2">참가비 없이 들어온 자리라 돌려줄 돈은 없어요 · 초록고래님이 다시 오려면 직접 신청해야 해요</p>' +
+      acts,
+  },
+}
+</script>
+<script src="_page.js"></script>
+</body>
+</html>
