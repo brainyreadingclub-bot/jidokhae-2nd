@@ -208,12 +208,13 @@ export default function TalkView({ data }: { data: TalkData }) {
                       {t.question}
                     </span>
                   </span>
+                  {/* 0개를 주황 「아직 없음」으로 칠하면 경고처럼 읽힌다 — 회색 「답변 0」 (2026-10-13) */}
                   <span
                     className={`flex-none text-[11.5px] font-bold ${
-                      t.answer_count > 0 ? 'text-brand' : 'text-warnx'
+                      t.answer_count > 0 ? 'text-brand' : 'text-tg-600'
                     }`}
                   >
-                    {t.answer_count > 0 ? `답변 ${t.answer_count}` : '아직 없음'}
+                    답변 {t.answer_count}
                   </span>
                 </Link>
               ))}

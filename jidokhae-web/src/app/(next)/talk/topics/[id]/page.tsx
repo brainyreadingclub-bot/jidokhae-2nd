@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getUser } from '@/lib/auth'
+import { getKSTToday } from '@/lib/kst'
 import { getAnswersWithMeta } from '@/lib/discussion'
-import { canWriteAnswer } from '@/lib/discussion-rules'
+import { getAnswerAccess } from '@/lib/answer-access'
+import { topicApplyCta } from '@/lib/answer-access-rules'
+import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 import TopicThread from '@/components/next/TopicThread'
 import type { DiscussionTopic } from '@/types/discussion'
 
@@ -25,19 +28,35 @@ export default async function TopicPage({
   if (!topic) notFound()
   const typedTopic = topic as DiscussionTopic
 
-  const [answers, myStatus] = await Promise.all([
+  const [allAnswers, access, { data: meeting }, { data: counts }] = await Promise.all([
     getAnswersWithMeta(id, user?.id ?? null),
-    user
-      ? admin
-          .from('registrations')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('meeting_id', typedTopic.meeting_id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .then(({ data }) => data?.[0]?.status ?? null)
-      : Promise.resolve(null),
+    getAnswerAccess(user?.id ?? null, typedTopic.meeting_id),
+    admin
+      .from('meetings')
+      .select('id, date, status, capacity')
+      .eq('id', typedTopic.meeting_id)
+      .single(),
+    admin.rpc('get_confirmed_counts', { meeting_ids: [typedTopic.meeting_id] }),
   ])
+
+  // 🔒 읽기 자격이 없으면 남의 답변(본문·닉네임)은 **서버에서 걸러** 내려보내지 않는다 (2026-10-13).
+  //    자기가 쓴 답변만 남긴다 — 취소한 사람이 자기 글이 사라진 줄 알면 안 된다
+  const answers = access.canRead
+    ? allAnswers
+    : allAnswers.filter((a) => user && a.user_id === user.id)
+
+  const confirmedCount = Number(
+    ((counts ?? []) as { confirmed_count: number }[])[0]?.confirmed_count ?? 0,
+  )
+  const cta = meeting
+    ? topicApplyCta({
+        waitlisted: access.waitlisted,
+        applyOpen: isDiscussionApplyOpen(meeting.date, getKSTToday()),
+        meetingActive: meeting.status === 'active',
+        confirmedCount,
+        capacity: meeting.capacity,
+      })
+    : 'closed'
 
   return (
     <div>
@@ -47,7 +66,10 @@ export default async function TopicPage({
       <TopicThread
         topic={typedTopic}
         answers={answers}
-        canWrite={canWriteAnswer(myStatus)}
+        answerCount={allAnswers.length}
+        canRead={access.canRead}
+        canWrite={access.live}
+        applyCta={cta}
         myUserId={user?.id ?? null}
       />
     </div>
