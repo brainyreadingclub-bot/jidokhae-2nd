@@ -3,6 +3,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 import { isOnboarded } from '@/lib/onboarding'
 import {
+  redirectCandidate,
+  needsOnboardingCheck,
+  nextUiRedirectTarget,
+} from '@/lib/next-ui-redirect'
+import {
   AFTER_LOGIN_PATH,
   safeNextPath,
   toNextParam,
@@ -131,7 +136,7 @@ export async function middleware(request: NextRequest) {
   // 로딩 경계 안에서 던져지면 HTML을 다 보낸 다음 브라우저가 다시 이동한다(2026-10-13 속도 점검).
   // 페이지 쪽 redirect는 안전망으로 그대로 둔다.
   if (request.method === 'GET' || request.method === 'HEAD') {
-    const target = await nextUiRedirectTarget(supabase, user.id, pathname)
+    const target = await resolveNextUiRedirect(supabase, user.id, pathname)
     if (target) {
       const url = request.nextUrl.clone()
       url.pathname = target
@@ -146,39 +151,28 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse
 }
 
-/** 알림톡 버튼이 가리키는 옛 모임 상세 — 그 아래 결제 화면(/confirm, /payment-*)은 대상이 아니다 */
-const OLD_MEETING_DETAIL = /^\/meetings\/([^/]+)$/
-
-/**
- * 새 화면(next_ui)으로 바로 보낼 곳. 없으면 null.
- * - `/` → `/home`: 온보딩(웰컴·프로필)을 마친 회원만. 미완성 회원은 `/`의 관문을 그대로 본다.
- *   (`(next)` 레이아웃이 미완성 회원을 `/`로 돌려보내므로, 여기서 같은 판정을 하지 않으면 순환한다)
- * - `/meetings/[id]` → `/meet/[id]`: 옛 상세 페이지의 redirect와 같은 조건(플래그만).
- * 판정 기준은 `isNextUiEnabled`(next-ui.ts)·`isOnboarded`(onboarding.ts)와 같아야 한다.
- */
-async function nextUiRedirectTarget(
+/** 새 화면으로 바로 보낼 곳을 정한다 — 규칙은 next-ui-redirect.ts(순수 함수, 테스트 있음) */
+async function resolveNextUiRedirect(
   supabase: SupabaseClient,
   userId: string,
   pathname: string,
 ): Promise<string | null> {
-  const oldDetail = OLD_MEETING_DETAIL.exec(pathname)
-  if (pathname !== '/' && !oldDetail) return null
+  // 대상 주소가 아니면 DB를 읽지 않는다 — 모든 요청이 이 미들웨어를 지난다
+  if (!redirectCandidate(pathname)) return null
 
-  const flagQuery = supabase.from('site_settings').select('value').eq('key', 'next_ui').maybeSingle()
-  const profileQuery =
-    pathname === '/'
+  // 플래그와 프로필은 동시에 읽는다. 프로필은 첫 주소일 때만
+  const [flag, profile] = await Promise.all([
+    supabase.from('site_settings').select('value').eq('key', 'next_ui').maybeSingle(),
+    needsOnboardingCheck(pathname)
       ? supabase
           .from('profiles')
           .select('welcomed_at, profile_completed_at, real_name')
           .eq('id', userId)
           .maybeSingle()
-      : null
-  const [flag, profile] = await Promise.all([flagQuery, profileQuery])
-
+      : null,
+  ])
   const nextUiOn = process.env.NEXT_UI_PREVIEW === 'on' || flag.data?.value === 'on'
-  if (!nextUiOn) return null
-  if (oldDetail) return `/meet/${oldDetail[1]}`
-  return isOnboarded(profile?.data ?? null) ? '/home' : null
+  return nextUiRedirectTarget(pathname, nextUiOn, isOnboarded(profile?.data ?? null))
 }
 
 export const config = {
