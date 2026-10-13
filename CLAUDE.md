@@ -238,8 +238,10 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 - **결제 완료 = 신청 확정** — No payment-less registrations exist
 - **Refund policy (정기모임):** 3+ days → 100%, 2 days → 50%, <2 days → 0% (cancellation still allowed)
-- **Refund policy (토론모임):** 7+ days → 100%, 3+ days → 50%, 이후 0%. `calculateRefundByType(meeting_type, ...)`이 유형 분기 단일 진입점 — 실환불·권장액·모달·정책 페이지 전부 이 함수 경유 (PR #64). `meeting_type` null(구 데이터)은 정기 규칙 폴백
-- **토론모임 신청 마감 = D-7** (신청 마감 = 환불 100% 경계 = 책 주문 마감, 세 날짜 통일). 서버 3중 강제: 상세 버튼 `apply_closed` + 카드 결제 자동취소(payment.ts) + 계좌이체 400(transfer route). `isDiscussionApplyOpen()`(discussion-rules.ts)이 단일 소스
+- **Refund policy (토론모임):** 14+ days → 100%, 7+ days → 50%, 이후 0% (2026-10-13 대표님 결정, 옛 7/3 대체 — 10/27 포함 전부). `calculateRefundByType(meeting_type, ...)`이 유형 분기 단일 진입점 — 실환불·권장액·모달·정책 페이지 전부 이 함수 경유. `meeting_type` null(구 데이터)은 정기 규칙 폴백
+- ~~토론모임 신청 마감 = D-7~~ — 🚫 **2026-10-13 폐지.** 정기모임처럼 정원이 찰 때까지 받는다. 책 주문은 회원 몫이라 서비스에 마감이 없다. 남은 신청 관문은 `discussion-gate.ts`(참여 자격·격리 플래그)뿐
+- **발제자 지정 (토론모임, 2026-10-13):** admin만 지정·빼기. 발제자 행 = `confirmed` · `payment_method='none'` · paid 0 · `is_presenter=true`(CHECK 2개로 묶임, 모임당 1명 부분 유니크). 코드는 `is_presenter`가 아니라 `payment_method='none'`으로 가린다. RPC `assign_presenter`·`unassign_presenter`(service_role만). 회원 화면 노출 없음, 본인 취소 불가
+- **0원 모임 (2026-10-13):** 계좌이체 한 길(카드 선택지 숨김 + 서버 0원 카드 거절). 0원 신청 취소·삭제의 `refunded_amount`는 **0**(NULL 아님)
 - **Cancellation cutoff:** Day after meeting date → cancel button hidden
 - **Capacity display:** Show "O/N명" format (current/max) — both meeting cards and detail page. 회원/비로그인에게는 신청자 3명 미만(0·1·2명)일 때 "N명 모집 중" 형식으로 마스킹(`shouldMaskConfirmedCount` 절대 임계 3명, social proof 역효과 방지). 운영자는 0명만 마스킹, 1명+ 정확 노출. 마감 시 항상 정확 노출. **모임 상세에서 본인이 정원에 차지한 회원(confirmed 또는 pending_transfer)에게는 마스킹 해제** — 명단 헤더("함께하는 멤버 N명")와 카운트 정합성 확보 (`MeetingDetailContent`가 `isPrivileged={isEditorOrAdmin || hasConfirmed || hasPendingTransfer}` 전달)
 - **Meeting capacity minimum:** 정원 최소 3명 (Form 단에서 강제, DB CHECK는 두지 않음). 노출 임계(3명)와 정합성을 위해 정원 1·2명 모임 생성 차단. 운영자가 SQL 콘솔로 직접 INSERT하는 우회 경로는 운영 정책상 발생하지 않는다고 가정
