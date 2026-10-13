@@ -494,14 +494,14 @@ function TopicRow({
           )}
         </b>
         {t.quote && (
-          <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-neutral-700">
+          <p className="mt-1.5 whitespace-pre-line break-keep break-words text-[13px] leading-relaxed text-neutral-700">
             “{t.quote}”
             {t.quote_page && (
               <span className="ml-1 whitespace-nowrap text-neutral-600">{t.quote_page}쪽</span>
             )}
           </p>
         )}
-        <p className="mt-1 line-clamp-2 break-keep text-[13px] leading-relaxed text-neutral-800 lg:line-clamp-none">
+        <p className="mt-1 line-clamp-2 whitespace-pre-line break-keep break-words text-[13px] leading-relaxed text-neutral-800 lg:line-clamp-none">
           {t.question}
         </p>
         <p className="mt-1 text-xs text-neutral-600">
@@ -796,7 +796,7 @@ function TopicsPreview({
                 <div className="mt-3 rounded-[16px] bg-tg-100 p-4">
                   {sel.quote && (
                     <>
-                      <p className="text-[13.5px] font-bold leading-relaxed tracking-tight text-tg-900">
+                      <p className="whitespace-pre-line break-words text-[13.5px] font-bold leading-relaxed tracking-tight text-tg-900">
                         “{sel.quote}”
                       </p>
                       {sel.quote_page && (
@@ -804,7 +804,7 @@ function TopicsPreview({
                       )}
                     </>
                   )}
-                  <p className="mt-2.5 text-[12.5px] leading-relaxed text-tg-700">{sel.question}</p>
+                  <p className="mt-2.5 whitespace-pre-line break-words text-[12.5px] leading-relaxed text-tg-700">{sel.question}</p>
                 </div>
               </div>
             </div>

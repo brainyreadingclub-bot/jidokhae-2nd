@@ -46,7 +46,7 @@ export default function LiveMode({
       <div className="mt-5 flex-1">
         {t.quote && (
           <>
-            <p className="text-[19px] font-extrabold leading-[1.5] tracking-[-0.02em] text-tg-900">
+            <p className="whitespace-pre-line break-words text-[19px] font-extrabold leading-[1.5] tracking-[-0.02em] text-tg-900">
               “{t.quote}”
             </p>
             {t.quote_page && (
@@ -56,7 +56,7 @@ export default function LiveMode({
             )}
           </>
         )}
-        <p className="mt-4 text-[15px] leading-[1.7] tracking-tight text-tg-700">
+        <p className="mt-4 whitespace-pre-line break-words text-[15px] leading-[1.7] tracking-tight text-tg-700">
           {t.question}
         </p>
 
