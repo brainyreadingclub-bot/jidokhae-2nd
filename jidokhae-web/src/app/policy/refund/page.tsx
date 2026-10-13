@@ -66,10 +66,8 @@ export default async function RefundPolicyPage() {
         >
           환불 기준 — 토론모임
         </h2>
-        <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-          토론모임은 선정 도서 준비(책 주문) 일정에 맞춰 신청 마감과 환불 경계가 모임
-          7일 전으로 통일되어 있습니다.
-        </p>
+        {/* 「책 주문 일정에 맞춰 신청 마감과 환불 경계가 7일 전으로 통일」 문단은 2026-10-13에 뺐다 —
+            D-7 신청 마감 폐지 + 책 주문 마감을 서비스에 두지 않는다(대표님 결정). 표는 lib/refund.ts 상수를 읽는다 */}
 
         <div className="mt-4 overflow-hidden rounded-[var(--radius-md)] border border-surface-300">
           <table className="w-full text-sm">

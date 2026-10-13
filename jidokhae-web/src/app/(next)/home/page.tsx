@@ -113,7 +113,7 @@ export default async function NextHomePage() {
     }
   }
 
-  // ④ 토론 홍보 — 미신청 + (열림이거나 마감 후 문구 전환)
+  // ④ 토론 홍보 — 미신청일 때. 「신청 열림」은 정기모임과 같은 기준(모임 당일까지) — D-7 마감 폐지(2026-10-13)
   const discussion = upcoming.find((m) => m.meeting_type === 'discussion')
 
   // 격리 플래그 OFF면 홍보를 내린다 — "새로 들어오는 것만 막는다"의 홈 쪽 몫.

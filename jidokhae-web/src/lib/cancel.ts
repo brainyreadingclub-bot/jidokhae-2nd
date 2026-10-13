@@ -42,7 +42,7 @@ export async function processUserCancel(
     return { status: 'error', message: '취소할 수 없는 상태입니다' }
   }
 
-  // 4. Calculate refund amount (KST date-based) — 토론모임은 7/3 규칙
+  // 4. Calculate refund amount (KST date-based) — 토론모임은 14/7 규칙 (calculateRefundByType이 분기)
   const meetingRow = reg.meetings as unknown as { date: string; meeting_type: string | null }
   const meetingDate = meetingRow.date
   const paidAmount = reg.paid_amount ?? 0

@@ -2,14 +2,13 @@
  * 결제 **전** 환불 안내가 쓰는 순수 함수 테스트.
  *
  * 왜 이 테스트가 있나 — 화면에 "9월 6일까지 전액"이라고 손으로 적으면
- * 규칙(7/3, 3/2)이 바뀔 때 문구만 남는다. 그래서 규칙 상수에서 계산하게 만들었고,
+ * 규칙(토론 14/7, 정기 3/2)이 바뀔 때 문구만 남는다. 그래서 규칙 상수에서 계산하게 만들었고,
  * 이 테스트가 "규칙과 문구가 같은 곳에서 나온다"를 고정한다.
  */
 
 import { describe, it, expect } from 'vitest'
 import {
   getRefundScheduleByType,
-  getFullRefundDeadline,
   REFUND_RULES,
   DISCUSSION_REFUND_RULES,
 } from '@/lib/refund'
@@ -58,11 +57,11 @@ describe('getRefundScheduleByType', () => {
     )
   })
 
-  it('토론모임 — 7일 100% / 3일 50%', () => {
+  it('토론모임 — 14일 100% / 7일 50% (2026-10-13 결정)', () => {
     const s = getRefundScheduleByType('discussion', '2026-09-13')
     expect(s).toEqual([
-      { rate: 100, daysBefore: 7, date: '2026-09-06' },
-      { rate: 50, daysBefore: 3, date: '2026-09-10' },
+      { rate: 100, daysBefore: 14, date: '2026-08-30' },
+      { rate: 50, daysBefore: 7, date: '2026-09-06' },
     ])
   })
 
@@ -73,15 +72,5 @@ describe('getRefundScheduleByType', () => {
     expect(getRefundScheduleByType('discussion', '2026-09-13').map((s) => s.rate)).toEqual(
       DISCUSSION_REFUND_RULES.map((r) => r.rate),
     )
-  })
-})
-
-describe('getFullRefundDeadline', () => {
-  it('토론모임 100% 경계 = D-7 = 신청 마감 = 책 주문 마감 (2026-08-17 세 날짜 통일)', () => {
-    expect(getFullRefundDeadline('discussion', '2026-09-13')).toBe('2026-09-06')
-  })
-
-  it('정기모임은 D-3', () => {
-    expect(getFullRefundDeadline('regular', '2026-09-13')).toBe('2026-09-10')
   })
 })

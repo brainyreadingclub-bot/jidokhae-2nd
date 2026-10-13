@@ -4,7 +4,6 @@ import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { getMeeting } from '@/lib/meeting'
 import { getKSTToday, getButtonState, type ButtonState } from '@/lib/kst'
-import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 import { getDiscussionApplyBlock } from '@/lib/discussion-gate'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
@@ -15,7 +14,7 @@ import type { Meeting } from '@/types/meeting'
  * 모임 상세 한 화면에 필요한 데이터 + 판정을 모으는 단일 진입점.
  *
  * 왜 분리했나 — 같은 상세를 스킨 두 벌(`(main)` 잉크그린 / `(next)` 토스)로 그린다.
- * 조회·정원 마스킹·D-7 게이트·스텝 할인 표시가가 두 벌이 되면 다음에 규칙이
+ * 조회·정원 마스킹·토론 자격 게이트·스텝 할인 표시가가 두 벌이 되면 다음에 규칙이
  * 바뀔 때 한쪽만 고쳐진다 (PR #64가 고친 사고의 모양). 화면은 둘, 판정은 하나로 둔다.
  *
  * 이 파일은 MeetingDetailContent.tsx에서 **그대로 옮긴 것**이다. 판정 규칙은 바뀌지 않았다.
@@ -190,21 +189,13 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
     typedMeeting.meeting_type,
   )
 
-  // 토론모임 D-7 신청 마감 (2026-08-17 결정) — 신규 신청·대기 진입만 차단.
-  // 이미 신청한 사람의 취소/입금 버튼은 그대로 둔다 (환불 7/3 규칙은 별도 동작).
-  if (
-    typedMeeting.meeting_type === 'discussion' &&
-    !isDiscussionApplyOpen(typedMeeting.date, kstToday) &&
-    (buttonState.type === 'register' ||
-      buttonState.type === 'join_waitlist' ||
-      buttonState.type === 'full')
-  ) {
-    buttonState = { type: 'apply_closed' }
-  }
+  // 토론모임 D-7 신청 마감은 2026-10-13에 폐지됐다(대표님 결정). 토론모임도 위 getButtonState
+  // 그대로 — 정원 전 register, 정원 후 join_waitlist, 지난 모임은 none/attended (정기모임과 같다).
 
-  // 토론모임 참여 자격 + 격리 플래그 — D-7과 **같은 자리**. 새 층을 만들지 않는다.
+  // 토론모임 참여 자격 + 격리 플래그 — 토론 전용으로 남은 유일한 관문. 새 층을 만들지 않는다.
   //
-  // D-7 마감이 먼저다: 모두에게 닫힌 모임을 두고 "정기모임 다녀오면 열려요"라고 하면 사실이 아니다.
+  // 「신청할 수 있는 상태」(register·join_waitlist·full)일 때만 묻는다: 지난 모임처럼 모두에게
+  // 닫힌 모임을 두고 "정기모임 다녀오면 열려요"라고 하면 사실이 아니다.
   // 이미 신청한 사람의 취소·입금 버튼은 여기서도 건드리지 않는다 —
   // 끄면서 취소를 막으면 환불 경로 자체가 사라진다 (2026-08-22 §2-2).
   const discussionBlock =
@@ -262,7 +253,6 @@ export function hasStickyAction(buttonState: ButtonState): boolean {
     buttonState.type === 'join_waitlist' ||
     buttonState.type === 'waitlist_cancel' ||
     buttonState.type === 'pending_transfer' ||
-    buttonState.type === 'apply_closed' ||
     buttonState.type === 'discussion_locked' ||
     buttonState.type === 'discussion_paused'
   )

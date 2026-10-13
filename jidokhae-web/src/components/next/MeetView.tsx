@@ -28,7 +28,6 @@ export type MeetData = {
     date: string
     time: string
     venueName: string
-    open: boolean
     /** 연결된 책 (2026-08-18 표지 배치 — 토론은 표지가 얼굴, 56×84) */
     thumbnail: string | null
     authors: string | null
@@ -163,7 +162,6 @@ export default function MeetView({
                 }`}
               >
                 {formatKoreanDate(discussion.date)} {formatKoreanTime(discussion.time)}
-                {!discussion.open && ' · 신청 마감'}
               </span>
               <span className="mt-0.5 block truncate text-[15px] font-extrabold tracking-tight">
                 {discussion.title}

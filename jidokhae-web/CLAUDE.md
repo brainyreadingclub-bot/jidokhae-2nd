@@ -45,8 +45,8 @@ Refreshes Supabase session on every request. Redirects unauthenticated → `/aut
 - `payment.ts` — Payment confirmation flow (PortOne V2 KakaoPay 채널). 결제 금액 검증은 화이트리스트 `[meeting.fee, calculateFee(fee, true)]` — 자격·슬롯 재검증은 RPC FOR UPDATE 락에 위임 (PR #34)
 - `cancel.ts` — User cancellation flow (returns meetingId for promotion trigger). PortOne `cancelPayment` 사용
 - `waitlist.ts` — 대기 승격 래퍼 (promote RPC + 알림톡) + 대기 취소 (100% 환불)
-- `refund.ts` — Refund amount calculation (paid_amount 기반 — 스텝 할인 결제도 paid_amount * 비율로 환불). **`calculateRefundByType(meetingType, ...)`이 단일 진입점** — 토론모임(discussion)은 7일 100%/3일 50%, 그 외는 3일 100%/2일 50%. 실환불(cancel.ts)·권장액(mark-refunded)·취소 모달·admin 표시·환불정책 페이지가 전부 이 함수를 거친다. `calculateRefund`/`calculateDiscussionRefund`를 직접 부르지 말 것 (2026-08-21 배선, PR #64)
-- `discussion-rules.ts` — 토론모임 순수 규칙: `isDiscussionApplyOpen()` (D-7 신청 마감 — 화면 버튼 + payment.ts 카드 자동취소 + transfer 400, 3중 강제), `canWriteAnswer()` (발제 답변 자격 = confirmed·pending_transfer)
+- `refund.ts` — Refund amount calculation (paid_amount 기반 — 스텝 할인 결제도 paid_amount * 비율로 환불). **`calculateRefundByType(meetingType, ...)`이 단일 진입점** — 토론모임(discussion)은 14일 100%/7일 50%(2026-10-13 대표님 결정 — 옛 7/3 대체, 모든 토론모임 동일), 그 외는 3일 100%/2일 50%. 실환불(cancel.ts)·권장액(mark-refunded)·취소 모달·admin 표시·환불정책 페이지가 전부 이 함수를 거친다. `calculateRefund`/`calculateDiscussionRefund`를 직접 부르지 말 것 (2026-08-21 배선, PR #64)
+- `discussion-rules.ts` — 토론모임 순수 규칙: `isDiscussionApplyOpen()` (홈·이야기 탭 카드의 「신청 열림」 표시용 — 정기모임과 같은 기준, 모임 당일까지 열림. **D-7 신청 마감은 2026-10-13 폐지** — 신청 경로에 토론 전용 날짜 관문 없음, 남은 관문은 `discussion-gate.ts`의 참여 자격·격리 플래그뿐), `canWriteAnswer()` (발제 답변 자격 = confirmed·pending_transfer)
 - `discussion.ts` — 발제 스레드 조회 (`getTopicsWithStats` 등). 테이블 5개: discussion_topics/topic_answers/answer_replies/answer_reactions + (migration-discussion-thread.sql)
 - `curator.ts` — 발제 등록·수정·핀 권한 = admin·editor·`is_staff` (is_staff에 할인 외 권한이 생긴 첫 사례). DB `is_curator()` SQL 함수와 동기 필수
 - `app-notifications.ts` — 인앱 알림 (알림함). 라우트에서 발송 시 반드시 `after()`로 감쌀 것

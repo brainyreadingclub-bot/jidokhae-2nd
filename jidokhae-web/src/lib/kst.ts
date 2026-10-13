@@ -235,8 +235,7 @@ export type ButtonState =
   | { type: 'join_waitlist' }
   | { type: 'waitlist_cancel' }
   | { type: 'pending_transfer' }
-  // 토론모임 D-7 신청 마감 (2026-08-17 결정) — 마감 후 신청·대기 모두 차단
-  | { type: 'apply_closed' }
+  // (`apply_closed` — 토론모임 D-7 신청 마감 — 은 2026-10-13 폐지로 지웠다. 토론모임도 위 상태를 그대로 쓴다)
   // 토론모임 참여 자격 미충족 (2026-08-14·08-22 결정) — 비활성 버튼이 아니라 "갈 곳이 있는" 버튼.
   // 벽이 아니라 문으로 만든다. 모임 자체는 보인다 (블라인드 금지)
   | { type: 'discussion_locked' }

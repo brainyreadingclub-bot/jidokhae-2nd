@@ -14,7 +14,6 @@ import { NextResponse, after, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getDisplayFee } from '@/lib/staff-slot'
-import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 import { getDiscussionApplyBlock, DISCUSSION_BLOCK_MESSAGE } from '@/lib/discussion-gate'
 import { sendRegistrationConfirmNotification } from '@/lib/notification'
 
@@ -85,13 +84,8 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // 토론모임 D-7 신청 마감 강제 (2026-08-17 결정) — 딥링크·공유 URL 경로 차단
-  if (meeting.meeting_type === 'discussion' && !isDiscussionApplyOpen(meeting.date)) {
-    return NextResponse.json(
-      { status: 'error', message: '신청이 마감된 모임입니다' },
-      { status: 400 },
-    )
-  }
+  // 토론모임 D-7 신청 마감은 2026-10-13에 폐지됐다(대표님 결정) — 정기모임과 같은 규칙.
+  // 정원·대기 판정은 아래 register_transfer RPC가 FOR UPDATE 락 안에서 한다.
 
   // 토론모임 참여 자격 + 격리 플래그 — 딥링크·공유 URL 경로 차단.
   // 이체는 승인 개념이 없어 돈이 움직이기 전에 거절된다(카드와 달리 환불이 필요 없다)
