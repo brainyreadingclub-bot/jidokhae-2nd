@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { startDiagnostic } from '@/lib/diagnostic-log'
-import { safeNextPath, NEXT_COOKIE } from '@/lib/next-path'
+import { safeNextPath, NEXT_COOKIE, AFTER_LOGIN_PATH } from '@/lib/next-path'
 
 export async function GET(request: NextRequest) {
   const diag = startDiagnostic('callback')
