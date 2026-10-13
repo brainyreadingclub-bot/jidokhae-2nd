@@ -120,7 +120,7 @@ export default function VenueManager({ venues }: Props) {
     const typeLabel = venue.settlement_type === 'percentage'
       ? `${venue.settlement_rate}%`
       : venue.settlement_type === 'fixed'
-        ? `${venue.settlement_fixed?.toLocaleString('ko-KR')}원/회`
+        ? `${venue.settlement_fixed?.toLocaleString('ko-KR')}/회`
         : '없음'
 
     return (
@@ -204,7 +204,7 @@ export default function VenueManager({ venues }: Props) {
                   style={inputStyle}
                 >
                   <option value="percentage">비율 (%)</option>
-                  <option value="fixed">고정 금액 (원/회)</option>
+                  <option value="fixed">고정 금액 (회당)</option>
                   <option value="none">정산 없음</option>
                 </select>
               </div>
@@ -226,7 +226,7 @@ export default function VenueManager({ venues }: Props) {
 
               {form.settlement_type === 'fixed' && (
                 <div>
-                  <label className="mb-2 block text-xs font-bold text-primary-700">고정 금액 (원)</label>
+                  <label className="mb-2 block text-xs font-bold text-primary-700">고정 금액 (회당)</label>
                   <input
                     type="number"
                     min="0"

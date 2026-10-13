@@ -45,7 +45,7 @@ export default function RefundWaitingTable({ rows }: Props) {
                 {row.nickname}
               </span>
               <span className="text-sm font-bold text-primary-800 shrink-0">
-                {formatFee(row.refundAmount)}원
+                {formatFee(row.refundAmount)}
               </span>
             </div>
             {/* Row 2: 모임 + 날짜 */}
@@ -134,7 +134,7 @@ export default function RefundWaitingTable({ rows }: Props) {
                 </td>
                 {/* 환불액 */}
                 <td className="px-3 py-2.5 text-right text-primary-800 whitespace-nowrap">
-                  {formatFee(row.refundAmount)}원
+                  {formatFee(row.refundAmount)}
                 </td>
                 {/* 취소 시각 */}
                 <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">

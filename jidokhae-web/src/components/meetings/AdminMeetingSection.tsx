@@ -1,5 +1,3 @@
-import Link from 'next/link'
-import DeleteMeetingButton from './DeleteMeetingButton'
 import DepositToggle from '@/components/admin/DepositToggle'
 import RefundToggle from '@/components/admin/RefundToggle'
 import { getKSTToday, formatFee, toKSTDate } from '@/lib/kst'
@@ -7,11 +5,8 @@ import { calculateRefundByType } from '@/lib/refund'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
-  meetingId: string
-  meetingStatus: string
   confirmedCount: number
   registrations: RegistrationWithProfile[]
-  role: string
   meetingDate: string
   meetingType: string | null
 }
@@ -30,12 +25,13 @@ function formatDate(dateStr: string): string {
   return `${month}/${day}`
 }
 
+/**
+ * 운영자 모임 상세의 신청자 영역. 수정·삭제 버튼은 2026-10-09에 페이지로 옮겼다
+ * (수정 = 오른쪽 위 작은 버튼, 삭제 = 맨 아래 빨간 구역). 금액은 숫자만.
+ */
 export default function AdminMeetingSection({
-  meetingId,
-  meetingStatus,
   confirmedCount,
   registrations,
-  role,
   meetingDate,
   meetingType,
 }: Props) {
@@ -147,7 +143,7 @@ export default function AdminMeetingSection({
       )
       return {
         label: '환불 필요',
-        refundText: `${formatFee(refundAmount)}원`,
+        refundText: `${formatFee(refundAmount)}`,
         phone: reg.profiles?.phone ?? null,
       }
     }
@@ -161,7 +157,7 @@ export default function AdminMeetingSection({
       return (
         <div className="mt-0.5">
           <div className="text-xs text-accent-500/70">
-            {formatFee(reg.paid_amount)}원 (입금 대기)
+            {formatFee(reg.paid_amount)} (입금 대기)
           </div>
           {reg.is_staff_discount && (
             <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
@@ -173,7 +169,7 @@ export default function AdminMeetingSection({
       return (
         <div className="mt-0.5">
           <div className="text-xs text-primary-500/70">
-            {formatFee(reg.paid_amount)}원
+            {formatFee(reg.paid_amount)}
           </div>
           {reg.is_staff_discount && (
             <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
@@ -202,7 +198,7 @@ export default function AdminMeetingSection({
       return (
         <div className="mt-0.5">
           {reg.refunded_amount ? (
-            <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}원</div>
+            <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}</div>
           ) : null}
           {reg.cancel_type && (
             <div className="text-xs text-primary-400">
@@ -218,12 +214,12 @@ export default function AdminMeetingSection({
     if ((reg.status === 'waitlisted' || reg.status === 'waitlist_cancelled' || reg.status === 'waitlist_refunded') && reg.paid_amount) {
       return (
         <div className="mt-0.5">
-          <div className="text-xs text-primary-500/70">{formatFee(reg.paid_amount)}원</div>
+          <div className="text-xs text-primary-500/70">{formatFee(reg.paid_amount)}</div>
           {reg.is_staff_discount && (
             <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
           )}
           {reg.refunded_amount ? (
-            <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}원</div>
+            <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}</div>
           ) : null}
         </div>
       )
@@ -277,7 +273,7 @@ export default function AdminMeetingSection({
         return parts.join('  ')
       }
       const parts: string[] = []
-      if (reg.refunded_amount) parts.push(`환불 ${formatFee(reg.refunded_amount)}원`)
+      if (reg.refunded_amount) parts.push(`환불 ${formatFee(reg.refunded_amount)}`)
       if (reg.cancel_type) parts.push(`(${CANCEL_TYPE_LABELS[reg.cancel_type] ?? reg.cancel_type})`)
       if (reg.cancelled_at) parts.push(formatDate(reg.cancelled_at))
       return parts.length > 0 ? parts.join('  ') : null
@@ -321,7 +317,7 @@ export default function AdminMeetingSection({
                 <div className="text-xs text-primary-500">
                   {formatDate(reg.created_at)}
                   {reg.paid_amount ? (
-                    <span className="text-primary-500/70"> · {formatFee(reg.paid_amount)}원</span>
+                    <span className="text-primary-500/70"> · {formatFee(reg.paid_amount)}</span>
                   ) : null}
                   {cancelDetail && (
                     <span className="text-primary-400 ml-1.5">{cancelDetail}</span>
@@ -413,61 +409,21 @@ export default function AdminMeetingSection({
   }
 
   return (
-    <div
-      className="mt-8 rounded-[var(--radius-lg)] p-4"
-      style={{ backgroundColor: 'var(--color-surface-100)' }}
-    >
-      <h2 className="text-sm font-bold text-primary-800 mb-4 tracking-tight">
-        운영자 관리
-      </h2>
-
-      {/* Action buttons — Edit prominent, Delete subtle below */}
-      <div className="mb-6">
-        <Link
-          href={`/admin/meetings/${meetingId}/edit`}
-          className="block w-full rounded-[var(--radius-md)] bg-primary-600 py-3 text-center text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 active:scale-[0.98]"
-        >
-          수정
-        </Link>
-        {role === 'admin' && (
-          <div className="mt-3">
-            <DeleteMeetingButton
-              meetingId={meetingId}
-              meetingStatus={meetingStatus}
-              confirmedCount={confirmedCount}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* 결제/환불 요약 카드 */}
-      {confirmedRegs.length > 0 && (
-        <div
-          className="mb-5 rounded-[var(--radius-md)] px-4 py-3"
-          style={{ border: '1px solid var(--color-surface-300)', backgroundColor: 'var(--color-surface-50)' }}
-        >
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <div className="text-xs text-primary-500 mb-1">총 결제</div>
-              <div className="text-sm font-bold text-primary-800">{formatFee(totalPaid)}원</div>
-            </div>
-            <div>
-              <div className="text-xs text-primary-500 mb-1">환불</div>
-              <div className="text-sm font-bold text-primary-800">{formatFee(totalRefunded)}원</div>
-            </div>
-            <div>
-              <div className="text-xs text-primary-500 mb-1">순매출</div>
-              <div className="text-sm font-bold text-primary-800">{formatFee(netRevenue)}원</div>
-            </div>
-          </div>
-        </div>
-      )}
-
+    <div className="mt-10">
       {/* Confirmed registrant list */}
       <div>
-        <h3 className="text-xs font-bold text-primary-500 mb-3 tracking-tight">
-          신청자 목록 ({confirmedCount}명 확정{confirmedRegs.length > confirmedCount ? ` · ${confirmedRegs.length - confirmedCount}명 취소` : ''})
-        </h3>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 className="text-[17px] font-extrabold tracking-tight text-neutral-900">
+            신청자
+            <span className="ml-1.5 text-sm font-semibold text-neutral-600">
+              {confirmedCount}명
+              {confirmedRegs.length > confirmedCount
+                ? ` · 취소 ${confirmedRegs.length - confirmedCount}명`
+                : ''}
+            </span>
+          </h2>
+          <small className="text-xs text-neutral-600">최근 신청 순</small>
+        </div>
         {confirmedRegs.length === 0 ? (
           <p className="text-sm text-primary-400 text-center py-8">
             아직 신청자가 없습니다
@@ -476,13 +432,21 @@ export default function AdminMeetingSection({
           <>
             {renderMobileCards(confirmedRegs, false)}
             {renderDesktopTable(confirmedRegs, false)}
+            {/* 결제/환불 요약 — 숫자만 */}
+            <p className="mt-3.5 text-[13px] text-neutral-600">
+              총 결제 <b className="font-bold text-neutral-800">{formatFee(totalPaid)}</b>
+              <span className="mx-2 text-neutral-400">·</span>
+              환불 <b className="font-bold text-neutral-800">{formatFee(totalRefunded)}</b>
+              <span className="mx-2 text-neutral-400">·</span>
+              순매출 <b className="font-bold text-neutral-800">{formatFee(netRevenue)}</b>
+            </p>
           </>
         )}
       </div>
 
       {/* Waitlisted registrant list */}
       {waitlistedRegs.length > 0 && (
-        <div className="mt-6">
+        <div className="mt-8">
           <h3 className="text-xs font-bold text-accent-500 mb-3 tracking-tight">
             대기자 목록 ({waitlistedRegs.filter((r) => r.status === 'waitlisted').length}명)
           </h3>

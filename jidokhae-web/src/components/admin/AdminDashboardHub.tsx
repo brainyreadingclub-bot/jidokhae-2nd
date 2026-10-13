@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import AdminTopicTodo from '@/components/admin/AdminTopicTodo'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import {
@@ -63,7 +64,7 @@ export default async function AdminDashboardHub() {
   const dateLabel = `${y}년 ${m}월 ${d}일 (${weekdays[dowIdx]})`
 
   return (
-    <div className="px-5 pt-6 pb-10 lg:px-10 lg:pt-10">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-500">
@@ -76,6 +77,9 @@ export default async function AdminDashboardHub() {
           오늘의 운영 현황
         </h1>
       </div>
+
+      {/* 발제문 할 일 — 다가오는 토론모임 중 발제문 없음·작성 중만 */}
+      <AdminTopicTodo kstToday={kstToday} />
 
       {/* 긴급 알림 */}
       {hasUrgent && (
@@ -147,11 +151,11 @@ export default async function AdminDashboardHub() {
         <Kpi
           label="이번 달 순매출"
           value={formatFee(revenue.netRevenue)}
-          unit="원"
+          unit=""
           subtext={
             revenueDelta >= 0
-              ? `+${formatFee(revenueDelta)}원 vs 전월`
-              : `${formatFee(revenueDelta)}원 vs 전월`
+              ? `+${formatFee(revenueDelta)} vs 전월`
+              : `${formatFee(revenueDelta)} vs 전월`
           }
           subtextVariant={revenueDelta >= 0 ? 'up' : 'down'}
         />
@@ -273,7 +277,7 @@ function Kpi({
         style={{ fontFamily: 'var(--font-display)' }}
       >
         {value}
-        <span className="ml-1 text-sm font-semibold text-primary-500">{unit}</span>
+        {unit && <span className="ml-1 text-sm font-semibold text-primary-500">{unit}</span>}
       </div>
       <div className={`mt-2 text-xs font-medium ${subtextColor}`} style={{ fontFamily: 'var(--font-mono)' }}>
         {subtext}

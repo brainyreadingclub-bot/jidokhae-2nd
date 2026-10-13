@@ -12,7 +12,7 @@ type Props = {
  */
 export default function PlaceholderPage({ title, milestone, description }: Props) {
   return (
-    <div className="mx-auto max-w-2xl px-5 py-12 lg:px-10 lg:py-16">
+    <div className="max-w-2xl">
       <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-600">
         준비 중 · {milestone} 도착 예정
       </div>

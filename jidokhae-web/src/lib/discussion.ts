@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/admin'
+import { countTopicsByMeeting, type TopicCounts } from '@/lib/topic-status'
 import type {
   DiscussionTopic,
   TopicAnswer,
@@ -12,7 +13,7 @@ import type {
  * 쓰기는 전부 API Route — 여기는 읽기만.
  */
 
-/** meeting의 발제 목록 + 답변 수 + 내 답변 여부 */
+/** meeting의 **공개된** 발제 목록 + 답변 수 + 내 답변 여부 (작성 중은 회원 화면에 안 나간다) */
 export const getTopicsWithStats = cache(
   async (meetingId: string, userId: string | null): Promise<TopicWithStats[]> => {
     const supabase = createServiceClient()
@@ -20,6 +21,7 @@ export const getTopicsWithStats = cache(
       .from('discussion_topics')
       .select('*')
       .eq('meeting_id', meetingId)
+      .not('published_at', 'is', null)
       .order('topic_no')
     if (!topics || topics.length === 0) return []
 
@@ -86,3 +88,21 @@ export const getAnswersWithMeta = cache(
     }))
   },
 )
+
+/**
+ * 🔒 운영자 화면 전용 — 모임별 작성 중/공개 개수. **작성 중을 포함해 센다.**
+ * 회원 화면에서 부르지 말 것 (회원 쪽은 getTopicsWithStats가 공개된 것만 준다).
+ */
+export async function getTopicCountsForAdmin(
+  meetingIds: string[],
+): Promise<Map<string, TopicCounts>> {
+  if (meetingIds.length === 0) return new Map()
+  const supabase = createServiceClient()
+  const { data } = await supabase
+    .from('discussion_topics')
+    .select('meeting_id, published_at')
+    .in('meeting_id', meetingIds)
+  return countTopicsByMeeting(
+    (data ?? []) as { meeting_id: string; published_at: string | null }[],
+  )
+}

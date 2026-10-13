@@ -44,6 +44,19 @@ export function toKSTDate(date: Date): string {
   }).format(date)
 }
 
+/** ISO 시각 → KST "10월 9일 22:40" (운영자 화면의 「언제 공개했나」 같은 기록 표시용) */
+export function formatKSTDateTime(iso: string): string {
+  const d = new Date(iso)
+  const [, month, day] = toKSTDate(d).split('-').map(Number)
+  const hm = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(d)
+  return `${month}월 ${day}일 ${hm}`
+}
+
 /** "2026-03-10" → "3월 10일 (화)" */
 export function formatKoreanDate(dateStr: string): string {
   const [, month, day] = dateStr.split('-').map(Number)

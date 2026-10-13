@@ -148,6 +148,13 @@ body {
   background-color: var(--color-surface-100);
 }
 
+/* 운영자 화면은 root의 640 캡을 풀어 전체 폭을 쓴다 — (admin)/layout.tsx 주석 참조.
+   100vw·음수 마진을 쓰지 않으려는 것(스크롤바 폭만큼 가로 스크롤이 생겼다, 2026-10-09).
+   :has 미지원 브라우저에서는 640 폭으로 보일 뿐 깨지지 않는다 */
+[data-root-frame]:has([data-admin-root]) {
+  max-width: none;
+}
+
 /* Subtle noise texture for depth */
 body::before {
   content: '';

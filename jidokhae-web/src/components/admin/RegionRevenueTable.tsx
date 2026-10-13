@@ -164,7 +164,7 @@ export default function RegionRevenueTable({ entries, currentMonth }: Props) {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-bold text-primary-800">{row.region}</span>
-                  <span className="text-sm font-bold text-primary-800">{formatFee(row.revenue)}원</span>
+                  <span className="text-sm font-bold text-primary-800">{formatFee(row.revenue)}</span>
                 </div>
                 <div className="mt-1 text-xs text-neutral-500">
                   모임 {row.meetings}회 · 참여 {row.participants}명
@@ -178,7 +178,7 @@ export default function RegionRevenueTable({ entries, currentMonth }: Props) {
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-bold text-primary-800">합계</span>
-                <span className="text-sm font-bold text-primary-900">{formatFee(totals.revenue)}원</span>
+                <span className="text-sm font-bold text-primary-900">{formatFee(totals.revenue)}</span>
               </div>
               <div className="mt-1 text-xs text-primary-600">
                 모임 {totals.meetings}회 · 참여 {totals.participants}명
@@ -218,7 +218,7 @@ export default function RegionRevenueTable({ entries, currentMonth }: Props) {
                     <td className="px-4 py-2.5 text-right text-neutral-600">{row.meetings}회</td>
                     <td className="px-4 py-2.5 text-right text-neutral-600">{row.participants}명</td>
                     <td className="px-4 py-2.5 text-right font-medium text-primary-800">
-                      {formatFee(row.revenue)}원
+                      {formatFee(row.revenue)}
                     </td>
                   </tr>
                 ))}
@@ -229,7 +229,7 @@ export default function RegionRevenueTable({ entries, currentMonth }: Props) {
                   <td className="px-4 py-2.5 text-right font-bold text-primary-700">{totals.meetings}회</td>
                   <td className="px-4 py-2.5 text-right font-bold text-primary-700">{totals.participants}명</td>
                   <td className="px-4 py-2.5 text-right font-bold text-primary-900">
-                    {formatFee(totals.revenue)}원
+                    {formatFee(totals.revenue)}
                   </td>
                 </tr>
               </tfoot>

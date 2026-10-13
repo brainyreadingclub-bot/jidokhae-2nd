@@ -144,7 +144,11 @@ export default async function NextTalkPage() {
           .eq('meeting_type', 'discussion')
           .neq('status', 'deleted')
           .lte('date', pastMeetings[0].date),
-        admin.from('discussion_topics').select('id, meeting_id').in('meeting_id', pastIds),
+        admin
+          .from('discussion_topics')
+          .select('id, meeting_id')
+          .in('meeting_id', pastIds)
+          .not('published_at', 'is', null),
         admin.rpc('get_confirmed_counts', { meeting_ids: pastIds }),
       ])
 

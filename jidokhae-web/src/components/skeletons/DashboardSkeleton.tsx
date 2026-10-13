@@ -12,7 +12,7 @@ function SkeletonRow() {
 
 export default function DashboardSkeleton() {
   return (
-    <div className="px-5 pt-4 pb-6">
+    <div>
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <div className="h-6 w-20 animate-pulse rounded bg-neutral-100" />
