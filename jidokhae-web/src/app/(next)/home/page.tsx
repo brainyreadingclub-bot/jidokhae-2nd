@@ -7,6 +7,8 @@ import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
 import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
+import { pickUpcomingRegulars } from '@/lib/home-upcoming'
+import { PARTICIPATED_STATUSES } from '@/lib/registration-status'
 import HomeView, { type HomeData } from '@/components/next/HomeView'
 import WhatsNewSheet from '@/components/next/WhatsNewSheet'
 import type { Meeting } from '@/types/meeting'
@@ -33,8 +35,12 @@ export default async function NextHomePage() {
       .order('time', { ascending: true }),
     // 내 신청 — 범위는 아래 주석 참조
     user
-      ? supabase.from('registrations').select('meeting_id, status').eq('user_id', user.id)
-      : Promise.resolve({ data: [] as { meeting_id: string; status: string }[] }),
+      ? supabase
+          .from('registrations')
+          // meetings join — 「정기모임에 확정된 적 있는 지역」(⑥ 다가오는 정기모임 정렬)용
+          .select('meeting_id, status, meetings(region, meeting_type)')
+          .eq('user_id', user.id)
+      : Promise.resolve({ data: [] }),
     user ? listAppNotifications(user.id, 10) : [],
   ])
   const nickname = profile?.nickname || '회원'
@@ -49,7 +55,12 @@ export default async function NextHomePage() {
   // (재신청은 새 행을 만들어서 한 모임에 여러 행이 생길 수 있다).
   // (다가오는 모임이 없으면 신청 이력은 쓰지 않는다 — 옛 코드는 그때 조회 자체를 건너뛰었다)
   const meetingIds = upcoming.map((m) => m.id)
-  const allRegs = meetingIds.length > 0 ? (myRegs ?? []) : []
+  type MyReg = {
+    meeting_id: string
+    status: string
+    meetings: { region: string | null; meeting_type: string | null } | null
+  }
+  const allRegs = meetingIds.length > 0 ? ((myRegs ?? []) as unknown as MyReg[]) : []
   // waitlisted 포함 (홍보 카드에서 대기자에게 "신청하세요" 노출 방지)
   const myRegMap = new Map(
     allRegs
@@ -97,24 +108,49 @@ export default async function NextHomePage() {
   // ⑥ 다가오는 정기모임 최대 3건 (2026-10-13 시안) — 「가장 가까운 모임」 1건을 대신한다.
   //    회원 권한(anon + RLS) 클라이언트로 읽은 upcoming에서 고른다 — 쿼리 1건(인원 수)만 추가.
   //    내가 신청한 모임(confirmed·pending_transfer·waitlisted = 취소 제외)은 뺀다.
-  const regularPicks = upcoming
-    .filter((m) => m.meeting_type === 'regular' && !myRegMap.has(m.id))
-    .slice(0, 3)
-  const { data: counts } = regularPicks.length > 0
-    ? await supabase.rpc('get_confirmed_counts', { meeting_ids: regularPicks.map((m) => m.id) })
-    : { data: [] }
+  //    마감된 모임도 뺀다 — 신청할 수 있는 것만 (2차 수정)
+  const regularCandidates = upcoming.filter(
+    (m) => m.meeting_type === 'regular' && !myRegMap.has(m.id),
+  )
+  const discussion = upcoming.find((m) => m.meeting_type === 'discussion')
+  // 인원 수(⑥)와 토론 격리 플래그(④)는 서로 무관하다 — 동시에 받는다 (속도 점검의 원칙 유지).
+  // 격리 플래그 OFF면 홍보를 내린다 — "새로 들어오는 것만 막는다"의 홈 쪽 몫.
+  // ② 내 모임 스트립은 플래그와 무관하게 위에서 그대로 렌더된다(결제한 모임은 안 숨긴다)
+  const [{ data: counts }, discussionEnabled] = await Promise.all([
+    regularCandidates.length > 0
+      ? supabase.rpc('get_confirmed_counts', {
+          meeting_ids: regularCandidates.map((m) => m.id),
+        })
+      : Promise.resolve({ data: [] }),
+    discussion ? isDiscussionMeetingEnabled() : false,
+  ])
   const countMap = new Map(
     ((counts ?? []) as { meeting_id: string; confirmed_count: number }[]).map((c) => [
       c.meeting_id,
       Number(c.confirmed_count),
     ]),
   )
+  // 정기모임에 확정된 적 있는 지역 — 그 지역 모임을 먼저 채운다 (pending_transfer = confirmed 동등)
+  const homeRegions = new Set(
+    allRegs
+      .filter(
+        (r) =>
+          (PARTICIPATED_STATUSES as readonly string[]).includes(r.status) &&
+          r.meetings?.meeting_type === 'regular' &&
+          r.meetings.region,
+      )
+      .map((r) => r.meetings!.region as string),
+  )
+  const regularPicks = pickUpcomingRegulars(
+    regularCandidates.filter((m) => (countMap.get(m.id) ?? 0) < m.capacity),
+    homeRegions,
+  )
   const upcomingRegular: HomeData['upcoming'] = regularPicks.map((m) => {
     const count = countMap.get(m.id) ?? 0
     const left = m.capacity - count
     // 3자리 이하일 때만 말한다. 신청자 3명 미만 마스킹(visibility.ts)도 그대로 지킨다
     const seatsLeft =
-      left <= 0 ? 0 : left <= 3 && !shouldMaskConfirmedCount(count, m.capacity, false) ? left : null
+      left <= 3 && !shouldMaskConfirmedCount(count, m.capacity, false) ? left : null
     return {
       id: m.id,
       date: m.date,
@@ -149,11 +185,7 @@ export default async function NextHomePage() {
   }
 
   // ④ 토론 홍보 — 미신청일 때. 「신청 열림」은 정기모임과 같은 기준(모임 당일까지) — D-7 마감 폐지(2026-10-13)
-  const discussion = upcoming.find((m) => m.meeting_type === 'discussion')
-
-  // 격리 플래그 OFF면 홍보를 내린다 — "새로 들어오는 것만 막는다"의 홈 쪽 몫.
-  // ② 내 모임 스트립은 플래그와 무관하게 위에서 그대로 렌더된다(결제한 모임은 안 숨긴다)
-  const discussionEnabled = discussion ? await isDiscussionMeetingEnabled() : false
+  // (discussion · discussionEnabled는 위 ⑥에서 인원 수와 함께 받았다)
 
   // 자격 판정 본체가 들어왔다 — `firstTime` 어림짐작을 실제 판정으로 바꾼다.
   // 카드를 숨기지는 않는다(블라인드 금지). 라벨만 바뀌고, CTA는 「발제문 먼저 읽어보기」라
