@@ -47,15 +47,31 @@ export const NEXT_COOKIE_MAX_AGE = 600
  * 로그인했더니 에러가 뜨는 형태라 회원 입장에서 원인을 짐작할 수 없다.
  *
  * prefetch도 제외한다 — 회원이 누른 적 없는 링크가 로그인 후 목적지가 되면 안 된다.
+ *
+ * 화면이 아닌 파일 요청도 제외한다(2026-10-13). 로그인 화면이 뜨면서 브라우저가 스스로
+ * 부르는 파일(`/_vercel/insights/script.js` 분석 스크립트, `/sw.js` 서비스워커)도 미인증으로
+ * 잡혀 목적지를 **덮어썼다.** 그래서 로그인 직후 회원이 404를 보고, 알림톡 딥링크도 사라졌다.
+ * `sec-fetch-dest`가 있으면 그것으로, 없으면(구형 브라우저) 확장자·`/_vercel/` 경로로 거른다.
  */
+const NON_PAGE_DESTS = new Set([
+  'script', 'serviceworker', 'sharedworker', 'worker', 'style', 'image', 'font',
+  'manifest', 'audio', 'video', 'track', 'object', 'embed', 'report',
+])
+
 export function shouldRememberPath(
   method: string,
   pathname: string,
   isPrefetch = false,
+  fetchDest: string | null = null,
 ): boolean {
   if (method !== 'GET') return false
   if (isPrefetch) return false
   if (pathname.startsWith('/api/')) return false
+  if (pathname.startsWith('/_vercel/')) return false
+  if (fetchDest && NON_PAGE_DESTS.has(fetchDest.toLowerCase())) return false
+  // 마지막 조각에 확장자가 있으면 파일이다 — 우리 화면 주소에는 점이 들어가지 않는다
+  const last = pathname.slice(pathname.lastIndexOf('/') + 1)
+  if (/\.[a-z0-9]+$/i.test(last)) return false
   return true
 }
 

@@ -105,6 +105,7 @@ export async function middleware(request: NextRequest) {
           request.headers.get('sec-purpose'),
           request.headers.get('purpose'),
         ),
+        request.headers.get('sec-fetch-dest'),
       )
     if (remember) {
       redirectResponse.cookies.set(NEXT_COOKIE, next, {
