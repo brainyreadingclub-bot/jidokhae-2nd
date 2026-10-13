@@ -1,0 +1,111 @@
+---
+name: 마무리
+description: "하루 작업 마무리. 대표님이 「마무리」「오늘 끝」「오늘 작업 마무리해줘」라고 하면 묻지 말고 실행한다. ① 오늘 main에 합친 것 목록 ② 결정 기록 상태·빠진 결정 갱신 후 저장 ③ 운영 안내서에 넘길 「오늘 바뀐 운영 기능」 코드 블록 ④ 열린 일·다음 할 일 메모 ⑤ 저장 안 된 문서 변경 알림. 회고(교훈 기록)는 reflect 스킬 몫 — 이 스킬이 끝난 뒤 필요하면 제안만 한다."
+---
+
+# 마무리
+
+대표님은 비전공자다. 보고는 「무엇을 했는지 → 정할 게 있는지 → 다음 단계」 순서, 15줄 안팎, 파일명·PR 번호·전문용어 없이.
+**이 스킬 안에서 병합·배포·DB 변경은 하지 않는다.** 할 일이 보이면 ④에 적는다.
+
+## ⓪ 준비 — 날짜와 위치
+
+```bash
+date "+%Y-%m-%d %H:%M"              # 한국시간 기준 「오늘」. 기억으로 쓰지 않는다
+git fetch -q origin
+git -C "$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")" branch --show-current   # 저장소 본 폴더의 가지
+```
+
+본 폴더가 `feat/agent-team`이 아니면 ②의 저장 방법이 달라진다(②-3).
+
+## ① 오늘 main에 합친 것
+
+```bash
+D=$(date +%Y-%m-%d)
+gh pr list --repo brainyreadingclub-bot/jidokhae-2nd --state merged --base main \
+  --search "merged:>=$D" --json number,title,mergedAt,headRefName --limit 50
+git log origin/main --first-parent --merges --since="$D 00:00 +0900" --format='%h %ad %s' --date=format:%H:%M
+```
+
+- 두 목록이 다르면(다른 세션이 PR 없이 합친 것 등) 둘 다 적는다
+- 마지막 병합 커밋의 실서비스 배포 상태를 본다 — `gh api "repos/brainyreadingclub-bot/jidokhae-2nd/deployments?sha=<sha>&environment=Production" --jq '.[0].id'` → `/deployments/<id>/statuses --jq '.[0].state'`. `success`가 아니면 ✅로 바꾸지 않는다
+- 보고에는 한 줄에 하나, 회원·운영자가 겪는 말로(「토론모임 환불이 14일/7일 기준으로 바뀜」)
+
+## ② 결정 기록 갱신 → 저장
+
+**읽는 판** — 늘 문서 작업 공간(`feat/agent-team`)의 최신판. 본 폴더가 그 가지면 본 폴더의 `검토문서/DECISIONS.md`, 아니면 `git show feat/agent-team:검토문서/DECISIONS.md`. (`.claude/hooks/decisions-source.mjs`와 같은 순서)
+
+1. **상태 갱신** — ①의 각 항목에 해당하는 행을 찾아 상태 칸을 고친다. 상태 뜻은 파일 머리의 표가 정본이다
+   - 배포 success + 회원·운영자가 지금 겪는다 → `✅ 적용`
+   - 배포됐지만 플래그 OFF → `🌑 다크 배포`
+   - 코드는 나갔는데 DB 작업이 대표님 실행 대기 → `🔨 미적용` 유지 + 「SQL 실행 대기」
+   - 한 결정이 두 상태에 걸치면 둘 다 적는다
+2. **빠진 결정 추가** — 오늘 대화에서 대표님이 **분명히 정한 것** 중 행이 없는 것. 한 결정 = 한 줄, 뒤집힌 결정은 지우지 말고 취소선 + 「YYYY-MM-DD 행으로 바뀜」
+   - 추측으로 결정을 만들지 않는다. 애매하면 ④의 「정할 것」으로 보낸다
+3. **고치는 법** — 🔴 **파일을 통째로 다시 쓰지 않는다.** 고치기 직전에 다시 읽고 Edit로 자기 줄만. 다른 세션이 넣은 저장 전 줄이 섞여 있을 수 있다(2026-10-13 실제 사례) — 지우거나 덮지 않는다
+   - 관리자 세션에서 `manager-write-guard`가 이 파일 수정을 막으면 **제품기획 부서에 맡긴다**(바꿀 줄을 그대로 적어서). 우회하지 않는다
+4. **저장** — 결정 기록 파일 **하나만** 커밋한다. 다른 파일은 같이 넣지 않는다(⑤에서 알리기만)
+   - 본 폴더가 `feat/agent-team`이면 거기서 `git add -- 검토문서/DECISIONS.md` → 커밋 → `git push origin feat/agent-team`
+   - 아니면 본 폴더를 건드리지 말고 `feat/agent-team` 워크트리를 따로 열어 같은 일을 하거나, 대표님께 「결정 기록 저장은 본 폴더 작업이 끝난 뒤」로 ④에 남긴다
+   - 그 파일에 **다른 세션의 저장 전 줄이 있으면** 대표님께 한 줄로 알리고, 함께 저장할지는 대표님 말을 따른다(2026-10-13에는 「함께 넣어」였다)
+   - 커밋 메시지 끝 두 줄은 세션 지시대로(Co-Authored-By · Claude-Session)
+
+## ③ 운영 안내서에 넘길 「오늘 바뀐 운영 기능」
+
+①에서 **운영자나 회원이 하는 일·보는 화면이 바뀐 것만** 골라 **코드 블록 하나**로 낸다. 대표님이 그대로 복사해 운영 안내서에 붙인다.
+
+- 넣지 않는 것: 내부 정리, 테스트, 문서, 속도 개선처럼 쓰는 사람이 모르는 변경
+- 형식(한 줄에 하나):
+
+```
+[YYYY-MM-DD 바뀐 운영 기능]
+- (어디서) 무엇이 바뀌었나 — 운영자가 할 일 / 회원이 보게 되는 것
+- (토론모임 환불) 14일 전 100% · 7일 전 50% · 이후 환불 없음 — 정책 페이지·취소 창 모두 반영
+```
+
+- 금액은 「원」 없이 숫자만. 아직 DB 작업 대기라 안 켜진 기능은 「(DB 작업 뒤 켜짐)」을 붙인다
+- 해당 없음이면 블록 안에 「오늘 바뀐 운영 기능 없음」 한 줄
+
+## ④ 열린 일 · 다음 할 일
+
+- 대표님 승인 대기(병합·배포·SQL·알림톡 제출), DB 실행 대기 SQL, 다음 세션 첫 일을 짧게 모은다
+- 대표님이 정해야 하는데 미룬 것은 `docs/agent-team/결정대기.md`에 적는다(정해진 것은 지운다)
+- 대시보드 기록(전역 지시):
+
+```bash
+node C:/Projects/cockpit/bin/cockpit.mjs record --cwd "C:/jidokhae-2nd" --did "<오늘 한 일 한두 줄>" --next "<다음에 무엇부터>"
+```
+
+  `--next`는 확실할 때만 쓴다. 모르면 비운다
+
+## ⑤ 저장 안 된 문서 변경
+
+```bash
+MAIN="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")"
+git -C "$MAIN" status --porcelain -- '*.md'
+git worktree list --porcelain | grep '^worktree ' | cut -d' ' -f2- | while read w; do
+  n=$(git -C "$w" status --porcelain -- '*.md' 2>/dev/null | wc -l); [ "$n" -gt 0 ] && echo "$w: $n"
+done
+```
+
+- **알리기만 한다.** 다른 세션의 기록이 섞여 있을 수 있어 이 스킬은 커밋하지 않는다(②의 결정 기록 하나만 예외)
+- 보고에는 「저장 안 된 문서가 N곳에 있다 — 어느 세션 것인지」 정도로
+
+## 보고 형식
+
+```
+**한 일**
+- 오늘 합친 것 N건: …
+- 결정 기록: N줄 상태 갱신, N줄 추가, 저장(온라인 저장소까지/로컬만)
+
+(운영 안내서용 코드 블록)
+
+**정할 것**
+(최대 3개, 질문 / 권고 / 안 정하면 생기는 일 — 없으면 「결정할 것 없음」)
+
+**다음 단계**
+- 열린 일 …
+- 저장 안 된 문서: …
+```
+
+끝나고 이번 세션에 다시 쓸 교훈이 있었으면 「회고(reflect)도 할까요?」 한 줄만 덧붙인다.

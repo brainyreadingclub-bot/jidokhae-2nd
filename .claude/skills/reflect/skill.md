@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: "세션 회고 스킬. 작업 세션이 끝날 때 사용하여 '어떻게 작업했는지'를 분석하고 교훈을 메모리에 기록한다. 트리거: /reflect, 세션 회고, 회고해줘, 오늘 뭘 배웠지, what did we learn, session retrospective. 사용자가 '작업 마무리', '오늘 끝', '쉬려고 해' 같은 종료 신호를 보낼 때 이 스킬을 제안할 것."
+description: "세션 회고 스킬. 작업 세션이 끝날 때 사용하여 '어떻게 작업했는지'를 분석하고 교훈을 메모리에 기록한다. 트리거: /reflect, 세션 회고, 회고해줘, 오늘 뭘 배웠지, what did we learn, session retrospective. 「마무리」「오늘 끝」은 마무리 스킬이 먼저 받는다 — 이 스킬은 그 뒤에 교훈이 있을 때만 제안할 것."
 ---
 
 # 세션 회고 (Reflect)
