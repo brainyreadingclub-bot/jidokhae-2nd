@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec } from '@/components/next/TossUI'
 import { formatKoreanTime } from '@/lib/kst'
@@ -9,7 +8,9 @@ import { formatKoreanTime } from '@/lib/kst'
  * 0건이면 page가 빈 배열을 넘기고 이 칸은 통째로 안 그린다.
  *
  * 남은 자리는 3자리 이하일 때만 말한다 — 넉넉할 때 숫자를 보이면 「아무도 안 오나」로 읽힌다.
- * 링크에 `?from=home_upcoming`을 단다 — 「홈에서 온 신청」을 세는 출처 표시.
+ * 마감된 모임은 page가 빼고 넘긴다 — 신청할 수 있는 것만 (2차 수정).
+ * 카드 전체가 모임 상세로 가는 링크다. 「신청하기」는 그 안의 표시라 카드·버튼 클릭은 같은 클릭이다.
+ * 클릭 기록(구현 때): 카드 = target 'meeting', 「다른 일정도 보기」 = target 'more' — home_upcoming_clicks 표.
  */
 
 export type UpcomingRegular = {
@@ -18,7 +19,7 @@ export type UpcomingRegular = {
   time: string
   region: string
   venueName: string
-  /** 남은 자리. null = 넉넉함(표시 안 함) / 0 = 마감 */
+  /** 남은 자리 (3 이하일 때만). null = 넉넉함 — 표시 안 함. 마감 모임은 page가 아예 안 넘긴다 */
   seatsLeft: number | null
 }
 
@@ -42,12 +43,11 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
       >
         {items.map((m, i) => {
           const { month, day, weekday } = dayParts(m.date)
-          const full = m.seatsLeft === 0
           return (
             <TrackedLink
               key={m.id}
               eventName="home_card_click"
-              eventParams={{ card: 'upcoming', position: i + 1, full }}
+              eventParams={{ card: 'upcoming', position: i + 1 }}
               href={`/meet/${m.id}?from=home_upcoming`}
               className="flex min-h-[68px] items-center gap-3 border-t border-tg-100 py-3 first:border-t-0"
             >
@@ -59,8 +59,10 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
                 <span className="block text-[10px] font-semibold text-tg-600">{weekday}</span>
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold tracking-tight">
-                  {m.region} · {m.venueName}
+                {/* 지역을 장소보다 한 단계 진하게 — 어디서 하는지가 먼저 읽히게 */}
+                <span className="block truncate text-sm tracking-tight">
+                  <b className="font-extrabold text-tg-900">{m.region}</b>
+                  <span className="font-semibold text-tg-700"> · {m.venueName}</span>
                 </span>
                 <span className="mt-0.5 block truncate text-xs text-tg-600">
                   {formatKoreanTime(m.time)}
@@ -69,26 +71,22 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
                   )}
                 </span>
               </span>
-              {full ? (
-                <span className="flex h-9 flex-none items-center rounded-[10px] bg-tg-100 px-3 text-xs font-bold text-tg-600">
-                  마감
-                </span>
-              ) : (
-                <span className="flex h-9 flex-none items-center rounded-[10px] bg-brand-bg px-3.5 text-xs font-extrabold text-brand-deep">
-                  신청하기
-                </span>
-              )}
+              <span className="flex h-9 flex-none items-center rounded-[10px] bg-brand-bg px-3.5 text-xs font-extrabold text-brand-deep">
+                신청하기
+              </span>
             </TrackedLink>
           )
         })}
       </div>
-      <Link
+      <TrackedLink
+        eventName="home_card_click"
+        eventParams={{ card: 'upcoming_more' }}
         href="/meet"
         className="mt-3 flex h-10 items-center justify-center gap-[3px] text-[12.5px] font-bold text-tg-600"
       >
         다른 일정도 보기
         <span aria-hidden>›</span>
-      </Link>
+      </TrackedLink>
     </>
   )
 }
