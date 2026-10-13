@@ -91,6 +91,22 @@ describe('shouldRememberPath', () => {
     // 회원이 누른 적 없는 링크가 로그인 후 목적지가 되면 안 된다
     expect(shouldRememberPath('GET', '/meetings/abc', true)).toBe(false)
   })
+
+  it('화면이 아닌 파일 요청은 기억하지 않는다 (로그인 직후 404 사고, 2026-10-13)', () => {
+    // 로그인 화면이 뜨며 브라우저가 부르는 파일이 딥링크를 덮어썼다
+    expect(shouldRememberPath('GET', '/_vercel/insights/script.js')).toBe(false)
+    expect(shouldRememberPath('GET', '/sw.js')).toBe(false)
+    expect(shouldRememberPath('GET', '/sw.js', false, 'serviceworker')).toBe(false)
+    expect(shouldRememberPath('GET', '/robots.txt')).toBe(false)
+    expect(shouldRememberPath('GET', '/_vercel/anything')).toBe(false)
+    expect(shouldRememberPath('GET', '/talk', false, 'script')).toBe(false)
+  })
+
+  it('화면 이동(document)과 앱 안 이동(empty)은 여전히 기억한다', () => {
+    expect(shouldRememberPath('GET', '/meetings/abc', false, 'document')).toBe(true)
+    expect(shouldRememberPath('GET', '/talk/topic/abc', false, 'empty')).toBe(true)
+    expect(shouldRememberPath('GET', '/meet/abc', false, null)).toBe(true)
+  })
 })
 
 describe('isPrefetchRequest', () => {
