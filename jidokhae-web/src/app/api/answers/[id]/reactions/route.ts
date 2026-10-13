@@ -3,6 +3,7 @@ import { getRouteUser } from '@/lib/api-auth'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { upsertReactionNotification } from '@/lib/app-notifications'
 import { getProfile } from '@/lib/profile'
+import { getAnswerAccess } from '@/lib/answer-access'
 
 /** 공감 토글. 본인 글에는 알림 없음. 알림은 묶음 처리(upsert). */
 export async function POST(
@@ -21,10 +22,14 @@ export async function POST(
     const admin = createServiceClient()
     const { data: answer } = await admin
       .from('topic_answers')
-      .select('id, user_id')
+      .select('id, user_id, discussion_topics(meeting_id)')
       .eq('id', answerId)
       .single()
-    if (!answer) {
+    // 읽을 수 없는 답변에는 공감도 못 한다 — 「있다」는 것도 안 알린다(404로 같게)
+    const meetingId = (answer as { discussion_topics?: { meeting_id: string } | null } | null)
+      ?.discussion_topics?.meeting_id
+    const access = meetingId ? await getAnswerAccess(user.id, meetingId) : null
+    if (!answer || !access?.canRead) {
       return NextResponse.json(
         { status: 'error', message: '답변을 찾을 수 없어요' },
         { status: 404 },

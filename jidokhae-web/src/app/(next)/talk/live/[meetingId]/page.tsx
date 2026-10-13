@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/admin'
+import { getUser } from '@/lib/auth'
 import { getTopicsWithStats, getAnswersWithMeta } from '@/lib/discussion'
+import { getAnswerAccess } from '@/lib/answer-access'
 import LiveMode, { type LiveTopic } from '@/components/next/LiveMode'
 import type { Meeting } from '@/types/meeting'
 
@@ -20,10 +22,15 @@ export default async function LivePage({
     .single()
   if (!meeting || (meeting as Meeting).meeting_type !== 'discussion') notFound()
 
-  const topics = await getTopicsWithStats(meetingId, null)
+  const user = await getUser()
+  const [topics, access] = await Promise.all([
+    getTopicsWithStats(meetingId, null),
+    getAnswerAccess(user?.id ?? null, meetingId),
+  ])
+  // 🔒 답변은 그 모임 신청자 + 운영진만 (2026-10-13). 아니면 발제만 보이고 답변은 안 내려보낸다
   const liveTopics: LiveTopic[] = await Promise.all(
     topics.map(async (t) => {
-      const answers = await getAnswersWithMeta(t.id, null)
+      const answers = access.canRead ? await getAnswersWithMeta(t.id, null) : []
       return {
         ...t,
         answers: answers.map((a) => ({

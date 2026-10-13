@@ -1,24 +1,34 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { trackEvent } from '@/lib/analytics'
 import type { DiscussionTopic, AnswerWithMeta } from '@/types/discussion'
+import type { TopicApplyCta } from '@/lib/answer-access-rules'
 
 /**
  * 발제 스레드 (전면개편 스펙 §4-1).
- * 읽기 = 회원 전체 / 쓰기 = 신청자 (canWrite prop — 서버에서 판정).
- * 미신청자 입력창 자리에는 "신청하면 함께 이야기할 수 있어요".
+ * 읽기 = 그 모임 신청자 + 운영진 / 쓰기 = 신청자 (둘 다 서버에서 판정, 2026-10-13).
+ * 읽기 자격이 없으면 서버가 남의 답변을 아예 안 내려보낸다 — 여기서는 답변 수만 보여준다.
+ * 미신청자 입력창 자리에는 안내 + 모임 상세로 가는 신청 버튼(결제로 바로 보내지 않는다).
  */
 export default function TopicThread({
   topic,
   answers,
+  answerCount,
+  canRead,
   canWrite,
+  applyCta,
   myUserId,
 }: {
   topic: DiscussionTopic
   answers: AnswerWithMeta[]
+  /** 전체 답변 수 — 읽기 자격이 없어도 수는 보인다 */
+  answerCount: number
+  canRead: boolean
   canWrite: boolean
+  applyCta: TopicApplyCta
   myUserId: string | null
 }) {
   const router = useRouter()
@@ -134,7 +144,12 @@ export default function TopicThread({
         </div>
       ))}
 
-      {others.length === 0 && !myAnswer && (
+      {/* 읽기 자격 없음 — 답변 수만 */}
+      {!canRead && (
+        <p className="mt-4 text-xs font-semibold text-tg-600">답변 {answerCount}개</p>
+      )}
+
+      {canRead && others.length === 0 && !myAnswer && (
         <p className="mt-4 rounded-[14px] bg-tg-50 p-4 text-center text-xs text-tg-600">
           아직 답변이 없어요 — 첫 답을 남겨보세요
         </p>
@@ -144,6 +159,8 @@ export default function TopicThread({
       {canWrite ? (
         !myAnswer && (
           <div className="mt-4 border-t border-tg-100 pt-3">
+            {/* 실제 읽기 범위와 같아야 한다 — answer-access-rules.ts canReadAnswers */}
+            <p className="mb-2 text-[11px] text-tg-600">이 모임 신청자와 운영진만 읽어요</p>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -167,10 +184,30 @@ export default function TopicThread({
             </button>
           </div>
         )
-      ) : (
-        <p className="mt-4 rounded-[12px] bg-tg-50 p-3.5 text-center text-xs font-semibold text-tg-600">
-          신청하면 함께 이야기할 수 있어요 · 읽기는 누구나
-        </p>
+      ) : canRead ? null : (
+        // 운영진(읽기만 가능)에게는 이 칸이 필요 없다 — 신청 안 한 회원에게만
+        <div className="mt-4 rounded-[12px] bg-tg-50 p-3.5 text-center">
+          <p className="break-keep text-xs font-semibold leading-relaxed text-tg-700">
+            신청하면 다른 분들의 답변을 읽고 함께 이야기할 수 있어요
+          </p>
+          {applyCta === 'apply' ? (
+            <Link
+              href={`/meet/${topic.meeting_id}?from=topic`}
+              onClick={() => trackEvent('topic_apply_click', { topic_id: topic.id })}
+              className="mt-2.5 flex min-h-[44px] items-center justify-center rounded-[12px] bg-brand text-[13px] font-bold text-white"
+            >
+              모임 보고 신청하기
+            </Link>
+          ) : (
+            <p className="mt-2.5 flex min-h-[40px] items-center justify-center rounded-[12px] bg-tg-100 text-xs font-bold text-tg-600">
+              {applyCta === 'full'
+                ? '정원이 다 찼어요'
+                : applyCta === 'waitlisted'
+                  ? '대기 중이에요 — 자리가 나면 함께 읽을 수 있어요'
+                  : '신청이 마감됐어요'}
+            </p>
+          )}
+        </div>
       )}
     </div>
   )
