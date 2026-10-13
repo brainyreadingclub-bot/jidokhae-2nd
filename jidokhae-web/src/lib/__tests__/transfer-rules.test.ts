@@ -4,7 +4,10 @@ import {
   transferDoneHref,
   showsDepositGuide,
   isNoTransferNeeded,
+  registerEntry,
+  showsCardOption,
 } from '@/lib/transfer-rules'
+import { isAllowedCardAmount } from '@/lib/pricing'
 
 // 2026-10-13 — 0원 모임 계좌이체 신청은 처음부터 신청 완료(register_transfer → 'confirmed')
 
@@ -52,5 +55,45 @@ describe('isNoTransferNeeded — 계좌이체 단계 입금 안내 숨김', () =
   it('🔴 유료 모임이면 청구액이 무엇이든 보인다 (서버 판정과 같은 두 조건)', () => {
     expect(isNoTransferNeeded(10000, 0)).toBe(false)
     expect(isNoTransferNeeded(10000, 5000)).toBe(false)
+  })
+})
+
+describe('registerEntry — 신청 버튼을 누르면 어디로 (0원은 카드 선택지 없음)', () => {
+  it('🔴 0원이면 결제 방식과 상관없이 계좌이체 단계로 바로 (card_only에서도 신청 길이 열려 있게)', () => {
+    expect(registerEntry('card_only', 0)).toBe('transfer')
+    expect(registerEntry('both', 0)).toBe('transfer')
+    expect(registerEntry('transfer_only', 0)).toBe('transfer')
+    expect(registerEntry(undefined, 0)).toBe('transfer')
+  })
+  it('유료는 종전 그대로', () => {
+    expect(registerEntry('both', 10000)).toBe('method')
+    expect(registerEntry('transfer_only', 10000)).toBe('method')
+    expect(registerEntry('card_only', 10000)).toBe('card')
+    expect(registerEntry(undefined, 5000)).toBe('card')
+  })
+})
+
+describe('showsCardOption — 결제 방법 창의 카드 선택지', () => {
+  it('🔴 0원이면 숨긴다', () => {
+    expect(showsCardOption(0)).toBe(false)
+  })
+  it('유료면 보인다', () => {
+    expect(showsCardOption(10000)).toBe(true)
+  })
+})
+
+describe('isAllowedCardAmount — 서버 카드 금액 화이트리스트', () => {
+  it('🔴 0원 모임의 0원 카드 결제는 거절 (종전 화이트리스트가 [0]이라 통과했다)', () => {
+    expect(isAllowedCardAmount(0, 'regular', 0)).toBe(false)
+    expect(isAllowedCardAmount(0, 'discussion', 0)).toBe(false)
+  })
+  it('0원 모임에 금액이 실린 결제도 거절 (호출부가 safeCancel로 돌려준다)', () => {
+    expect(isAllowedCardAmount(0, 'regular', 10000)).toBe(false)
+  })
+  it('정가 · 정기모임 스텝 50%는 허용, 토론모임 스텝가는 거절', () => {
+    expect(isAllowedCardAmount(10000, 'regular', 10000)).toBe(true)
+    expect(isAllowedCardAmount(10000, 'regular', 5000)).toBe(true)
+    expect(isAllowedCardAmount(25000, 'discussion', 25000)).toBe(true)
+    expect(isAllowedCardAmount(25000, 'discussion', 12500)).toBe(false)
   })
 })

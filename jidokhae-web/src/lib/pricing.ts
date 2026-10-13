@@ -59,3 +59,16 @@ export function calculateFee(baseFee: number, isStaffDiscount: boolean): number 
   if (!isStaffDiscount) return baseFee
   return Math.floor(baseFee * STAFF_DISCOUNT_RATE)
 }
+
+/**
+ * 카드 결제 금액 화이트리스트 — 정가 또는 (정기모임 한정) 스텝 할인가.
+ * 🔴 **0원은 카드로 받지 않는다** (2026-10-13 대표님 확정). 0원 모임은 계좌이체 한 길 → 바로 신청 완료.
+ *    종전에는 참가비 0이면 화이트리스트가 `[0]`이 되어 0원 PAID 결제가 그대로 통과했다.
+ */
+export function isAllowedCardAmount(meetingFee: number, meetingType: string, amount: number): boolean {
+  if (!(amount > 0)) return false
+  const allowed = isStaffDiscountableMeetingType(meetingType)
+    ? [meetingFee, calculateFee(meetingFee, true)]
+    : [meetingFee]
+  return allowed.includes(amount)
+}

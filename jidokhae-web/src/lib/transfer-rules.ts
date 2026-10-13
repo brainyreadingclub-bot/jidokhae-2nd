@@ -29,3 +29,23 @@ export function showsDepositGuide(type: string | undefined, meetingFee: number |
 export function isNoTransferNeeded(meetingFee: number, chargedFee: number): boolean {
   return meetingFee === 0 && chargedFee === 0
 }
+
+/**
+ * 신청 버튼을 누르면 어디로 가나 (2026-10-13 대표님 확정 — 0원은 카드 선택지를 숨긴다).
+ * - 회원이 낼 금액 0 → **계좌이체 단계로 바로**(= 서버가 바로 신청 완료). 선택지가 하나라 고르는 창을 건너뛴다.
+ *   🔴 `payment_mode`보다 먼저 본다 — `card_only`면 종전에는 0원으로 카드 결제창을 불러 신청 길이 막혔다.
+ *   계좌이체 라우트·RPC는 `payment_mode`를 보지 않으므로 `card_only`에서도 이 길은 열려 있다.
+ * - 그 외 — 종전 그대로: both·transfer_only = 결제 방법 창 / card_only·미지정 = 카드 결제창 직행
+ */
+export type RegisterEntry = 'transfer' | 'method' | 'card'
+
+export function registerEntry(paymentMode: string | undefined, chargedFee: number): RegisterEntry {
+  if (chargedFee === 0) return 'transfer'
+  if (paymentMode === 'transfer_only' || paymentMode === 'both') return 'method'
+  return 'card'
+}
+
+/** 결제 방법 창에 「카드결제」를 보이는가 — 0원은 카드로 받지 않는다(서버 `isAllowedCardAmount`도 거절) */
+export function showsCardOption(chargedFee: number): boolean {
+  return chargedFee > 0
+}

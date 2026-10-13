@@ -15,7 +15,7 @@ import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 import { getActionSkin, type SkinName } from '@/components/meetings/actionButtonSkin'
 import { trackEvent } from '@/lib/analytics'
 import { isWaitlistCardOnly } from '@/lib/waitlist-rules'
-import { isNoTransferNeeded, transferDoneHref } from '@/lib/transfer-rules'
+import { isNoTransferNeeded, registerEntry, showsCardOption, transferDoneHref } from '@/lib/transfer-rules'
 
 type Props = {
   buttonState: ButtonState
@@ -134,9 +134,27 @@ export default function MeetingActionButton({
     if (loading) return
     setLoading(true)
 
+    const entry = registerEntry(paymentMode, effectiveFee)
+
+    // 0원 — 계좌이체(= 바로 신청 완료) 한 길뿐이라 고르는 창 없이 그 단계로 (2026-10-13).
+    // payment_mode보다 먼저 본다: card_only에서도 0원 회원이 카드 결제창으로 가지 않게
+    if (entry === 'transfer') {
+      trackEvent('begin_checkout', {
+        item_id: meetingId,
+        item_name: meetingTitle,
+        value: 0,
+        currency: 'KRW',
+        registration_type: buttonState.type === 'join_waitlist' ? 'waitlist' : 'regular',
+        payment_method: 'transfer',
+      })
+      setRegisterPhase('transfer')
+      setLoading(false)
+      return
+    }
+
     // both / transfer_only: 결제 방법 선택 모달 표시
     // 'both'면 카드+계좌이체 둘 다 활성, 'transfer_only'면 카드는 "준비 중"으로 비활성
-    if (paymentMode === 'transfer_only' || paymentMode === 'both') {
+    if (entry === 'method') {
       trackEvent('begin_checkout', {
         item_id: meetingId,
         item_name: meetingTitle,
@@ -706,8 +724,8 @@ export default function MeetingActionButton({
                   </div>
                 )}
                 <div className="mt-5 space-y-3">
-                  {/* 카드결제 — 'both' 모드면 활성, 'transfer_only' 모드면 비활성 */}
-                  {paymentMode === 'both' ? (
+                  {/* 카드결제 — 'both' 모드면 활성, 'transfer_only' 모드면 비활성. 0원이면 아예 없다 (2026-10-13) */}
+                  {!showsCardOption(effectiveFee) ? null : paymentMode === 'both' ? (
                     <button
                       onClick={handleCardPayment}
                       className={s.optionCard}
@@ -771,12 +789,15 @@ export default function MeetingActionButton({
             {/* Transfer Details */}
             {registerPhase === 'transfer' && (
               <>
-                <button onClick={() => setRegisterPhase('method')} className={s.backBtn}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                  뒤로
-                </button>
+                {/* 0원은 고르는 창을 건너뛰고 왔다 — 돌아갈 선택지가 없으니 「뒤로」를 숨긴다 */}
+                {!noTransferNeeded && (
+                  <button onClick={() => setRegisterPhase('method')} className={s.backBtn}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    뒤로
+                  </button>
+                )}
 
                 <div className="text-center mb-4">
                   <p className={s.transferTitle}>{meetingTitle}</p>
