@@ -52,8 +52,8 @@
 ## 비즈니스 로직 핵심
 - **모임 종류**: `meetings.meeting_type` — `regular`(정기) / `discussion`(토론). **규칙이 서로 다르다**
 - **환불(정기)**: 3일 이상 100% / 2일 50% / 2일 미만 0%
-- **환불(토론)**: 🔴 **7일 전 100% / 3일 전 50% / 이후 불가** (2026-08-14에 14/7일에서 완화). ~~배포 대기~~ → **2026-08-21 머지, prod 가동 중**(`calculateRefundByType`이 단일 진입점)
-- **토론모임 D-7 통일**: 신청 마감 = 환불 100% 경계 = 책 주문 마감이 **전부 같은 날**(D-7, 23:59 KST). 회원이 외울 날짜를 하나로
+- **환불(토론)**: 🔴 **14일 전 100% / 7일 전 50% / 이후 불가** (2026-10-13 대표님 결정 — 옛 7/3일 대체, 10/27 모임 포함 전부). `calculateRefundByType`이 단일 진입점 — 2026-10-13 main 병합
+- ~~**토론모임 D-7 통일**: 신청 마감 = 환불 100% 경계 = 책 주문 마감(D-7)~~ → 🚫 **2026-10-13 폐지.** 정원이 찰 때까지 받는다. 책 주문은 회원 몫이라 서비스에 마감 없음
 - **스텝 할인**: 50%, 모임당 슬롯 2명. 🔴 **정기모임 한정 — 토론모임 제외**(2026-08-17 확정). `pricing.ts` 상수 ↔ SQL 가드(`migration-staff-discount-discussion-guard.sql`) **동기 필수**
 - **무료 회원**: `profiles.is_free=true` — 정산 목록에서만 제외. 토글 UI 없음(SQL로 지정)
 - **엔티티 17개**: `profiles` `meetings` `registrations` `notifications` `site_settings` `venues` `venue_settlements` `banners` `book_quotes` `books` `library_entries` `book_asks` **`discussion_topics` `topic_answers` `answer_replies` `answer_reactions` `app_notifications`**
@@ -129,4 +129,4 @@
 | 알림 종류 union이 **4곳에 서로 다르게** 정의 (`types/notification.ts` 2종 / `lib/notification.ts` 5종 / `notification-log.ts` 7종 / `migration.sql` CHECK 5종). `types/notification.ts`는 **어디서도 import 안 되는 사문** | 인지됨. types로 통합하는 수정이 **미머지** |
 | 발송 실패 시 이력 행이 남고 중복 방지 인덱스가 자리를 차지해 **재시도가 영영 안 됨** | 인지됨. 재발송 버튼은 별도 작업 |
 | 호칭이 채널 간 불일치 — 인앱 닉네임, 알림톡 실명 우선 | 닉네임 통일로 결정됨. 🔨 **코드 미적용** |
-| 토론모임 환불 7/3일, D-7 통일 | ✅ **배포됨** (2026-08-21 머지) |
+| 토론모임 환불 14/7일 + D-7 마감 폐지 (2026-10-13, 옛 7/3·D-7 대체) | ✅ **배포됨** (2026-10-13 머지) |
