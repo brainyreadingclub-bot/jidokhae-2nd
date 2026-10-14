@@ -16,7 +16,9 @@ type Props = {
 export default function AskStrip({ meetingId, meetingLabel, entryPoint = 'my' }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [closing, setClosing] = useState(false)
+  // 닫기는 누르는 순간 띠를 숨긴다. 서버 기록이 실패하면 다시 보이고 알린다
+  const [hidden, setHidden] = useState(false)
+  const [dismissError, setDismissError] = useState(false)
 
   useEffect(() => {
     trackEvent('ask_strip_view', { meeting_id: meetingId, entry_point: entryPoint })
@@ -29,19 +31,26 @@ export default function AskStrip({ meetingId, meetingLabel, entryPoint = 'my' }:
   }, [meetingId, entryPoint])
 
   async function handleDismiss() {
-    setClosing(true)
+    if (hidden) return
+    setHidden(true)
+    setDismissError(false)
     try {
-      await fetch('/api/library/ask', {
+      const res = await fetch('/api/library/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'dismiss', meetingId }),
       })
+      if (!res.ok) throw new Error('dismiss failed')
       trackEvent('ask_dismissed', { meeting_id: meetingId, entry_point: entryPoint })
+      // 화면은 이미 바뀌었다 — 뒤에서 새로 받아 서버 상태와 맞춘다
       router.refresh()
-    } finally {
-      setClosing(false)
+    } catch {
+      setHidden(false)
+      setDismissError(true)
     }
   }
+
+  if (hidden) return null
 
   return (
     <section
@@ -69,9 +78,8 @@ export default function AskStrip({ meetingId, meetingLabel, entryPoint = 'my' }:
         </div>
         <button
           onClick={handleDismiss}
-          disabled={closing}
           aria-label="닫기"
-          className="shrink-0 text-neutral-400 disabled:opacity-50"
+          className="shrink-0 text-neutral-400"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
             <path d="M18 6 6 18" />
@@ -79,6 +87,12 @@ export default function AskStrip({ meetingId, meetingLabel, entryPoint = 'my' }:
           </svg>
         </button>
       </div>
+
+      {dismissError && (
+        <p role="alert" className="mt-2 text-caption font-semibold text-accent-600">
+          닫지 못했어요. 잠시 후 다시 눌러 주세요
+        </p>
+      )}
 
       {open ? (
         <div className="mt-3">

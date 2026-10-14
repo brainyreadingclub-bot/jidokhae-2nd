@@ -15,19 +15,28 @@ const LIVE_REG_STATUSES: string[] = ['confirmed', 'pending_transfer', 'waitliste
 
 export default async function NextHomePage() {
   const user = await getUser()
-  const profile = user ? await getProfile(user.id) : null
-  const nickname = profile?.nickname || '회원'
   const kstToday = getKSTToday()
   const supabase = await createClient()
 
-  // 다가오는 모임 전체 (정기+토론) — 토론 홍보 카드용 책 표지 join
-  const { data: meetings } = await supabase
-    .from('meetings')
-    .select('*, books(thumbnail, authors)')
-    .eq('status', 'active')
-    .gte('date', kstToday)
-    .order('date', { ascending: true })
-    .order('time', { ascending: true })
+  // 프로필·다가오는 모임·내 신청·알림은 서로 무관하다 — 동시에 받는다 (2026-10-13 속도 점검).
+  // 차례로 기다리면 홈 본문이 DB를 네 번 연달아 기다렸다
+  const [profile, { data: meetings }, { data: myRegs }, notis] = await Promise.all([
+    user ? getProfile(user.id) : null,
+    // 다가오는 모임 전체 (정기+토론) — 토론 홍보 카드용 책 표지 join
+    supabase
+      .from('meetings')
+      .select('*, books(thumbnail, authors)')
+      .eq('status', 'active')
+      .gte('date', kstToday)
+      .order('date', { ascending: true })
+      .order('time', { ascending: true }),
+    // 내 신청 — 범위는 아래 주석 참조
+    user
+      ? supabase.from('registrations').select('meeting_id, status').eq('user_id', user.id)
+      : Promise.resolve({ data: [] as { meeting_id: string; status: string }[] }),
+    user ? listAppNotifications(user.id, 10) : [],
+  ])
+  const nickname = profile?.nickname || '회원'
   const upcoming = (meetings ?? []) as (Meeting & {
     books: { thumbnail: string | null; authors: string | null } | null
   })[]
@@ -37,14 +46,9 @@ export default async function NextHomePage() {
   // 지난 모임과 취소 건까지 세야 한다 — "취소했어도 신청은 한 것"(2026-08-26 북극성 정의).
   // status 필터를 JS로 옮긴 이유: 취소 행이 Map에서 확정 행을 덮어쓰면 안 되기 때문
   // (재신청은 새 행을 만들어서 한 모임에 여러 행이 생길 수 있다).
+  // (다가오는 모임이 없으면 신청 이력은 쓰지 않는다 — 옛 코드는 그때 조회 자체를 건너뛰었다)
   const meetingIds = upcoming.map((m) => m.id)
-  const { data: myRegs } = user && meetingIds.length > 0
-    ? await supabase
-        .from('registrations')
-        .select('meeting_id, status')
-        .eq('user_id', user.id)
-    : { data: [] as { meeting_id: string; status: string }[] }
-  const allRegs = myRegs ?? []
+  const allRegs = meetingIds.length > 0 ? (myRegs ?? []) : []
   // waitlisted 포함 (홍보 카드에서 대기자에게 "신청하세요" 노출 방지)
   const myRegMap = new Map(
     allRegs
@@ -57,7 +61,6 @@ export default async function NextHomePage() {
   // ① 반응 — 최신 미읽음 답글 알림 1건
   let reply: HomeData['reply'] = null
   if (user) {
-    const notis = await listAppNotifications(user.id, 10)
     const found = notis.find((n) => n.type === 'answer_reply' && n.read_at === null)
     if (found) {
       reply = {
@@ -123,11 +126,19 @@ export default async function NextHomePage() {
   // 자격 판정 본체가 들어왔다 — `firstTime` 어림짐작을 실제 판정으로 바꾼다.
   // 카드를 숨기지는 않는다(블라인드 금지). 라벨만 바뀌고, CTA는 「발제문 먼저 읽어보기」라
   // 자격이 없어도 할 수 있는 일을 가리킨다
-  const promoLocked =
-    discussion && discussionEnabled && user ? !(await canApplyToDiscussion(user.id)) : false
+  //
+  // 자격 판정(홍보 카드용)과 발제 목록(⑤ 할 일용)은 서로 무관하다 — 동시에 받는다.
+  // 자격 판정은 홍보 카드가 뜰 때(미신청)만 한다 — 이미 신청한 회원에겐 결과를 버리고 있었다
+  const showPromo = !!discussion && discussionEnabled && !myRegMap.has(discussion.id)
+  const wantsTodo =
+    !!user && !!discussion && canWriteAnswer(myRegMap.get(discussion.id) ?? null)
+  const [promoLocked, todoTopics] = await Promise.all([
+    showPromo && user ? canApplyToDiscussion(user.id).then((ok) => !ok) : false,
+    wantsTodo ? getTopicsWithStats(discussion!.id, user!.id) : [],
+  ])
 
   const promo: HomeData['promo'] =
-    discussion && discussionEnabled && !myRegMap.has(discussion.id)
+    discussion && showPromo
       ? {
           meetingId: discussion.id,
           title: discussion.title,
@@ -143,8 +154,8 @@ export default async function NextHomePage() {
 
   // ⑤ 답 안 한 발제 — 신청한 토론이 있을 때
   let todo: HomeData['todo'] = null
-  if (user && discussion && canWriteAnswer(myRegMap.get(discussion.id) ?? null)) {
-    const topics = await getTopicsWithStats(discussion.id, user.id)
+  if (discussion && wantsTodo) {
+    const topics = todoTopics
     if (topics.length > 0) {
       const unanswered = topics.filter((t) => !t.my_answered).length
       const answeredSomeone = topics.filter((t) => t.answer_count > 0).length

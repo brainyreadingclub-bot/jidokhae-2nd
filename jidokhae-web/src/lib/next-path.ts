@@ -20,6 +20,13 @@ export function safeNextPath(raw: string | null | undefined, fallback = '/'): st
   return raw
 }
 
+/**
+ * 목적지가 없을 때 로그인 직후 가는 곳(2026-10-13).
+ * `/`로 보내면 `/`가 다시 `/home`으로 보내 한 번 더 왕복한다. 온보딩 미완성 회원은
+ * `(next)` 레이아웃이 `/`(관문)로 돌려보내므로 여기서 가를 필요가 없다.
+ */
+export const AFTER_LOGIN_PATH = '/home'
+
 /** 현재 요청 경로를 `next` 값으로 만든다(쿼리스트링 보존, 해시는 서버가 못 본다). */
 export function toNextParam(pathname: string, search = ''): string {
   return `${pathname}${search}`

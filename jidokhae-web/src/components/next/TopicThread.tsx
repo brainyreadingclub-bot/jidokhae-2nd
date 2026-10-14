@@ -35,38 +35,100 @@ export default function TopicThread({
   const [body, setBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // 누르는 순간 보여 줄 내 답변 — 서버 목록에 내 답변이 들어오면 그쪽이 우선한다
+  const [pendingMine, setPendingMine] = useState<{ id: string; body: string } | null>(null)
+  // 공감: 누르는 순간 바꿔 둔 값(답변 id → 상태). 서버 목록이 새로 오면 비운다
+  const [reactions, setReactions] = useState<Record<string, { reacted: boolean; count: number }>>({})
+  const [reactingIds, setReactingIds] = useState<Set<string>>(new Set())
+  const [reactionError, setReactionError] = useState<string | null>(null)
+  const [prevAnswers, setPrevAnswers] = useState(answers)
+  if (answers !== prevAnswers) {
+    setPrevAnswers(answers)
+    setReactions({})
+  }
 
-  const myAnswer = myUserId ? answers.find((a) => a.user_id === myUserId) : undefined
-  const others = answers.filter((a) => a.id !== myAnswer?.id)
+  const serverMine = myUserId ? answers.find((a) => a.user_id === myUserId) : undefined
+  const myAnswer: Pick<AnswerWithMeta, 'id' | 'body' | 'reaction_count' | 'reply_count'> | undefined =
+    serverMine ??
+    (pendingMine !== null
+      ? { id: pendingMine.id, body: pendingMine.body, reaction_count: 0, reply_count: 0 }
+      : undefined)
+  const others = answers.filter((a) => a.id !== serverMine?.id)
 
   async function submitAnswer() {
-    if (submitting || body.trim().length === 0) return
+    const text = body.trim()
+    if (submitting || text.length === 0) return
+    // 누르는 순간 내 답변 카드를 먼저 그린다. 실패하면 거두고 쓴 글을 입력칸에 돌려놓는다
     setSubmitting(true)
     setError(null)
+    setPendingMine({ id: 'pending', body: text })
+    setBody('')
+    const rollback = (message: string) => {
+      setPendingMine(null)
+      setBody(text)
+      setError(message)
+    }
     try {
       const res = await fetch(`/api/topics/${topic.id}/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({ body: text }),
       })
       const json = await res.json()
       if (json.status !== 'success') {
-        setError(json.message ?? '잠시 후 다시 시도해 주세요')
+        rollback(json.message ?? '저장하지 못했어요. 잠시 후 다시 시도해 주세요')
         return
       }
-      trackEvent('topic_answer_submit', { topic_id: topic.id })
-      setBody('')
+      setPendingMine({ id: String(json.data?.id ?? 'saved'), body: text })
+      if (!json.data?.duplicate) trackEvent('topic_answer_submit', { topic_id: topic.id })
+      // 화면은 이미 바뀌었다 — 다른 화면(이야기 탭 진행률 등)이 맞도록 뒤에서 새로 받는다
       router.refresh()
     } catch {
-      setError('잠시 후 다시 시도해 주세요')
+      rollback('저장하지 못했어요. 잠시 후 다시 시도해 주세요')
     } finally {
       setSubmitting(false)
     }
   }
 
-  async function toggleReaction(answerId: string) {
-    await fetch(`/api/answers/${answerId}/reactions`, { method: 'POST' })
-    router.refresh()
+  function reactionOf(a: AnswerWithMeta) {
+    return reactions[a.id] ?? { reacted: a.my_reacted, count: a.reaction_count }
+  }
+
+  async function toggleReaction(a: AnswerWithMeta) {
+    // 응답이 오기 전 같은 답변을 또 누르면 서버에서 순서가 꼬인다 — 그 답변만 잠깐 막는다
+    if (reactingIds.has(a.id)) return
+    const before = reactionOf(a)
+    const after = {
+      reacted: !before.reacted,
+      count: Math.max(0, before.count + (before.reacted ? -1 : 1)),
+    }
+    setReactions((r) => ({ ...r, [a.id]: after }))
+    setReactingIds((s) => new Set(s).add(a.id))
+    setReactionError(null)
+    const done = () =>
+      setReactingIds((s) => {
+        const next = new Set(s)
+        next.delete(a.id)
+        return next
+      })
+    try {
+      const res = await fetch(`/api/answers/${a.id}/reactions`, { method: 'POST' })
+      const json = await res.json()
+      if (json.status !== 'success') throw new Error()
+      // 서버가 정한 상태가 다르면(다른 창에서 이미 눌렀던 경우) 서버를 따른다
+      const reacted = Boolean(json.data?.reacted)
+      if (reacted !== after.reacted) {
+        setReactions((r) => ({
+          ...r,
+          [a.id]: { reacted, count: Math.max(0, before.count + (reacted ? 1 : 0) - (before.reacted ? 1 : 0)) },
+        }))
+      }
+    } catch {
+      setReactions((r) => ({ ...r, [a.id]: before }))
+      setReactionError('공감을 반영하지 못했어요. 잠시 후 다시 눌러 주세요')
+    } finally {
+      done()
+    }
   }
 
   return (
@@ -89,7 +151,12 @@ export default function TopicThread({
       {/* 내 답변 */}
       {myAnswer && (
         <div className="mt-3 rounded-[16px] border-[1.5px] border-brand bg-white p-4">
-          <p className="text-[11px] font-extrabold text-brand-deep">내가 쓴 답변</p>
+          <p className="text-[11px] font-extrabold text-brand-deep">
+            내가 쓴 답변
+            {myAnswer.id === 'pending' && (
+              <span className="ml-1.5 font-semibold text-tg-500">저장하는 중…</span>
+            )}
+          </p>
           <p className="mt-1.5 whitespace-pre-wrap text-[12.5px] leading-relaxed text-tg-800">
             {myAnswer.body}
           </p>
@@ -109,7 +176,14 @@ export default function TopicThread({
       )}
 
       {/* 다른 사람 답변 */}
-      {others.map((a) => (
+      {reactionError && (
+        <p role="alert" className="mt-3 text-xs font-semibold text-warnx">
+          {reactionError}
+        </p>
+      )}
+      {others.map((a) => {
+        const r = reactionOf(a)
+        return (
         <div key={a.id} className="border-t border-tg-100 py-3.5 first:border-t-0">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-brand-bg text-[10px] font-extrabold text-brand-deep">
@@ -128,12 +202,13 @@ export default function TopicThread({
           <div className="mt-1.5 flex gap-3 pl-8">
             <button
               type="button"
-              onClick={() => toggleReaction(a.id)}
+              onClick={() => toggleReaction(a)}
+              aria-pressed={r.reacted}
               className={`min-h-[32px] text-[11px] font-semibold ${
-                a.my_reacted ? 'text-brand-deep' : 'text-tg-600'
+                r.reacted ? 'text-brand-deep' : 'text-tg-600'
               }`}
             >
-              ♡ {a.reaction_count > 0 ? a.reaction_count : '공감'}
+              ♡ {r.count > 0 ? r.count : '공감'}
             </button>
             {a.reply_count > 0 && (
               <span className="flex min-h-[32px] items-center text-[11px] text-tg-600">
@@ -142,7 +217,8 @@ export default function TopicThread({
             )}
           </div>
         </div>
-      ))}
+        )
+      })}
 
       {/* 읽기 자격 없음 — 답변 수만 */}
       {!canRead && (

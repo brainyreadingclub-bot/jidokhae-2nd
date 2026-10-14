@@ -25,19 +25,39 @@ export default function LibraryGrid({ entries }: Props) {
   // 대기 중인 삭제 커밋 타이머 (entryId → timeout)
   const pendingRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
+  // 완독 토글: 누르는 순간 바꿔 둔 값(entryId → completed). 서버 목록이 새로 오면 비운다
+  const [completedOverrides, setCompletedOverrides] = useState<Record<string, boolean>>({})
+  const [prevEntries, setPrevEntries] = useState(entries)
+  if (entries !== prevEntries) {
+    setPrevEntries(entries)
+    setCompletedOverrides({})
+  }
+  const isCompleted = (entry: LibraryEntryWithBook) =>
+    completedOverrides[entry.id] ?? entry.completed
+
   const shown = entries.filter((e) => !hiddenIds.has(e.id))
   const visible = expanded ? shown : shown.slice(0, VISIBLE_LIMIT)
   const hasMore = shown.length > VISIBLE_LIMIT
 
   async function toggleCompleted(entry: LibraryEntryWithBook) {
+    // 응답 전 같은 책을 또 누르면 무시한다 — 서버에 순서가 뒤바뀐 두 요청이 가지 않게
+    if (togglingId === entry.id) return
+    // 누르는 순간 문구를 먼저 바꾼다. 실패하면 되돌리고 알린다
+    const before = isCompleted(entry)
+    setCompletedOverrides((o) => ({ ...o, [entry.id]: !before }))
     setTogglingId(entry.id)
     try {
-      await fetch('/api/library/complete', {
+      const res = await fetch('/api/library/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entryId: entry.id, completed: !entry.completed }),
+        body: JSON.stringify({ entryId: entry.id, completed: !before }),
       })
+      if (!res.ok) throw new Error('complete failed')
+      // 화면은 이미 바뀌었다 — 권수 등 다른 숫자가 맞도록 뒤에서 새로 받는다
       router.refresh()
+    } catch {
+      setCompletedOverrides((o) => ({ ...o, [entry.id]: before }))
+      show({ message: '완독 표시를 바꾸지 못했어요. 다시 시도해주세요.', tone: 'neutral' })
     } finally {
       setTogglingId(null)
     }
@@ -153,14 +173,15 @@ export default function LibraryGrid({ entries }: Props) {
 
             <button
               onClick={() => toggleCompleted(entry)}
-              disabled={togglingId === entry.id}
+              aria-pressed={isCompleted(entry)}
+              aria-busy={togglingId === entry.id}
               className={
-                entry.completed
-                  ? 'mt-1.5 inline-flex items-center gap-1 rounded-[5px] border border-primary-200 bg-primary-50 px-1.5 py-0.5 text-[10px] font-bold text-primary-700 disabled:opacity-50'
-                  : 'mt-1.5 inline-flex items-center gap-1 rounded-[5px] bg-neutral-100 px-1.5 py-0.5 text-[10px] font-bold text-neutral-600 disabled:opacity-50'
+                isCompleted(entry)
+                  ? 'mt-1.5 inline-flex items-center gap-1 rounded-[5px] border border-primary-200 bg-primary-50 px-1.5 py-0.5 text-[10px] font-bold text-primary-700'
+                  : 'mt-1.5 inline-flex items-center gap-1 rounded-[5px] bg-neutral-100 px-1.5 py-0.5 text-[10px] font-bold text-neutral-600'
               }
             >
-              {entry.completed ? '✓ 완독' : '읽는 중'}
+              {isCompleted(entry) ? '✓ 완독' : '읽는 중'}
             </button>
             {entry.source === 'ask' && (
               <p className="mt-0.5 text-[10px] text-neutral-400 leading-tight break-keep">

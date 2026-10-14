@@ -1,6 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isOnboarded } from '@/lib/onboarding'
 import {
+  redirectCandidate,
+  needsOnboardingCheck,
+  nextUiRedirectTarget,
+} from '@/lib/next-ui-redirect'
+import {
+  AFTER_LOGIN_PATH,
   safeNextPath,
   toNextParam,
   shouldRememberPath,
@@ -68,7 +76,7 @@ export async function middleware(request: NextRequest) {
       // 이미 로그인된 회원이 딥링크를 눌러 로그인 화면에 도달한 경우
       // (직전 요청에서 쿠키가 심겼다) 홈이 아니라 목적지로 보낸다
       const rawNext = request.cookies.get(NEXT_COOKIE)?.value
-      const target = safeNextPath(rawNext)
+      const target = safeNextPath(rawNext, AFTER_LOGIN_PATH)
       const qIndex = target.indexOf('?')
       url.pathname = qIndex === -1 ? target : target.slice(0, qIndex)
       url.search = qIndex === -1 ? '' : target.slice(qIndex)
@@ -123,7 +131,48 @@ export async function middleware(request: NextRequest) {
     return redirectResponse
   }
 
+  // 첫 주소(/)와 알림톡 옛 모임 주소는 화면을 그리기 전에 여기서 바로 새 화면으로 보낸다.
+  // 페이지에서 redirect()하면 옛 레이아웃을 그리느라 DB를 두세 번 기다린 뒤에야 넘어가고,
+  // 로딩 경계 안에서 던져지면 HTML을 다 보낸 다음 브라우저가 다시 이동한다(2026-10-13 속도 점검).
+  // 페이지 쪽 redirect는 안전망으로 그대로 둔다.
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const target = await resolveNextUiRedirect(supabase, user.id, pathname)
+    if (target) {
+      const url = request.nextUrl.clone()
+      url.pathname = target
+      const redirectResponse = NextResponse.redirect(url)
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie)
+      })
+      return redirectResponse
+    }
+  }
+
   return supabaseResponse
+}
+
+/** 새 화면으로 바로 보낼 곳을 정한다 — 규칙은 next-ui-redirect.ts(순수 함수, 테스트 있음) */
+async function resolveNextUiRedirect(
+  supabase: SupabaseClient,
+  userId: string,
+  pathname: string,
+): Promise<string | null> {
+  // 대상 주소가 아니면 DB를 읽지 않는다 — 모든 요청이 이 미들웨어를 지난다
+  if (!redirectCandidate(pathname)) return null
+
+  // 플래그와 프로필은 동시에 읽는다. 프로필은 첫 주소일 때만
+  const [flag, profile] = await Promise.all([
+    supabase.from('site_settings').select('value').eq('key', 'next_ui').maybeSingle(),
+    needsOnboardingCheck(pathname)
+      ? supabase
+          .from('profiles')
+          .select('welcomed_at, profile_completed_at, real_name')
+          .eq('id', userId)
+          .maybeSingle()
+      : null,
+  ])
+  const nextUiOn = process.env.NEXT_UI_PREVIEW === 'on' || flag.data?.value === 'on'
+  return nextUiRedirectTarget(pathname, nextUiOn, isOnboarded(profile?.data ?? null))
 }
 
 export const config = {
