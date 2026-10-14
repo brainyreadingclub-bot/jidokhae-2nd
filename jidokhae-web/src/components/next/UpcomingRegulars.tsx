@@ -1,6 +1,7 @@
 import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec } from '@/components/next/TossUI'
 import { formatKoreanTime } from '@/lib/kst'
+import { FROM_HOME_UPCOMING, FROM_HOME_UPCOMING_MORE } from '@/lib/home-upcoming'
 
 /**
  * 홈 「다가오는 정기모임」 — 최대 3건 (2026-10-13 시안).
@@ -10,7 +11,8 @@ import { formatKoreanTime } from '@/lib/kst'
  * 남은 자리는 3자리 이하일 때만 말한다 — 넉넉할 때 숫자를 보이면 「아무도 안 오나」로 읽힌다.
  * 마감된 모임은 page가 빼고 넘긴다 — 신청할 수 있는 것만 (2차 수정).
  * 카드 전체가 모임 상세로 가는 링크다. 「신청하기」는 그 안의 표시라 카드·버튼 클릭은 같은 클릭이다.
- * 클릭 기록(구현 때): 카드 = target 'meeting', 「다른 일정도 보기」 = target 'more' — home_upcoming_clicks 표.
+ * 클릭 기록: 링크의 `from`(+카드는 `pos`)을 받은 쪽 페이지가 after()로 home_upcoming_clicks에 남긴다 —
+ *   카드 = target 'meeting'(/meet/[id]), 「다른 일정도 보기」 = target 'more'(/meet). lib/home-upcoming.ts 참조
  */
 
 export type UpcomingRegular = {
@@ -48,7 +50,7 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
               key={m.id}
               eventName="home_card_click"
               eventParams={{ card: 'upcoming', position: i + 1 }}
-              href={`/meet/${m.id}?from=home_upcoming`}
+              href={`/meet/${m.id}?from=${FROM_HOME_UPCOMING}&pos=${i + 1}`}
               className="flex min-h-[68px] items-center gap-3 border-t border-tg-100 py-3 first:border-t-0"
             >
               <span className="w-11 flex-none text-center">
@@ -81,7 +83,7 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
       <TrackedLink
         eventName="home_card_click"
         eventParams={{ card: 'upcoming_more' }}
-        href="/meet"
+        href={`/meet?from=${FROM_HOME_UPCOMING_MORE}`}
         className="mt-3 flex h-10 items-center justify-center gap-[3px] text-[12.5px] font-bold text-tg-600"
       >
         다른 일정도 보기
