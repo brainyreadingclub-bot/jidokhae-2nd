@@ -37,6 +37,18 @@
         ]
       }
     ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/wrapup-decisions-check.mjs\"",
+            "timeout": 20,
+            "statusMessage": "결정 기록 갱신 확인 중"
+          }
+        ]
+      }
+    ],
     "TeammateIdle": [
       {
         "hooks": [

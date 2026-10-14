@@ -14,10 +14,21 @@
  *   stdout에 JSON 한 덩어리. additionalContext가 모델 컨텍스트로 들어간다.
  *   파일이 없거나 읽기에 실패하면 아무것도 출력하지 않고 조용히 끝낸다 —
  *   훅이 세션 시작을 막으면 안 된다.
+ *
+ * 어느 판을 읽나 (2026-10-13 대표님 결정)
+ *   늘 문서 작업 공간(`feat/agent-team`)의 최신판. 못 읽을 때만 세션을 연 폴더의 파일.
+ *   찾는 순서는 `decisions-source.mjs` 머리말. 그전에는 세션을 연 폴더의 파일만 읽어서
+ *   `main` 기반 작업 폴더에서 연 세션이 8/21판(결정 30개 빠짐)으로 시작했다.
  */
 
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readLatestDecisions } from './decisions-source.mjs'
+
+const SOURCE_LABEL = {
+  'doc-checkout': '문서 작업 공간 최신판(저장 전 수정 포함)',
+  'doc-branch': '문서 작업 공간 최신판(저장된 판)',
+  'doc-remote': '문서 작업 공간 최신판(온라인 저장소 판)',
+  'local-file': '⚠️ 이 폴더의 파일 — 문서 작업 공간 판을 못 읽었다. 옛 판일 수 있다',
+}
 
 const HEADER = [
   '[결정 기록 — 구현/기획 착수 전 확인]',
@@ -32,7 +43,9 @@ const HEADER = [
 
 try {
   const root = process.env.CLAUDE_PROJECT_DIR || process.cwd()
-  const body = readFileSync(join(root, '검토문서', 'DECISIONS.md'), 'utf8')
+  const found = readLatestDecisions(root)
+  if (!found) throw new Error('no decisions')
+  const body = `(읽은 판: ${SOURCE_LABEL[found.source]})\n\n` + found.body
 
   process.stdout.write(
     JSON.stringify({
