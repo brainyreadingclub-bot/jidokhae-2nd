@@ -51,21 +51,24 @@ export function docCheckoutDir(cwd) {
 }
 
 /**
- * @returns {{ body: string, source: 'doc-checkout' | 'doc-branch' | 'doc-remote' | 'local-file' } | null}
+ * @returns {{ body: string, source: 'doc-checkout' | 'doc-branch' | 'doc-remote' | 'local-file', where: string } | null}
+ *   where = 전문을 여는 방법(파일 경로 또는 git 명령)
  */
 export function readLatestDecisions(root) {
   const docDir = docCheckoutDir(root)
   if (docDir) {
     try {
-      return { body: readFileSync(join(docDir, DECISIONS_PATH), 'utf8'), source: 'doc-checkout' }
+      const where = join(docDir, DECISIONS_PATH)
+      return { body: readFileSync(where, 'utf8'), source: 'doc-checkout', where }
     } catch {}
   }
   for (const [ref, source] of [[DOC_BRANCH, 'doc-branch'], [`origin/${DOC_BRANCH}`, 'doc-remote']]) {
     const body = git(root, ['show', `${ref}:${DECISIONS_PATH}`])
-    if (body) return { body, source }
+    if (body) return { body, source, where: `git show ${ref}:${DECISIONS_PATH}` }
   }
   try {
-    return { body: readFileSync(join(root, DECISIONS_PATH), 'utf8'), source: 'local-file' }
+    const where = join(root, DECISIONS_PATH)
+    return { body: readFileSync(where, 'utf8'), source: 'local-file', where }
   } catch {
     return null
   }

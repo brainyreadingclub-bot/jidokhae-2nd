@@ -41,17 +41,97 @@ const HEADER = [
   '',
 ].join('\n')
 
+// 🔴 세션 시작 글은 1만 자를 넘으면 앞 2,000자 미리보기 + 파일 경로로만 들어간다
+//    (https://code.claude.com/docs/en/hooks — SessionStart additionalContext).
+//    결정 기록 전문은 5만 자가 넘어서 2026-10-13까지 사실상 머리말만 보였다.
+//    그래서 전문 대신 「미적용 결정 + 최근 2주 결정」 요약을 넣고, 전문은 여는 방법만 알린다.
+const LIMIT = 9500
+const RECENT_DAYS = 14
+const TEXT_MAX = 150
+const STATUS_MAX = 40
+
+function kstDateDaysAgo(days) {
+  const d = new Date(Date.now() + 9 * 3600 * 1000 - days * 86400 * 1000)
+  return d.toISOString().slice(0, 10)
+}
+
+function plain(md) {
+  return md
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\*\*|`|~~/g, '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function cut(text, max) {
+  return text.length > max ? text.slice(0, max - 1) + '…' : text
+}
+
+/** 결정 행 하나를 한 줄 요약으로. 굵은 글씨 첫 덩어리가 있으면 그것이 결정의 요지다 */
+export function summarizeRow(line) {
+  const cells = line.split('|').slice(1, -1)
+  if (cells.length < 3) return null
+  const dateCell = cells[0].trim()
+  if (dateCell.startsWith('~~')) return null // 뒤집힌 결정
+  const date = dateCell.match(/\d{4}-\d{2}-\d{2}/)?.[0]
+  if (!date) return null
+  const raw = cells[1]
+  const bold = raw.match(/\*\*(.+?)\*\*/)
+  const gist = plain(bold ? bold[1] : raw).replace(/^🔴\s*/, '')
+  const status = plain(cells[2])
+  return { date, unapplied: status.includes('🔨'), text: cut(gist, TEXT_MAX), status: cut(status, STATUS_MAX) }
+}
+
+export function buildDigest(body, where, sourceLabel, recentFrom) {
+  const rows = body
+    .split(/\r?\n/)
+    .filter((l) => /^\|\s*(~~)?\d{4}-\d{2}-\d{2}/.test(l))
+    .map(summarizeRow)
+    .filter(Boolean)
+  const unapplied = rows.filter((r) => r.unapplied)
+  const recent = rows.filter((r) => !r.unapplied && r.date >= recentFrom)
+  const fmt = (r) => `- ${r.date} [${r.status}] ${r.text}`
+  const head = [
+    HEADER,
+    `(읽은 판: ${sourceLabel})`,
+    `전문(살아 있는 결정 ${rows.length}건 + 뒤집힌 결정 + 쓰는 법·상태 뜻): ${where} — 결정에 걸리는 일을 시작하기 전에 해당 행을 전문에서 읽는다.`,
+    '아래는 요약이다. 줄마다 결정의 요지만 잘라 담았다.',
+    '',
+  ].join('\n')
+  const parts = (u, r) =>
+    [
+      `## 🔨 미적용 결정 ${unapplied.length}건 — 정해졌지만 아직 코드에 없다`,
+      ...u.map(fmt),
+      ...(u.length < unapplied.length ? [`- …외 ${unapplied.length - u.length}건은 전문에서`] : []),
+      '',
+      `## 최근 ${RECENT_DAYS}일(${recentFrom}~) 결정 ${recent.length}건 — 미적용 제외`,
+      ...r.map(fmt),
+      ...(r.length < recent.length ? [`- …외 ${recent.length - r.length}건은 전문에서`] : []),
+    ].join('\n')
+  // 한도를 넘으면 최근 결정의 오래된 쪽부터, 그다음 미적용의 오래된 쪽부터 덜어낸다(파일이 최신순이다)
+  let u = unapplied.slice()
+  let r = recent.slice()
+  let text = head + parts(u, r)
+  while (text.length > LIMIT && (r.length || u.length)) {
+    if (r.length) r = r.slice(0, -1)
+    else u = u.slice(0, -1)
+    text = head + parts(u, r)
+  }
+  return text
+}
+
 try {
   const root = process.env.CLAUDE_PROJECT_DIR || process.cwd()
   const found = readLatestDecisions(root)
   if (!found) throw new Error('no decisions')
-  const body = `(읽은 판: ${SOURCE_LABEL[found.source]})\n\n` + found.body
+  const context = buildDigest(found.body, found.where, SOURCE_LABEL[found.source], kstDateDaysAgo(RECENT_DAYS))
 
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
         hookEventName: 'SessionStart',
-        additionalContext: HEADER + body,
+        additionalContext: context,
       },
       suppressOutput: true,
     }),
