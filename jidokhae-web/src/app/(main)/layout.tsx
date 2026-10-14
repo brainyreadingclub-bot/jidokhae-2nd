@@ -1,9 +1,11 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import BottomNav from '@/components/BottomNav'
 import NextNav from '@/components/next/NextNav'
 import LogoutButton from '@/components/LogoutButton'
+import NotificationBell, { BellLink } from '@/components/next/NotificationBell'
 import Footer from '@/components/Footer'
 import { isNextUiEnabled } from '@/lib/next-ui'
 
@@ -21,6 +23,29 @@ export default async function MainLayout({
     isNextUiEnabled(),
     user ? getProfile(user.id) : null,
   ])
+  // next_ui ON이면 머리글·아래 탭을 `(next)/layout.tsx`와 같은 모양으로 그린다.
+  // 지금 이 그룹에서 회원에게 실제로 그려지는 건 결제 확인 중·결제 실패 두 장뿐이다
+  // (상세·신청 완료·마이페이지는 새 주소로 넘어간다). 옛 머리글(「닉네임님 · 로그아웃」)과
+  // 사업자 정보 푸터가 그 두 장에만 남아 있었다 (2026-10-13 화면 점검 27·28번)
+  if (nextUi) {
+    return (
+      <div className="min-h-dvh bg-white text-tg-900">
+        <header className="mx-auto flex h-12 max-w-screen-sm items-center justify-between pl-5 pr-2">
+          <Link href="/home" className="text-[17px] font-extrabold tracking-tight text-brand-deep">
+            지독해
+          </Link>
+          {user && (
+            <Suspense fallback={<BellLink unread={0} />}>
+              <NotificationBell userId={user.id} />
+            </Suspense>
+          )}
+        </header>
+        <main className="mx-auto max-w-screen-sm px-5 pb-24">{children}</main>
+        <NextNav />
+      </div>
+    )
+  }
+
   const nickname = profile?.nickname || ''
   const role = profile?.role || 'member'
 

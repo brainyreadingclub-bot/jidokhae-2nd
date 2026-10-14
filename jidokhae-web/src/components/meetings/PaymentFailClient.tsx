@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { SkinName } from '@/components/meetings/actionButtonSkin'
+import { isPaymentCancelled } from '@/lib/payment-cancel'
 
 type Props = {
   detailHref: string
@@ -32,6 +33,17 @@ export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props
     code === 'PAY_PROCESS_CANCELED' || code === 'USER_CANCEL' || !raw
       ? DEFAULT_MESSAGE
       : decodeMessage(raw)
+  // 새 화면(해요체) 문구 — 회원이 결제창을 닫은 것과 결제가 안 된 것을 다른 말로 (화면 문구 전용)
+  const cancelled =
+    !code ||
+    isPaymentCancelled({
+      code,
+      pgCode: searchParams.get('pgCode'),
+      message: raw,
+      pgMessage: searchParams.get('pgMessage'),
+    })
+  const tossTitle = cancelled ? '결제가 취소됐어요' : '결제가 되지 않았어요'
+  const tossReason = !cancelled && raw ? decodeMessage(raw) : null
 
   useEffect(() => {
     const timer = setTimeout(() => router.replace(detailHref), 5000)
@@ -70,9 +82,14 @@ export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </div>
-        <p className={`text-sm font-bold ${toss ? 'text-warnx' : 'text-error'}`}>{message}</p>
+        <p className={`text-sm font-bold ${toss ? 'text-warnx' : 'text-error'}`}>
+          {toss ? tossTitle : message}
+        </p>
+        {toss && tossReason && (
+          <p className="mt-1.5 text-xs text-tg-600 [word-break:keep-all]">{tossReason}</p>
+        )}
         <p className={`mt-2 text-xs ${toss ? 'text-tg-600' : 'text-primary-400'}`}>
-          5초 후 자동으로 이동합니다
+          {toss ? '5초 뒤에 모임 화면으로 돌아가요' : '5초 후 자동으로 이동합니다'}
         </p>
         <button
           onClick={() => router.replace(detailHref)}
