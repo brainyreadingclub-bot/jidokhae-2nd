@@ -6,8 +6,9 @@ import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussi
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import { getProfile } from '@/lib/profile'
 import { resolveHomeUpcomingClick } from '@/lib/home-upcoming'
-import { recordHomeUpcomingClick } from '@/lib/home-upcoming-click'
+import { recordAppEvent } from '@/lib/app-events'
 import MeetView, { type MeetData } from '@/components/next/MeetView'
+import TrackMeetList from '@/components/analytics/TrackMeetList'
 import type { Meeting } from '@/types/meeting'
 
 export default async function NextMeetPage({
@@ -19,9 +20,9 @@ export default async function NextMeetPage({
   const { from } = await searchParams
   const fromLock = from === 'lock'
   const user = await getUser()
-  // 홈 「다른 일정도 보기」에서 왔으면 한 줄 남긴다 (target 'more' — 2026-10-13 결정). 실패해도 목록은 그대로
+  // 홈 「다른 일정도 보기」에서 왔으면 기록표에 한 줄 남긴다 (2026-10-13 결정). 실패해도 목록은 그대로
   const click = resolveHomeUpcomingClick({ page: 'list', userId: user?.id, from })
-  if (click) after(recordHomeUpcomingClick(click))
+  if (click) after(recordAppEvent({ ...click, userId: user?.id }))
   const profile = user ? await getProfile(user.id) : null
   const isPrivileged = profile?.role === 'admin' || profile?.role === 'editor'
   const kstToday = getKSTToday()
@@ -118,5 +119,15 @@ export default async function NextMeetPage({
       }
     : null
 
-  return <MeetView data={{ mine, regular, discussion }} showLockContext={fromLock && locked} />
+  // 목록을 봤다 — 기록표는 응답 뒤 after()로, GA view_item_list는 브라우저에서 마운트 1회 (TrackMeetList).
+  // 정기 행 + 토론 카드 = 화면에 실제로 놓인 모임 수
+  const itemsCount = regular.length + (discussion ? 1 : 0)
+  after(recordAppEvent({ event: 'meet.view_item_list', userId: user?.id, props: { items_count: itemsCount } }))
+
+  return (
+    <>
+      <TrackMeetList itemsCount={itemsCount} />
+      <MeetView data={{ mine, regular, discussion }} showLockContext={fromLock && locked} />
+    </>
+  )
 }

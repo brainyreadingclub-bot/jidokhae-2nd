@@ -36,17 +36,16 @@ describe('resolveHomeUpcomingClick', () => {
   const U = 'u-1'
   const M = '0b6f3c1e-1234-4abc-9def-0123456789ab'
 
-  it('카드 클릭 — 상세에 from=home_upcoming으로 오면 meeting 한 줄', () => {
+  it('카드 클릭 — 상세에 from=home_upcoming으로 오면 meeting_click', () => {
     expect(
       resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos: '2' }),
-    ).toEqual({ user_id: U, target: 'meeting', meeting_id: M, position: 2 })
+    ).toEqual({ event: 'home_upcoming.meeting_click', meetingId: M, props: { pos: 2 } })
   })
-  it('「다른 일정도 보기」 — 목록에 from=home_upcoming_more로 오면 more 한 줄', () => {
+  it('「다른 일정도 보기」 — 목록에 from=home_upcoming_more로 오면 more_click', () => {
     expect(resolveHomeUpcomingClick({ page: 'list', userId: U, from: 'home_upcoming_more' })).toEqual({
-      user_id: U,
-      target: 'more',
-      meeting_id: null,
-      position: null,
+      event: 'home_upcoming.more_click',
+      meetingId: null,
+      props: {},
     })
   })
   it('출처 표시가 없거나 다르면 기록하지 않는다', () => {
@@ -65,7 +64,7 @@ describe('resolveHomeUpcomingClick', () => {
     expect(resolveHomeUpcomingClick({ page: 'meeting', userId: null, from: 'home_upcoming', meetingId: M })).toBeNull()
     expect(resolveHomeUpcomingClick({ page: 'list', userId: undefined, from: 'home_upcoming_more' })).toBeNull()
   })
-  it('모임 id가 UUID가 아니면 기록하지 않는다 (표의 uuid 칸이 insert를 거절한다)', () => {
+  it('모임 id가 UUID가 아니면 기록하지 않는다 (표의 uuid 칸을 지킨다)', () => {
     expect(
       resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: 'abc' }),
     ).toBeNull()
@@ -74,12 +73,13 @@ describe('resolveHomeUpcomingClick', () => {
   it('위치는 1~3 정수만, 아니면 null로 남기고 클릭은 센다', () => {
     for (const pos of [undefined, '0', '4', '1.5', 'x', '-1']) {
       expect(
-        resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos })?.position,
+        (resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos })
+          ?.props as { pos: number | null }).pos,
       ).toBeNull()
     }
     expect(
-      resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos: '3' })?.position,
-    ).toBe(3)
+      resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos: '3' })?.props,
+    ).toEqual({ pos: 3 })
   })
   it('쿼리가 배열로 와도 첫 값으로 판정한다', () => {
     expect(
@@ -90,6 +90,6 @@ describe('resolveHomeUpcomingClick', () => {
         meetingId: M,
         pos: ['1', '9'],
       }),
-    ).toEqual({ user_id: U, target: 'meeting', meeting_id: M, position: 1 })
+    ).toEqual({ event: 'home_upcoming.meeting_click', meetingId: M, props: { pos: 1 } })
   })
 })
