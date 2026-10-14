@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pickUpcomingRegulars } from '@/lib/home-upcoming'
+import { pickUpcomingRegulars, resolveHomeUpcomingClick } from '@/lib/home-upcoming'
 
 // 날짜순 후보 (page가 이미 정렬해서 넘긴다)
 const c = [
@@ -29,5 +29,67 @@ describe('pickUpcomingRegulars', () => {
   it('후보가 3개 미만이면 있는 만큼, 0개면 빈 배열', () => {
     expect(ids(pickUpcomingRegulars(c.slice(0, 2), new Set(['포항'])))).toEqual(['1', '2'])
     expect(pickUpcomingRegulars([], new Set(['포항']))).toEqual([])
+  })
+})
+
+describe('resolveHomeUpcomingClick', () => {
+  const U = 'u-1'
+  const M = '0b6f3c1e-1234-4abc-9def-0123456789ab'
+
+  it('카드 클릭 — 상세에 from=home_upcoming으로 오면 meeting 한 줄', () => {
+    expect(
+      resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos: '2' }),
+    ).toEqual({ user_id: U, target: 'meeting', meeting_id: M, position: 2 })
+  })
+  it('「다른 일정도 보기」 — 목록에 from=home_upcoming_more로 오면 more 한 줄', () => {
+    expect(resolveHomeUpcomingClick({ page: 'list', userId: U, from: 'home_upcoming_more' })).toEqual({
+      user_id: U,
+      target: 'more',
+      meeting_id: null,
+      position: null,
+    })
+  })
+  it('출처 표시가 없거나 다르면 기록하지 않는다', () => {
+    expect(resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: undefined, meetingId: M })).toBeNull()
+    expect(resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'lock', meetingId: M })).toBeNull()
+    expect(resolveHomeUpcomingClick({ page: 'list', userId: U, from: 'lock' })).toBeNull()
+    expect(resolveHomeUpcomingClick({ page: 'list', userId: U, from: undefined })).toBeNull()
+  })
+  it('출처를 서로 바꿔 달고 오면 기록하지 않는다 (목록에 카드 표시, 상세에 more 표시)', () => {
+    expect(resolveHomeUpcomingClick({ page: 'list', userId: U, from: 'home_upcoming' })).toBeNull()
+    expect(
+      resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming_more', meetingId: M }),
+    ).toBeNull()
+  })
+  it('로그인 안 했으면 기록하지 않는다', () => {
+    expect(resolveHomeUpcomingClick({ page: 'meeting', userId: null, from: 'home_upcoming', meetingId: M })).toBeNull()
+    expect(resolveHomeUpcomingClick({ page: 'list', userId: undefined, from: 'home_upcoming_more' })).toBeNull()
+  })
+  it('모임 id가 UUID가 아니면 기록하지 않는다 (표의 uuid 칸이 insert를 거절한다)', () => {
+    expect(
+      resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: 'abc' }),
+    ).toBeNull()
+    expect(resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: null })).toBeNull()
+  })
+  it('위치는 1~3 정수만, 아니면 null로 남기고 클릭은 센다', () => {
+    for (const pos of [undefined, '0', '4', '1.5', 'x', '-1']) {
+      expect(
+        resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos })?.position,
+      ).toBeNull()
+    }
+    expect(
+      resolveHomeUpcomingClick({ page: 'meeting', userId: U, from: 'home_upcoming', meetingId: M, pos: '3' })?.position,
+    ).toBe(3)
+  })
+  it('쿼리가 배열로 와도 첫 값으로 판정한다', () => {
+    expect(
+      resolveHomeUpcomingClick({
+        page: 'meeting',
+        userId: U,
+        from: ['home_upcoming', 'x'],
+        meetingId: M,
+        pos: ['1', '9'],
+      }),
+    ).toEqual({ user_id: U, target: 'meeting', meeting_id: M, position: 1 })
   })
 })

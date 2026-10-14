@@ -18,3 +18,46 @@ export function pickUpcomingRegulars<T extends { id: string; region: string | nu
   // candidates가 이미 날짜순이므로 원래 순서를 지키면 날짜순이다
   return candidates.filter((m) => chosen.has(m.id))
 }
+
+/** 홈 「다가오는 정기모임」 카드 → 모임 상세 링크의 출처 표시 */
+export const FROM_HOME_UPCOMING = 'home_upcoming'
+/** 「다른 일정도 보기」 → 모임 목록 링크의 출처 표시 */
+export const FROM_HOME_UPCOMING_MORE = 'home_upcoming_more'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export type HomeUpcomingClickRow =
+  | { user_id: string; target: 'meeting'; meeting_id: string; position: number | null }
+  | { user_id: string; target: 'more'; meeting_id: null; position: null }
+
+/**
+ * 도착한 요청이 홈 「다가오는 정기모임」 클릭인지 판정하고, 남길 한 줄을 만든다 (순수 함수).
+ * null = 기록하지 않는다.
+ *
+ * - 로그인한 회원만 센다 (user_id NOT NULL — 세는 법이 회원 단위다)
+ * - 모임 상세는 `from=home_upcoming`, 목록은 `from=home_upcoming_more`일 때만 — 다른 출처는 무시
+ * - meeting_id는 UUID일 때만 — 표의 CHECK(target='meeting' ↔ meeting_id 있음)와 uuid 타입을 지킨다
+ * - position은 1~3 정수일 때만 남기고, 아니면 null (위치가 이상해도 클릭 자체는 센다)
+ */
+export function resolveHomeUpcomingClick(input: {
+  page: 'meeting' | 'list'
+  userId: string | null | undefined
+  from: string | string[] | undefined
+  meetingId?: string | null
+  pos?: string | string[] | undefined
+}): HomeUpcomingClickRow | null {
+  if (!input.userId) return null
+  const from = Array.isArray(input.from) ? input.from[0] : input.from
+
+  if (input.page === 'list') {
+    if (from !== FROM_HOME_UPCOMING_MORE) return null
+    return { user_id: input.userId, target: 'more', meeting_id: null, position: null }
+  }
+
+  if (from !== FROM_HOME_UPCOMING) return null
+  if (!input.meetingId || !UUID_RE.test(input.meetingId)) return null
+  const rawPos = Array.isArray(input.pos) ? input.pos[0] : input.pos
+  const n = rawPos !== undefined && /^\d+$/.test(rawPos) ? Number(rawPos) : NaN
+  const position = Number.isInteger(n) && n >= 1 && n <= 3 ? n : null
+  return { user_id: input.userId, target: 'meeting', meeting_id: input.meetingId, position }
+}
