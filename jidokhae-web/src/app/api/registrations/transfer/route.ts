@@ -23,6 +23,7 @@ import { getDisplayFee } from '@/lib/staff-slot'
 import { getDiscussionApplyBlock, DISCUSSION_BLOCK_MESSAGE } from '@/lib/discussion-gate'
 import { sendRegistrationConfirmNotification } from '@/lib/notification'
 import { isSeatedTransferResult } from '@/lib/transfer-rules'
+import { recordAppEvent } from '@/lib/app-events'
 
 export async function POST(request: NextRequest) {
   try {
@@ -206,6 +207,9 @@ export async function POST(request: NextRequest) {
       console.error('[transfer] 알림톡 대상 신청을 되찾지 못했습니다:', user.id, meetingId)
     }
   }
+
+  // 기록표 — 접수된 신청 1건 (2026-10-14). 회원 정보는 넣지 않는다. 실패해도 응답은 그대로다 (lib/app-events.ts)
+  after(recordAppEvent({ event: 'registration.sign_up_meeting', userId: user.id, meetingId, props: { payment_method: 'transfer', amount: paidAmount, result, meeting_type: meeting.meeting_type } }))
 
   // confirmed(0원) · pending_transfer · waitlisted
   return NextResponse.json({ status: result })

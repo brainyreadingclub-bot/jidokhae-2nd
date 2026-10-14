@@ -23,7 +23,7 @@ export default async function NextHomePage() {
 
   // 프로필·다가오는 모임·내 신청·알림은 서로 무관하다 — 동시에 받는다 (2026-10-13 속도 점검).
   // 차례로 기다리면 홈 본문이 DB를 네 번 연달아 기다렸다
-  const [profile, { data: meetings }, { data: myRegs }, notis] = await Promise.all([
+  const [profile, meetingsRes, myRegsRes, notis] = await Promise.all([
     user ? getProfile(user.id) : null,
     // 다가오는 모임 전체 (정기+토론) — 토론 홍보 카드용 책 표지 join
     supabase
@@ -40,9 +40,16 @@ export default async function NextHomePage() {
           // meetings join — 「정기모임에 확정된 적 있는 지역」(⑥ 다가오는 정기모임 정렬)용
           .select('meeting_id, status, meetings(region, meeting_type)')
           .eq('user_id', user.id)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
     user ? listAppNotifications(user.id, 10) : [],
   ])
+  // 조회 실패를 빈 값으로 삼키면 진짜 0건과 구분이 안 된다 — 모임 탭·이야기 탭과 같은 방식으로
+  // 던져서 (next)/error.tsx의 「화면을 불러오지 못했어요 · 다시 시도」로 보낸다 (2026-10-14 대표님 결정).
+  // 모임이 틀리면 「지금은 조용해요」가, 내 신청이 틀리면 이미 신청한 모임이 「다가오는 정기모임」에 뜬다
+  if (meetingsRes.error) throw new Error(`홈 모임 조회 실패: ${meetingsRes.error.message}`)
+  if (myRegsRes.error) throw new Error(`홈 내 신청 조회 실패: ${myRegsRes.error.message}`)
+  const meetings = meetingsRes.data
+  const myRegs = myRegsRes.data
   const nickname = profile?.nickname || '회원'
   const upcoming = (meetings ?? []) as (Meeting & {
     books: { thumbnail: string | null; authors: string | null } | null
@@ -116,14 +123,18 @@ export default async function NextHomePage() {
   // 인원 수(⑥)와 토론 격리 플래그(④)는 서로 무관하다 — 동시에 받는다 (속도 점검의 원칙 유지).
   // 격리 플래그 OFF면 홍보를 내린다 — "새로 들어오는 것만 막는다"의 홈 쪽 몫.
   // ② 내 모임 스트립은 플래그와 무관하게 위에서 그대로 렌더된다(결제한 모임은 안 숨긴다)
-  const [{ data: counts }, discussionEnabled] = await Promise.all([
+  const [countsRes, discussionEnabled] = await Promise.all([
     regularCandidates.length > 0
       ? supabase.rpc('get_confirmed_counts', {
           meeting_ids: regularCandidates.map((m) => m.id),
         })
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
     discussion ? isDiscussionMeetingEnabled() : false,
   ])
+  // 인원 수가 틀리면 마감된 모임이 「다가오는 정기모임」에 신청할 수 있는 것처럼 뜬다 — 이것도 삼키지 않는다
+  // (모임 탭이 같은 조회 실패를 오류 화면으로 보낸다)
+  if (countsRes.error) throw new Error(`홈 참가자 수 조회 실패: ${countsRes.error.message}`)
+  const counts = countsRes.data
   const countMap = new Map(
     ((counts ?? []) as { meeting_id: string; confirmed_count: number }[]).map((c) => [
       c.meeting_id,

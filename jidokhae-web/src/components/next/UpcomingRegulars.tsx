@@ -11,8 +11,9 @@ import { FROM_HOME_UPCOMING, FROM_HOME_UPCOMING_MORE } from '@/lib/home-upcoming
  * 남은 자리는 3자리 이하일 때만 말한다 — 넉넉할 때 숫자를 보이면 「아무도 안 오나」로 읽힌다.
  * 마감된 모임은 page가 빼고 넘긴다 — 신청할 수 있는 것만 (2차 수정).
  * 카드 전체가 모임 상세로 가는 링크다. 「신청하기」는 그 안의 표시라 카드·버튼 클릭은 같은 클릭이다.
- * 클릭 기록: 링크의 `from`(+카드는 `pos`)을 받은 쪽 페이지가 after()로 home_upcoming_clicks에 남긴다 —
- *   카드 = target 'meeting'(/meet/[id]), 「다른 일정도 보기」 = target 'more'(/meet). lib/home-upcoming.ts 참조
+ * 클릭 기록: 링크의 `from`(+카드는 `pos`)을 받은 쪽 페이지가 after()로 기록표(app_events)에 남긴다 —
+ *   카드 = home_upcoming.meeting_click(/meet/[id]), 「다른 일정도 보기」 = home_upcoming.more_click(/meet).
+ *   lib/home-upcoming.ts · lib/app-events.ts 참조
  */
 
 export type UpcomingRegular = {
