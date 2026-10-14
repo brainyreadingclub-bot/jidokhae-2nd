@@ -10,6 +10,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:buttons": "node scripts/verify-buttons.mjs",
     "verify:prod": "npx tsx scripts/verify-production.ts",
     "prelaunch": "npm run lint && npx tsc --noEmit && npm run test && npm run build",
     "screenshot": "npx tsx scripts/capture-screenshots.ts"
