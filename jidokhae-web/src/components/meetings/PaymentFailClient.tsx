@@ -3,22 +3,11 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { SkinName } from '@/components/meetings/actionButtonSkin'
-import { isPaymentCancelled } from '@/lib/payment-cancel'
+import { getPaymentFailMessage, clipForLog } from '@/lib/payment-fail-message'
 
 type Props = {
   detailHref: string
   skin?: SkinName
-}
-
-const DEFAULT_MESSAGE = '결제가 취소되었습니다'
-
-/** PG가 넘긴 message는 인코딩이 깨져 있을 수 있다 — 실패하면 기본 문구 */
-function decodeMessage(raw: string): string {
-  try {
-    return decodeURIComponent(raw)
-  } catch {
-    return raw
-  }
 }
 
 export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props) {
@@ -27,23 +16,25 @@ export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props
   const toss = skin === 'toss'
 
   // 쿼리에서 바로 읽는다 — state로 옮기면 effect 안 setState가 되어 렌더가 한 번 더 돈다
+  // 화면에는 코드로 정한 문구만 — 주소의 message·pgMessage 원문은 남이 써 넣을 수 있어 띄우지 않는다
   const code = searchParams.get('code')
-  const raw = searchParams.get('message')
-  const message =
-    code === 'PAY_PROCESS_CANCELED' || code === 'USER_CANCEL' || !raw
-      ? DEFAULT_MESSAGE
-      : decodeMessage(raw)
-  // 새 화면(해요체) 문구 — 회원이 결제창을 닫은 것과 결제가 안 된 것을 다른 말로 (화면 문구 전용)
-  const cancelled =
-    !code ||
-    isPaymentCancelled({
-      code,
-      pgCode: searchParams.get('pgCode'),
-      message: raw,
-      pgMessage: searchParams.get('pgMessage'),
+  const message = getPaymentFailMessage({
+    code,
+    pgCode: searchParams.get('pgCode'),
+    message: searchParams.get('message'),
+    pgMessage: searchParams.get('pgMessage'),
+  })
+
+  // 원문은 로그로만 (길이 제한)
+  useEffect(() => {
+    if (!searchParams.get('code')) return
+    console.warn('[payment-fail]', {
+      code: clipForLog(searchParams.get('code')),
+      pgCode: clipForLog(searchParams.get('pgCode')),
+      message: clipForLog(searchParams.get('message')),
+      pgMessage: clipForLog(searchParams.get('pgMessage')),
     })
-  const tossTitle = cancelled ? '결제가 취소됐어요' : '결제가 되지 않았어요'
-  const tossReason = !cancelled && raw ? decodeMessage(raw) : null
+  }, [searchParams])
 
   useEffect(() => {
     const timer = setTimeout(() => router.replace(detailHref), 5000)
@@ -83,11 +74,8 @@ export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props
           </svg>
         </div>
         <p className={`text-sm font-bold ${toss ? 'text-warnx' : 'text-error'}`}>
-          {toss ? tossTitle : message}
+          {message}
         </p>
-        {toss && tossReason && (
-          <p className="mt-1.5 text-xs text-tg-600 [word-break:keep-all]">{tossReason}</p>
-        )}
         <p className={`mt-2 text-xs ${toss ? 'text-tg-600' : 'text-primary-400'}`}>
           {toss ? '5초 뒤에 모임 화면으로 돌아가요' : '5초 후 자동으로 이동합니다'}
         </p>

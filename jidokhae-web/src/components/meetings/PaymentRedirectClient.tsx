@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { trackEvent } from '@/lib/analytics'
-import { isPaymentCancelled } from '@/lib/payment-cancel'
+import { getPaymentFailMessage, clipForLog } from '@/lib/payment-fail-message'
 import type { SkinName } from '@/components/meetings/actionButtonSkin'
 
 type Props = {
@@ -23,16 +23,6 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
   const [error, setError] = useState<string | null>(null)
   const processedRef = useRef(false)
   const toss = skin === 'toss'
-  // 화면 문구 전용 — 아래 effect(결제 확인·이동)는 이 값을 보지 않는다
-  const failCode = searchParams.get('code')
-  const cancelled = failCode
-    ? isPaymentCancelled({
-        code: failCode,
-        pgCode: searchParams.get('pgCode'),
-        message: searchParams.get('message'),
-        pgMessage: searchParams.get('pgMessage'),
-      })
-    : false
 
   useEffect(() => {
     if (processedRef.current) return
@@ -58,7 +48,20 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
           meeting_id: meetingId,
           reason: code,
         })
-        setError(message || '결제가 취소되었습니다')
+        // 화면에는 코드로 정한 문구만 — 주소의 message 원문은 남이 써 넣을 수 있어 로그로만
+        console.warn('[payment-fail]', {
+          code: clipForLog(code),
+          message: clipForLog(message),
+          pgMessage: clipForLog(searchParams.get('pgMessage')),
+        })
+        setError(
+          getPaymentFailMessage({
+            code,
+            pgCode: searchParams.get('pgCode'),
+            message,
+            pgMessage: searchParams.get('pgMessage'),
+          }),
+        )
         setTimeout(() => router.replace(detailHref), 2000)
         return
       }
@@ -129,7 +132,7 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
       {error ? (
         <div className="text-center">
           {toss ? (
-            <TossErrorCopy error={error} failCode={failCode} cancelled={cancelled} />
+            <TossErrorCopy error={error} />
           ) : (
             <>
               <p className="text-sm font-bold text-error">{error}</p>
@@ -175,27 +178,12 @@ const TOSS_COPY: Record<string, string> = {
   '결제 처리 중 오류가 발생했습니다': '결제를 처리하지 못했어요',
 }
 
-function TossErrorCopy({
-  error,
-  failCode,
-  cancelled,
-}: {
-  error: string
-  failCode: string | null
-  cancelled: boolean
-}) {
-  // 결제창이 실패 코드로 돌아온 경우 — 회원이 닫은 것과 결제가 안 된 것을 다른 말로
-  const title = failCode
-    ? cancelled
-      ? '결제가 취소됐어요'
-      : '결제가 되지 않았어요'
-    : (TOSS_COPY[error] ?? error)
-  // 결제가 안 된 경우에만 결제사가 준 사유를 작게 붙인다
-  const reason = failCode && !cancelled && error !== '결제가 취소되었습니다' ? error : null
+function TossErrorCopy({ error }: { error: string }) {
+  // 결제창 실패 코드 문구는 effect가 이미 해요체 고정 문구로 넣는다(getPaymentFailMessage)
+  const title = TOSS_COPY[error] ?? error
   return (
     <>
       <p className="text-sm font-bold text-warnx">{title}</p>
-      {reason && <p className="mt-1.5 text-xs text-tg-600 [word-break:keep-all]">{reason}</p>}
       <p className="mt-2 text-xs text-tg-600">잠깐 뒤에 모임 화면으로 돌아가요</p>
     </>
   )
