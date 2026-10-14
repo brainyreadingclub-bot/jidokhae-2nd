@@ -38,6 +38,8 @@ export type PortOnePayment = {
   transactionId: string
   status: string
   totalAmount: number
+  /** 지금까지 취소된 누적 금액 — 부분 환불이 이미 나갔는지 판정에 쓴다 */
+  cancelledAmount: number
   orderName: string
 }
 
@@ -59,12 +61,17 @@ export async function getPayment(paymentId: string): Promise<PortOnePayment> {
       'amount' in payment && payment.amount && typeof payment.amount.total === 'number'
         ? payment.amount.total
         : 0
+    const cancelledAmount =
+      'amount' in payment && payment.amount && typeof payment.amount.cancelled === 'number'
+        ? payment.amount.cancelled
+        : 0
 
     return {
       paymentId: 'id' in payment ? payment.id : paymentId,
       transactionId: 'transactionId' in payment ? payment.transactionId : '',
       status: payment.status,
       totalAmount,
+      cancelledAmount,
       orderName: 'orderName' in payment ? payment.orderName : '',
     }
   }
@@ -78,16 +85,20 @@ export async function getPayment(paymentId: string): Promise<PortOnePayment> {
  * @param paymentId 우리 시스템의 결제 ID (orderId)
  * @param reason 취소 사유
  * @param amount 부분 취소 금액 (생략 시 전액 취소)
+ * @param currentCancellableAmount 이 요청 직전의 취소 가능 잔액. 넘기면 포트원이 잔액이
+ *   일치할 때만 취소한다 — 같은 순간 두 번 들어온 부분 환불 중 하나만 통과시키는 장치
  */
 export async function cancelPayment(
   paymentId: string,
   reason: string,
   amount?: number,
+  currentCancellableAmount?: number,
 ): Promise<void> {
   const client = getClient()
   await client.payment.cancelPayment({
     paymentId,
     reason,
     ...(amount !== undefined && { amount }),
+    ...(currentCancellableAmount !== undefined && { currentCancellableAmount }),
   })
 }

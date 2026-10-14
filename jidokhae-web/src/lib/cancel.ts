@@ -9,6 +9,7 @@ import { cancelPayment, getPayment } from '@/lib/portone'
 import { calculateRefundByType, transferCloseRefundedAmount } from '@/lib/refund'
 import { getKSTToday } from '@/lib/kst'
 import { isPresenterRow } from '@/lib/presenter-rules'
+import { isRefundAlreadyApplied } from '@/lib/cancel-guard'
 
 export type CancelResult =
   | { status: 'success'; refundedAmount: number; refundRate: number; meetingId: string }
@@ -97,19 +98,23 @@ export async function processUserCancel(
 
   // 5b. PortOne cancel (skip if 0 refund or no payment_id)
   if (refundAmount > 0 && reg.payment_id) {
+    const isFullRefund = refundRate === 100
     try {
       await cancelPayment(
         reg.payment_id,
         '사용자 취소',
         // 100% 환불은 amount 생략 (전액 취소), 부분 환불은 금액 지정
-        refundRate === 100 ? undefined : refundAmount,
+        isFullRefund ? undefined : refundAmount,
+        // 부분 환불은 「잔액이 결제 금액 그대로일 때만」 — 동시에 두 번 눌려도 포트원이
+        // 하나만 통과시킨다. 전액 취소는 포트원이 이미 두 번째를 거절하므로 넣지 않는다
+        isFullRefund ? undefined : paidAmount,
       )
     } catch {
       // Race condition safety: check if already cancelled at PortOne
       // (handles concurrent cancel where another request already succeeded)
       try {
         const payment = await getPayment(reg.payment_id)
-        if (payment.status !== 'CANCELLED') {
+        if (!isRefundAlreadyApplied(payment, refundAmount, isFullRefund)) {
           return {
             status: 'error',
             message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
