@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getDaysUntil, toKSTDate, getKSTToday } from '@/lib/kst'
+import { recommendedTransferRefund } from '@/lib/refund'
 
 export type DepositRow = {
   id: string
@@ -18,7 +19,10 @@ export type DepositRow = {
 export type RefundRow = {
   id: string
   cancelledAt: string | null
+  /** 돌려줄 금액 — 환불 규정 기준. 「환불 완료」 체크 때 서버가 기록하는 값과 같은 함수(recommendedTransferRefund) */
   refundAmount: number
+  /** 회원이 낸 돈 (참고 표시용) */
+  paidAmount: number
   meetingId: string | null
   meetingTitle: string | null
   meetingDate: string | null
@@ -174,16 +178,17 @@ export async function getRegionRevenueData(supabase: SupabaseClient): Promise<Re
 type RefundRegRow = {
   id: string
   cancelled_at: string | null
+  cancel_type: string | null
   paid_amount: number | null
   profiles: { nickname: string | null; real_name: string | null; phone: string | null } | null
-  meetings: { id: string | null; title: string | null; date: string | null } | null
+  meetings: { id: string | null; title: string | null; date: string | null; meeting_type: string | null } | null
 }
 
 // 탭 B: 환불 대기 (계좌이체 취소 + 미환불 + 실입금)
 export async function getPendingRefunds(supabase: SupabaseClient): Promise<RefundRow[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, cancelled_at, paid_amount, profiles(nickname, real_name, phone), meetings(id, title, date)')
+    .select('id, cancelled_at, cancel_type, paid_amount, profiles(nickname, real_name, phone), meetings(id, title, date, meeting_type)')
     .eq('status', 'cancelled')
     .eq('payment_method', 'transfer')
     .is('refunded_amount', null)
@@ -192,19 +197,32 @@ export async function getPendingRefunds(supabase: SupabaseClient): Promise<Refun
 
   if (error) throw error
 
-  // 환불액은 표시용으로 paid_amount(원금)를 노출한다.
-  // 실제 환불 처리는 mark-refunded 라우트가 calculateRefund(meeting.date, paid_amount, cancelled_at)로
-  // 서버에서 재계산해 기록한다. 이 탭에 뜨는 계좌이체 취소 건은 대부분 100%(모임 삭제 or 3일+ 전 취소)라
-  // 원금 표시가 실무상 오해를 최소화한다.
-  return ((data ?? []) as unknown as RefundRegRow[]).map((r) => ({
-    id: r.id,
-    cancelledAt: r.cancelled_at,
-    refundAmount: r.paid_amount ?? 0,
-    meetingId: r.meetings?.id ?? null,
-    meetingTitle: r.meetings?.title ?? null,
-    meetingDate: r.meetings?.date ?? null,
-    nickname: r.profiles?.nickname ?? '(알수없음)',
-    realName: r.profiles?.real_name ?? null,
-    phone: r.profiles?.phone ?? null,
-  }))
+  // 돌려줄 금액은 「환불 완료」 체크 때 서버(mark-refunded)가 기록하는 값과 같은 함수로 계산한다 —
+  // 모임 운영 상세 신청자 표(AdminMeetingSection)도 같은 함수다. 종전에는 낸 돈 전액을 보여 줘서
+  // 운영자가 이 숫자대로 송금하면 기록(규정 금액)과 실제 송금액이 어긋날 수 있었다 (2026-10-14 코드 조사 §1-3 6번).
+  // 표시만 바꾼다 — 처리 로직·DB 값은 그대로.
+  return ((data ?? []) as unknown as RefundRegRow[]).map((r) => {
+    const paidAmount = r.paid_amount ?? 0
+    const refundAmount = r.meetings?.date
+      ? recommendedTransferRefund({
+          cancelType: r.cancel_type,
+          meetingType: r.meetings.meeting_type,
+          meetingDate: r.meetings.date,
+          paidAmount,
+          cancelDate: r.cancelled_at ? toKSTDate(new Date(r.cancelled_at)) : getKSTToday(),
+        })
+      : paidAmount
+    return {
+      id: r.id,
+      cancelledAt: r.cancelled_at,
+      refundAmount,
+      paidAmount,
+      meetingId: r.meetings?.id ?? null,
+      meetingTitle: r.meetings?.title ?? null,
+      meetingDate: r.meetings?.date ?? null,
+      nickname: r.profiles?.nickname ?? '(알수없음)',
+      realName: r.profiles?.real_name ?? null,
+      phone: r.profiles?.phone ?? null,
+    }
+  })
 }

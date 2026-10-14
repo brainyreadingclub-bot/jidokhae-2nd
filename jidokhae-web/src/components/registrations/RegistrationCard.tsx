@@ -72,6 +72,14 @@ export default function RegistrationCard({ registration, badge }: Props) {
                   </span>
                 </span>
               )}
+            {/* 계좌이체로 입금한 뒤 취소해 운영자가 손으로 돌려줄 건(refunded_amount NULL — 0은 「받은 돈 없음」이라 제외).
+                종전에는 아무 표시가 없어 회원이 환불되는지 알 수 없었다 (2026-10-14 코드 조사 §1-3 6번) */}
+            {registration.status === 'cancelled' &&
+              registration.payment_method === 'transfer' &&
+              registration.refunded_amount === null &&
+              registration.paid_amount > 0 && (
+                <span className="ml-2 font-semibold text-primary-600">· 환불 진행 중</span>
+              )}
           </div>
         )}
       </div>

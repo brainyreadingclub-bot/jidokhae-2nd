@@ -28,7 +28,7 @@ export default function RefundWaitingTable({ rows }: Props) {
     <div>
       {/* 안내 문구 */}
       <p className="mb-3 text-xs text-neutral-400">
-        계좌이체 환불은 회원 연락처로 계좌번호를 확인한 뒤 직접 송금하고, 완료 후 환불 완료를 체크하세요.
+        계좌이체 환불은 회원 연락처로 계좌번호를 확인한 뒤 「환불할 금액」만큼 직접 송금하고, 완료 후 환불 완료를 체크하세요. 환불할 금액은 환불 규정(취소한 날 기준)으로 계산한 값이에요.
       </p>
 
       {/* 모바일 카드 목록 */}
@@ -39,13 +39,17 @@ export default function RefundWaitingTable({ rows }: Props) {
             className="rounded-[var(--radius-md)] p-3"
             style={{ backgroundColor: 'var(--color-surface-50)', border: '1px solid var(--color-surface-200)' }}
           >
-            {/* Row 1: 닉네임 + 환불액 */}
-            <div className="flex items-center justify-between gap-2">
+            {/* Row 1: 닉네임 + 환불할 금액(규정 기준, 크게) · 낸 돈(작게) */}
+            <div className="flex items-start justify-between gap-2">
               <span className="text-sm font-medium text-primary-800 truncate min-w-0">
                 {row.nickname}
               </span>
-              <span className="text-sm font-bold text-primary-800 shrink-0">
-                {formatFee(row.refundAmount)}
+              <span className="shrink-0 text-right">
+                <span className="block text-[11px] text-neutral-500">환불할 금액</span>
+                <span className="block text-base font-bold text-primary-800">
+                  {formatFee(row.refundAmount)}
+                </span>
+                <span className="block text-[11px] text-neutral-400">낸 돈 {formatFee(row.paidAmount)}</span>
               </span>
             </div>
             {/* Row 2: 모임 + 날짜 */}
@@ -107,7 +111,7 @@ export default function RefundWaitingTable({ rows }: Props) {
             >
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">닉네임</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">실명</th>
-              <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">환불액</th>
+              <th className="px-3 py-2.5 text-right text-xs font-bold text-primary-500">환불할 금액</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">취소 시각</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">모임</th>
               <th className="px-3 py-2.5 text-left text-xs font-bold text-primary-500">모임 날짜</th>
@@ -132,9 +136,10 @@ export default function RefundWaitingTable({ rows }: Props) {
                 <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">
                   {row.realName ?? '-'}
                 </td>
-                {/* 환불액 */}
-                <td className="px-3 py-2.5 text-right text-primary-800 whitespace-nowrap">
-                  {formatFee(row.refundAmount)}
+                {/* 환불할 금액(규정 기준, 크게) · 낸 돈(작게) */}
+                <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                  <span className="block text-base font-bold text-primary-800">{formatFee(row.refundAmount)}</span>
+                  <span className="block text-[11px] text-neutral-400">낸 돈 {formatFee(row.paidAmount)}</span>
                 </td>
                 {/* 취소 시각 */}
                 <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap">

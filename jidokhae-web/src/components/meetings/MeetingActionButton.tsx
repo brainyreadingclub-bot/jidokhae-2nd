@@ -835,6 +835,11 @@ export default function MeetingActionButton({
                   <CopyableDepositorName depositorName={depositorName} skin={skin} />
                 )}
 
+                {/* 이 버튼은 「입금했다」고 알리는 버튼이 아니라 신청 요청을 보내는 버튼이다 — 문구만 바꿈, 동작 그대로 (2026-10-14 코드 조사 §1-3 12번) */}
+                {!noTransferNeeded && (
+                  <p className="mt-5 text-center text-[13px] text-neutral-500">입금이 확인되면 신청이 확정돼요</p>
+                )}
+
                 <button
                   onClick={async () => {
                     setRegisterPhase('processing')
@@ -861,10 +866,10 @@ export default function MeetingActionButton({
                       showToast('네트워크 오류가 발생했습니다')
                     }
                   }}
-                  className={`mt-5 ${s.btnPrimary}`}
+                  className={`${noTransferNeeded ? 'mt-5' : 'mt-2'} ${s.btnPrimary}`}
                   style={s.btnPrimaryStyle}
                 >
-                  {noTransferNeeded ? '신청하기' : '입금 완료'}
+                  {noTransferNeeded ? '신청하기' : '계좌이체로 신청하기'}
                 </button>
               </>
             )}
