@@ -3,6 +3,7 @@ import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec, BoxWhite, RowItem, Chevron } from '@/components/next/TossUI'
 import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
 import { highResCoverUrl } from '@/lib/book-cover'
+import UpcomingRegulars, { type UpcomingRegular } from '@/components/next/UpcomingRegulars'
 
 /**
  * 홈 탭 표현 (전면개편 스펙 §2 — "지금 나 뭐 해야 하지?").
@@ -45,6 +46,8 @@ export type HomeData = {
     venueName: string
     fee: number
   } | null
+  /** 다가오는 정기모임 최대 3건 — 내가 신청한 것 제외. 빈 배열이면 칸을 안 그린다 (2026-10-13 시안) */
+  upcoming: UpcomingRegular[]
   /** 토론 홍보 — 미신청일 때. `open`은 정기모임과 같은 기준(당일까지 열림) — D-7 마감은 2026-10-13 폐지 */
   promo: {
     meetingId: string
@@ -67,7 +70,7 @@ export type HomeData = {
 }
 
 export default function HomeView({ data }: { data: HomeData }) {
-  const { nickname, firstTime, reply, nextMeeting, nearest, promo, todo } = data
+  const { nickname, firstTime, reply, nextMeeting, nearest, upcoming, promo, todo } = data
 
   return (
     <div className="pt-2">
@@ -182,11 +185,13 @@ export default function HomeView({ data }: { data: HomeData }) {
         </>
       )}
 
+      <UpcomingRegulars items={upcoming} />
+
       {/* 토론 홍보 — 표지 중형(60×90), 버튼은 "발제문 먼저 읽어보기" (신청 강요 금지) */}
       {promo && (
         <>
           {/* 카드가 두 장 나란히 놓이면 이유가 필요하다. 토론은 월 1회라 「이달의」가 사실 */}
-          {(nextMeeting || nearest) && <Sec>이달의 토론모임</Sec>}
+          {(nextMeeting || nearest || upcoming.length > 0) && <Sec>이달의 토론모임</Sec>}
           <BoxWhite>
             <TrackedLink
               eventName="home_card_click"
@@ -253,7 +258,7 @@ export default function HomeView({ data }: { data: HomeData }) {
         (2026-09-19 A3 시안 08b). 점선 박스 + 가운데 정렬 + 링크 없음은 「고장인가?」로 읽힌다.
         「알림으로 알려드릴게요」 같은 말은 넣지 않는다 — 새 모임 알림을 보내는 코드가 없다.
       */}
-      {!reply && !nextMeeting && !nearest && !promo && (!todo || todo.unanswered === 0) && (
+      {!reply && !nextMeeting && !nearest && upcoming.length === 0 && !promo && (!todo || todo.unanswered === 0) && (
         <Link href="/meet" className="mt-5 flex items-center gap-3 rounded-[18px] bg-tg-100 px-4 py-[18px]">
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-tg-800">지금은 조용해요</span>
