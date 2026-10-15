@@ -36,7 +36,7 @@ export default async function ButtonLabPage() {
   return (
     <div className="mx-auto max-w-screen-sm p-5">
       <div id="thread">
-        <TopicThread topic={topic} answers={answers} answerCount={1} canRead canWrite applyCta="apply" myUserId="u1" />
+        <TopicThread topic={topic} answers={answers} answererCount={1} view="open" canWrite applyCta="apply" myUserId="u1" />
       </div>
       <div id="grid">
         <LibraryToastProvider>

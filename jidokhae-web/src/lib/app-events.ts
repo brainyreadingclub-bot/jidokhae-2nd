@@ -28,6 +28,12 @@ export const APP_EVENTS = [
   'meet.view_item_list',
   /** 계좌이체·0원 신청이 접수됐다 (register_transfer 결과가 자리·대기). GA sign_up_meeting과 짝 */
   'registration.sign_up_meeting',
+  /** 발제 화면을 열었다. `access` = locked(신청자·아직 안 씀) / open(써서 열림) / staff(운영진·발제자) / outsider(미신청) */
+  'topic.view',
+  /** 발제에 답을 새로 남겼다 (같은 내용 다시 저장은 빼고). `opened_now` = 이 답으로 남의 답이 처음 열렸나 */
+  'topic.answer_submit',
+  /** 「응답 후 공개」가 켜진 발제에서 첫 답을 남겨 남의 답이 열렸다. `answerers` = 그때 이미 답한 사람 수 */
+  'topic.answers_unlock',
 ] as const
 
 export type AppEventName = (typeof APP_EVENTS)[number]
