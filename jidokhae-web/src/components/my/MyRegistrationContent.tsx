@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/auth'
 import { getKSTToday } from '@/lib/kst'
 import RegistrationCard from '@/components/registrations/RegistrationCard'
+import { isCancelledBeforeDeposit } from '@/lib/refund'
 import type { RegistrationWithMeeting } from '@/types/registration'
 
 /**
@@ -63,6 +64,8 @@ export default async function MyRegistrationContent({
     .sort((a, b) => b.meetings.date.localeCompare(a.meetings.date))
 
   function getBadge(reg: RegistrationWithMeeting): { label: string; color: 'success' | 'gray' } {
+    // 계좌이체 입금 확인 전 취소 — 카드에 「입금하셨다면 운영진이 확인 후 돌려드려요」가 같이 붙는다 (refund.ts isCancelledBeforeDeposit)
+    if (isCancelledBeforeDeposit(reg)) return { label: '입금 전 취소', color: 'gray' }
     if (reg.status === 'cancelled') return { label: '취소됨', color: 'gray' }
     if (reg.status === 'waitlisted') return { label: '대기 중', color: 'gray' }
     if (reg.status === 'waitlist_cancelled') return { label: '대기 취소됨', color: 'gray' }

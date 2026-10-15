@@ -5,6 +5,7 @@ import Link from 'next/link'
 // formatPaidAmountWithUnitForScreen = 결제 금액 — 「0원」은 **모임 참가비**로만 판정한다
 import { formatKoreanDate, formatKoreanTime, formatFee, formatPaidAmountWithUnitForScreen } from '@/lib/kst'
 import type { RegistrationWithMeeting } from '@/types/registration'
+import { isCancelledBeforeDeposit } from '@/lib/refund'
 
 type Props = {
   registration: RegistrationWithMeeting
@@ -85,6 +86,10 @@ export default function RegistrationCard({ registration, badge }: Props) {
                 <span className="ml-2 font-semibold text-primary-600">· 환불 진행 중</span>
               )}
           </div>
+        )}
+        {/* 입금 확인 전에 취소된 계좌이체 — 혹시 입금했어도 돌려받는다는 걸 알린다. 0원 모임 취소(결제 금액 0)에는 붙이지 않는다 (2026-10-15 대표님 1안) */}
+        {isCancelledBeforeDeposit(registration) && (
+          <p className="mt-1.5 text-caption text-neutral-600 break-keep">입금하셨다면 운영진이 확인 후 돌려드려요</p>
         )}
       </div>
     </>
