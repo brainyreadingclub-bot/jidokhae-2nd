@@ -5,28 +5,30 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { trackEvent } from '@/lib/analytics'
 import type { DiscussionTopic, AnswerWithMeta } from '@/types/discussion'
-import type { TopicApplyCta } from '@/lib/answer-access-rules'
+import type { TopicApplyCta, TopicAnswerView } from '@/lib/answer-access-rules'
 
 /**
  * 발제 스레드 (전면개편 스펙 §4-1).
  * 읽기 = 그 모임 신청자 + 운영진 / 쓰기 = 신청자 (둘 다 서버에서 판정, 2026-10-13).
- * 읽기 자격이 없으면 서버가 남의 답변을 아예 안 내려보낸다 — 여기서는 답변 수만 보여준다.
+ * 응답 후 공개 (2026-10-15): 신청자는 이 발제에 자기 답을 남겨야 남의 답이 열린다.
+ * 남의 답을 볼 수 없으면 서버가 아예 안 내려보낸다 — 여기서는 「n명이 답했어요」 숫자만 보여준다.
  * 미신청자 입력창 자리에는 안내 + 모임 상세로 가는 신청 버튼(결제로 바로 보내지 않는다).
  */
 export default function TopicThread({
   topic,
   answers,
-  answerCount,
-  canRead,
+  answererCount,
+  view,
   canWrite,
   applyCta,
   myUserId,
 }: {
   topic: DiscussionTopic
   answers: AnswerWithMeta[]
-  /** 전체 답변 수 — 읽기 자격이 없어도 수는 보인다 */
-  answerCount: number
-  canRead: boolean
+  /** 이 발제에 답한 사람 수 — 잠겨 있어도 숫자는 보인다(내용·이름은 안 온다) */
+  answererCount: number
+  /** 서버 판정 — answer-access-rules.ts topicAnswerView */
+  view: TopicAnswerView
   canWrite: boolean
   applyCta: TopicApplyCta
   myUserId: string | null
@@ -54,6 +56,9 @@ export default function TopicThread({
       ? { id: pendingMine.id, body: pendingMine.body, reaction_count: 0, reply_count: 0 }
       : undefined)
   const others = answers.filter((a) => a.id !== serverMine?.id)
+  const seesOthers = view === 'staff' || view === 'open'
+  // 답한 사람 수에서 나를 뺀 수 — 「n명이 답했어요」는 남의 답이 몇 명분 기다리는지를 말한다
+  const othersCount = Math.max(0, answererCount - (serverMine ? 1 : 0))
 
   async function submitAnswer() {
     const text = body.trim()
@@ -220,12 +225,45 @@ export default function TopicThread({
         )
       })}
 
-      {/* 읽기 자격 없음 — 답변 수만 */}
-      {!canRead && (
-        <p className="mt-4 text-xs font-semibold text-tg-600">답변 {answerCount}개</p>
+      {/* 잠긴 발제 — 숫자만. 내용·이름은 서버가 안 보냈다 */}
+      {view === 'locked' && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-[14px] bg-tg-50 p-4">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            className="mt-0.5 h-4 w-4 flex-none text-tg-500"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
+            <rect x="4" y="9" width="12" height="8" rx="2" />
+            <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
+          </svg>
+          <div>
+            <p className="text-[13px] font-extrabold text-tg-900">
+              {myAnswer
+                ? '다른 분들의 답을 여는 중…'
+                : othersCount > 0
+                  ? `${othersCount}명이 답했어요`
+                  : '아직 아무도 답하지 않았어요'}
+            </p>
+            {!myAnswer && (
+              <p className="mt-0.5 break-keep text-xs leading-relaxed text-tg-600">
+                내 생각을 남기면 다른 분들의 답이 열려요
+              </p>
+            )}
+          </div>
+        </div>
       )}
 
-      {canRead && others.length === 0 && !myAnswer && (
+      {/* 신청 안 함 — 숫자만 */}
+      {view === 'outsider' && (
+        <p className="mt-4 text-xs font-semibold text-tg-600">
+          {othersCount > 0 ? `${othersCount}명이 답했어요` : '아직 답한 사람이 없어요'}
+        </p>
+      )}
+
+      {seesOthers && others.length === 0 && !myAnswer && (
         <p className="mt-4 rounded-[14px] bg-tg-50 p-4 text-center text-xs text-tg-600">
           아직 답변이 없어요 — 첫 답을 남겨보세요
         </p>
@@ -235,8 +273,11 @@ export default function TopicThread({
       {canWrite ? (
         !myAnswer && (
           <div className="mt-4 border-t border-tg-100 pt-3">
-            {/* 실제 읽기 범위와 같아야 한다 — answer-access-rules.ts canReadAnswers */}
-            <p className="mb-2 text-[11px] text-tg-600">이 모임 신청자와 운영진만 읽어요</p>
+            {/* 첫 줄은 실제 읽기 범위와 같아야 한다 — answer-access-rules.ts topicAnswerView */}
+            <p className="text-[11px] font-semibold text-tg-700">이 모임 신청자끼리만 보여요</p>
+            <p className="mb-2 mt-0.5 break-keep text-[11px] text-tg-600">
+              완성된 답 말고, 지금 떠오르는 첫 생각이면 충분해요
+            </p>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -260,7 +301,7 @@ export default function TopicThread({
             </button>
           </div>
         )
-      ) : canRead ? null : (
+      ) : view === 'staff' ? null : (
         // 운영진(읽기만 가능)에게는 이 칸이 필요 없다 — 신청 안 한 회원에게만
         <div className="mt-4 rounded-[12px] bg-tg-50 p-3.5 text-center">
           <p className="break-keep text-xs font-semibold leading-relaxed text-tg-700">

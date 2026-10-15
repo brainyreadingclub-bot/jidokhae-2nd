@@ -4,6 +4,8 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import { createAppNotification } from '@/lib/app-notifications'
 import { getProfile } from '@/lib/profile'
 import { canWriteAnswer } from '@/lib/discussion-rules'
+import { getAnswerAccess, getMyAnsweredTopicIds, viewForTopic } from '@/lib/answer-access'
+import { canSeeOthersAnswers } from '@/lib/answer-access-rules'
 
 /** 답글 작성. 자격 = 해당 모임 신청자. 답변 주인에게 인앱 알림. */
 export async function POST(
@@ -64,6 +66,20 @@ export async function POST(
         { status: 'error', message: '신청하면 함께 이야기할 수 있어요' },
         { status: 403 },
       )
+    }
+
+    // 응답 후 공개: 볼 수 없는 답에는 답글도 못 단다 — 「있다」는 것도 안 알린다(404로 같게, 2026-10-15)
+    if (answer.user_id !== user.id) {
+      const [access, mine] = await Promise.all([
+        getAnswerAccess(user.id, topic.meeting_id),
+        getMyAnsweredTopicIds(user.id, [answer.topic_id]),
+      ])
+      if (!canSeeOthersAnswers(viewForTopic(access, mine.has(answer.topic_id)))) {
+        return NextResponse.json(
+          { status: 'error', message: '답변을 찾을 수 없어요' },
+          { status: 404 },
+        )
+      }
     }
 
     const { error } = await admin

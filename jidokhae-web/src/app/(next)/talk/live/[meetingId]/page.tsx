@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getUser } from '@/lib/auth'
 import { getTopicsWithStats, getAnswersWithMeta } from '@/lib/discussion'
-import { getAnswerAccess } from '@/lib/answer-access'
+import { getAnswerAccess, viewForTopic } from '@/lib/answer-access'
+import { canSeeOthersAnswers } from '@/lib/answer-access-rules'
 import LiveMode, { type LiveTopic } from '@/components/next/LiveMode'
 import type { Meeting } from '@/types/meeting'
 
@@ -24,13 +25,16 @@ export default async function LivePage({
 
   const user = await getUser()
   const [topics, access] = await Promise.all([
-    getTopicsWithStats(meetingId, null),
+    getTopicsWithStats(meetingId, user?.id ?? null),
     getAnswerAccess(user?.id ?? null, meetingId),
   ])
-  // 🔒 답변은 그 모임 신청자 + 운영진만 (2026-10-13). 아니면 발제만 보이고 답변은 안 내려보낸다
+  // 🔒 답변은 그 모임 신청자 + 운영진만 (2026-10-13), 신청자는 자기가 답한 발제만 (응답 후 공개, 2026-10-15).
+  //    못 보는 발제는 답변을 안 내려보낸다 — 화면 판정과 같은 함수(viewForTopic)를 쓴다
   const liveTopics: LiveTopic[] = await Promise.all(
     topics.map(async (t) => {
-      const answers = access.canRead ? await getAnswersWithMeta(t.id, null) : []
+      const answers = canSeeOthersAnswers(viewForTopic(access, t.my_answered))
+        ? await getAnswersWithMeta(t.id, null)
+        : []
       return {
         ...t,
         answers: answers.map((a) => ({
