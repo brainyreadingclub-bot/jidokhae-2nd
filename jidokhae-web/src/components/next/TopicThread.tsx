@@ -274,7 +274,7 @@ export default function TopicThread({
         !myAnswer && (
           <div className="mt-4 border-t border-tg-100 pt-3">
             {/* 첫 줄은 실제 읽기 범위와 같아야 한다 — answer-access-rules.ts topicAnswerView */}
-            <p className="text-[11px] font-semibold text-tg-700">이 모임 신청자끼리만 보여요</p>
+            <p className="text-[11px] font-semibold text-tg-700">이 모임 신청자와 운영진만 보여요</p>
             <p className="mb-2 mt-0.5 break-keep text-[11px] text-tg-600">
               완성된 답 말고, 지금 떠오르는 첫 생각이면 충분해요
             </p>
