@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 // formatFee = 환불 금액(0은 "돌려받을 돈 없음")
-// formatPaidAmountWithUnit = 낸 돈 — 「무료」는 **모임 참가비**로만 판정한다
-import { formatKoreanDate, formatKoreanTime, formatFee, formatPaidAmountWithUnit } from '@/lib/kst'
+// formatPaidAmountWithUnitForScreen = 결제 금액 — 「0원」은 **모임 참가비**로만 판정한다
+import { formatKoreanDate, formatKoreanTime, formatFee, formatPaidAmountWithUnitForScreen } from '@/lib/kst'
 import type { RegistrationWithMeeting } from '@/types/registration'
 
 type Props = {
@@ -61,10 +61,10 @@ export default function RegistrationCard({ registration, badge }: Props) {
           <div className="mt-3 pt-2.5 border-t border-neutral-200 text-caption text-neutral-600">
             결제 금액{' '}
             <span className={`font-bold font-mono ${isMuted ? 'line-through' : ''}`}>
-              {/* 🔴 「무료」 판정은 **모임 참가비**로 한다. 결제액으로 판정하면
+              {/* 🔴 「0원」 판정은 **모임 참가비**로 한다. 결제액으로 판정하면
                   유료 모임인데 paid_amount가 0인 건(2026-10-06 중복환불 장부 정리)이
-                  「무료」가 되어 "이 모임은 공짜였다"는 거짓말이 된다 */}
-              {formatPaidAmountWithUnit(registration.paid_amount, meeting.fee)}
+                  「0원」이 되어 "이 모임은 공짜였다"는 거짓말이 된다 */}
+              {formatPaidAmountWithUnitForScreen(registration.paid_amount, meeting.fee)}
             </span>
             {isCancelled &&
               registration.refunded_amount != null &&

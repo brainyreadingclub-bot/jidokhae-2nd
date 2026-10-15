@@ -5,7 +5,7 @@ import { getMeeting } from '@/lib/meeting'
 import { getUser } from '@/lib/auth'
 import { resolveHomeUpcomingClick } from '@/lib/home-upcoming'
 import { recordAppEvent } from '@/lib/app-events'
-import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatMeetingFeeForScreen } from '@/lib/kst'
 import MeetingDetailView from '@/components/next/MeetingDetailView'
 
 type Props = {
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: '지독해 - 독서모임' }
   }
 
-  const description = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatMeetingFee(meeting.fee)}`
+  const description = `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)} · ${meeting.location} · 참가비 ${formatMeetingFeeForScreen(meeting.fee)}`
 
   return {
     title: meeting.title,

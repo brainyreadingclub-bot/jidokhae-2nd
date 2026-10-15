@@ -14,6 +14,9 @@ import {
   formatMeetingFee,
   formatPaidAmount,
   formatPaidAmountWithUnit,
+  formatMeetingFeeForScreen,
+  formatPaidAmountForScreen,
+  formatPaidAmountWithUnitForScreen,
   getDaysUntil,
   getMeetingTiming,
   getButtonState,
@@ -322,5 +325,32 @@ describe('getButtonState', () => {
     it('미신청 → none', () => {
       expect(getButtonState(PAST, TODAY, false, false)).toEqual({ type: 'none' })
     })
+  })
+})
+
+// 화면용 금액 표기 (문구표준 §5, 2026-10-15) — 0원 모임은 「무료」가 아니라 「0원」.
+// 알림톡이 쓰는 formatPaidAmount·formatMeetingFee(「무료」)는 그대로여야 한다.
+describe('화면용 금액 표기 — 0원 모임은 「0원」', () => {
+  it('0원 모임 참가비 → "0원"', () => {
+    expect(formatMeetingFeeForScreen(0)).toBe('0원')
+  })
+  it('유료 모임 참가비 → 단위 없이 숫자', () => {
+    expect(formatMeetingFeeForScreen(10000)).toBe('10,000')
+  })
+  it('0원 모임 결제 건 → "0원" (단위 붙은 것도 "0원원"이 아님)', () => {
+    expect(formatPaidAmountForScreen(0, 0)).toBe('0원')
+    expect(formatPaidAmountWithUnitForScreen(0, 0)).toBe('0원')
+  })
+  it('🔴 유료 모임인데 결제액이 0 → "0원"이 아니라 "0" (판정은 모임 참가비로)', () => {
+    expect(formatPaidAmountForScreen(0, 10000)).toBe('0')
+    expect(formatPaidAmountWithUnitForScreen(0, 10000)).toBe('0원')
+  })
+  it('스텝 할인 결제 → 결제액 그대로', () => {
+    expect(formatPaidAmountForScreen(5000, 10000)).toBe('5,000')
+    expect(formatPaidAmountWithUnitForScreen(5000, 10000)).toBe('5,000원')
+  })
+  it('🔴 알림톡용 공용 표기는 바뀌지 않았다 — 0원 모임은 여전히 「무료」', () => {
+    expect(formatPaidAmount(0, 0)).toBe('무료')
+    expect(formatMeetingFee(0)).toBe('무료')
   })
 })

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec, BoxWhite, RowItem, Chevron } from '@/components/next/TossUI'
-import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatMeetingFeeForScreen } from '@/lib/kst'
 import { highResCoverUrl } from '@/lib/book-cover'
 import UpcomingRegulars, { type UpcomingRegular } from '@/components/next/UpcomingRegulars'
 
@@ -139,7 +139,7 @@ export default function HomeView({ data }: { data: HomeData }) {
               <span className="mt-0.5 block truncate text-xs text-tg-600">
                 {formatKoreanDate(nextMeeting.date)} {formatKoreanTime(nextMeeting.time)} ·{' '}
                 {nextMeeting.venueName}
-                {nextMeeting.pendingTransfer && ' · 입금 확인 중'}
+                {nextMeeting.pendingTransfer && ' · 입금 확인 전'}
               </span>
             </span>
             <Chevron />
@@ -169,7 +169,7 @@ export default function HomeView({ data }: { data: HomeData }) {
               {nearest.title}
             </span>
             <span className="mt-1 block break-keep text-xs leading-[1.5] text-tg-600">
-              {nearest.venueName} · 참가비 {formatMeetingFee(nearest.fee)}
+              {nearest.venueName} · 참가비 {formatMeetingFeeForScreen(nearest.fee)}
             </span>
             <span className="mt-[13px] flex h-[46px] items-center justify-center rounded-[14px] bg-brand text-sm font-extrabold tracking-tight text-white">
               모임 자세히 보기

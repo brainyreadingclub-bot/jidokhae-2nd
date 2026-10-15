@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Sec, BoxWhite, Chevron } from '@/components/next/TossUI'
-import { formatKoreanDate, formatKoreanTime, formatMeetingFee } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatMeetingFeeForScreen } from '@/lib/kst'
 import { highResCoverUrl } from '@/lib/book-cover'
 
 /**
@@ -127,7 +127,7 @@ export default function MeetView({
                 </span>
                 <span className="flex-none text-right">
                   <span className="block text-[13px] font-bold tabular-nums">
-                    {formatMeetingFee(m.fee)}
+                    {formatMeetingFeeForScreen(m.fee)}
                   </span>
                   <span className="block text-[10px] text-tg-600">참가비</span>
                 </span>

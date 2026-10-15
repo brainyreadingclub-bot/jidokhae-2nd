@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { formatKoreanDate, formatKoreanTime, formatPaidAmount } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmountForScreen } from '@/lib/kst'
 import { getSiteSettings } from '@/lib/site-settings'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { loadRegistrationSummary } from '@/lib/registration-summary'
@@ -112,7 +112,7 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
               <span className="text-neutral-600 text-xs w-10 mt-0.5">결제 금액</span>
               <div className="flex flex-col">
                 <span className="font-bold text-neutral-900">
-                  {formatPaidAmount(paidAmount ?? typedMeeting.fee, typedMeeting.fee)}
+                  {formatPaidAmountForScreen(paidAmount ?? typedMeeting.fee, typedMeeting.fee)}
                 </span>
                 {paidAmount !== null && paidAmount < typedMeeting.fee && (
                   <span className="text-[11px] font-medium text-primary-600 mt-0.5">
