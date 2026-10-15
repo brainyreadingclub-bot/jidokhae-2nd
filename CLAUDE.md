@@ -278,6 +278,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 - **결정을 미루면 `docs/agent-team/결정대기.md`에 적고, 정해지면 지운다**(정해진 내용은 `DECISIONS.md`로).
 - **사람 손 없이 도는 작업(예약·자동 발송·점검 메일) 목록은 `docs/agent-team/걸어둔-자동작업.md`** — 걸거나 끄면 그 세션 안에 고친다.
 - **화면 캡처 중 크롬 창 크기를 바꾸지 않는다** — 줄인 직후 캡처가 먹통이 됐다. 폭은 페이지 안에서 맞춘다.
+- **큰 작업 하나가 끝나거나 기억 사용량이 70%를 넘으면, 보고 끝에 『마무리 후 /clear 권장』을 적는다.** (기억 사용량은 하단 상태 표시줄의 「기억 N%」. 압축 직전·직후 인계는 훅이 한다 — `.claude/hooks/session-handoff.mjs`)
 
 - **Language:** All planning documents are written in Korean. Maintain Korean when editing core and roadmap documents.
 - **Core documents are authoritative:** `/core` documents define the spec. When implementing, always cross-reference these specs — do not rely on memory or summaries alone.

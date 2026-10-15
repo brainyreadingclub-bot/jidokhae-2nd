@@ -20,6 +20,11 @@
             "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/report-contract.mjs\"",
             "timeout": 10,
             "statusMessage": "보고 규칙 확인 중"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/remember-session.mjs\"",
+            "timeout": 5
           }
         ]
       }
@@ -72,6 +77,19 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/save-handoff.mjs\"",
+            "timeout": 15,
+            "statusMessage": "세션 인계 저장 중"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {
@@ -85,5 +103,9 @@
     "superpowers@claude-plugins-official": false,
     "dryforge@dryforge": true
   },
-  "autoUpdatesChannel": "latest"
+  "autoUpdatesChannel": "latest",
+  "statusLine": {
+    "type": "command",
+    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/statusline.mjs\""
+  }
 }
