@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json(
-      { status: 'error', message: '로그인이 필요합니다' },
+      { status: 'error', message: '로그인이 필요해요' },
       { status: 401 },
     )
   }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     body = await request.json()
   } catch {
     return NextResponse.json(
-      { status: 'error', message: '잘못된 요청입니다' },
+      { status: 'error', message: '잘못된 요청이에요' },
       { status: 400 },
     )
   }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   const { paymentId, meetingId } = body
   if (!paymentId || !meetingId) {
     return NextResponse.json(
-      { status: 'error', message: 'paymentId, meetingId가 필요합니다' },
+      { status: 'error', message: '잘못된 요청이에요' },
       { status: 400 },
     )
   }
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       }),
     )
     return NextResponse.json(
-      { status: 'error', message: '신청 처리 중 오류가 발생했습니다' },
+      { status: 'error', message: '결제를 처리하지 못했어요. 신청 내역을 확인해 주세요' },
       { status: 500 },
     )
   }

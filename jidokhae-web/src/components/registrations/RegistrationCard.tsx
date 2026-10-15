@@ -35,6 +35,10 @@ export default function RegistrationCard({ registration, badge }: Props) {
               <span>{formatKoreanTime(meeting.time)}</span>
             </div>
             <div className="mt-1 text-caption text-neutral-500">{meeting.location}</div>
+            {/* 운영자가 모임을 지운 신청 — 회원 본인 취소와 구분해 알린다 (문구표준) */}
+            {registration.status === 'cancelled' && registration.cancel_type === 'meeting_deleted' && (
+              <div className="mt-1 text-caption font-semibold text-neutral-600">모임이 취소됐어요</div>
+            )}
           </div>
 
           <span
@@ -55,18 +59,18 @@ export default function RegistrationCard({ registration, badge }: Props) {
 
         {registration.paid_amount != null && (
           <div className="mt-3 pt-2.5 border-t border-neutral-200 text-caption text-neutral-600">
-            결제금액{' '}
+            결제 금액{' '}
             <span className={`font-bold font-mono ${isMuted ? 'line-through' : ''}`}>
               {/* 🔴 「무료」 판정은 **모임 참가비**로 한다. 결제액으로 판정하면
                   유료 모임인데 paid_amount가 0인 건(2026-10-06 중복환불 장부 정리)이
                   「무료」가 되어 "이 모임은 공짜였다"는 거짓말이 된다 */}
               {formatPaidAmountWithUnit(registration.paid_amount, meeting.fee)}
             </span>
-            {registration.status === 'cancelled' &&
+            {isCancelled &&
               registration.refunded_amount != null &&
               registration.refunded_amount > 0 && (
                 <span className="ml-2">
-                  · 환불{' '}
+                  · 환불 완료 ·{' '}
                   <span className="font-semibold font-mono text-primary-600">
                     {formatFee(registration.refunded_amount)}원
                   </span>

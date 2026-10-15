@@ -37,7 +37,7 @@ export default async function MyRegistrationContent({
   if (typedRegs.length === 0) {
     return (
       <div className="mt-4">
-        <p className="text-caption text-neutral-400">신청 내역이 없습니다</p>
+        <p className="text-caption text-neutral-400">신청 내역이 없어요</p>
         <Link
           href={browseHref}
           className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
@@ -65,11 +65,11 @@ export default async function MyRegistrationContent({
   function getBadge(reg: RegistrationWithMeeting): { label: string; color: 'success' | 'gray' } {
     if (reg.status === 'cancelled') return { label: '취소됨', color: 'gray' }
     if (reg.status === 'waitlisted') return { label: '대기 중', color: 'gray' }
-    if (reg.status === 'waitlist_cancelled') return { label: '대기 취소', color: 'gray' }
-    if (reg.status === 'waitlist_refunded') return { label: '대기 환불', color: 'gray' }
-    if (reg.status === 'pending_transfer') return { label: '입금 대기', color: 'success' }
+    if (reg.status === 'waitlist_cancelled') return { label: '대기 취소됨', color: 'gray' }
+    if (reg.status === 'waitlist_refunded') return { label: '대기 종료', color: 'gray' }
+    if (reg.status === 'pending_transfer') return { label: '신청 완료 · 입금 확인 전', color: 'success' }
     if (reg.meetings.date < kstToday) return { label: '참여 완료', color: 'success' }
-    return { label: '신청완료', color: 'success' }
+    return { label: '신청 완료', color: 'success' }
   }
 
   return (

@@ -44,7 +44,7 @@ export default function SettlementTabs({ deposits, refunds, excludedDeposits, re
               : undefined
           }
         >
-          입금 확인 대기
+          입금 확인 필요
           <span
             className={[
               'text-[11px] rounded-full px-1.5 py-0.5',

@@ -53,7 +53,7 @@ export default function CopyableDepositorName({ depositorName, skin = 'legacy' }
         </svg>
         <div className="flex-1">
           <p className={`text-sm leading-relaxed ${toss ? 'text-tg-800' : 'text-accent-700'}`}>
-            아래 입금자명을 복사해서 입금해주세요
+            아래 입금자명을 복사해서 입금해 주세요
           </p>
           <div className="mt-2.5 flex items-center gap-2">
             <span

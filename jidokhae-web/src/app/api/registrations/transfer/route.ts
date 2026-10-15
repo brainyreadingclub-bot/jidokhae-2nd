@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json(
-      { status: 'error', message: '로그인이 필요합니다' },
+      { status: 'error', message: '로그인이 필요해요' },
       { status: 401 },
     )
   }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     body = await request.json()
   } catch {
     return NextResponse.json(
-      { status: 'error', message: '잘못된 요청입니다' },
+      { status: 'error', message: '잘못된 요청이에요' },
       { status: 400 },
     )
   }
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   const { meetingId } = body
   if (!meetingId) {
     return NextResponse.json(
-      { status: 'error', message: 'meetingId가 필요합니다' },
+      { status: 'error', message: '잘못된 요청이에요' },
       { status: 400 },
     )
   }
@@ -79,14 +79,14 @@ export async function POST(request: NextRequest) {
 
   if (meetingError || !meeting) {
     return NextResponse.json(
-      { status: 'error', message: '모임을 찾을 수 없습니다' },
+      { status: 'error', message: '모임을 찾을 수 없어요' },
       { status: 404 },
     )
   }
 
   if (meeting.status !== 'active') {
     return NextResponse.json(
-      { status: 'error', message: '신청할 수 없는 모임입니다' },
+      { status: 'error', message: '신청할 수 없는 모임이에요' },
       { status: 400 },
     )
   }
@@ -129,21 +129,21 @@ export async function POST(request: NextRequest) {
   if (rpcError) {
     console.error('[transfer] RPC 오류:', rpcError)
     return NextResponse.json(
-      { status: 'error', message: '신청 처리 중 오류가 발생했습니다' },
+      { status: 'error', message: '신청하지 못했어요. 잠깐 뒤에 다시 시도해 주세요' },
       { status: 500 },
     )
   }
 
   if (result === 'not_found' || result === 'not_active') {
     return NextResponse.json(
-      { status: 'error', message: '신청할 수 없는 모임입니다' },
+      { status: 'error', message: '신청할 수 없는 모임이에요' },
       { status: 400 },
     )
   }
 
   if (result === 'already_registered') {
     return NextResponse.json(
-      { status: 'error', message: '이미 신청한 모임입니다' },
+      { status: 'error', message: '이미 신청한 모임이에요' },
       { status: 400 },
     )
   }
@@ -151,14 +151,14 @@ export async function POST(request: NextRequest) {
   // 스텝 할인 race 거부 (사전 슬롯 카운트 후 다른 사용자가 차지)
   if (result === 'discount_not_eligible') {
     return NextResponse.json(
-      { status: 'error', message: '스텝 할인 자격이 없습니다' },
+      { status: 'error', message: '스텝 할인 50% 대상이 아니에요' },
       { status: 400 },
     )
   }
 
   if (result === 'staff_slot_full') {
     return NextResponse.json(
-      { status: 'error', message: '스텝 할인 슬롯이 마감되었습니다. 정가로 다시 신청해주세요.' },
+      { status: 'error', message: '스텝 할인 50% 자리가 다 찼어요. 정가로 다시 신청해 주세요' },
       { status: 400 },
     )
   }
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[transfer] 예기치 않은 오류:', error)
     return NextResponse.json(
-      { status: 'error', message: '서버 오류가 발생했습니다' },
+      { status: 'error', message: '신청하지 못했어요. 잠깐 뒤에 다시 시도해 주세요' },
       { status: 500 },
     )
   }

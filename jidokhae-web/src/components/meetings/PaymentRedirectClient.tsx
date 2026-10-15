@@ -37,7 +37,7 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
       const message = searchParams.get('message')
 
       if (!paymentId) {
-        setError('결제 정보가 없습니다')
+        setError('결제 정보를 찾지 못했어요')
         setTimeout(() => router.replace(detailHref), 2000)
         return
       }
@@ -110,16 +110,16 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
         })
 
         if (data.status === 'full') {
-          setError('마감되었습니다')
+          setError('정원이 찼어요')
         } else if (data.status === 'already_registered') {
-          setError('이미 신청한 모임입니다')
+          setError('이미 신청한 모임이에요')
         } else {
-          setError(data.message || '결제 처리 중 오류가 발생했습니다')
+          setError(data.message || '결제를 처리하지 못했어요')
         }
 
         setTimeout(() => router.replace(detailHref), 2000)
       } catch {
-        setError('결제 처리 중 오류가 발생했습니다')
+        setError('결제를 처리하지 못했어요')
         setTimeout(() => router.replace(detailHref), 2000)
       }
     }
@@ -136,7 +136,7 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
           ) : (
             <>
               <p className="text-sm font-bold text-error">{error}</p>
-              <p className="mt-2 text-xs text-neutral-400">잠시 후 모임 페이지로 이동합니다...</p>
+              <p className="mt-2 text-xs text-neutral-400">잠깐 뒤에 모임 화면으로 돌아가요</p>
             </>
           )}
         </div>
@@ -162,7 +162,7 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
             />
           </svg>
           <p className={`mt-4 text-sm ${toss ? 'text-tg-600' : 'text-neutral-600'}`}>
-            {toss ? '결제 결과를 확인하고 있어요' : '결제를 확인하고 있습니다...'}
+            결제 결과를 확인하고 있어요
           </p>
         </div>
       )}
@@ -170,20 +170,11 @@ export default function PaymentRedirectClient({ meetingId, detailHref, skin = 'l
   )
 }
 
-/** 새 화면(해요체) 문구 — effect가 넣은 error 문자열을 그대로 받아 말만 바꾼다 */
-const TOSS_COPY: Record<string, string> = {
-  '결제 정보가 없습니다': '결제 정보를 찾지 못했어요',
-  '마감되었습니다': '정원이 다 찼어요',
-  '이미 신청한 모임입니다': '이미 신청한 모임이에요',
-  '결제 처리 중 오류가 발생했습니다': '결제를 처리하지 못했어요',
-}
-
+// effect가 넣는 문구는 옛·새 화면 모두 해요체 고정 문구다 (문구표준 — docs/문구표준.md)
 function TossErrorCopy({ error }: { error: string }) {
-  // 결제창 실패 코드 문구는 effect가 이미 해요체 고정 문구로 넣는다(getPaymentFailMessage)
-  const title = TOSS_COPY[error] ?? error
   return (
     <>
-      <p className="text-sm font-bold text-warnx">{title}</p>
+      <p className="text-sm font-bold text-warnx">{error}</p>
       <p className="mt-2 text-xs text-tg-600">잠깐 뒤에 모임 화면으로 돌아가요</p>
     </>
   )

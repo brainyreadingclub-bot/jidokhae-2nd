@@ -112,7 +112,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({ message: undefined })) as { message?: string }
-        setBanner({ confirmed: 0, failures: [], networkError: body.message || '요청에 실패했습니다' })
+        setBanner({ confirmed: 0, failures: [], networkError: body.message || '요청 실패' })
         setSubmitting(false)
         return
       }
@@ -157,7 +157,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({ message: undefined })) as { message?: string }
-        setBanner({ confirmed: 0, failures: [], networkError: body.message || '요청에 실패했습니다' })
+        setBanner({ confirmed: 0, failures: [], networkError: body.message || '요청 실패' })
         setExcludingId(null)
         return
       }
@@ -176,7 +176,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
   if (rows.length === 0 && excludedRows.length === 0) {
     return (
       <p className="py-12 text-center text-sm text-neutral-400">
-        입금 확인 대기 중인 건이 없습니다.
+        입금 확인 필요 건 없음
       </p>
     )
   }
@@ -219,7 +219,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
 
       {rows.length === 0 && (
         <p className="py-12 text-center text-sm text-neutral-400">
-          입금 확인 대기 중인 건이 없습니다.
+          입금 확인 필요 건 없음
         </p>
       )}
 
@@ -307,7 +307,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
                           className="ml-1 text-[10px] font-bold text-primary-600 rounded px-1 py-0.5"
                           style={{ backgroundColor: 'var(--color-primary-50)', border: '1px solid var(--color-primary-200)' }}
                         >
-                          스텝½
+                          스텝 할인 50%
                         </span>
                       </span>
                     ) : (
@@ -434,7 +434,7 @@ export default function DepositConfirmTable({ rows, excludedRows }: Props) {
                           className="ml-1 text-[10px] font-bold text-primary-600 rounded px-1 py-0.5"
                           style={{ backgroundColor: 'var(--color-primary-50)', border: '1px solid var(--color-primary-200)' }}
                         >
-                          스텝½
+                          스텝 할인 50%
                         </span>
                       </span>
                     ) : (

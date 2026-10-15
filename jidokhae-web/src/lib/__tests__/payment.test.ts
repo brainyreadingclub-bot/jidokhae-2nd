@@ -309,7 +309,7 @@ describe('진짜 중복 (다른 결제로 만들어진 신청이 이미 있을 �
 
     expect(mocks.cancelPayment).toHaveBeenCalledTimes(1)
     expect(mocks.cancelPayment).toHaveBeenCalledWith(PAYMENT_ID, '중복 신청으로 인한 환불')
-    expect(result).toEqual({ status: 'already_registered', message: '이미 신청한 모임입니다' })
+    expect(result).toEqual({ status: 'already_registered', message: '이미 신청한 모임이에요' })
   })
 
   it('계좌이체로 이미 신청한(pending_transfer) 뒤 카드로 또 결제하면 환불한다', async () => {

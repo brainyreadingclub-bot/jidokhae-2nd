@@ -65,6 +65,10 @@ export default async function NextMeetPage({
     (myRegs ?? []).filter((r) => r.status === 'waitlisted').map((r) => r.meeting_id),
   )
 
+  const myPendingIds = new Set(
+    (myRegs ?? []).filter((r) => r.status === 'pending_transfer').map((r) => r.meeting_id),
+  )
+
   // 내 신청 스트립 — 가장 가까운 것 하나. 대기 중이면 "대기 중"으로 구분 표시
   const mineMeeting = upcoming.find((m) => myIds.has(m.id))
   const mine: MeetData['mine'] = mineMeeting
@@ -74,6 +78,7 @@ export default async function NextMeetPage({
         date: mineMeeting.date,
         daysLeft: getDaysUntil(mineMeeting.date, kstToday),
         waitlisted: myWaitlistedIds.has(mineMeeting.id),
+        pendingTransfer: myPendingIds.has(mineMeeting.id),
       }
     : null
 

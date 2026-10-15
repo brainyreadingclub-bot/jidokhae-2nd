@@ -13,7 +13,7 @@ import { highResCoverUrl } from '@/lib/book-cover'
 
 export type MeetData = {
   /** 내가 신청한 가장 가까운 모임 (스트립). waitlisted = 대기 중 (확정 아님) */
-  mine: { id: string; title: string; date: string; daysLeft: number; waitlisted: boolean } | null
+  mine: { id: string; title: string; date: string; daysLeft: number; waitlisted: boolean; pendingTransfer: boolean } | null
   regular: {
     id: string
     date: string
@@ -82,12 +82,12 @@ export default function MeetView({
           </span>
           <span className="min-w-0 flex-1 truncate text-xs text-tg-700">
             <b className={`font-bold ${mine.waitlisted ? 'text-tg-700' : 'text-brand-deep'}`}>
-              {mine.waitlisted ? '대기 중인 모임' : '신청한 모임'}
+              {mine.waitlisted ? '대기 중' : mine.pendingTransfer ? '신청 완료 · 입금 확인 전' : '신청 완료'}
             </b>{' '}
             {formatKoreanDate(mine.date)} · {mine.title}
           </span>
           <span className={`flex-none text-[11px] font-bold ${mine.waitlisted ? 'text-tg-600' : 'text-brand-deep'}`}>
-            {mine.waitlisted ? '대기 중' : mine.daysLeft === 0 ? '오늘' : `D-${mine.daysLeft}`}
+            {mine.daysLeft === 0 ? '오늘' : `D-${mine.daysLeft}`}
           </span>
           <Chevron />
         </Link>

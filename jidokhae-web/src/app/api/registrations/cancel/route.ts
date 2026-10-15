@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json(
-      { status: 'error', message: '로그인이 필요합니다' },
+      { status: 'error', message: '로그인이 필요해요' },
       { status: 401 },
     )
   }
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     body = await request.json()
   } catch {
     return NextResponse.json(
-      { status: 'error', message: '잘못된 요청입니다' },
+      { status: 'error', message: '잘못된 요청이에요' },
       { status: 400 },
     )
   }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   const { registrationId } = body
   if (!registrationId) {
     return NextResponse.json(
-      { status: 'error', message: 'registrationId가 필요합니다' },
+      { status: 'error', message: '잘못된 요청이에요' },
       { status: 400 },
     )
   }

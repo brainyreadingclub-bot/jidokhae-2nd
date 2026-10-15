@@ -30,7 +30,7 @@ type StaffModal = { type: 'staff'; userId: string; nickname: string; newIsStaff:
 type ModalState = RoleModal | StaffModal | null
 
 const SECTIONS = [
-  { key: 'admin', label: '운영자' },
+  { key: 'admin', label: '총괄' },
   { key: 'editor', label: '운영진' },
   { key: 'staff', label: '스텝' },
   { key: 'member', label: '회원' },
@@ -115,7 +115,7 @@ export default function MemberList({ profiles, currentUserId, viewerRole }: Prop
     if (role === 'admin') {
       return (
         <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-700" style={{ border: '1px solid var(--color-primary-200)' }}>
-          운영자
+          총괄
         </span>
       )
     }

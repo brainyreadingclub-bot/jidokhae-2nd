@@ -78,7 +78,7 @@ export default function AdminMeetingSection({
           className="inline-flex items-center rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-bold text-accent-700"
           style={{ border: '1px solid var(--color-accent-200)' }}
         >
-          입금 대기
+          입금 확인 필요
         </span>
       )
     }
@@ -88,7 +88,7 @@ export default function AdminMeetingSection({
           className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-700"
           style={{ border: '1px solid var(--color-primary-100)' }}
         >
-          결제완료
+          신청 완료
         </span>
       )
     }
@@ -108,7 +108,7 @@ export default function AdminMeetingSection({
           className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-primary-400"
           style={{ backgroundColor: 'var(--color-surface-200)', border: '1px solid var(--color-surface-300)' }}
         >
-          대기 취소
+          대기 취소됨
         </span>
       )
     }
@@ -118,7 +118,7 @@ export default function AdminMeetingSection({
           className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-primary-400"
           style={{ backgroundColor: 'var(--color-surface-200)', border: '1px solid var(--color-surface-300)' }}
         >
-          대기 환불
+          대기 종료
         </span>
       )
     }
@@ -133,7 +133,7 @@ export default function AdminMeetingSection({
   }
 
   function getPaymentMethodLabel(method: string | null | undefined) {
-    if (method === 'transfer') return '이체'
+    if (method === 'transfer') return '계좌이체'
     if (method === 'card') return '카드'
     return null
   }
@@ -149,7 +149,7 @@ export default function AdminMeetingSection({
 
     // 미입금 취소: pending_transfer → cancelled (refunded_amount = 0)
     if (reg.refunded_amount === 0) {
-      return { label: '미입금 취소', refundText: null, reasonText: null, phone: null }
+      return { label: '입금 전 취소', refundText: null, reasonText: null, phone: null }
     }
 
     // 입금 확인 후 취소: confirmed → cancelled (refunded_amount = null)
@@ -183,10 +183,10 @@ export default function AdminMeetingSection({
       return (
         <div className="mt-0.5">
           <div className="text-xs text-accent-500/70">
-            {formatFee(reg.paid_amount)} (입금 대기)
+            {formatFee(reg.paid_amount)} (입금 확인 필요)
           </div>
           {reg.is_staff_discount && (
-            <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
+            <div className="text-[11px] text-primary-600 font-semibold">스텝 할인 50%</div>
           )}
         </div>
       )
@@ -198,7 +198,7 @@ export default function AdminMeetingSection({
             {formatFee(reg.paid_amount)}
           </div>
           {reg.is_staff_discount && (
-            <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
+            <div className="text-[11px] text-primary-600 font-semibold">스텝 할인 50%</div>
           )}
         </div>
       )
@@ -245,7 +245,7 @@ export default function AdminMeetingSection({
         <div className="mt-0.5">
           <div className="text-xs text-primary-500/70">{formatFee(reg.paid_amount)}</div>
           {reg.is_staff_discount && (
-            <div className="text-[11px] text-primary-600 font-semibold">스텝 50%</div>
+            <div className="text-[11px] text-primary-600 font-semibold">스텝 할인 50%</div>
           )}
           {reg.refunded_amount ? (
             <div className="text-xs text-primary-400">환불 {formatFee(reg.refunded_amount)}</div>
@@ -459,7 +459,7 @@ export default function AdminMeetingSection({
         </div>
         {confirmedRegs.length === 0 ? (
           <p className="text-sm text-primary-400 text-center py-8">
-            아직 신청자가 없습니다
+            아직 신청자 없음
           </p>
         ) : (
           <>

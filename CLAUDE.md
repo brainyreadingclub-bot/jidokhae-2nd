@@ -211,6 +211,7 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 ## Working with This Repository
 
+- **화면 문구는 `docs/문구표준.md`를 따른다.** (신청·결제 상태 이름, 버튼, 할인·결제 수단·돈 용어, 말투 — 2026-10-15)
 - **Language:** All planning documents are written in Korean. Maintain Korean when editing core and roadmap documents.
 - **Core documents are authoritative:** `/core` documents define the spec. When implementing, always cross-reference these specs — do not rely on memory or summaries alone.
 - **Roadmap documents track execution:** `/roadmap` is maintained by Claude. When a WP is completed, update `milestones.md` status and mark completed scenarios in `scenarios.md`.
