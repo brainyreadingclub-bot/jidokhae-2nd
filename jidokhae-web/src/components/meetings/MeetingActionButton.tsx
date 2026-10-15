@@ -856,6 +856,8 @@ export default function MeetingActionButton({
                       // 'confirmed' = 0원 모임 — 처음부터 신청 완료(2026-10-13), 입금 안내 없는 완료 화면
                       const doneHref = transferDoneHref(meetingId, data.status)
                       if (doneHref) {
+                        // GA sign_up_meeting — 기록표 registration.sign_up_meeting과 짝 (GA 이름 = 점 뒤 부분). 카드 purchase와 별개
+                        trackEvent('sign_up_meeting', { payment_method: 'transfer', value: effectiveFee, currency: 'KRW', meeting_id: meetingId, registration_type: data.status })
                         router.replace(doneHref)
                       } else if (data.status === 'already_registered') {
                         setRegisterPhase('transfer')
