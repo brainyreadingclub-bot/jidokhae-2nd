@@ -113,6 +113,20 @@ export default function LoginClient({ settings, memberCount }: Props) {
           </p>
         )}
 
+        {/* Terms Agreement — 버튼 위에 둔다. 아래에 있으면 흐린 버튼만 보고 「안 눌린다」고 느낀다 (2026-10-13 화면 점검 23번) */}
+        <label className="mb-3 flex cursor-pointer items-center justify-center gap-2">
+          <input
+            type="checkbox"
+            checked={termsAgreed}
+            onChange={(e) => setTermsAgreed(e.target.checked)}
+            className="h-3.5 w-3.5 rounded accent-primary-600"
+          />
+          <span className="text-[11px] leading-relaxed text-neutral-500">
+            <a href="/policy/terms" target="_blank" className="underline">이용약관</a> 및{' '}
+            <a href="/policy/privacy" target="_blank" className="underline">개인정보처리방침</a> 동의
+          </span>
+        </label>
+
         {/* Kakao Login Button */}
         <button
           onClick={handleKakaoLogin}
@@ -131,23 +145,9 @@ export default function LoginClient({ settings, memberCount }: Props) {
           <p className="mt-3 text-center text-sm text-error">{errorMessage}</p>
         )}
 
-        {/* Terms Agreement */}
-        <label className="mt-3.5 flex cursor-pointer items-center justify-center gap-2">
-          <input
-            type="checkbox"
-            checked={termsAgreed}
-            onChange={(e) => setTermsAgreed(e.target.checked)}
-            className="h-3.5 w-3.5 rounded accent-primary-600"
-          />
-          <span className="text-[11px] leading-relaxed text-neutral-500">
-            <a href="/policy/terms" target="_blank" className="underline">이용약관</a> 및{' '}
-            <a href="/policy/privacy" target="_blank" className="underline">개인정보처리방침</a> 동의
-          </span>
-        </label>
-
         <Link
           href="/policy/meetings"
-          className="mt-3 flex items-center justify-center gap-1 text-xs font-bold text-primary-500 hover:text-primary-600"
+          className="mt-3.5 flex items-center justify-center gap-1 text-xs font-bold text-primary-500 hover:text-primary-600"
         >
           모임 일정 먼저 보기
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

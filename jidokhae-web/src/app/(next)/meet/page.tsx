@@ -20,22 +20,25 @@ export default async function NextMeetPage({
   const kstToday = getKSTToday()
   const supabase = await createClient()
 
-  const { data: meetings } = await supabase
+  const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
     .select('*, books(thumbnail, authors)')
     .eq('status', 'active')
     .gte('date', kstToday)
     .order('date', { ascending: true })
     .order('time', { ascending: true })
+  // 조회 실패를 빈 목록으로 삼키면 「등록된 모임이 없어요」가 뜬다 — 진짜 0건과 구분이 안 된다.
+  // 던져서 (next)/error.tsx의 「다시 시도」로 보낸다 (2026-10-13 화면 점검)
+  if (meetingsError) throw new Error(`모임 목록 조회 실패: ${meetingsError.message}`)
   const upcoming = (meetings ?? []) as (Meeting & {
     books: { thumbnail: string | null; authors: string | null } | null
   })[]
   const meetingIds = upcoming.map((m) => m.id)
 
-  const [{ data: counts }, { data: myRegs }] = await Promise.all([
+  const [countsResult, myRegsResult] = await Promise.all([
     meetingIds.length > 0
       ? supabase.rpc('get_confirmed_counts', { meeting_ids: meetingIds })
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [], error: null }),
     user && meetingIds.length > 0
       ? supabase
           .from('registrations')
@@ -43,8 +46,13 @@ export default async function NextMeetPage({
           .eq('user_id', user.id)
           .in('status', ['confirmed', 'pending_transfer', 'waitlisted'])
           .in('meeting_id', meetingIds)
-      : Promise.resolve({ data: [] as { meeting_id: string; status: string }[] }),
+      : Promise.resolve({ data: [] as { meeting_id: string; status: string }[], error: null }),
   ])
+  // 인원·내 신청이 틀리면 「신청하기」가 이미 신청한 사람에게도 뜬다 — 이것도 빈 값으로 삼키지 않는다
+  if (countsResult.error) throw new Error(`참가자 수 조회 실패: ${countsResult.error.message}`)
+  if (myRegsResult.error) throw new Error(`내 신청 조회 실패: ${myRegsResult.error.message}`)
+  const counts = countsResult.data
+  const myRegs = myRegsResult.data
 
   const countMap = new Map(
     ((counts ?? []) as { meeting_id: string; confirmed_count: number }[]).map((c) => [

@@ -2,6 +2,10 @@
 
 import { useEffect } from 'react'
 
+/**
+ * `(main)` 라우트 그룹 에러 경계 — `(next)/error.tsx`와 같은 모양으로 맞췄다 (2026-10-14 화면 점검 30번).
+ * 개발용 오류 문구(예: 「모임 목록 조회 실패: …」)는 화면에 그리지 않고 콘솔로만 남긴다.
+ */
 export default function MainError({
   error,
   reset,
@@ -14,38 +18,18 @@ export default function MainError({
   }, [error])
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-20 text-center">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-error/10">
-        <svg
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-error"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-5 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-tg-100 text-[22px]" aria-hidden>
+        😵
       </div>
-      <h2 className="text-lg font-bold text-neutral-900">
-        문제가 발생했습니다
+      <h2 className="mt-4 text-[17px] font-extrabold tracking-tight text-tg-900">
+        화면을 불러오지 못했어요
       </h2>
-      <p className="mt-2 text-sm text-neutral-600">
-        일시적인 오류입니다. 잠시 후 다시 시도해 주세요.
-      </p>
-      {process.env.NODE_ENV === 'development' && (
-        <pre className="mt-4 max-w-full overflow-auto rounded-lg bg-neutral-100 p-3 text-left text-xs text-neutral-700">
-          {error.message}
-        </pre>
-      )}
+      <p className="mt-1.5 text-[13px] text-tg-600">잠깐 뒤에 다시 시도해 주세요</p>
       <button
+        type="button"
         onClick={reset}
-        className="mt-6 rounded-[var(--radius-md)] bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
+        className="mt-5 flex min-h-[48px] min-w-[160px] items-center justify-center rounded-[14px] bg-brand px-6 text-sm font-bold text-white"
       >
         다시 시도
       </button>

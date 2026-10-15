@@ -17,7 +17,7 @@ export default async function NextTalkPage() {
   const supabase = await createClient()
 
   // 다가오는 토론 1건 + 지난 토론 6건 (책 표지 join)
-  const [{ data: upcomingRows }, { data: pastRows }] = await Promise.all([
+  const [upcomingRes, pastRes] = await Promise.all([
     supabase
       .from('meetings')
       .select('*, books(thumbnail, authors)')
@@ -35,9 +35,12 @@ export default async function NextTalkPage() {
       .order('date', { ascending: false })
       .limit(6),
   ])
+  // 조회 실패를 빈 목록으로 삼키면 「아직 토론모임이 없어요」처럼 보인다 — 오류 화면으로 보낸다
+  if (upcomingRes.error) throw new Error(`다가오는 토론 조회 실패: ${upcomingRes.error.message}`)
+  if (pastRes.error) throw new Error(`지난 토론 조회 실패: ${pastRes.error.message}`)
 
-  const d = (upcomingRows ?? [])[0] as UpcomingRow | undefined
-  const pastMeetings = (pastRows ?? []) as unknown as PastRow[]
+  const d = (upcomingRes.data ?? [])[0] as UpcomingRow | undefined
+  const pastMeetings = (pastRes.data ?? []) as unknown as PastRow[]
 
   // 다가오는 토론 블록과 지난 토론 블록은 서로 무관하다 — 동시에 받는다 (2026-10-13 속도 점검).
   // 지난 토론을 숨길지(hideDiscussion)는 다 받은 뒤에 가른다

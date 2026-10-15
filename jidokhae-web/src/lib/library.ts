@@ -21,11 +21,13 @@ export async function isLibraryEnabled(): Promise<boolean> {
  */
 export const getMyLibrary = cache(async (userId: string): Promise<LibraryEntryWithBook[]> => {
   const admin = createServiceClient()
-  const { data } = await admin
+  const { data, error } = await admin
     .from('library_entries')
     .select('*, books(*)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
+  // 실패를 빈 배열로 삼키면 책이 있는 회원에게 「빈 서재」가 보인다 — 던져서 오류 화면으로
+  if (error) throw new Error(`서재 조회 실패: ${error.message}`)
 
   const entries = (data ?? []) as LibraryEntryWithBook[]
 

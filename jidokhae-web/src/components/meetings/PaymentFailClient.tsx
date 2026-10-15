@@ -3,21 +3,11 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { SkinName } from '@/components/meetings/actionButtonSkin'
+import { getPaymentFailMessage, clipForLog } from '@/lib/payment-fail-message'
 
 type Props = {
   detailHref: string
   skin?: SkinName
-}
-
-const DEFAULT_MESSAGE = '결제가 취소되었습니다'
-
-/** PG가 넘긴 message는 인코딩이 깨져 있을 수 있다 — 실패하면 기본 문구 */
-function decodeMessage(raw: string): string {
-  try {
-    return decodeURIComponent(raw)
-  } catch {
-    return raw
-  }
 }
 
 export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props) {
@@ -26,12 +16,25 @@ export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props
   const toss = skin === 'toss'
 
   // 쿼리에서 바로 읽는다 — state로 옮기면 effect 안 setState가 되어 렌더가 한 번 더 돈다
+  // 화면에는 코드로 정한 문구만 — 주소의 message·pgMessage 원문은 남이 써 넣을 수 있어 띄우지 않는다
   const code = searchParams.get('code')
-  const raw = searchParams.get('message')
-  const message =
-    code === 'PAY_PROCESS_CANCELED' || code === 'USER_CANCEL' || !raw
-      ? DEFAULT_MESSAGE
-      : decodeMessage(raw)
+  const message = getPaymentFailMessage({
+    code,
+    pgCode: searchParams.get('pgCode'),
+    message: searchParams.get('message'),
+    pgMessage: searchParams.get('pgMessage'),
+  })
+
+  // 원문은 로그로만 (길이 제한)
+  useEffect(() => {
+    if (!searchParams.get('code')) return
+    console.warn('[payment-fail]', {
+      code: clipForLog(searchParams.get('code')),
+      pgCode: clipForLog(searchParams.get('pgCode')),
+      message: clipForLog(searchParams.get('message')),
+      pgMessage: clipForLog(searchParams.get('pgMessage')),
+    })
+  }, [searchParams])
 
   useEffect(() => {
     const timer = setTimeout(() => router.replace(detailHref), 5000)
@@ -70,9 +73,11 @@ export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </div>
-        <p className={`text-sm font-bold ${toss ? 'text-warnx' : 'text-error'}`}>{message}</p>
+        <p className={`text-sm font-bold ${toss ? 'text-warnx' : 'text-error'}`}>
+          {message}
+        </p>
         <p className={`mt-2 text-xs ${toss ? 'text-tg-600' : 'text-primary-400'}`}>
-          5초 후 자동으로 이동합니다
+          {toss ? '5초 뒤에 모임 화면으로 돌아가요' : '5초 후 자동으로 이동합니다'}
         </p>
         <button
           onClick={() => router.replace(detailHref)}
