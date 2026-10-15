@@ -21,7 +21,9 @@
  *   `main` 기반 작업 폴더에서 연 세션이 8/21판(결정 30개 빠짐)으로 시작했다.
  */
 
+import { pathToFileURL } from 'node:url'
 import { readLatestDecisions } from './decisions-source.mjs'
+import { extractBlock, goalsSummary, readState, readStatusText, readStdinJson, rememberSession } from './session-handoff.mjs'
 
 const SOURCE_LABEL = {
   'doc-checkout': '문서 작업 공간 최신판(저장 전 수정 포함)',
@@ -83,7 +85,7 @@ export function summarizeRow(line) {
   return { date, unapplied: status.includes('🔨'), text: cut(gist, TEXT_MAX), status: cut(status, STATUS_MAX) }
 }
 
-export function buildDigest(body, where, sourceLabel, recentFrom) {
+export function buildDigest(body, where, sourceLabel, recentFrom, limit = LIMIT) {
   const rows = body
     .split(/\r?\n/)
     .filter((l) => /^\|\s*(~~)?\d{4}-\d{2}-\d{2}/.test(l))
@@ -113,7 +115,7 @@ export function buildDigest(body, where, sourceLabel, recentFrom) {
   let u = unapplied.slice()
   let r = recent.slice()
   let text = head + parts(u, r)
-  while (text.length > LIMIT && (r.length || u.length)) {
+  while (text.length > limit && (r.length || u.length)) {
     if (r.length) r = r.slice(0, -1)
     else u = u.slice(0, -1)
     text = head + parts(u, r)
@@ -121,21 +123,68 @@ export function buildDigest(body, where, sourceLabel, recentFrom) {
   return text
 }
 
-try {
-  const root = process.env.CLAUDE_PROJECT_DIR || process.cwd()
-  const found = readLatestDecisions(root)
-  if (!found) throw new Error('no decisions')
-  const context = buildDigest(found.body, found.where, SOURCE_LABEL[found.source], kstDateDaysAgo(RECENT_DAYS))
+// 압축 직후(source=compact)에 앞에 붙이는 글의 상한. 나머지가 결정 요약 몫이다
+const COMPACT_MAX = 3500
 
-  process.stdout.write(
-    JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'SessionStart',
-        additionalContext: context,
-      },
-      suppressOutput: true,
-    }),
-  )
-} catch {
-  // 파일이 없거나 못 읽으면 조용히 넘어간다. 세션 시작을 막지 않는다.
+/**
+ * 압축 직후에만 — 현황.md 목표 요약 + 이 세션의 「세션 인계」 덩어리.
+ * 세션 인계는 현황.md에서 찾고, 없으면(본 폴더가 문서 가지가 아니었던 경우) 임시 상태 파일에서.
+ */
+export function buildCompactContext(statusText, block) {
+  const goals = goalsSummary(statusText)
+  const text = [
+    '[압축 직후 — 목표와 이 세션 인계 다시 읽기]',
+    '압축 직전에 훅이 저장한 것이다. 이어서 할 일을 정하기 전에 먼저 본다. 「모름」은 기계가 못 뽑은 칸이다.',
+    '',
+    '## 현황 목표 요약 (현황.md)',
+    goals || '- 현황.md 목표를 못 읽었다',
+    '',
+    '## 이 세션의 인계 (현황.md 「세션 인계」)',
+    block || '- 저장된 인계가 없다',
+    '',
+    '---',
+    '',
+  ].join('\n')
+  return text.length > COMPACT_MAX ? text.slice(0, COMPACT_MAX - 1) + '…\n\n' : text
+}
+
+// 테스트가 이 파일을 불러올 때는 실행하지 않는다
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href
+
+if (isMain) main()
+
+function main() {
+  try {
+    const input = readStdinJson()
+    rememberSession(input)
+    const root = process.env.CLAUDE_PROJECT_DIR || process.cwd()
+
+    let prefix = ''
+    if (input.source === 'compact') {
+      const state = readState(input.session_id)
+      const statusText = readStatusText(root)
+      const block = extractBlock(statusText, input.session_id, state.title) || state.handoff || ''
+      prefix = buildCompactContext(statusText, block)
+    }
+
+    // 1만 자 상한은 문자열 하나 기준이다 — 압축 글과 결정 요약을 한 문자열로 합쳐 LIMIT 안에 둔다
+    const found = readLatestDecisions(root)
+    const digest = found
+      ? buildDigest(found.body, found.where, SOURCE_LABEL[found.source], kstDateDaysAgo(RECENT_DAYS), LIMIT - prefix.length)
+      : ''
+    const context = (prefix + digest).slice(0, LIMIT)
+    if (!context.trim()) throw new Error('nothing to inject')
+
+    process.stdout.write(
+      JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: 'SessionStart',
+          additionalContext: context,
+        },
+        suppressOutput: true,
+      }),
+    )
+  } catch {
+    // 파일이 없거나 못 읽으면 조용히 넘어간다. 세션 시작을 막지 않는다.
+  }
 }

@@ -211,7 +211,8 @@ Milestone (목표)           → "무엇을 달성할 것인가"
 
 ## Working with This Repository
 
-- **화면 문구는 `docs/문구표준.md`를 따른다.** (신청·결제 상태 이름, 버튼, 할인·결제 수단·돈 용어, 말투 — 2026-10-15)
+- **화면 문구는 `docs/문구표준.md`, 말투는 `jidokhae-web/VOICE.md`를 따른다.** (신청·결제 상태 이름, 버튼, 할인·결제 수단·돈 용어 — 2026-10-15)
+- **큰 작업 하나가 끝나거나 기억 사용량이 70%를 넘으면, 보고 끝에 『마무리 후 /clear 권장』을 적는다.** (기억 사용량은 하단 상태 표시줄의 「기억 N%」. 압축 직전·직후 인계는 훅이 한다 — `.claude/hooks/session-handoff.mjs`)
 - **Language:** All planning documents are written in Korean. Maintain Korean when editing core and roadmap documents.
 - **Core documents are authoritative:** `/core` documents define the spec. When implementing, always cross-reference these specs — do not rely on memory or summaries alone.
 - **Roadmap documents track execution:** `/roadmap` is maintained by Claude. When a WP is completed, update `milestones.md` status and mark completed scenarios in `scenarios.md`.

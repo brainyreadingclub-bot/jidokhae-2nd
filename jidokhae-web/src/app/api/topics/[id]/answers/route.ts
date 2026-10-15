@@ -1,7 +1,10 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, after, type NextRequest } from 'next/server'
 import { getRouteUser } from '@/lib/api-auth'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { canWriteAnswer } from '@/lib/discussion-rules'
+import { getAnswerAccess } from '@/lib/answer-access'
+import { recordAppEvent } from '@/lib/app-events'
+import { getTopicAnswererCounts } from '@/lib/discussion'
 
 /** 발제 답변 작성. 자격 = 해당 모임 confirmed·pending_transfer 신청자. */
 export async function POST(
@@ -28,7 +31,7 @@ export async function POST(
     const admin = createServiceClient()
     const { data: topic } = await admin
       .from('discussion_topics')
-      .select('meeting_id')
+      .select('meeting_id, topic_no')
       .eq('id', topicId)
       .not('published_at', 'is', null)
       .single()
@@ -66,9 +69,13 @@ export async function POST(
         .select('id, body')
         .eq('topic_id', topicId)
         .eq('user_id', user.id)
-      return { data: (mine ?? []).find((a) => a.body === trimmed) ?? null }
+      return {
+        data: (mine ?? []).find((a) => a.body === trimmed) ?? null,
+        /** 이 발제에 쓴 답이 아직 하나도 없다 = 이번 답이 첫 답 */
+        firstHere: (mine ?? []).length === 0,
+      }
     }
-    const { data: same } = await findSame()
+    const { data: same, firstHere } = await findSame()
     if (same) {
       return NextResponse.json({ status: 'success', data: { id: same.id, duplicate: true } })
     }
@@ -90,6 +97,33 @@ export async function POST(
         { status: 500 },
       )
     }
+
+    // 기록 — 화면을 막지 않는다(after). 이번 답으로 남의 답이 처음 열렸으면 그것도 남긴다
+    after(async () => {
+      try {
+        const access = await getAnswerAccess(user.id, topic.meeting_id)
+        const openedNow =
+          firstHere && access.revealAfterOwn && !access.curator && !access.presenter
+        await recordAppEvent({
+          event: 'topic.answer_submit',
+          userId: user.id,
+          meetingId: topic.meeting_id,
+          props: { topic_no: topic.topic_no, body_length: trimmed.length, opened_now: openedNow },
+        })
+        if (openedNow) {
+          const counts = await getTopicAnswererCounts([topicId])
+          await recordAppEvent({
+            event: 'topic.answers_unlock',
+            userId: user.id,
+            meetingId: topic.meeting_id,
+            // 방금 쓴 나를 뺀, 열어서 보게 된 사람 수
+            props: { topic_no: topic.topic_no, answerers: Math.max(0, (counts.get(topicId) ?? 1) - 1) },
+          })
+        }
+      } catch (e) {
+        console.warn('[topic answer] 기록 중 예외:', e)
+      }
+    })
     return NextResponse.json({ status: 'success', data: { id: answer.id } })
   } catch {
     return NextResponse.json(

@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation'
+import { after } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { getUser } from '@/lib/auth'
 import { getKSTToday } from '@/lib/kst'
-import { getAnswersWithMeta } from '@/lib/discussion'
-import { getAnswerAccess } from '@/lib/answer-access'
-import { topicApplyCta } from '@/lib/answer-access-rules'
+import { getAnswersWithMeta, getTopicAnswererCounts } from '@/lib/discussion'
+import { getAnswerAccess, getMyAnsweredTopicIds, viewForTopic } from '@/lib/answer-access'
+import { canSeeOthersAnswers, topicApplyCta } from '@/lib/answer-access-rules'
+import { recordAppEvent } from '@/lib/app-events'
 import { isDiscussionApplyOpen } from '@/lib/discussion-rules'
 import TopicThread from '@/components/next/TopicThread'
 import type { DiscussionTopic } from '@/types/discussion'
@@ -28,9 +30,11 @@ export default async function TopicPage({
   if (!topic) notFound()
   const typedTopic = topic as DiscussionTopic
 
-  const [allAnswers, access, { data: meeting }, { data: counts }] = await Promise.all([
-    getAnswersWithMeta(id, user?.id ?? null),
-    getAnswerAccess(user?.id ?? null, typedTopic.meeting_id),
+  const userId = user?.id ?? null
+  const [access, mineIds, answererCounts, { data: meeting }, { data: counts }] = await Promise.all([
+    getAnswerAccess(userId, typedTopic.meeting_id),
+    getMyAnsweredTopicIds(userId, [id]),
+    getTopicAnswererCounts([id]),
     admin
       .from('meetings')
       .select('id, date, status, capacity')
@@ -39,11 +43,27 @@ export default async function TopicPage({
     admin.rpc('get_confirmed_counts', { meeting_ids: [typedTopic.meeting_id] }),
   ])
 
-  // 🔒 읽기 자격이 없으면 남의 답변(본문·닉네임)은 **서버에서 걸러** 내려보내지 않는다 (2026-10-13).
-  //    자기가 쓴 답변만 남긴다 — 취소한 사람이 자기 글이 사라진 줄 알면 안 된다
-  const answers = access.canRead
-    ? allAnswers
-    : allAnswers.filter((a) => user && a.user_id === user.id)
+  // 🔒 응답 후 공개 (2026-10-15): 남의 답을 볼 수 없는 상태면 **남의 답은 조회 자체를 안 한다.**
+  //    자기 답만 가져온다 — 취소한 사람이 자기 글이 사라진 줄 알면 안 된다.
+  //    조회는 회원 권한으로 해서 DB 규칙이 한 번 더 막는다 (lib/discussion.ts getAnswersWithMeta)
+  const view = viewForTopic(access, mineIds.has(id))
+  const answers = canSeeOthersAnswers(view)
+    ? await getAnswersWithMeta(id, userId)
+    : userId
+      ? await getAnswersWithMeta(id, userId, userId)
+      : []
+  const answererCount = answererCounts.get(id) ?? 0
+
+  if (userId) {
+    after(
+      recordAppEvent({
+        event: 'topic.view',
+        userId,
+        meetingId: typedTopic.meeting_id,
+        props: { topic_no: typedTopic.topic_no, access: view, answerers: answererCount },
+      }),
+    )
+  }
 
   const confirmedCount = Number(
     ((counts ?? []) as { confirmed_count: number }[])[0]?.confirmed_count ?? 0,
@@ -66,8 +86,8 @@ export default async function TopicPage({
       <TopicThread
         topic={typedTopic}
         answers={answers}
-        answerCount={allAnswers.length}
-        canRead={access.canRead}
+        answererCount={answererCount}
+        view={view}
         canWrite={access.live}
         applyCta={cta}
         myUserId={user?.id ?? null}

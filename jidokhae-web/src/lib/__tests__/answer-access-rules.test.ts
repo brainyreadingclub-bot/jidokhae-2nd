@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { canReadAnswers, topicApplyCta } from '@/lib/answer-access-rules'
+import {
+  canReadAnswers,
+  canSeeOthersAnswers,
+  isRevealAfterOwnOn,
+  topicAnswerView,
+  topicApplyCta,
+} from '@/lib/answer-access-rules'
 
 const member = { role: 'member', is_staff: false }
 
@@ -37,5 +43,48 @@ describe('topicApplyCta — 미신청자 안내 칸의 버튼 자리', () => {
   })
   it('대기 중이면 버튼 대신 대기 안내 (정원·기간보다 먼저)', () => {
     expect(topicApplyCta({ ...base, waitlisted: true, confirmedCount: 10 })).toBe('waitlisted')
+  })
+})
+
+describe('isRevealAfterOwnOn — 응답 후 공개 켜짐 여부 (모임 단위)', () => {
+  it('칸이 비어 있으면 토론모임은 켜짐', () => {
+    expect(isRevealAfterOwnOn({ meeting_type: 'discussion', answers_reveal_after_own: null })).toBe(true)
+  })
+  it('칸이 비어 있으면 정기모임은 꺼짐', () => {
+    expect(isRevealAfterOwnOn({ meeting_type: 'regular', answers_reveal_after_own: null })).toBe(false)
+  })
+  it('SQL 실행 전이라 칸 자체가 없어도 유형 기본값을 따른다', () => {
+    expect(isRevealAfterOwnOn({ meeting_type: 'discussion' })).toBe(true)
+  })
+  it('모임에 값을 적으면 유형보다 그 값이 이긴다', () => {
+    expect(isRevealAfterOwnOn({ meeting_type: 'discussion', answers_reveal_after_own: false })).toBe(false)
+    expect(isRevealAfterOwnOn({ meeting_type: 'regular', answers_reveal_after_own: true })).toBe(true)
+  })
+})
+
+describe('topicAnswerView — 발제 하나에서 남의 답을 보나 (2026-10-15 응답 후 공개)', () => {
+  const applicant = { live: true, presenter: false, curator: false, revealAfterOwn: true, answeredHere: false }
+
+  it('신청자가 아직 안 쓴 발제는 잠긴다', () => {
+    expect(topicAnswerView(applicant)).toBe('locked')
+    expect(canSeeOthersAnswers('locked')).toBe(false)
+  })
+  it('신청자가 답을 남긴 발제는 열린다', () => {
+    expect(topicAnswerView({ ...applicant, answeredHere: true })).toBe('open')
+    expect(canSeeOthersAnswers('open')).toBe(true)
+  })
+  it('응답 후 공개가 꺼진 모임이면 신청자는 쓰지 않아도 본다', () => {
+    expect(topicAnswerView({ ...applicant, revealAfterOwn: false })).toBe('open')
+  })
+  it('운영진은 쓰지 않아도, 신청하지 않아도 다 본다', () => {
+    expect(topicAnswerView({ ...applicant, live: false, curator: true })).toBe('staff')
+    expect(canSeeOthersAnswers('staff')).toBe(true)
+  })
+  it('그 모임 발제자는 쓰지 않아도 다 본다', () => {
+    expect(topicAnswerView({ ...applicant, presenter: true })).toBe('staff')
+  })
+  it('미신청·대기·취소한 회원은 다른 발제에 답이 있어도 못 본다', () => {
+    expect(topicAnswerView({ ...applicant, live: false, answeredHere: true })).toBe('outsider')
+    expect(canSeeOthersAnswers('outsider')).toBe(false)
   })
 })
