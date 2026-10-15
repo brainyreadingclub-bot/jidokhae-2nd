@@ -1,13 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
-import { getKSTToday, getDaysUntil } from '@/lib/kst'
+import { getKSTToday, getDaysUntil, getButtonState } from '@/lib/kst'
 import { listAppNotifications } from '@/lib/app-notifications'
 import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
 import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
-import { pickUpcomingRegulars } from '@/lib/home-upcoming'
+import { pickUpcomingRegulars, toUpcomingAction } from '@/lib/home-upcoming'
 import { PARTICIPATED_STATUSES } from '@/lib/registration-status'
 import HomeView, { type HomeData } from '@/components/next/HomeView'
 import WhatsNewSheet from '@/components/next/WhatsNewSheet'
@@ -115,7 +115,8 @@ export default async function NextHomePage() {
   // ⑥ 다가오는 정기모임 최대 3건 (2026-10-13 시안) — 「가장 가까운 모임」 1건을 대신한다.
   //    회원 권한(anon + RLS) 클라이언트로 읽은 upcoming에서 고른다 — 쿼리 1건(인원 수)만 추가.
   //    내가 신청한 모임(confirmed·pending_transfer·waitlisted = 취소 제외)은 뺀다.
-  //    마감된 모임도 뺀다 — 신청할 수 있는 것만 (2차 수정)
+  //    마감된 모임도 보여 준다 — 2차 수정의 「마감 제외」를 되돌렸다 (2026-10-15 대표님 확인).
+  //    정원이 찬 경주 10/21 모임이 칸에서 사라졌었다. 칸의 버튼 표시는 모임 상세와 같은 판정(getButtonState)
   const regularCandidates = upcoming.filter(
     (m) => m.meeting_type === 'regular' && !myRegMap.has(m.id),
   )
@@ -152,10 +153,7 @@ export default async function NextHomePage() {
       )
       .map((r) => r.meetings!.region as string),
   )
-  const regularPicks = pickUpcomingRegulars(
-    regularCandidates.filter((m) => (countMap.get(m.id) ?? 0) < m.capacity),
-    homeRegions,
-  )
+  const regularPicks = pickUpcomingRegulars(regularCandidates, homeRegions)
   const upcomingRegular: HomeData['upcoming'] = regularPicks.map((m) => {
     const count = countMap.get(m.id) ?? 0
     const left = m.capacity - count
@@ -169,6 +167,9 @@ export default async function NextHomePage() {
       region: m.region ?? '',
       venueName: m.location ?? '',
       seatsLeft,
+      // 모임 상세와 같은 판정 — 후보는 내가 신청 안 한 모임만이라 본인 신청 여부는 전부 false.
+      // 정원 판정도 상세와 같다(confirmed + pending_transfer 수 ≥ 정원 → 대기 신청)
+      action: toUpcomingAction(getButtonState(m.date, kstToday, false, count >= m.capacity)),
     }
   })
 

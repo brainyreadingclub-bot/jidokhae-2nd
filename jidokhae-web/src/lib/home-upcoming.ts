@@ -1,7 +1,10 @@
+import type { ButtonState } from '@/lib/kst'
+
 /**
  * 홈 「다가오는 정기모임」 고르기 (순수 함수 — 2026-10-13 대표님 결정 + 2차 수정).
  *
- * - 후보는 page가 넘긴다: 정기모임 · active · 오늘 이후 · 내가 신청 안 한 것 · **마감 아닌 것**, 날짜·시간순
+ * - 후보는 page가 넘긴다: 정기모임 · active · 오늘 이후 · 내가 신청 안 한 것, 날짜·시간순.
+ *   **마감된 모임도 후보다** — 2차 수정의 「마감 제외」를 2026-10-15에 되돌렸다(대표님 확인). 마감이라고 순서를 미루지 않는다
  * - 회원이 정기모임에 확정된 적이 있는 지역(`homeRegions`)이 있으면 **그 지역 모임으로 먼저 채우고**,
  *   남은 자리는 날짜순(다른 지역 포함)으로 채운다. 기록이 없으면 그냥 날짜순 3개
  * - 고른 뒤에는 **날짜순으로 다시 세운다** — 날짜 칸이 세로로 놓인 목록이라 순서가 뒤섞이면 읽기 어렵다
@@ -17,6 +20,20 @@ export function pickUpcomingRegulars<T extends { id: string; region: string | nu
   const chosen = new Set([...picked, ...rest.map((m) => m.id)])
   // candidates가 이미 날짜순이므로 원래 순서를 지키면 날짜순이다
   return candidates.filter((m) => chosen.has(m.id))
+}
+
+/** 칸 오른쪽 표시 — 모임 상세 버튼과 같은 세 갈래 */
+export type UpcomingAction = 'register' | 'join_waitlist' | 'full'
+
+/**
+ * 모임 상세의 버튼 상태(`getButtonState` — 단일 진입점)를 칸 표시로 옮긴다 (순수 함수).
+ * 판정을 새로 하지 않는다. 신청하기·대기 신청하기 말고는 전부 「마감」으로 접는다
+ * (후보가 「오늘 이후 · 내가 신청 안 한 모임」이라 다른 상태는 원래 오지 않는다)
+ */
+export function toUpcomingAction(state: ButtonState): UpcomingAction {
+  if (state.type === 'register') return 'register'
+  if (state.type === 'join_waitlist') return 'join_waitlist'
+  return 'full'
 }
 
 /** 홈 「다가오는 정기모임」 카드 → 모임 상세 링크의 출처 표시 */

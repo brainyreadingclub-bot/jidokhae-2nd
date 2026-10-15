@@ -43,7 +43,7 @@ export default async function PrivacyPolicyPage() {
 
           <p className="mt-4 font-semibold text-neutral-700">다. 서비스 이용 과정에서 자동 생성</p>
           <ul className="mt-2 ml-4 space-y-1">
-            <li>- 모임 신청 이력, 결제 이력, 참석 기록, 서비스 이용 일시</li>
+            <li>- 모임 신청 이력, 결제 이력, 참석 기록, 서비스 이용 일시 및 이용기록</li>
             <li>- 서비스 이용 통계 분석을 위한 쿠키 및 익명화된 이용 기록(Google Analytics, Vercel Analytics)</li>
           </ul>
         </div>
@@ -140,7 +140,7 @@ export default async function PrivacyPolicyPage() {
               <tbody>
                 <tr>
                   <td className="border border-neutral-200 px-2 py-1.5">Supabase Inc. (AWS)</td>
-                  <td className="border border-neutral-200 px-2 py-1.5">미국</td>
+                  <td className="border border-neutral-200 px-2 py-1.5">일본</td>
                   <td className="border border-neutral-200 px-2 py-1.5">회원 정보, 모임 신청/결제 내역</td>
                   <td className="border border-neutral-200 px-2 py-1.5">클라우드 데이터베이스 호스팅</td>
                   <td className="border border-neutral-200 px-2 py-1.5">회원 탈퇴 시까지</td>

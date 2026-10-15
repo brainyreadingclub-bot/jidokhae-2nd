@@ -1,7 +1,7 @@
 import TrackedLink from '@/components/analytics/TrackedLink'
 import { Sec } from '@/components/next/TossUI'
 import { formatKoreanTime } from '@/lib/kst'
-import { FROM_HOME_UPCOMING, FROM_HOME_UPCOMING_MORE } from '@/lib/home-upcoming'
+import { FROM_HOME_UPCOMING, FROM_HOME_UPCOMING_MORE, type UpcomingAction } from '@/lib/home-upcoming'
 
 /**
  * 홈 「다가오는 정기모임」 — 최대 3건 (2026-10-13 시안).
@@ -9,8 +9,9 @@ import { FROM_HOME_UPCOMING, FROM_HOME_UPCOMING_MORE } from '@/lib/home-upcoming
  * 0건이면 page가 빈 배열을 넘기고 이 칸은 통째로 안 그린다.
  *
  * 남은 자리는 3자리 이하일 때만 말한다 — 넉넉할 때 숫자를 보이면 「아무도 안 오나」로 읽힌다.
- * 마감된 모임은 page가 빼고 넘긴다 — 신청할 수 있는 것만 (2차 수정).
- * 카드 전체가 모임 상세로 가는 링크다. 「신청하기」는 그 안의 표시라 카드·버튼 클릭은 같은 클릭이다.
+ * 마감된 모임도 보여 준다 (2026-10-15 — 2차 수정의 「마감 제외」를 되돌림).
+ * 카드 전체가 모임 상세로 가는 링크다. 오른쪽 표시(신청하기·대기 신청하기·마감)는 그 안의 표시라
+ * 카드·버튼 클릭은 같은 클릭이다. 표시는 모임 상세 버튼과 같은 판정·같은 문구·같은 색 계열
  * 클릭 기록: 링크의 `from`(+카드는 `pos`)을 받은 쪽 페이지가 after()로 기록표(app_events)에 남긴다 —
  *   카드 = home_upcoming.meeting_click(/meet/[id]), 「다른 일정도 보기」 = home_upcoming.more_click(/meet).
  *   lib/home-upcoming.ts · lib/app-events.ts 참조
@@ -22,8 +23,17 @@ export type UpcomingRegular = {
   time: string
   region: string
   venueName: string
-  /** 남은 자리 (3 이하일 때만). null = 넉넉함 — 표시 안 함. 마감 모임은 page가 아예 안 넘긴다 */
+  /** 남은 자리 (3 이하일 때만). null = 넉넉함 — 표시 안 함. 마감이면 0이라 표시 안 함 */
   seatsLeft: number | null
+  /** 모임 상세 버튼과 같은 판정 (`toUpcomingAction(getButtonState(...))`) */
+  action: UpcomingAction
+}
+
+/** 상세 버튼(toss 스킨)과 같은 문구·색 계열 — 주 버튼 그린 / 대기 주황 / 마감 회색 */
+const ACTION_VIEW: Record<UpcomingAction, { label: string; className: string }> = {
+  register: { label: '신청하기', className: 'bg-brand-bg text-brand-deep' },
+  join_waitlist: { label: '대기 신청하기', className: 'bg-warnx-bg text-warnx' },
+  full: { label: '마감', className: 'bg-tg-100 text-tg-500' },
 }
 
 const WEEKDAY = ['일', '월', '화', '수', '목', '금', '토'] as const
@@ -46,6 +56,7 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
       >
         {items.map((m, i) => {
           const { month, day, weekday } = dayParts(m.date)
+          const action = ACTION_VIEW[m.action]
           return (
             <TrackedLink
               key={m.id}
@@ -74,8 +85,8 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
                   )}
                 </span>
               </span>
-              <span className="flex h-9 flex-none items-center rounded-[10px] bg-brand-bg px-3.5 text-xs font-extrabold text-brand-deep">
-                신청하기
+              <span className={`flex h-9 flex-none items-center rounded-[10px] px-3.5 text-xs font-extrabold ${action.className}`}>
+                {action.label}
               </span>
             </TrackedLink>
           )
