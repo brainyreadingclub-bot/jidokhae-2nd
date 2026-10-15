@@ -41,7 +41,7 @@ export default function AdminSidebar({ role, nickname, onNavigate }: Props) {
     }
   }
 
-  const roleLabel = role === 'admin' ? '운영자' : '운영진'
+  const roleLabel = role === 'admin' ? '총괄' : '운영진'
 
   return (
     <div className="flex h-full flex-col bg-primary-900 text-surface-100">
@@ -54,7 +54,7 @@ export default function AdminSidebar({ role, nickname, onNavigate }: Props) {
           지독해
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-          <span>관리자</span>
+          <span>운영</span>
           <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] tracking-wider text-surface-100">
             {roleLabel}
           </span>
@@ -62,7 +62,7 @@ export default function AdminSidebar({ role, nickname, onNavigate }: Props) {
       </div>
 
       {/* Menu */}
-      <nav aria-label="관리자 메뉴" className="flex-1 overflow-y-auto py-3">
+      <nav aria-label="운영 메뉴" className="flex-1 overflow-y-auto py-3">
         {ADMIN_MENU_GROUPS.map((group) => {
           // editor 권한이면 adminOnly 항목 필터
           const visibleItems = group.items.filter(

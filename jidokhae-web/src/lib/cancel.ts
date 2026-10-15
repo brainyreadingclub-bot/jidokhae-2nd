@@ -33,7 +33,7 @@ export async function processUserCancel(
     .single()
 
   if (fetchError || !reg) {
-    return { status: 'error', message: '신청 내역을 찾을 수 없습니다' }
+    return { status: 'error', message: '신청 내역을 찾을 수 없어요' }
   }
 
   // 2. Idempotency: already cancelled → safe return
@@ -49,7 +49,7 @@ export async function processUserCancel(
 
   // 3. Must be confirmed or pending_transfer to cancel
   if (reg.status !== 'confirmed' && reg.status !== 'pending_transfer') {
-    return { status: 'error', message: '취소할 수 없는 상태입니다' }
+    return { status: 'error', message: '지금은 취소할 수 없어요' }
   }
 
   // 4. Calculate refund amount (KST date-based) — 토론모임은 14/7 규칙 (calculateRefundByType이 분기)
@@ -117,14 +117,14 @@ export async function processUserCancel(
         if (!isRefundAlreadyApplied(payment, refundAmount, isFullRefund)) {
           return {
             status: 'error',
-            message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+            message: '환불하지 못했어요. 잠깐 뒤에 다시 시도해 주세요',
           }
         }
         // Already cancelled → proceed to DB update
       } catch {
         return {
           status: 'error',
-          message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          message: '환불하지 못했어요. 잠깐 뒤에 다시 시도해 주세요',
         }
       }
     }
@@ -149,7 +149,7 @@ export async function processUserCancel(
       `[cancel] DB update failed after refund for reg ${registrationId}:`,
       updateError,
     )
-    return { status: 'error', message: '취소 처리 중 오류가 발생했습니다' }
+    return { status: 'error', message: '취소하지 못했어요. 잠깐 뒤에 다시 시도해 주세요' }
   }
 
   // Zero rows updated = concurrent cancel already completed the DB update

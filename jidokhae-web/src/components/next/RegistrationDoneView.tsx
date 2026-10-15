@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatPaidAmount } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmountForScreen } from '@/lib/kst'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 
 export type RegistrationDoneData = {
@@ -11,7 +11,7 @@ export type RegistrationDoneData = {
   region: string | null
   /** 실제 결제(또는 입금 예정) 금액 */
   amount: number | null
-  /** 그 모임의 참가비 — 「무료」 판정의 유일한 근거. `amount`로 판정하지 않는다 */
+  /** 그 모임의 참가비 — 「0원」 판정의 유일한 근거. `amount`로 판정하지 않는다 */
   meetingFee: number
   kind: 'confirmed' | 'waitlisted' | 'pending_transfer'
   bankName: string
@@ -35,7 +35,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
     <div className="pb-6">
       <div className="pt-1">
         <h1 className="py-2 text-[17px] font-extrabold tracking-tight text-tg-900">
-          {isWaitlisted ? '대기 신청 완료' : '신청 완료'}
+          {isWaitlisted ? '대기 신청' : '신청 완료'}
         </h1>
       </div>
 
@@ -57,7 +57,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
           </svg>
         </div>
         <h2 className="mt-5 text-[24px] font-extrabold tracking-[-0.03em] text-tg-900">
-          {isWaitlisted ? '대기 신청됐어요' : '신청됐어요'}
+          {isWaitlisted ? '대기 신청이 접수됐어요' : '신청됐어요'}
         </h2>
         <p className="mt-2 text-[15px] leading-relaxed text-tg-600 break-keep">
           {formatKoreanDate(data.date)} {formatKoreanTime(data.time)}
@@ -69,14 +69,12 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
       {isPendingTransfer && (
         <>
           <div className="mt-7 rounded-[18px] bg-tg-100 px-4 py-4">
-            <p className="text-[15px] font-extrabold tracking-tight text-tg-900">
-              입금을 기다리고 있어요
+            <p className="text-[15px] font-extrabold tracking-tight text-tg-900 break-keep">
+              자리는 잡혀 있어요. 아직 입금 전이라면 아래 계좌로 보내 주세요
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-tg-700 break-keep">
               {data.bankName} {data.bankAccount} {data.bankHolder}
-              {data.amount !== null && ` · ${formatPaidAmount(data.amount, data.meetingFee)}`}
-              <br />
-              확인되면 신청이 확정돼요.
+              {data.amount !== null && ` · ${formatPaidAmountForScreen(data.amount, data.meetingFee)}`}
             </p>
           </div>
           {/* 입금자명은 맨 텍스트가 아니라 복사할 수 있게 둔다 — 손으로 옮겨 적다 틀리면
@@ -91,7 +89,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
       {isWaitlisted && (
         <div className="mt-7 rounded-[18px] bg-tg-100 px-4 py-4">
           <p className="text-[15px] font-extrabold tracking-tight text-tg-900">
-            자리가 나면 자동으로 확정돼요
+            자리가 나면 자동으로 신청이 완료돼요
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-tg-700 break-keep">
             모임 전날까지 자리가 나지 않으면 전액 환불해 드려요.
@@ -103,7 +101,7 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
         <div className="mt-7 rounded-[18px] bg-tg-100 px-4 py-4 text-center">
           <p className="text-[13px] font-semibold text-tg-600">결제 금액</p>
           <p className="mt-1 text-[22px] font-extrabold tracking-tight text-tg-900">
-            {formatPaidAmount(data.amount, data.meetingFee)}
+            {formatPaidAmountForScreen(data.amount, data.meetingFee)}
           </p>
         </div>
       )}

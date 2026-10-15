@@ -6,14 +6,15 @@ import { useRouter } from 'next/navigation'
 import * as PortOne from '@portone/browser-sdk/v2'
 import type { ButtonState } from '@/lib/kst'
 // formatFee = 환불 금액(0은 "돌려받을 돈 없음")
-// formatPaidAmount = 낼 돈/낸 돈 — 「무료」는 **모임 참가비**(meetingFee)로만 판정한다
-import { formatFee, formatPaidAmount } from '@/lib/kst'
+// formatPaidAmountForScreen = 낼 돈/낸 돈 — 「무료」는 **모임 참가비**(meetingFee)로만 판정한다
+import { formatFee, formatPaidAmountForScreen } from '@/lib/kst'
 import { calculateRefundByType, getRefundRuleTextByType } from '@/lib/refund'
 import ModalOverlay from '@/components/ui/ModalOverlay'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
 import { getActionSkin, type SkinName } from '@/components/meetings/actionButtonSkin'
 import { trackEvent } from '@/lib/analytics'
+import { getPaymentFailMessage, clipForLog } from '@/lib/payment-fail-message'
 import { isWaitlistCardOnly } from '@/lib/waitlist-rules'
 import { isNoTransferNeeded, registerEntry, showsCardOption, transferDoneHref } from '@/lib/transfer-rules'
 
@@ -210,7 +211,9 @@ export default function MeetingActionButton({
       // 모바일 redirect 케이스는 redirectUrl로 이동 → 여기 도달하지 않음
       // PC/팝업 inline 케이스만 도달 — 응답에 code가 있으면 실패
       if (response?.code !== undefined) {
-        showToast(response.message || '결제 요청에 실패했습니다')
+        // PortOne SDK의 원문(개발용 내용일 수 있음)은 화면에 내지 않고 로그로만
+        console.warn('[payment-request]', clipForLog(response.code), clipForLog(response.message))
+        showToast(getPaymentFailMessage({ code: response.code, message: response.message }))
         setLoading(false)
         return
       }
@@ -218,7 +221,7 @@ export default function MeetingActionButton({
       // PC 결제 성공 → redirect 핸들러로 직접 이동 (포트원이 자동 redirect 안 함)
       router.push(`/meetings/${meetingId}/payment-redirect?paymentId=${paymentId}`)
     } catch {
-      showToast('결제 요청에 실패했습니다')
+      showToast('결제를 시작하지 못했어요. 잠깐 뒤에 다시 시도해 주세요')
       setLoading(false)
     }
   }
@@ -239,11 +242,11 @@ export default function MeetingActionButton({
         router.refresh()
       } else {
         setPendingTransferCancelPhase('idle')
-        showToast(data.message || '취소에 실패했습니다')
+        showToast(data.message || '신청을 취소하지 못했어요')
       }
     } catch {
       setPendingTransferCancelPhase('idle')
-      showToast('네트워크 오류가 발생했습니다')
+      showToast('연결이 불안정해요. 잠깐 뒤에 다시 시도해 주세요')
     }
   }
 
@@ -285,15 +288,15 @@ export default function MeetingActionButton({
         router.refresh()
       } else if (data.status === 'already_cancelled') {
         setCancelPhase('idle')
-        showToast('이미 취소된 신청입니다')
+        showToast('이미 취소된 신청이에요')
         router.refresh()
       } else {
         setCancelPhase('idle')
-        showToast(data.message || '취소에 실패했습니다')
+        showToast(data.message || '신청을 취소하지 못했어요')
       }
     } catch {
       setCancelPhase('idle')
-      showToast('네트워크 오류가 발생했습니다')
+      showToast('연결이 불안정해요. 잠깐 뒤에 다시 시도해 주세요')
     }
   }
 
@@ -322,11 +325,11 @@ export default function MeetingActionButton({
         router.refresh()
       } else {
         setWaitlistCancelPhase('idle')
-        showToast(data.message || '대기 취소에 실패했습니다')
+        showToast(data.message || '대기 신청을 취소하지 못했어요')
       }
     } catch {
       setWaitlistCancelPhase('idle')
-      showToast('네트워크 오류가 발생했습니다')
+      showToast('연결이 불안정해요. 잠깐 뒤에 다시 시도해 주세요')
     }
   }
 
@@ -404,7 +407,7 @@ export default function MeetingActionButton({
               className={s.btnGhost}
               style={s.btnGhostStyle}
             >
-              취소하기
+              신청 취소하기
             </button>
           )}
 
@@ -426,9 +429,9 @@ export default function MeetingActionButton({
                 )}
               </button>
               <p className={s.note}>
-                취소자 발생 시 자동으로 참여가 확정됩니다.
+                자리가 나면 자동으로 신청이 완료돼요.
                 <br />
-                모임 전날까지 승격되지 않으면 자동 전액 환불됩니다.
+                모임 전날까지 자리가 나지 않으면 결제 금액을 모두 환불해 드려요.
               </p>
             </div>
           )}
@@ -439,7 +442,7 @@ export default function MeetingActionButton({
               className={s.btnGhost}
               style={s.btnGhostStyle}
             >
-              대기 취소하기
+              대기 신청 취소하기
             </button>
           )}
 
@@ -449,7 +452,7 @@ export default function MeetingActionButton({
               className={s.btnGhost}
               style={s.btnGhostStyle}
             >
-              신청 취소
+              신청 취소하기
             </button>
           )}
         </StickyBottom>
@@ -473,7 +476,7 @@ export default function MeetingActionButton({
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h3 className={s.panelTitle}>취소 완료</h3>
+          <h3 className={s.panelTitle}>신청을 취소했어요</h3>
           <p className={s.panelBody}>
             {cancelResult.refundedAmount > 0 ? (
               <>
@@ -484,16 +487,16 @@ export default function MeetingActionButton({
                 <br />
                 <span className={s.panelSmall}>
                   {registrationPaymentMethod === 'transfer'
-                    ? supportContact || '환불은 운영자에게 문의해주세요'
-                    : '영업일 기준 3~5일 내 환불됩니다'}
+                    ? supportContact || '환불은 운영진에게 문의해 주세요'
+                    : '영업일 기준 3~5일 안에 환불돼요'}
                 </span>
               </>
             ) : nothingToRefund ? (
-              '취소되었습니다'
+              '취소됐어요'
             ) : (
               registrationPaymentMethod === 'transfer'
-                ? '취소가 접수되었습니다'
-                : '환불 불가 기간으로 환불 금액이 없습니다'
+                ? '취소가 접수됐어요'
+                : '환불 불가 기간이라 환불 금액이 없어요'
             )}
           </p>
           <button onClick={() => router.push(listHref)} className={s.panelCta}>
@@ -508,13 +511,13 @@ export default function MeetingActionButton({
           <div className="flex items-center justify-between mb-3">
             <span className={s.waitPill}>대기 중</span>
             {waitlistPaidAmount != null && (
-              <span className={s.waitAmount}>{formatPaidAmount(waitlistPaidAmount, meetingFee)}</span>
+              <span className={s.waitAmount}>{formatPaidAmountForScreen(waitlistPaidAmount, meetingFee)}</span>
             )}
           </div>
           <p className={s.waitBody}>
-            자리가 나면 자동으로 참여가 확정됩니다.
+            자리가 나면 자동으로 신청이 완료돼요.
             <br />
-            모임 전날까지 승격되지 않으면 자동 전액 환불됩니다.
+            모임 전날까지 자리가 나지 않으면 결제 금액을 모두 환불해 드려요.
           </p>
         </div>
       )}
@@ -537,15 +540,15 @@ export default function MeetingActionButton({
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h3 className={s.panelTitle}>대기 취소 완료</h3>
+          <h3 className={s.panelTitle}>대기 신청을 취소했어요</h3>
           <p className={s.panelBody}>
             {waitlistPaymentMethod === 'transfer' ? (
-              '대기가 취소되었습니다'
+              '대기 신청이 취소됐어요'
             ) : (
               <>
-                결제 금액이 전액 환불됩니다.
+                결제 금액을 모두 환불해 드려요.
                 <br />
-                <span className={s.panelSmall}>영업일 기준 3~5일 내 환불됩니다</span>
+                <span className={s.panelSmall}>영업일 기준 3~5일 안에 환불돼요</span>
               </>
             )}
           </p>
@@ -569,7 +572,7 @@ export default function MeetingActionButton({
           <div className={s.infoBox} style={s.infoBoxStyle}>
             <div className="flex justify-between text-sm">
               <span className={s.infoLabel}>결제 금액</span>
-              <span className={s.infoValue}>{formatPaidAmount(paidAmount ?? 0, meetingFee)}</span>
+              <span className={s.infoValue}>{formatPaidAmountForScreen(paidAmount ?? 0, meetingFee)}</span>
             </div>
             {!nothingToRefund && (
               <div className="mt-2 flex justify-between text-sm">
@@ -582,7 +585,7 @@ export default function MeetingActionButton({
               style={s.infoDividerStyle}
             >
               <span className={s.infoTotalLabel}>
-                {nothingToRefund ? '돌려받을 금액' : '환불 예정 금액'}
+                환불 예정 금액
               </span>
               <span className={s.infoTotalValue}>
                 {nothingToRefund ? '없음' : formatFee(refundInfo.refundAmount)}
@@ -591,7 +594,7 @@ export default function MeetingActionButton({
           </div>
           {!nothingToRefund && refundInfo.refundRate === 0 && (
             <p className={`mt-3 ${s.warnText}`}>
-              환불 불가 기간입니다. 취소 시 환불 금액이 없습니다.
+              환불 불가 기간이에요. 지금 취소하면 환불 금액이 없어요.
             </p>
           )}
           {!nothingToRefund && (
@@ -621,13 +624,13 @@ export default function MeetingActionButton({
       {cancelPhase === 'confirm' && refundInfo && (
         <ModalOverlay onClose={() => setCancelPhase('info')}>
           <h3 className={`${s.modalTitle} text-center`}>
-            취소를 확정하시겠습니까?
+            신청을 취소할까요?
           </h3>
           {nothingToRefund ? (
-            <p className={`${s.modalBody} text-center`}>낸 참가비가 없어 돌려받을 금액은 없어요.</p>
+            <p className={`${s.modalBody} text-center`}>낸 참가비가 없어 환불은 없어요.</p>
           ) : (
             <p className={`${s.modalBody} text-center`}>
-              환불 금액:{' '}
+              환불 예정 금액:{' '}
               <span className={s.panelStrong}>{formatFee(refundInfo.refundAmount)}</span>
               {refundInfo.refundRate < 100 && (
                 <span className={s.modalMuted}> ({refundInfo.refundRate}%)</span>
@@ -636,7 +639,7 @@ export default function MeetingActionButton({
           )}
           {!nothingToRefund && refundInfo.refundAmount === 0 && (
             <p className={`mt-1 ${s.warnText}`}>
-              환불 금액이 0원입니다. 그래도 취소하시겠습니까?
+              환불 예정 금액이 0원이에요. 그래도 취소할까요?
             </p>
           )}
           <div className="mt-5 flex gap-2">
@@ -668,9 +671,9 @@ export default function MeetingActionButton({
       {waitlistCancelPhase === 'confirm' && (
         <ModalOverlay onClose={() => setWaitlistCancelPhase('idle')}>
           <h3 className={`${s.modalTitle} text-center`}>
-            대기를 취소하시겠습니까?
+            대기 신청을 취소할까요?
           </h3>
-          <p className={`${s.modalBody} text-center`}>결제 금액이 전액 환불됩니다.</p>
+          <p className={`${s.modalBody} text-center`}>결제 금액을 모두 환불해 드려요.</p>
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setWaitlistCancelPhase('idle')}
@@ -680,7 +683,7 @@ export default function MeetingActionButton({
               닫기
             </button>
             <button onClick={handleWaitlistCancelConfirm} className={s.btnDanger}>
-              대기 취소
+              대기 신청 취소하기
             </button>
           </div>
         </ModalOverlay>
@@ -704,7 +707,7 @@ export default function MeetingActionButton({
             {registerPhase === 'method' && (
               <>
                 <h3 className={`${s.modalTitle} text-center`}>
-                  결제 방법을 선택해주세요
+                  결제 방법을 골라 주세요
                 </h3>
                 {/* 자격자 — 결제 금액 사전 확인용 영수증 (정가 + 할인 + 총액) */}
                 {isStaffDiscount && (
@@ -737,7 +740,7 @@ export default function MeetingActionButton({
                           <line x1="1" y1="10" x2="23" y2="10" />
                         </svg>
                         <div>
-                          <p className={s.optionTitle}>카드결제</p>
+                          <p className={s.optionTitle}>카드</p>
                           <p className={s.optionSub}>카카오페이 (카드 + 카카오페이머니)</p>
                         </div>
                       </div>
@@ -750,8 +753,8 @@ export default function MeetingActionButton({
                           <line x1="1" y1="10" x2="23" y2="10" />
                         </svg>
                         <div>
-                          <p className={s.optionTitleOff}>카드결제</p>
-                          <p className={s.optionSubOff}>준비 중입니다</p>
+                          <p className={s.optionTitleOff}>카드</p>
+                          <p className={s.optionSubOff}>준비 중이에요</p>
                         </div>
                       </div>
                     </div>
@@ -817,7 +820,7 @@ export default function MeetingActionButton({
                       </div>
                     </div>
                   ) : (
-                    <p className={s.transferAmount}>{formatPaidAmount(effectiveFee, meetingFee)}</p>
+                    <p className={s.transferAmount}>{formatPaidAmountForScreen(effectiveFee, meetingFee)}</p>
                   )}
                 </div>
 
@@ -833,6 +836,11 @@ export default function MeetingActionButton({
 
                 {!noTransferNeeded && depositorName && (
                   <CopyableDepositorName depositorName={depositorName} skin={skin} />
+                )}
+
+                {/* 이 버튼은 「입금했다」고 알리는 버튼이 아니라 신청 요청을 보내는 버튼이다 — 문구만 바꿈, 동작 그대로 (2026-10-14 코드 조사 §1-3 12번) */}
+                {!noTransferNeeded && (
+                  <p className="mt-5 text-center text-[13px] text-neutral-500 break-keep">신청하면 바로 자리가 잡혀요. 입금은 안내된 계좌로 해 주세요</p>
                 )}
 
                 <button
@@ -853,20 +861,20 @@ export default function MeetingActionButton({
                         router.replace(doneHref)
                       } else if (data.status === 'already_registered') {
                         setRegisterPhase('transfer')
-                        showToast('이미 신청한 모임입니다')
+                        showToast('이미 신청한 모임이에요')
                       } else {
                         setRegisterPhase('transfer')
-                        showToast(data.message || '신청 처리에 실패했습니다')
+                        showToast(data.message || '신청하지 못했어요. 잠깐 뒤에 다시 시도해 주세요')
                       }
                     } catch {
                       setRegisterPhase('transfer')
-                      showToast('네트워크 오류가 발생했습니다')
+                      showToast('연결이 불안정해요. 잠깐 뒤에 다시 시도해 주세요')
                     }
                   }}
-                  className={`mt-5 ${s.btnPrimary}`}
+                  className={`${noTransferNeeded ? 'mt-5' : 'mt-2'} ${s.btnPrimary}`}
                   style={s.btnPrimaryStyle}
                 >
-                  {noTransferNeeded ? '신청하기' : '입금 완료'}
+                  {noTransferNeeded ? '신청하기' : '계좌이체로 신청하기'}
                 </button>
               </>
             )}
@@ -886,9 +894,9 @@ export default function MeetingActionButton({
       {pendingTransferCancelPhase === 'confirm' && (
         <ModalOverlay onClose={() => setPendingTransferCancelPhase('idle')}>
           <h3 className={`${s.modalTitle} text-center`}>
-            신청을 취소하시겠습니까?
+            신청을 취소할까요?
           </h3>
-          <p className={`${s.modalBody} text-center`}>취소 후에는 다시 신청해야 합니다.</p>
+          <p className={`${s.modalBody} text-center`}>취소하면 다시 신청해야 해요.</p>
           <div className="mt-5 flex gap-2">
             <button
               onClick={() => setPendingTransferCancelPhase('idle')}
@@ -898,7 +906,7 @@ export default function MeetingActionButton({
               돌아가기
             </button>
             <button onClick={handlePendingTransferCancelConfirm} className={s.btnDanger}>
-              취소하기
+              신청 취소하기
             </button>
           </div>
         </ModalOverlay>

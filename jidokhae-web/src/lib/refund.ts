@@ -200,6 +200,27 @@ export function recommendedTransferRefund(input: {
  * 회원 취소(cancel.ts)·모임 삭제(delete route)가 같은 규칙을 쓴다. 종전에는 둘 다 `isPending ? 0 : null`이라
  * **0원 confirmed가 NULL로** 적혔다 — `is null`로 세는 집계가 「돌려줄 돈 있음」으로 센다 (2026-10-13 발견).
  */
+/**
+ * 「입금 전 취소」 — 계좌이체 취소 중 운영자가 입금을 확인하기 전에 닫힌 건.
+ * 위 transferCloseRefundedAmount가 0을 적는 경우는 (가) 입금 전 pending_transfer 취소, (나) 0원 신청 두 가지뿐이라
+ * **결제 금액이 0보다 크면 (가)로 확정된다** — 취소 당시 상태를 따로 남기는 칸이 필요 없다.
+ * 회원이 몰래 입금했을 수 있으므로 회원 화면은 「입금하셨다면 운영진이 확인 후 돌려드려요」를 붙이고,
+ * 운영 정산 화면은 월말 통장 대조용 읽기 전용 목록에 모은다 (2026-10-15 대표님 1안)
+ */
+export function isCancelledBeforeDeposit(reg: {
+  status: string
+  payment_method: string | null | undefined
+  refunded_amount: number | null | undefined
+  paid_amount: number | null | undefined
+}): boolean {
+  return (
+    reg.status === 'cancelled' &&
+    reg.payment_method === 'transfer' &&
+    reg.refunded_amount === 0 &&
+    (reg.paid_amount ?? 0) > 0
+  )
+}
+
 export function transferCloseRefundedAmount(input: {
   wasPendingTransfer: boolean
   paidAmount: number | null

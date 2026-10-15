@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { formatKoreanDate, formatKoreanTime, formatPaidAmount, formatDDay } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmountForScreen, formatDDay } from '@/lib/kst'
 import type { MeetingDetailData } from '@/lib/meeting-detail'
 import { hasStickyAction } from '@/lib/meeting-detail'
 import { shouldMaskConfirmedCount } from '@/lib/visibility'
@@ -41,8 +41,8 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
     },
     {
       label: '참가비',
-      value: formatPaidAmount(data.displayFee, data.meeting.fee),
-      sub: data.isStaffDiscount ? '스텝 가격이 적용되었어요' : undefined,
+      value: formatPaidAmountForScreen(data.displayFee, data.meeting.fee),
+      sub: data.isStaffDiscount ? '스텝 할인 50%' : undefined,
       subTone: 'brand',
     },
   ]
@@ -71,7 +71,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
           <span className="min-w-0 flex-1 text-[13px] font-bold text-brand-deep">
             신청 완료
             {data.hasPendingTransfer && (
-              <span className="ml-1 font-semibold text-tg-700">· 입금 확인 중</span>
+              <span className="ml-1 font-semibold text-tg-700">· 입금 확인 전</span>
             )}
           </span>
           {dday && <span className="flex-none text-xs font-bold text-brand-deep">{dday}</span>}
@@ -79,8 +79,8 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
       )}
       {data.hasWaitlisted && (
         <div className="mt-2 flex min-h-[46px] items-center gap-2.5 rounded-[14px] bg-tg-100 px-3.5 py-2.5">
-          <span className="text-[13px] font-bold text-tg-700">대기 중이에요</span>
-          <span className="text-xs text-tg-600">자리가 나면 자동으로 확정돼요</span>
+          <span className="text-[13px] font-bold text-tg-700">대기 중</span>
+          <span className="text-xs text-tg-600">자리가 나면 자동으로 신청이 완료돼요</span>
         </div>
       )}
 
@@ -215,7 +215,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
           className="mt-6 flex min-h-[56px] items-center gap-3 rounded-[18px] bg-tg-50 px-4 py-3"
         >
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-tg-900">관리자 페이지에서 보기</span>
+            <span className="block text-sm font-bold text-tg-900">운영 화면에서 보기</span>
             <span className="mt-0.5 block text-xs text-tg-600">
               신청자 목록 · 입금 확인 · 재정 요약
             </span>
@@ -242,7 +242,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
               }`}
             >
               {data.buttonState.type === 'join_waitlist' ? '대기 신청하러 가기' : '신청하러 가기'} ·{' '}
-              {formatPaidAmount(data.displayFee, data.meeting.fee)}
+              {formatPaidAmountForScreen(data.displayFee, data.meeting.fee)}
             </Link>
           </div>
         </div>

@@ -61,7 +61,7 @@ export default async function MainLayout({
               href="/admin"
               className="text-[10px] font-bold tracking-wider uppercase text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full hover:bg-primary-100 transition-colors"
             >
-              {role === 'admin' ? '운영자' : '운영진'}
+              {role === 'admin' ? '총괄' : '운영진'}
             </Link>
           )}
         </div>

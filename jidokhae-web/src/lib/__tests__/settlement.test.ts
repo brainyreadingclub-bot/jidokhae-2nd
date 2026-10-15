@@ -1,16 +1,19 @@
 /**
  * 정산 헬퍼 단위 테스트
  * 순수 함수 3종: elapsedDaysKST, formatKSTDateTime, sortDepositRows
- * (쿼리 헬퍼 getPendingDeposits / getPendingRefunds 는 Supabase 의존 → 단위 테스트 제외)
+ * getPendingRefunds는 가짜 Supabase로 「환불할 금액」 계산만 확인한다 (getPendingDeposits는 제외)
  */
 
 import { describe, it, expect } from 'vitest'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   elapsedDaysKST,
   formatKSTDateTime,
   sortDepositRows,
+  getPendingRefunds,
   type DepositRow,
 } from '@/lib/settlement'
+import { recommendedTransferRefund } from '@/lib/refund'
 
 // ─── elapsedDaysKST ───
 
@@ -129,5 +132,78 @@ describe('sortDepositRows', () => {
 
   it('빈 배열 → 빈 배열 반환', () => {
     expect(sortDepositRows([], 'created')).toEqual([])
+  })
+})
+
+// ─── getPendingRefunds — 환불할 금액이 「환불 완료」 체크 때 기록되는 값과 같아야 한다 ───
+// (종전에는 낸 돈 전액을 보여 줘서, 운영자가 그대로 송금하면 기록과 송금액이 어긋날 수 있었다)
+
+
+function fakeClient(rows: unknown[]): SupabaseClient {
+  const chain: Record<string, unknown> = {}
+  for (const m of ['from', 'select', 'eq', 'is', 'gt', 'order']) chain[m] = () => chain
+  chain.then = (resolve: (v: unknown) => void) => resolve({ data: rows, error: null })
+  return chain as unknown as SupabaseClient
+}
+
+const baseRow = {
+  id: 'r1',
+  paid_amount: 10000,
+  profiles: { nickname: '가상회원', real_name: null, phone: null },
+}
+
+describe('getPendingRefunds', () => {
+  it('정기모임 2일 전 취소 → 환불할 금액 50%, 낸 돈은 전액', async () => {
+    const [row] = await getPendingRefunds(
+      fakeClient([
+        {
+          ...baseRow,
+          cancel_type: 'user_cancelled',
+          // KST 2026-07-08 12:00 취소, 모임 7-10 → 2일 전
+          cancelled_at: '2026-07-08T03:00:00Z',
+          meetings: { id: 'm1', title: '정기모임', date: '2026-07-10', meeting_type: 'regular' },
+        },
+      ]),
+    )
+    expect(row.paidAmount).toBe(10000)
+    expect(row.refundAmount).toBe(5000)
+  })
+
+  it('토론모임 10일 전 취소 → 14/7 규칙으로 50%', async () => {
+    const [row] = await getPendingRefunds(
+      fakeClient([
+        {
+          ...baseRow,
+          paid_amount: 25000,
+          cancel_type: 'user_cancelled',
+          cancelled_at: '2026-07-01T03:00:00Z',
+          meetings: { id: 'm2', title: '토론모임', date: '2026-07-11', meeting_type: 'discussion' },
+        },
+      ]),
+    )
+    expect(row.refundAmount).toBe(
+      recommendedTransferRefund({
+        cancelType: 'user_cancelled',
+        meetingType: 'discussion',
+        meetingDate: '2026-07-11',
+        paidAmount: 25000,
+        cancelDate: '2026-07-01',
+      }),
+    )
+    expect(row.refundAmount).toBe(12500)
+  })
+
+  it('모임 삭제로 닫힌 건 → 날짜와 상관없이 전액', async () => {
+    const [row] = await getPendingRefunds(
+      fakeClient([
+        {
+          ...baseRow,
+          cancel_type: 'meeting_deleted',
+          cancelled_at: '2026-07-10T03:00:00Z',
+          meetings: { id: 'm3', title: '정기모임', date: '2026-07-10', meeting_type: 'regular' },
+        },
+      ]),
+    )
+    expect(row.refundAmount).toBe(10000)
   })
 })

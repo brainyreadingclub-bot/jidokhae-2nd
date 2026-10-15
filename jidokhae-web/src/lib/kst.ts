@@ -128,6 +128,29 @@ export function formatPaidAmountWithUnit(paidAmount: number, meetingFee: number)
   return meetingFee === 0 ? '무료' : `${formatFee(paidAmount)}원`
 }
 
+/*
+ * ── 화면용 금액 표기 (문구표준 §5, 대표님 결정 2026-10-15) ──
+ * 0원 모임은 화면에서 「무료」가 아니라 **「0원」**으로 쓴다 — 「무료」를 결제 수단처럼 읽지 않게.
+ * 위의 `formatPaidAmount`·`formatMeetingFee`는 알림톡 `#{결제금액}`(notification.ts ·
+ * waitlist-rules.ts)이 쓰므로 **바꾸지 않는다.** 화면은 아래 셋만 쓴다.
+ * 「0원」 판정 기준은 위와 같다 — **모임 참가비**로만 판정한다(결제액 0인 유료 모임 건은 "0").
+ */
+
+/** 화면용 모임 참가비 표기 — 0원 모임이면 "0원", 아니면 "10,000" */
+export function formatMeetingFeeForScreen(fee: number): string {
+  return formatPaidAmountForScreen(fee, fee)
+}
+
+/** 화면용 결제 건 금액 표기 — 0원 모임이면 "0원", 아니면 단위 없이 "10,000" */
+export function formatPaidAmountForScreen(paidAmount: number, meetingFee: number): string {
+  return meetingFee === 0 ? '0원' : formatFee(paidAmount)
+}
+
+/** 화면용 결제 건 금액 + "원" — 0원 모임이면 "0원" */
+export function formatPaidAmountWithUnitForScreen(paidAmount: number, meetingFee: number): string {
+  return meetingFee === 0 ? '0원' : `${formatFee(paidAmount)}원`
+}
+
 /** Returns current KST month as "YYYY-MM" */
 export function getKSTMonth(): string {
   return new Intl.DateTimeFormat('en-CA', {

@@ -94,17 +94,17 @@ export default async function AboutPage() {
           <StepCard
             number="1"
             title="일정 확인"
-            description="매주 열리는 독서모임 일정과 장소, 참가비를 한눈에 확인하세요."
+            description="매주 열리는 독서모임 일정과 장소, 참가비를 한눈에 확인할 수 있어요."
           />
           <StepCard
             number="2"
             title="신청 · 결제"
-            description="참여할 모임을 골라 카드로 간편하게 결제하면 신청이 완료됩니다."
+            description="참여할 모임을 골라 카드로 간편하게 결제하면 신청이 완료돼요."
           />
           <StepCard
             number="3"
             title="참여"
-            description="모임 당일 장소에 오시면 됩니다. 사정이 생기면 언제든 취소할 수 있어요."
+            description="모임 당일 장소에 오시면 돼요. 사정이 생기면 언제든 취소할 수 있어요."
           />
         </div>
       </section>
@@ -124,8 +124,8 @@ export default async function AboutPage() {
           {/* 금액을 못 박지 않는다 — 대구 정기 모임은 무료라 "12,000원"이 틀린 말이었고,
               참가비는 모임마다 운영자가 정한다. 값은 모임 일정이 항상 맞게 들고 있다 */}
           <p className="mt-1.5 text-sm leading-relaxed text-neutral-500">
-            참가비는 <span className="font-semibold text-neutral-700">모임마다 다릅니다</span>. 모임 일정에서 각 모임의 참가비를 확인할 수 있어요.
-            <br />카드 결제로 간편하게 신청할 수 있고, 결제 완료 즉시 모임 참여가 확정됩니다.
+            참가비는 <span className="font-semibold text-neutral-700">모임마다 달라요</span>. 모임 일정에서 각 모임의 참가비를 확인할 수 있어요.
+            <br />카드 결제로 간편하게 신청할 수 있고, 결제가 끝나면 바로 신청이 완료돼요.
           </p>
         </div>
       </section>

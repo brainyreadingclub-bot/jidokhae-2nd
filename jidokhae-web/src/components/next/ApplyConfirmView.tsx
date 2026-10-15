@@ -1,4 +1,4 @@
-import { formatKoreanDate, formatKoreanTime, formatPaidAmount } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmountForScreen } from '@/lib/kst'
 import type { MeetingDetailData } from '@/lib/meeting-detail'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import MeetingInfoRows, { type InfoRow } from '@/components/next/MeetingInfoRows'
@@ -26,8 +26,8 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
     { label: '어디서', value: [m.location, m.region].filter(Boolean).join(' · ') },
     {
       label: '참가비',
-      value: formatPaidAmount(data.displayFee, data.meeting.fee),
-      sub: data.isStaffDiscount ? '스텝 가격이 적용되었어요' : undefined,
+      value: formatPaidAmountForScreen(data.displayFee, data.meeting.fee),
+      sub: data.isStaffDiscount ? '스텝 할인 50%' : undefined,
       subTone: 'brand',
     },
   ]
@@ -53,7 +53,7 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
         <div className="mt-4 rounded-[18px] bg-warnx-bg px-4 py-3.5">
           <p className="text-[13.5px] font-extrabold text-tg-900">지금은 자리가 다 찼어요</p>
           <p className="mt-1 text-[13px] leading-relaxed text-tg-700 break-keep">
-            대기로 신청하면 취소자가 생길 때 자동으로 확정돼요. 모임 전날까지 자리가 나지 않으면
+            대기로 신청하면 자리가 날 때 자동으로 신청이 완료돼요. 모임 전날까지 자리가 나지 않으면
             전액 환불해 드려요.
           </p>
         </div>
@@ -70,16 +70,16 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
             </p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-tg-700 break-keep">
               입금자명을 <b className="font-extrabold text-tg-900">{data.depositorName}</b>로
-              보내주세요.
+              보내 주세요.
               <br />
-              확인되면 신청이 확정돼요.
+              신청하면 바로 자리가 잡혀요.
             </p>
           </div>
         </section>
       )}
       {waitlistCardOnly ? (
         <p className="mt-5 text-[13px] leading-relaxed text-tg-600">
-          대기 신청은 카드 결제로만 가능해요.
+          대기 신청은 카드로만 할 수 있어요.
         </p>
       ) : (
         !transferOnly && (
@@ -110,7 +110,7 @@ export default function ApplyConfirmView({ data }: { data: MeetingDetailData }) 
         depositorName={data.depositorName}
         skin="toss"
         listHref="/meet"
-        registerLabel={`이대로 ${isWaitlist ? '대기 ' : ''}신청하기 · ${formatPaidAmount(data.displayFee, data.meeting.fee)}`}
+        registerLabel={`이대로 ${isWaitlist ? '대기 ' : ''}신청하기 · ${formatPaidAmountForScreen(data.displayFee, data.meeting.fee)}`}
       />
     </div>
   )

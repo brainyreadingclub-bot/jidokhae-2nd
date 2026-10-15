@@ -77,7 +77,7 @@ export default function PaymentFailClient({ detailHref, skin = 'legacy' }: Props
           {message}
         </p>
         <p className={`mt-2 text-xs ${toss ? 'text-tg-600' : 'text-primary-400'}`}>
-          {toss ? '5초 뒤에 모임 화면으로 돌아가요' : '5초 후 자동으로 이동합니다'}
+          5초 뒤에 모임 화면으로 돌아가요
         </p>
         <button
           onClick={() => router.replace(detailHref)}

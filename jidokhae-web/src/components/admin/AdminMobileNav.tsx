@@ -40,7 +40,7 @@ export default function AdminMobileNav({ role, nickname }: Props) {
     }
   }, [open])
 
-  const roleLabel = role === 'admin' ? '운영자' : '운영진'
+  const roleLabel = role === 'admin' ? '총괄' : '운영진'
 
   return (
     <>
@@ -53,7 +53,7 @@ export default function AdminMobileNav({ role, nickname }: Props) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            aria-label="관리자 메뉴 열기"
+            aria-label="운영 메뉴 열기"
             aria-expanded={open}
             aria-controls="admin-drawer"
             className="flex h-11 w-11 items-center justify-center rounded-md text-primary-800 transition-colors hover:bg-primary-50 active:scale-[0.97]"
@@ -81,7 +81,7 @@ export default function AdminMobileNav({ role, nickname }: Props) {
               지독해
             </span>
             <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-500">
-              관리자
+              운영
             </span>
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function AdminMobileNav({ role, nickname }: Props) {
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
-        aria-label="관리자 메뉴"
+        aria-label="운영 메뉴"
         tabIndex={-1}
         className={`fixed inset-y-0 left-0 z-50 w-[280px] transform transition-transform duration-250 ease-out lg:hidden ${
           open ? 'translate-x-0' : '-translate-x-full'

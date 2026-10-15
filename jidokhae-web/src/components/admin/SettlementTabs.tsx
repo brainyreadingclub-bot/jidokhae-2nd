@@ -3,18 +3,20 @@
 import { useState } from 'react'
 import DepositConfirmTable from '@/components/admin/DepositConfirmTable'
 import RefundWaitingTable from '@/components/admin/RefundWaitingTable'
+import CancelledBeforeDepositList from '@/components/admin/CancelledBeforeDepositList'
 import RegionRevenueTable from '@/components/admin/RegionRevenueTable'
-import type { DepositRow, RefundRow, RegionRevenueEntry } from '@/lib/settlement'
+import type { DepositRow, RefundRow, RegionRevenueEntry, CancelledBeforeDepositRow } from '@/lib/settlement'
 
 type Props = {
   deposits: DepositRow[]
   refunds: RefundRow[]
   excludedDeposits: DepositRow[]
+  cancelledBeforeDeposit: CancelledBeforeDepositRow[]
   regionEntries: RegionRevenueEntry[]
   currentMonth: string
 }
 
-export default function SettlementTabs({ deposits, refunds, excludedDeposits, regionEntries, currentMonth }: Props) {
+export default function SettlementTabs({ deposits, refunds, excludedDeposits, cancelledBeforeDeposit, regionEntries, currentMonth }: Props) {
   const [tab, setTab] = useState<'deposit' | 'refund' | 'region'>('deposit')
 
   return (
@@ -44,7 +46,7 @@ export default function SettlementTabs({ deposits, refunds, excludedDeposits, re
               : undefined
           }
         >
-          입금 확인 대기
+          입금 확인 필요
           <span
             className={[
               'text-[11px] rounded-full px-1.5 py-0.5',
@@ -128,7 +130,12 @@ export default function SettlementTabs({ deposits, refunds, excludedDeposits, re
         className="mt-4"
       >
         {tab === 'deposit' && <DepositConfirmTable rows={deposits} excludedRows={excludedDeposits} />}
-        {tab === 'refund' && <RefundWaitingTable rows={refunds} />}
+        {tab === 'refund' && (
+          <>
+            <RefundWaitingTable rows={refunds} />
+            <CancelledBeforeDepositList rows={cancelledBeforeDeposit} />
+          </>
+        )}
         {tab === 'region' && <RegionRevenueTable entries={regionEntries} currentMonth={currentMonth} />}
       </div>
     </div>

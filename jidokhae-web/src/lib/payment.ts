@@ -100,7 +100,7 @@ export async function processPaymentConfirmation(
     .single()
 
   if (!meeting || meeting.status !== 'active') {
-    return { status: 'error', message: '신청할 수 없는 모임입니다' }
+    return { status: 'error', message: '신청할 수 없는 모임이에요' }
   }
 
   // 토론모임 D-7 신청 마감은 2026-10-13에 폐지됐다(대표님 결정) — 정기모임처럼 정원까지 받고
@@ -115,7 +115,7 @@ export async function processPaymentConfirmation(
     await safeCancel(paymentId, `토론모임 신청 차단(${block})`)
     return {
       status: 'error',
-      message: `${DISCUSSION_BLOCK_MESSAGE[block]}. 결제는 자동 취소됩니다`,
+      message: `${DISCUSSION_BLOCK_MESSAGE[block]}. 결제는 자동으로 취소돼요`,
     }
   }
 
@@ -124,11 +124,11 @@ export async function processPaymentConfirmation(
   try {
     payment = await getPayment(paymentId)
   } catch {
-    return { status: 'error', message: '결제 검증에 실패했습니다' }
+    return { status: 'error', message: '결제를 확인하지 못했어요' }
   }
 
   if (payment.status !== 'PAID') {
-    return { status: 'error', message: '결제가 완료되지 않았습니다' }
+    return { status: 'error', message: '결제가 끝나지 않았어요' }
   }
 
   // 결제 금액 검증 — 정가 또는 스텝 할인가(50%)만 허용. **0원은 카드로 받지 않는다**(2026-10-13).
@@ -137,7 +137,7 @@ export async function processPaymentConfirmation(
   // 거절해도 safeCancel을 부른다 — 0원 모임에 금액이 실린 결제가 오면 돌려줘야 한다
   if (!isAllowedCardAmount(meeting.fee, meeting.meeting_type, payment.totalAmount)) {
     await safeCancel(paymentId, '결제 금액 불일치')
-    return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
+    return { status: 'error', message: '결제 정보가 맞지 않아요' }
   }
 
   // paymentId prefix ↔ meetingId 교차 검증
@@ -154,7 +154,7 @@ export async function processPaymentConfirmation(
     paymentParts[2] !== userId8
   ) {
     await safeCancel(paymentId, 'paymentId prefix 불일치 (meeting/user)')
-    return { status: 'error', message: '결제 정보가 일치하지 않습니다' }
+    return { status: 'error', message: '결제 정보가 맞지 않아요' }
   }
 
   // Layer 2: Atomic registration via DB Function
@@ -170,7 +170,7 @@ export async function processPaymentConfirmation(
 
   if (rpcError) {
     await safeCancel(paymentId, '신청 처리 오류')
-    return { status: 'error', message: '신청 처리 중 오류가 발생했습니다' }
+    return { status: 'error', message: '결제를 처리하지 못했어요. 신청 내역을 확인해 주세요' }
   }
 
   const rpcResult = result as string
@@ -201,7 +201,7 @@ export async function processPaymentConfirmation(
   if (rpcResult === 'full') {
     // 방어 코드 — confirm_registration()이 더 이상 'full' 반환하지 않지만 안전을 위해 유지
     await safeCancel(paymentId, '정원 마감으로 인한 환불')
-    return { status: 'full', message: '마감되었습니다' }
+    return { status: 'full', message: '정원이 찼어요' }
   }
 
   if (rpcResult === 'already_registered') {
@@ -234,32 +234,32 @@ export async function processPaymentConfirmation(
       )
       return {
         status: 'error',
-        message: '신청 상태 확인에 실패했습니다. 내 신청 내역을 확인해주세요',
+        message: '신청 상태를 확인하지 못했어요. 신청 내역을 확인해 주세요',
       }
     }
 
     // 이 결제로 만들어진 행이 없다 = 다른 결제·계좌이체로 이미 신청돼 있다 → 진짜 중복
     await safeCancel(paymentId, '중복 신청으로 인한 환불')
-    return { status: 'already_registered', message: '이미 신청한 모임입니다' }
+    return { status: 'already_registered', message: '이미 신청한 모임이에요' }
   }
 
   // 스텝 할인 신규 결과 코드 — 'error'로 흡수, 메시지만 차별화
   if (rpcResult === 'discount_not_eligible') {
     await safeCancel(paymentId, '스텝 할인 자격 없음')
-    return { status: 'error', message: '스텝 할인 자격이 없습니다' }
+    return { status: 'error', message: '스텝 할인 50% 대상이 아니에요' }
   }
 
   if (rpcResult === 'staff_slot_full') {
     await safeCancel(paymentId, '스텝 할인 슬롯 마감')
     return {
       status: 'error',
-      message: '스텝 할인 슬롯이 마감되어 결제가 취소되었습니다. 정가로 다시 신청해주세요.',
+      message: '스텝 할인 50% 자리가 다 차서 결제가 취소됐어요. 정가로 다시 신청해 주세요',
     }
   }
 
   // not_found, not_active, etc.
   await safeCancel(paymentId, '모임 상태 오류')
-  return { status: 'error', message: '신청할 수 없는 모임입니다' }
+  return { status: 'error', message: '신청할 수 없는 모임이에요' }
 }
 
 /**

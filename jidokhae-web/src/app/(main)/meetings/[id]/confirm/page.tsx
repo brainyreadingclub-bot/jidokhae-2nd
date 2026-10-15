@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { formatKoreanDate, formatKoreanTime, formatPaidAmount } from '@/lib/kst'
+import { formatKoreanDate, formatKoreanTime, formatPaidAmountForScreen } from '@/lib/kst'
 import { getSiteSettings } from '@/lib/site-settings'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { loadRegistrationSummary } from '@/lib/registration-summary'
@@ -64,18 +64,18 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
         </div>
 
         <h1 className="text-xl font-extrabold text-neutral-900 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-          {isWaitlisted ? '대기 신청이 완료되었습니다' : '신청이 완료되었습니다'}
+          {isWaitlisted ? '대기 신청이 접수됐어요' : '신청됐어요'}
         </h1>
         <p className="mt-2 text-sm text-neutral-500">
           {showDeposit
-            ? '아래 계좌로 입금해주세요'
+            ? '자리는 잡혀 있어요. 아직 입금 전이라면 아래 계좌로 보내 주세요'
             : isWaitlisted
-              ? '취소자 발생 시 자동으로 참여가 확정됩니다'
-              : '모임에 참여해 주셔서 감사합니다'}
+              ? '자리가 나면 자동으로 신청이 완료돼요'
+              : '모임에서 만나요'}
         </p>
         {isWaitlisted && (
           <p className="mt-1 text-xs text-neutral-500">
-            모임 전날까지 승격되지 않으면 자동 전액 환불됩니다
+            모임 전날까지 자리가 나지 않으면 결제 금액을 모두 환불해 드려요
           </p>
         )}
       </div>
@@ -109,14 +109,14 @@ export default async function ConfirmPage({ params, searchParams }: Props) {
               className="flex items-start gap-2 pt-2"
               style={{ borderTop: '1px solid var(--color-surface-300)' }}
             >
-              <span className="text-neutral-600 text-xs w-10 mt-0.5">결제</span>
+              <span className="text-neutral-600 text-xs w-10 mt-0.5">결제 금액</span>
               <div className="flex flex-col">
                 <span className="font-bold text-neutral-900">
-                  {formatPaidAmount(paidAmount ?? typedMeeting.fee, typedMeeting.fee)}
+                  {formatPaidAmountForScreen(paidAmount ?? typedMeeting.fee, typedMeeting.fee)}
                 </span>
                 {paidAmount !== null && paidAmount < typedMeeting.fee && (
                   <span className="text-[11px] font-medium text-primary-600 mt-0.5">
-                    스텝 가격이 적용되었습니다
+                    스텝 할인 50%
                   </span>
                 )}
               </div>

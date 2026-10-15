@@ -97,7 +97,7 @@ export async function processWaitlistCancel(
     .single()
 
   if (fetchError || !reg) {
-    return { status: 'error', message: '대기 신청을 찾을 수 없습니다' }
+    return { status: 'error', message: '대기 신청을 찾을 수 없어요' }
   }
 
   if (reg.status === 'waitlist_cancelled') {
@@ -105,7 +105,7 @@ export async function processWaitlistCancel(
   }
 
   if (reg.status !== 'waitlisted') {
-    return { status: 'error', message: '취소할 수 없는 상태입니다' }
+    return { status: 'error', message: '지금은 취소할 수 없어요' }
   }
 
   const paidAmount = reg.paid_amount ?? 0
@@ -118,10 +118,10 @@ export async function processWaitlistCancel(
       try {
         const payment = await getPayment(reg.payment_id)
         if (payment.status !== 'CANCELLED') {
-          return { status: 'error', message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.' }
+          return { status: 'error', message: '환불하지 못했어요. 잠깐 뒤에 다시 시도해 주세요' }
         }
       } catch {
-        return { status: 'error', message: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.' }
+        return { status: 'error', message: '환불하지 못했어요. 잠깐 뒤에 다시 시도해 주세요' }
       }
     }
   }
@@ -141,7 +141,7 @@ export async function processWaitlistCancel(
 
   if (updateError) {
     console.error(`[waitlist] DB update failed for reg ${registrationId}:`, updateError)
-    return { status: 'error', message: '취소 처리 중 오류가 발생했습니다' }
+    return { status: 'error', message: '취소하지 못했어요. 잠깐 뒤에 다시 시도해 주세요' }
   }
 
   if (!updated || updated.length === 0) {
