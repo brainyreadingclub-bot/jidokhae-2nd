@@ -246,7 +246,7 @@ export default async function PrivacyPolicyPage() {
           11. 개인정보 처리방침 변경
         </h2>
         <div className="mt-4 text-sm text-neutral-600 leading-relaxed">
-          <p>이 개인정보처리방침은 2026년 3월 21일부터 적용됩니다.</p>
+          <p>이 개인정보처리방침은 2026년 10월 15일부터 적용됩니다.</p>
           <p className="mt-2">변경 시 서비스 내 공지를 통해 안내합니다.</p>
         </div>
       </section>

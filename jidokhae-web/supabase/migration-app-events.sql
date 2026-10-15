@@ -22,7 +22,8 @@
 --   props에 실명·전화·이메일·결제 식별자를 넣지 않는다. 코드(sanitizeEventProps)가 지운다.
 --   이 표에 남는 회원 식별은 user_id(uuid)뿐이다.
 --
--- 보관 기간 — 미정 (대표님 결정 대기). 정해지면 지우는 방법을 따로 붙인다
+-- 보관 기간 — 1년 뒤 삭제 (2026-10-15 대표님 결정). 삭제 작업은 아직 없다.
+--   지우기 전에 회원 번호(user_id)를 뺀 월별 건수 요약은 남긴다
 --
 -- 롤백: migration-app-events-rollback.sql (기록이 통째로 사라진다 — 지우기 전에 SELECT로 떠 둘 것)
 -- ============================================================
@@ -62,6 +63,8 @@ CREATE INDEX IF NOT EXISTS idx_app_events_event_created
 CREATE INDEX IF NOT EXISTS idx_app_events_user
   ON public.app_events (user_id);
 
+-- ⚠️ 아래 COMMENT의 「보관 기간 미정」은 실서비스에 실행된 그대로 둔다(파일과 DB가 갈리지 않게).
+--    현재 보관 기간은 위 머리말(1년 뒤 삭제)이 맞다
 COMMENT ON TABLE public.app_events IS
   '공통 기록표 (2026-10-14). 이벤트 목록은 src/lib/app-events.ts APP_EVENTS + docs/agent-team/기록표-이벤트-목록.md. 쓰기는 service_role만. 보관 기간 미정.';
 
