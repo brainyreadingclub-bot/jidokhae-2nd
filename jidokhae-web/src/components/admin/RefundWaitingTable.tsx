@@ -27,9 +27,14 @@ export default function RefundWaitingTable({ rows }: Props) {
   return (
     <div>
       {/* 안내 문구 */}
-      <p className="mb-3 text-xs text-neutral-400">
-        계좌이체 환불은 회원 연락처로 계좌번호를 확인한 뒤 「환불 예정 금액」만큼 직접 송금하고, 완료 후 환불 완료를 체크하세요. 환불 예정 금액은 환불 규정(취소한 날 기준)으로 계산한 값이에요.
-      </p>
+      <div className="mb-3 rounded-[var(--radius-md)] border border-accent-200 bg-accent-50 px-3 py-2.5">
+        <p className="text-sm font-bold text-accent-700 break-keep">
+          표시된 환불 예정 금액만큼 송금하세요<span className="whitespace-nowrap">(낸 돈과 다를 수 있어요)</span>
+        </p>
+        <p className="mt-1 text-xs text-neutral-600 break-keep">
+          환불 예정 금액은 환불 규정(취소한 날 기준)으로 계산한 값이에요. 회원 연락처로 계좌번호를 확인해 직접 송금하고, 완료 후 환불 완료를 체크하세요.
+        </p>
+      </div>
 
       {/* 모바일 카드 목록 */}
       <div className="md:hidden space-y-2">
