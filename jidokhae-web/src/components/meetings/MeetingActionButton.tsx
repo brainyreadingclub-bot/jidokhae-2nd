@@ -840,7 +840,7 @@ export default function MeetingActionButton({
 
                 {/* 이 버튼은 「입금했다」고 알리는 버튼이 아니라 신청 요청을 보내는 버튼이다 — 문구만 바꿈, 동작 그대로 (2026-10-14 코드 조사 §1-3 12번) */}
                 {!noTransferNeeded && (
-                  <p className="mt-5 text-center text-[13px] text-neutral-500">신청하면 바로 자리가 잡혀요. 입금은 안내된 계좌로 해 주세요</p>
+                  <p className="mt-5 text-center text-[13px] text-neutral-500 break-keep">신청하면 바로 자리가 잡혀요. 입금은 안내된 계좌로 해 주세요</p>
                 )}
 
                 <button

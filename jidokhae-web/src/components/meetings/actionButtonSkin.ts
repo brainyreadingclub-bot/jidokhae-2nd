@@ -112,7 +112,7 @@ const legacy: ActionSkin = {
   btnGhost:
     'w-full rounded-[var(--radius-lg)] bg-white py-4 text-sm font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]',
   btnGhostStyle: { border: '1px solid var(--color-neutral-300)' },
-  note: 'mt-2 text-center text-xs text-primary-400 leading-relaxed',
+  note: 'mt-2 text-center text-xs text-primary-400 leading-relaxed break-keep',
   panel: 'mt-8 rounded-[var(--radius-lg)] p-6 text-center',
   panelStyle: {
     backgroundColor: 'var(--color-surface-50)',
@@ -134,7 +134,7 @@ const legacy: ActionSkin = {
   waitPill:
     'inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-[11px] font-bold text-accent-700 border border-accent-200',
   waitAmount: 'text-sm font-bold text-primary-800',
-  waitBody: 'text-xs text-primary-500 leading-relaxed',
+  waitBody: 'text-xs text-primary-500 leading-relaxed break-keep',
   attended:
     'mt-8 w-full rounded-[var(--radius-lg)] bg-primary-50 py-4 text-center text-sm font-bold text-primary-700',
   attendedStyle: { border: '1px solid var(--color-primary-100)' },
@@ -226,7 +226,7 @@ const toss: ActionSkin = {
     'w-full rounded-[14px] bg-tg-100 py-4 text-[15px] font-bold text-tg-500 cursor-not-allowed',
   btnGhost:
     'w-full rounded-[14px] bg-tg-100 py-4 text-[15px] font-bold text-tg-700 transition-all active:scale-[0.98]',
-  note: 'mt-2 text-center text-xs text-tg-600 leading-relaxed',
+  note: 'mt-2 text-center text-xs text-tg-600 leading-relaxed break-keep',
   panel: 'mt-8 rounded-[20px] bg-white p-6 text-center',
   panelStyle: { boxShadow: 'var(--shadow-toss-card)' },
   panelIcon: 'mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-bg',
@@ -241,7 +241,7 @@ const toss: ActionSkin = {
   waitPill:
     'inline-flex items-center rounded-full bg-warnx-bg px-2.5 py-0.5 text-[11px] font-bold text-warnx',
   waitAmount: 'text-sm font-bold text-tg-900',
-  waitBody: 'text-xs text-tg-600 leading-relaxed',
+  waitBody: 'text-xs text-tg-600 leading-relaxed break-keep',
   attended:
     'mt-8 w-full rounded-[14px] bg-brand-bg py-4 text-center text-[15px] font-bold text-brand-deep',
   modalTitle: 'text-base font-bold text-tg-900',
