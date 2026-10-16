@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
+import { adminAreaOf, STAFF_HOME } from '@/lib/admin-access'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import AdminMobileNav from '@/components/admin/AdminMobileNav'
 
@@ -15,7 +16,10 @@ export default async function AdminLayout({
 
   const profile = await getProfile(user.id)
 
-  if (profile.role !== 'admin' && profile.role !== 'editor') redirect('/')
+  // 운영 화면은 총괄·운영진만. 스텝은 발제문만 있는 스텝 구역으로 — 운영 화면은 통째로 닫는다(허용 목록 방식, 2026-10-16)
+  const area = adminAreaOf(profile)
+  if (area === 'staff') redirect(STAFF_HOME)
+  if (area !== 'admin') redirect('/')
 
   const role = profile.role as 'admin' | 'editor'
   const nickname = profile.nickname || user.email || '운영자'

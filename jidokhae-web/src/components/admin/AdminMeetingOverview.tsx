@@ -229,6 +229,7 @@ export default function AdminMeetingOverview({
         registrations={registrations}
         meetingDate={meeting.date}
         meetingType={meeting.meeting_type ?? null}
+        showRevenueSummary={isAdmin}
       />
 
       {/* 삭제 — 맨 아래, 빨간색. 되돌릴 수 없는 동작이라 확인 창에서 「삭제」를 직접 입력한다 */}

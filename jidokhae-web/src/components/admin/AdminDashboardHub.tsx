@@ -39,7 +39,8 @@ export default async function AdminDashboardHub() {
   const weekLater = getWeekLater(kstToday)
 
   const [revenue, upcoming, memberStats, alerts, transferAlerts] = await Promise.all([
-    getMonthlyRevenue(supabase, currentMonth, prevMonth),
+    // 이번 달 순매출은 총괄만 (2026-10-16 대표님 결정) — 운영진이면 읽지도 않는다
+    isAdmin ? getMonthlyRevenue(supabase, currentMonth, prevMonth) : Promise.resolve(null),
     getUpcomingMeetings(supabase, kstToday, weekLater),
     getMemberStats(supabase, monthRange.start),
     isAdmin
@@ -50,7 +51,7 @@ export default async function AdminDashboardHub() {
       : Promise.resolve({ pendingTransferCount: 0, pendingRefundCount: 0 }),
   ])
 
-  const revenueDelta = revenue.netRevenue - revenue.prevNetRevenue
+  const revenueDelta = revenue ? revenue.netRevenue - revenue.prevNetRevenue : 0
   const hasUrgent =
     alerts.deletingMeetings.length > 0 ||
     alerts.unsettledVenues.length > 0 ||
@@ -135,7 +136,7 @@ export default async function AdminDashboardHub() {
       )}
 
       {/* KPI 3 */}
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className={`mb-6 grid grid-cols-1 gap-3 ${revenue ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         <Kpi
           label="이번 주 모임"
           value={String(upcoming.count)}
@@ -148,6 +149,7 @@ export default async function AdminDashboardHub() {
           unit="명"
           subtext={`총 ${memberStats.total}명`}
         />
+        {revenue && (
         <Kpi
           label="이번 달 순매출"
           value={formatFee(revenue.netRevenue)}
@@ -159,6 +161,7 @@ export default async function AdminDashboardHub() {
           }
           subtextVariant={revenueDelta >= 0 ? 'up' : 'down'}
         />
+        )}
       </div>
 
       {/* 이번 주 모임 + 바로가기 */}
