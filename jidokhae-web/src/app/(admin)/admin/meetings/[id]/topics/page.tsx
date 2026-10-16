@@ -5,6 +5,7 @@ import { formatKoreanDate, formatKSTDateTime, getDaysUntil, getKSTToday } from '
 import TopicsManager from '@/components/admin/TopicsManager'
 import type { DiscussionTopic } from '@/types/discussion'
 import type { Meeting } from '@/types/meeting'
+import { getMeetingKindShortLabel } from '@/lib/meeting-kinds'
 
 /**
  * 발제문 관리 (admin·editor — (admin) 레이아웃이 역할 검사). 2026-10-09 시안 B.
@@ -81,7 +82,7 @@ export default async function AdminTopicsPage({
           </span>
         )}
         <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-bold text-neutral-700">
-          {m.meeting_type === 'discussion' ? '토론' : '정기'}
+          {getMeetingKindShortLabel(m.meeting_type)}
         </span>
       </div>
       <h1
@@ -95,7 +96,7 @@ export default async function AdminTopicsPage({
       </p>
       {m.meeting_type !== 'discussion' && (
         <p className="mt-3 rounded-lg bg-accent-500/10 px-3 py-2 text-xs font-semibold text-accent-500">
-          정기모임입니다 — 발제문은 토론모임에서만 회원에게 보여요
+          토론모임이 아니에요 — 발제문은 토론모임에서만 회원에게 보여요
         </p>
       )}
       <TopicsManager
