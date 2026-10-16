@@ -10,6 +10,8 @@ type Props = {
   registrations: RegistrationWithProfile[]
   meetingDate: string
   meetingType: string | null
+  /** 「총 결제 · 환불 · 순매출」 줄 — 총괄만 (2026-10-16 대표님 결정, 대시보드 순매출과 같은 기준) */
+  showRevenueSummary?: boolean
 }
 
 const CANCEL_TYPE_LABELS: Record<string, string> = {
@@ -42,6 +44,7 @@ export default function AdminMeetingSection({
   registrations,
   meetingDate,
   meetingType,
+  showRevenueSummary = false,
 }: Props) {
   const confirmedRegs = registrations.filter((r) => r.status === 'confirmed' || r.status === 'cancelled' || r.status === 'pending_transfer')
   const waitlistedRegs = registrations
@@ -465,7 +468,8 @@ export default function AdminMeetingSection({
           <>
             {renderMobileCards(confirmedRegs, false)}
             {renderDesktopTable(confirmedRegs, false)}
-            {/* 결제/환불 요약 — 숫자만 */}
+            {/* 결제/환불 요약 — 숫자만. 총괄만 본다 (2026-10-16) */}
+            {showRevenueSummary && (
             <p className="mt-3.5 text-[13px] text-neutral-600">
               총 결제 <b className="font-bold text-neutral-800">{formatFee(totalPaid)}</b>
               <span className="mx-2 text-neutral-400">·</span>
@@ -473,6 +477,7 @@ export default function AdminMeetingSection({
               <span className="mx-2 text-neutral-400">·</span>
               순매출 <b className="font-bold text-neutral-800">{formatFee(netRevenue)}</b>
             </p>
+            )}
           </>
         )}
       </div>
