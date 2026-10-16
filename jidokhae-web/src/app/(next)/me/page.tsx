@@ -2,6 +2,7 @@ import { getUser } from '@/lib/auth'
 import { getProfile } from '@/lib/profile'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { unreadCount } from '@/lib/app-notifications'
+import { isReviewEnabled } from '@/lib/review'
 import { Sec, RowItem } from '@/components/next/TossUI'
 import AccountFooter from '@/components/next/AccountFooter'
 
@@ -19,7 +20,7 @@ export default async function MePage() {
   const profile = user ? await getProfile(user.id) : null
   const admin = createServiceClient()
 
-  const [shelfCount, answerCount, unread] = user
+  const [shelfCount, answerCount, unread, reviewOn] = user
     ? await Promise.all([
         admin
           .from('library_entries')
@@ -32,8 +33,9 @@ export default async function MePage() {
           .eq('user_id', user.id)
           .then(({ count }) => count ?? 0),
         unreadCount(user.id),
+        isReviewEnabled(),
       ])
-    : [0, 0, 0]
+    : [0, 0, 0, false]
 
   const joinedAt = profile?.profile_completed_at ?? profile?.welcomed_at ?? null
   const joined = joinedAt
@@ -83,6 +85,10 @@ export default async function MePage() {
 
       <Sec>내 활동</Sec>
       <RowItem emoji="🧾" tone="blue" title="신청 내역" sub="내 모임 신청과 취소" href="/me/registrations" />
+      {/* 모임 후기 (시안 14) — 카운터 칸은 늘리지 않는다. 받은 칭찬 줄은 칭찬을 붙일 때 (DECISIONS 2026-10-16) */}
+      {reviewOn && (
+        <RowItem emoji="💬" tone="green" title="내가 남긴 후기" sub="한 줄 소감 · 공개 설정" href="/me/reviews" />
+      )}
       <RowItem
         emoji="🔔"
         tone="green"

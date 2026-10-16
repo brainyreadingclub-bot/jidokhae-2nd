@@ -4,6 +4,8 @@ import { getUser } from '@/lib/auth'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { isLibraryEnabled } from '@/lib/library'
 import { getPendingAsk } from '@/lib/asks'
+import { getReviewTargets, isReviewEnabled } from '@/lib/review'
+import { resolveMyRedirect } from '@/lib/review-rules'
 import MyRegistrationContent from '@/components/my/MyRegistrationContent'
 import RegistrationsSkeleton from '@/components/skeletons/RegistrationsSkeleton'
 import ProfileSection from '@/components/my/ProfileSection'
@@ -27,6 +29,12 @@ import HashScroller from '@/components/my/HashScroller'
  * 보내는 조건을 `AskStripSection`과 **같은 함수·같은 플래그**로 맞춘다 — 기준이 갈리면
  * 「보냈는데 스트립이 없는」 빈 화면이 난다.
  *
+ * 🔴 **모임 후기가 맨 앞이다** (2026-10-12 결정 — 후기 알림톡 버튼도 새 주소 대신 이 `/my`).
+ * `review_enabled`가 켜져 있고 후기 기간(모임 다음 날~3일 뒤) 안에 아직 안 남긴 정기모임이 있으면
+ * `/review/{id}`로. 기간이 지났어도(4~7일 뒤) 후기 알림톡을 받은 모임이면 「기간이 지났어요」 화면으로.
+ * 후기를 물어보기보다 앞에 두는 이유는 `resolveMyRedirect` 주석.
+ * 스위치가 꺼져 있으면 후기 조회를 아예 하지 않는다 — 지금 동작 그대로다.
+ *
  * 🔴 아래 구 화면 코드는 한 줄도 지우지 않는다. 플래그를 OFF로 되돌리면 그게 유일한 경로다.
  */
 export default async function MyPage() {
@@ -34,8 +42,22 @@ export default async function MyPage() {
     const user = await getUser()
     // 로그인 전(미들웨어가 막지만 방어적으로)에는 아래 구 화면이 로그인으로 보낸다
     if (user) {
-      const pending = (await isLibraryEnabled()) ? await getPendingAsk(user.id) : null
-      redirect(pending ? '/shelf' : '/me')
+      const reviewEnabled = await isReviewEnabled()
+      const review = reviewEnabled ? await getReviewTargets(user.id) : { open: null, expired: null }
+      // 후기로 갈 사람은 물어보기를 조회하지 않는다
+      const pending =
+        !review.open && !review.expired && (await isLibraryEnabled())
+          ? await getPendingAsk(user.id)
+          : null
+      const target = resolveMyRedirect({
+        nextUi: true,
+        loggedIn: true,
+        reviewEnabled,
+        openReviewMeetingId: review.open?.meetingId ?? null,
+        expiredReviewMeetingId: review.expired?.meetingId ?? null,
+        hasPendingAsk: Boolean(pending),
+      })
+      if (target) redirect(target)
     }
   }
 

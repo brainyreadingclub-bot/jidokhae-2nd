@@ -25,6 +25,8 @@ export const ADMIN_MENU_GROUPS: AdminMenuGroup[] = [
       { label: '정산', href: '/admin/settlements', adminOnly: true },
       { label: '회원 관리', href: '/admin/members' },
       { label: '서재 응답률', href: '/admin/library' },
+      // 표정·아쉬운 점은 총괄운영자만 본다 (대표님 답 2026-10-12). 페이지·API·RLS도 admin 판정
+      { label: '모임 후기', href: '/admin/reviews', adminOnly: true },
     ],
   },
   {

@@ -21,7 +21,14 @@ import { Chevron } from '@/components/next/TossUI'
  * 조회·판정은 `lib/meeting-detail.ts` 한 벌을 구 화면과 공유한다.
  * 결제·취소 버튼도 구 화면과 **같은 컴포넌트**를 쓰고 스킨만 바꾼다 — 돈 흐름 코드는 한 벌이다.
  */
-export default function MeetingDetailView({ data }: { data: MeetingDetailData }) {
+export default function MeetingDetailView({
+  data,
+  afterInfo,
+}: {
+  data: MeetingDetailData
+  /** 모임 정보 아래에 끼우는 조각 — 「지난 모임에서 남긴 한 줄」(모임 후기, page가 넘긴다) */
+  afterInfo?: React.ReactNode
+}) {
   const m = data.meeting
   const isDiscussion = m.meeting_type === 'discussion'
   const canApply = data.buttonState.type === 'register' || data.buttonState.type === 'join_waitlist'
@@ -141,6 +148,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
       )}
 
       <MeetingInfoRows rows={rows} />
+      {afterInfo}
 
       {/* 발제문 진입 — 이번 개편이 만든 단절을 메운다.
           이야기 탭 → 상세 방향은 링크가 있었는데 반대 방향이 0이었다 (2026-08-25 조사 §3-2). */}

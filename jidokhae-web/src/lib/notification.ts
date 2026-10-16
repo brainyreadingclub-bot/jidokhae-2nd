@@ -367,6 +367,40 @@ export async function sendBookAskNotification(
   })
 }
 
+// ─── 모임 후기 알림 ───
+
+/**
+ * 모임 다음 날, 참여자에게 「모임 어땠어요?」를 1회 보낸다 (2026-10-12 결정 — 책 담기 알림을 대신한다).
+ * `book-ask` 크론이 스위치·템플릿 env를 보고 이것과 `sendBookAskNotification` 중 **하나만** 부른다.
+ *
+ * 변수는 BOOK_ASK와 같은 이름·같은 값이다(`#{회원명}`·`#{모임일}`). 버튼은 템플릿에 고정된 `/my` —
+ * `/my`가 후기 기간 안의 모임으로 보낸다(`app/(main)/my/page.tsx`).
+ *
+ * 중복 차단은 notifications의 부분 UNIQUE INDEX가 맡는다
+ * (recipient_id, meeting_id) WHERE type = 'meeting_review'.
+ */
+export async function sendMeetingReviewNotification(
+  userId: string,
+  meetingId: string,
+  meetingDate: string,
+) {
+  const profile = await getProfileForNotification(userId)
+  // 호칭은 닉네임 우선 (2026-08-07 결정, VOICE.md §6)
+  const displayName = profile.nickname || profile.real_name || ''
+
+  return sendNotification({
+    type: 'meeting_review',
+    recipientId: userId,
+    recipientPhone: profile.phone,
+    meetingId,
+    templateCode: process.env.SOLAPI_TEMPLATE_MEETING_REVIEW!,
+    variables: {
+      '#{회원명}': displayName,
+      '#{모임일}': formatKoreanDate(meetingDate),
+    },
+  })
+}
+
 // ─── 가입 환영 알림 ───
 
 /**
