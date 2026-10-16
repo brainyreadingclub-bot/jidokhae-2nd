@@ -1,0 +1,17 @@
+-- ============================================================
+-- 롤백 — migration-remove-test-meeting-hide.sql 되돌리기
+-- ============================================================
+--
+-- 이 규칙은 저장소에 원문이 없다. 지우기 전에 본 파일 ①이 뽑아 둔 한 줄
+-- (CREATE POLICY "hide test meeting from members" ...)을 그대로 붙여 실행한다.
+--
+-- 🔴 보통은 되돌릴 일이 없다 — 규칙이 가리키던 시험 모임은 이미 지워졌으므로
+--   되살려도 숨길 대상이 없다. 시험 모임을 실수로 되살렸을 때만 쓴다.
+--
+-- 원문을 잃어버렸다면, 같은 효과를 내는 대체 규칙(회원에게만 그 모임을 숨김):
+--   CREATE POLICY "hide test meeting from members" ON public.meetings
+--     AS RESTRICTIVE FOR SELECT TO authenticated, anon
+--     USING (id <> '<시험 모임 id>'::uuid OR public.is_editor_or_admin());
+-- ============================================================
+
+-- 여기에 본 파일 ①의 결과 한 줄을 붙인다
