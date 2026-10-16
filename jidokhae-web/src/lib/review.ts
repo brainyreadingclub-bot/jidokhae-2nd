@@ -72,6 +72,8 @@ const MEETING_COLUMNS = 'id, title, date, time, region, location, meeting_type, 
 /**
  * (user, meeting)이 후기 대상인지 — 참여(confirmed·입금대기) · 정기 · active. 기간은 호출부가 본다.
  * 대상이 아니면 null.
+ * `attended`로 거르지 않는다 — 결석 데이터가 없는 칸이다(2026-10-16 실측 true 4 · false 0 · null 388).
+ * 근거는 `api/cron/book-ask/route.ts` 대상 조회 주석에 있다
  */
 export async function getReviewableMeeting(
   admin: SupabaseClient,

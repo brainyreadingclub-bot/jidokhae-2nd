@@ -85,6 +85,12 @@ export async function GET(request: NextRequest) {
   let lookupFailed = 0
 
   for (const meeting of eligibleMeetings) {
+    // 대상 = 「신청 확정 후 취소하지 않은 회원」 = PARTICIPATED_STATUSES(confirmed·pending_transfer).
+    // 후기 알림톡도 같다 (대표님 2026-10-16).
+    // 🔴 `registrations.attended`로 결석자를 거르지 않는다. 출석 토글은 이미 없어졌고,
+    // 2026-10-16 실측에서 true 4 · false 0 · null 388이었다. 결석 데이터가 없는 칸이라
+    // `attended = true`로 거르면 null이 전부 빠져 사실상 아무에게도 안 나간다.
+    // 못 간 사람은 후기 화면의 「이 모임에 못 갔어요」로 스스로 빠진다
     const { data: registrations } = await supabase
       .from('registrations')
       .select('user_id')
