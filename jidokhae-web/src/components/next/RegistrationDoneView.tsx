@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { formatKoreanDate, formatKoreanTime, formatPaidAmountForScreen } from '@/lib/kst'
 import CopyableDepositorName from '@/components/meetings/CopyableDepositorName'
+import RegistrationFollowUps from '@/components/next/RegistrationFollowUps'
 
 export type RegistrationDoneData = {
   meetingId: string
@@ -19,6 +20,15 @@ export type RegistrationDoneData = {
   bankHolder: string
   /** "M/D 닉네임" — 상세·신청 확인과 같은 규칙 */
   depositorName: string
+  /**
+   * 「내 달력에 추가」 구글 캘린더 링크 — 본인이 자리를 차지한 모임(confirmed·pending_transfer)일 때만.
+   * 대기 신청이면 null(확정이 아니다)
+   */
+  googleCalendarUrl: string | null
+  /** 채널 친구 추가 링크 (`lib/kakao-channel.ts`). 비어 있으면 채널 줄을 그리지 않는다 */
+  channelUrl: string
+  /** GA4 `payment_method` — 신청 행에 적힌 값 */
+  paymentMethod: string
 }
 
 /**
@@ -104,6 +114,15 @@ export default function RegistrationDoneView({ data }: { data: RegistrationDoneD
             {formatPaidAmountForScreen(data.amount, data.meetingFee)}
           </p>
         </div>
+      )}
+
+      {!isWaitlisted && (
+        <RegistrationFollowUps
+          meetingId={data.meetingId}
+          googleCalendarUrl={data.googleCalendarUrl}
+          channelUrl={data.channelUrl}
+          paymentMethod={data.paymentMethod}
+        />
       )}
 
       <div className="mt-8 space-y-2.5">

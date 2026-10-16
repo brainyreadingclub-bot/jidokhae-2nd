@@ -7,6 +7,8 @@ import { resolveHomeUpcomingClick } from '@/lib/home-upcoming'
 import { recordAppEvent } from '@/lib/app-events'
 import { formatKoreanDate, formatKoreanTime, formatMeetingFeeForScreen } from '@/lib/kst'
 import MeetingDetailView from '@/components/next/MeetingDetailView'
+import RegionPublicComments from '@/components/next/review/RegionPublicComments'
+import { Suspense } from 'react'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -46,5 +48,15 @@ export default async function NextMeetingDetailPage({ params, searchParams }: Pr
   const click = resolveHomeUpcomingClick({ page: 'meeting', userId: user?.id, from, meetingId: id, pos })
   if (click) after(recordAppEvent({ ...click, userId: user?.id }))
 
-  return <MeetingDetailView data={data} />
+  // 「지난 모임에서 남긴 한 줄」은 늦게 와도 된다 — 상세 본문이 이 조회를 기다리지 않게
+  return (
+    <MeetingDetailView
+      data={data}
+      afterInfo={
+        <Suspense fallback={null}>
+          <RegionPublicComments meetingId={data.meeting.id} meetingType={data.meeting.meeting_type ?? null} />
+        </Suspense>
+      }
+    />
+  )
 }

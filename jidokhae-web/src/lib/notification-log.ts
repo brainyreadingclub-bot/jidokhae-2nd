@@ -25,6 +25,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   waitlist_refunded: '미승격 환불',
   book_ask: '물어보기',
   new_member_welcome: '가입 환영',
+  meeting_review: '모임 후기',
 }
 
 export const NOTIFICATION_STATUS_LABELS: Record<string, string> = {

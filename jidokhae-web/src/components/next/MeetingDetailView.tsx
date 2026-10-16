@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { formatKoreanDate, formatKoreanTime, formatPaidAmountForScreen, formatDDay } from '@/lib/kst'
 import type { MeetingDetailData } from '@/lib/meeting-detail'
 import { hasStickyAction } from '@/lib/meeting-detail'
-import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import { highResCoverUrl } from '@/lib/book-cover'
 import MeetingActionButton from '@/components/meetings/MeetingActionButton'
 import BankInfoCard from '@/components/meetings/BankInfoCard'
@@ -12,6 +11,7 @@ import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 import MeetingInfoRows, { type InfoRow } from '@/components/next/MeetingInfoRows'
 import RefundNotice from '@/components/next/RefundNotice'
 import BackLink from '@/components/next/BackLink'
+import FirstVisitGuide from '@/components/next/FirstVisitGuide'
 import { Chevron } from '@/components/next/TossUI'
 
 /**
@@ -21,7 +21,14 @@ import { Chevron } from '@/components/next/TossUI'
  * 조회·판정은 `lib/meeting-detail.ts` 한 벌을 구 화면과 공유한다.
  * 결제·취소 버튼도 구 화면과 **같은 컴포넌트**를 쓰고 스킨만 바꾼다 — 돈 흐름 코드는 한 벌이다.
  */
-export default function MeetingDetailView({ data }: { data: MeetingDetailData }) {
+export default function MeetingDetailView({
+  data,
+  afterInfo,
+}: {
+  data: MeetingDetailData
+  /** 모임 정보 아래에 끼우는 조각 — 「지난 모임에서 남긴 한 줄」(모임 후기, page가 넘긴다) */
+  afterInfo?: React.ReactNode
+}) {
   const m = data.meeting
   const isDiscussion = m.meeting_type === 'discussion'
   const canApply = data.buttonState.type === 'register' || data.buttonState.type === 'join_waitlist'
@@ -32,12 +39,8 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
     { label: '어디서', value: [m.location, m.region].filter(Boolean).join(' · ') },
     {
       label: '참여',
-      // 마스킹 판정은 `shouldMaskConfirmedCount()` 한 벌이다 — 구 상세·모임 탭과 같은 함수.
-      // showAccurateCount를 그대로 쓰면 **마감(count >= capacity)인데 "N명 모집 중"**으로 보인다
-      // (규칙 함수는 마감이면 마스킹을 푼다). 2026-08-25 렌더 전수에서 나온 회귀.
-      value: shouldMaskConfirmedCount(data.confirmedCount, m.capacity, data.showAccurateCount)
-        ? `${m.capacity}명 모집 중`
-        : `${data.confirmedCount}/${m.capacity}명`,
+      // 자리 상태 공통 규칙(seat-status.ts) — 3명 미만 가리기·마감 우선도 그 안에서 지킨다
+      value: data.seatLabel,
     },
     {
       label: '참가비',
@@ -141,6 +144,8 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
       )}
 
       <MeetingInfoRows rows={rows} />
+      <FirstVisitGuide meetingType={m.meeting_type} userId={data.userId} />
+      {afterInfo}
 
       {/* 발제문 진입 — 이번 개편이 만든 단절을 메운다.
           이야기 탭 → 상세 방향은 링크가 있었는데 반대 방향이 0이었다 (2026-08-25 조사 §3-2). */}

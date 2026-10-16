@@ -19,7 +19,10 @@ export type MeetData = {
     date: string
     time: string
     venueName: string
+    /** 자리 문구 — `getSeatStatus().label` */
     confirmedLabel: string
+    /** 「n자리 남았어요」면 진한 회색 굵게 (빨강·주황 금지 — 자리 상태 공통 규칙) */
+    seatEmphasis: boolean
     fee: number
   }[]
   discussion: {
@@ -122,7 +125,10 @@ export default function MeetView({
                     {m.venueName}
                   </span>
                   <span className="mt-0.5 block truncate text-xs text-tg-600">
-                    {formatKoreanTime(m.time)} · {m.confirmedLabel}
+                    {formatKoreanTime(m.time)} ·{' '}
+                    <span className={m.seatEmphasis ? 'font-bold text-tg-800' : undefined}>
+                      {m.confirmedLabel}
+                    </span>
                   </span>
                 </span>
                 <span className="flex-none text-right">

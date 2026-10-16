@@ -5,7 +5,7 @@ import { isLibraryEnabled, upsertBookAndEntry } from '@/lib/library'
 import { verifyEligibleParticipation, recordAskAnswered, recordAskDismissed, recordAskViewed } from '@/lib/asks'
 import type { BookSearchResult } from '@/types/book'
 
-type AnswerBody = { action: 'answer'; meetingId: string; book: BookSearchResult }
+type AnswerBody = { action: 'answer'; meetingId: string; book: BookSearchResult; surface?: unknown }
 type DismissBody = { action: 'dismiss'; meetingId: string }
 type ViewBody = { action: 'view'; meetingId: string }
 type AskBody = AnswerBody | DismissBody | ViewBody
@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'error', message: '서재에 담지 못했습니다' }, { status: 500 })
     }
     // 담기 성공/이미담김 모두 응답으로 간주 → answered 기록
-    await recordAskAnswered(admin, user.id, body.meetingId)
+    // 모임 후기 ④에서 담았으면 화면을 남긴다 — 후기 경로와 띠 경로의 전환율을 섞지 않게
+    await recordAskAnswered(admin, user.id, body.meetingId, body.surface === 'review' ? 'review' : undefined)
     return NextResponse.json({ status: 'success', data: { result } })
   }
 
