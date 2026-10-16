@@ -6,6 +6,7 @@ import { isLinkOpen, linkClosesAtLabel } from '@/lib/presenter-link'
 import TopicsManager from '@/components/admin/TopicsManager'
 import type { DiscussionTopic } from '@/types/discussion'
 import type { Meeting } from '@/types/meeting'
+import { getMeetingKindShortLabel } from '@/lib/meeting-kinds'
 
 /**
  * 발제문 관리 화면 본체 — 운영 화면(admin·editor)과 스텝 구역(/staff/topics)이 같이 쓴다.
@@ -104,7 +105,7 @@ export default async function TopicsScreen({
           </span>
         )}
         <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-bold text-neutral-700">
-          {m.meeting_type === 'discussion' ? '토론' : '정기'}
+          {getMeetingKindShortLabel(m.meeting_type)}
         </span>
       </div>
       <h1
@@ -118,7 +119,7 @@ export default async function TopicsScreen({
       </p>
       {m.meeting_type !== 'discussion' && (
         <p className="mt-3 rounded-lg bg-accent-500/10 px-3 py-2 text-xs font-semibold text-accent-500">
-          정기모임입니다 — 발제문은 토론모임에서만 회원에게 보여요
+          토론모임이 아니에요 — 발제문은 토론모임에서만 회원에게 보여요
         </p>
       )}
       <TopicsManager

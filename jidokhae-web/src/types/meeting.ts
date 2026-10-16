@@ -1,3 +1,5 @@
+import type { MeetingKind } from '@/lib/meeting-kinds'
+
 export type Meeting = {
   id: string
   title: string
@@ -9,8 +11,8 @@ export type Meeting = {
   capacity: number
   fee: number
   status: 'active' | 'deleting' | 'deleted'
-  // 토론모임 개편 0조각 — 정기/토론 구분
-  meeting_type: 'regular' | 'discussion'
+  // 모임 종류 — 규칙은 `lib/meeting-kinds.ts` 표가 정한다. workshop = 작업실, event = 별책부록(2026-10-16)
+  meeting_type: MeetingKind
   // Phase 3 (WP7-2)
   region: string // VALID_REGIONS 중 1, default '경주'
   is_featured: boolean // 인라인 PICK 배너 노출 대상
