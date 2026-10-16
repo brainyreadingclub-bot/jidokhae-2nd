@@ -17,6 +17,10 @@
  *   단언하고 있었다. 상태에 따라 갈리도록 변수로 뺀다.
  *   ⚠️ 이 코드는 MEETING_REMIND_V2 템플릿이 승인된 뒤에 배포해야 한다.
  *      구 템플릿에는 `#{결제상태}` 변수가 없어 치환 오류로 발송이 막힌다.
+ *
+ * 2026-10-16: 모임 종류로 템플릿을 고른다 (`lib/remind-template.ts`).
+ *   토론모임 → MEETING_REMIND_DISCUSSION_V2. 해당 env가 없으면 전부 종전
+ *   SOLAPI_TEMPLATE_REMIND — 배포 순서를 안 탄다.
  */
 
 import { NextResponse, type NextRequest } from 'next/server'
@@ -24,6 +28,7 @@ import { createServiceClient } from '@/lib/supabase/admin'
 import { getTomorrowKST, formatKoreanDate, formatKoreanTime, formatFee } from '@/lib/kst'
 import { sendNotification } from '@/lib/notification'
 import { PARTICIPATED_STATUSES, paymentStatusLabel } from '@/lib/registration-status'
+import { buildRemindVariables, pickRemindTemplate, type RemindVariant } from '@/lib/remind-template'
 import type { Meeting } from '@/types/meeting'
 
 type RemindTask = {
@@ -100,26 +105,37 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const env = {
+    SOLAPI_TEMPLATE_REMIND: process.env.SOLAPI_TEMPLATE_REMIND,
+    SOLAPI_TEMPLATE_REMIND_DISCUSSION: process.env.SOLAPI_TEMPLATE_REMIND_DISCUSSION,
+  }
+
+  // 갈래별 건수 — 켠 뒤 첫 실행에서 크론 응답만 보고도 갈래가 맞게 나뉘었는지 확인할 수 있게
+  const variantCounts: Record<RemindVariant, number> = { default: 0, discussion: 0 }
+
   // 병렬 발송 (Vercel 10s 타임아웃 대응 — Promise.allSettled로 부분 실패 허용)
   const results = await Promise.allSettled(
     tasks.map(({ meeting, registrationId, userId, paidAmount, registrationStatus, profile }) => {
       const displayName = profile.nickname || profile.real_name || ''
+      const { templateCode, variant } = pickRemindTemplate({ meetingType: meeting.meeting_type, env })
+      variantCounts[variant]++
       return sendNotification({
+        // 갈래와 무관하게 meeting_remind — 중복 막기 인덱스를 공유해 한 사람이 두 통 받지 않는다
         type: 'meeting_remind',
         recipientId: userId,
         recipientPhone: profile.phone,
         meetingId: meeting.id,
         registrationId: registrationId,
-        templateCode: process.env.SOLAPI_TEMPLATE_REMIND!,
-        variables: {
-          '#{회원명}': displayName,
-          '#{모임명}': meeting.title,
-          '#{모임일시}': `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)}`,
-          '#{장소}': meeting.location,
-          '#{참가비}': formatFee(paidAmount ?? meeting.fee),
-          '#{결제상태}': paymentStatusLabel(registrationStatus),
-          '#{모임ID}': meeting.id,
-        },
+        templateCode,
+        variables: buildRemindVariables({
+          displayName,
+          meetingTitle: meeting.title,
+          dateTime: `${formatKoreanDate(meeting.date)} ${formatKoreanTime(meeting.time)}`,
+          location: meeting.location,
+          fee: formatFee(paidAmount ?? meeting.fee),
+          paymentStatus: paymentStatusLabel(registrationStatus),
+          meetingId: meeting.id,
+        }),
       })
     }),
   )
@@ -149,6 +165,7 @@ export async function GET(request: NextRequest) {
       sent: totalSent,
       skipped: totalSkipped,
       failed: totalFailed,
+      variants: variantCounts,
     },
   })
 }
