@@ -7,6 +7,7 @@ import { shouldMaskConfirmedCount } from '@/lib/visibility'
 import { getProfile } from '@/lib/profile'
 import { resolveHomeUpcomingClick } from '@/lib/home-upcoming'
 import { recordAppEvent } from '@/lib/app-events'
+import { getMeetSection } from '@/lib/meeting-kinds'
 import MeetView, { type MeetData } from '@/components/next/MeetView'
 import TrackMeetList from '@/components/analytics/TrackMeetList'
 import type { Meeting } from '@/types/meeting'
@@ -90,9 +91,10 @@ export default async function NextMeetPage({
       }
     : null
 
-  // 정기모임 — 카운트 마스킹 규칙 재사용 (기존 visibility 정책)
+  // 날짜 행 — 정기·작업실 (2026-10-16 모임 탭 자리). 카운트 마스킹 규칙 재사용 (기존 visibility 정책)
+  // 별책부록(event)은 사진·티켓형 카드 구역이 따로라 여기 섞지 않는다 — 구역은 시안 확인 뒤 연다
   const regular: MeetData['regular'] = upcoming
-    .filter((m) => m.meeting_type !== 'discussion')
+    .filter((m) => getMeetSection(m.meeting_type) === 'regular')
     .map((m) => {
       const count = countMap.get(m.id) ?? 0
       const masked = shouldMaskConfirmedCount(count, m.capacity, isPrivileged)
