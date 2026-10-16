@@ -14,6 +14,8 @@ export type NotificationType =
   | 'waitlist_refunded'
   | 'book_ask'
   | 'new_member_welcome'
+  // 모임 후기 (모임 다음 날 — `review_enabled` 켜짐 + 템플릿 env 있을 때 book_ask 대신). migration-meeting-review.sql
+  | 'meeting_review'
 
 export type Notification = {
   id: string

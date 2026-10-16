@@ -123,17 +123,36 @@ async function recordAsk(
   userId: string,
   meetingId: string,
   status: 'answered' | 'dismissed',
+  surface?: AskAnsweredSurface,
 ): Promise<boolean> {
   const row: Record<string, unknown> = { user_id: userId, meeting_id: meetingId, status }
   if (status === 'dismissed') row.dismissed_at = new Date().toISOString()
+  if (surface) row.answered_surface = surface
   const { error } = await admin
     .from('book_asks')
     .upsert(row, { onConflict: 'user_id,meeting_id' })
+  // 칸이 아직 없으면(마이그레이션 전 — 42703/PGRST204) 화면 구분 없이 한 번 더 — 담기 자체는 잃지 않는다
+  if (error && surface && (error.code === '42703' || error.code === 'PGRST204')) {
+    console.error('[asks] answered_surface 칸 없음 — 구분 없이 기록:', error.message)
+    return recordAsk(admin, userId, meetingId, status)
+  }
   return !error
 }
 
-export function recordAskAnswered(admin: SupabaseClient, userId: string, meetingId: string) {
-  return recordAsk(admin, userId, meetingId, 'answered')
+/**
+ * 어디서 담았나 (`book_asks.answered_surface` — 모임 후기 DB 계획 §2-3·§6).
+ * 후기 경로(④)와 띠 경로의 전환율을 섞지 않으려고 둔다. 지금은 후기만 값을 넘긴다
+ * (NULL = 후기 이전·구분 없음)
+ */
+export type AskAnsweredSurface = 'strip' | 'meeting_detail' | 'review'
+
+export function recordAskAnswered(
+  admin: SupabaseClient,
+  userId: string,
+  meetingId: string,
+  surface?: AskAnsweredSurface,
+) {
+  return recordAsk(admin, userId, meetingId, 'answered', surface)
 }
 
 export function recordAskDismissed(admin: SupabaseClient, userId: string, meetingId: string) {
