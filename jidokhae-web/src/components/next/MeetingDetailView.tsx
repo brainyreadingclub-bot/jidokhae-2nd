@@ -13,6 +13,7 @@ import RefundNotice from '@/components/next/RefundNotice'
 import BackLink from '@/components/next/BackLink'
 import FirstVisitGuide from '@/components/next/FirstVisitGuide'
 import { Chevron } from '@/components/next/TossUI'
+import { getMeetingKindLabel } from '@/lib/meeting-kinds'
 
 /**
  * 모임 상세 — 토스 스킨 (승인 시안 06 「정기모임 상세」 / 09 「토론모임 상세」).
@@ -61,7 +62,7 @@ export default function MeetingDetailView({
       <TrackMeetingView meetingId={m.id} title={m.title} fee={m.fee} />
 
       <div className="pt-1">
-        <BackLink href="/meet" label={isDiscussion ? '토론모임' : '정기모임'} />
+        <BackLink href="/meet" label={getMeetingKindLabel(m.meeting_type)} />
       </div>
 
       {/* 내 신청 상태 — confirmed/pending_transfer는 같게 보인다
