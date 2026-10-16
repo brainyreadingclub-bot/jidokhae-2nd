@@ -12,6 +12,7 @@ import TrackMeetingView from '@/components/analytics/TrackMeetingView'
 import MeetingInfoRows, { type InfoRow } from '@/components/next/MeetingInfoRows'
 import RefundNotice from '@/components/next/RefundNotice'
 import BackLink from '@/components/next/BackLink'
+import FirstVisitGuide from '@/components/next/FirstVisitGuide'
 import { Chevron } from '@/components/next/TossUI'
 
 /**
@@ -141,6 +142,7 @@ export default function MeetingDetailView({ data }: { data: MeetingDetailData })
       )}
 
       <MeetingInfoRows rows={rows} />
+      <FirstVisitGuide meetingType={m.meeting_type} userId={data.userId} />
 
       {/* 발제문 진입 — 이번 개편이 만든 단절을 메운다.
           이야기 탭 → 상세 방향은 링크가 있었는데 반대 방향이 0이었다 (2026-08-25 조사 §3-2). */}
