@@ -25,6 +25,8 @@ export const ADMIN_MENU_GROUPS: AdminMenuGroup[] = [
       { label: '정산', href: '/admin/settlements', adminOnly: true },
       { label: '회원 관리', href: '/admin/members' },
       { label: '서재 응답률', href: '/admin/library' },
+      // 글에 회원 연락처가 들어올 수 있어 admin 전용 (2026-10-16, I-001)
+      { label: '회원 의견', href: '/admin/feedback', adminOnly: true },
     ],
   },
   {
