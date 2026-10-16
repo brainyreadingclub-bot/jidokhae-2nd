@@ -116,48 +116,55 @@ export default function AdminMeetingReview({ d }: { d: AdminMeetingReviewDetail 
         {d.firstTimers.length === 0 ? (
           <p className="mt-3 text-sm text-neutral-500">이 모임이 첫 정기모임인 회원이 없다.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse text-[13.5px]">
-              <thead>
-                <tr className="border-b border-neutral-300 text-left text-xs font-bold text-neutral-600">
-                  <th className="px-3 py-2.5">닉네임</th>
-                  <th className="px-3 py-2.5">표정</th>
-                  <th className="px-3 py-2.5">아쉬운 점</th>
-                  <th className="px-3 py-2.5">한 줄 소감</th>
-                  <th className="px-3 py-2.5">14일 안 재신청</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.firstTimers.map((f) => (
-                  <tr key={f.userId} className="border-b border-neutral-100 align-top">
-                    <td className="px-3 py-3 font-bold text-neutral-900">{f.nickname}</td>
-                    <td
-                      className={`px-3 py-3 ${
-                        f.mood === null ? 'text-neutral-400' : f.mood <= 2 ? 'font-extrabold text-neutral-900' : ''
-                      }`}
-                    >
-                      {f.didNotAttend ? '못 갔어요' : f.mood === null ? '안 남김' : moodLabel(f.mood)}
-                    </td>
-                    <td className={`px-3 py-3 ${f.regretCodes.length ? '' : 'text-neutral-400'}`}>
-                      {f.regretCodes.length ? f.regretCodes.map(regretLabel).join(' · ') : '—'}
-                    </td>
-                    <td className={`px-3 py-3 break-keep ${f.comment ? '' : 'text-neutral-400'}`}>{f.comment ?? '—'}</td>
-                    <td className="px-3 py-3">
-                      {f.rereg.kind === 'yes' ? (
-                        <span className="font-bold text-primary-600">
-                          했어요 · {formatMonthDay(f.rereg.meetingDate)} {f.rereg.region ?? ''}
-                        </span>
-                      ) : f.rereg.kind === 'pending' ? (
-                        <span>아직 · {f.rereg.daysLeft === 0 ? '오늘까지' : `${f.rereg.daysLeft}일 남음`}</span>
-                      ) : (
-                        <span className="text-neutral-500">안 했어요</span>
-                      )}
-                    </td>
+          <>
+            {/* 모바일 카드 목록 — 표는 폭이 모자라 닉네임·표정이 세로로 쪼개졌다(390 실측) */}
+            <ul className="mt-3 space-y-2 md:hidden">
+              {d.firstTimers.map((f) => (
+                <li key={f.userId} className="rounded-[var(--radius-md)] border border-neutral-200 bg-white p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm font-bold text-neutral-900">{f.nickname}</span>
+                    <span className={`flex-none text-[13px] ${firstTimerMoodTone(f)}`}>{firstTimerMoodText(f)}</span>
+                  </div>
+                  <p className={`mt-1.5 text-[13px] break-keep ${f.regretCodes.length ? 'text-neutral-700' : 'text-neutral-400'}`}>
+                    아쉬운 점 · {f.regretCodes.length ? f.regretCodes.map(regretLabel).join(' · ') : '—'}
+                  </p>
+                  {f.comment && <p className="mt-1 text-[13px] leading-relaxed text-neutral-900 break-keep">{f.comment}</p>}
+                  <p className="mt-1.5 text-xs">
+                    <span className="text-neutral-500">14일 안 재신청 · </span>
+                    <ReregText r={f.rereg} />
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[760px] border-collapse text-[13.5px]">
+                <thead>
+                  <tr className="border-b border-neutral-300 text-left text-xs font-bold text-neutral-600">
+                    <th className="px-3 py-2.5">닉네임</th>
+                    <th className="px-3 py-2.5">표정</th>
+                    <th className="px-3 py-2.5">아쉬운 점</th>
+                    <th className="px-3 py-2.5">한 줄 소감</th>
+                    <th className="px-3 py-2.5">14일 안 재신청</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {d.firstTimers.map((f) => (
+                    <tr key={f.userId} className="border-b border-neutral-100 align-top">
+                      <td className="px-3 py-3 font-bold text-neutral-900">{f.nickname}</td>
+                      <td className={`px-3 py-3 ${firstTimerMoodTone(f)}`}>{firstTimerMoodText(f)}</td>
+                      <td className={`px-3 py-3 ${f.regretCodes.length ? '' : 'text-neutral-400'}`}>
+                        {f.regretCodes.length ? f.regretCodes.map(regretLabel).join(' · ') : '—'}
+                      </td>
+                      <td className={`px-3 py-3 break-keep ${f.comment ? '' : 'text-neutral-400'}`}>{f.comment ?? '—'}</td>
+                      <td className="px-3 py-3">
+                        <ReregText r={f.rereg} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
 
@@ -168,7 +175,25 @@ export default function AdminMeetingReview({ d }: { d: AdminMeetingReviewDetail 
             count={`${d.comments.length}개`}
             hint="공개 = 회원이 「모임 소개에 공개해도 좋아요」를 켠 것 · 운영자가 내린 소감은 회원이 다시 공개할 수 없다"
           />
-          <div className="mt-3 overflow-x-auto">
+          {/* 모바일 카드 목록 — 상태와 「내리기」를 한 줄에 가로로 (표에선 버튼이 세로로 깨졌다, 390 실측) */}
+          <ul className="mt-3 space-y-2 md:hidden">
+            {d.comments.map((c) => (
+              <li key={c.id} className="rounded-[var(--radius-md)] border border-neutral-200 bg-white p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 truncate text-sm font-bold text-neutral-900">{c.nickname}</span>
+                  <span className="flex-none text-[13px] text-neutral-700">{moodLabel(c.mood)}</span>
+                </div>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-neutral-900 break-keep">{c.comment}</p>
+                <div className="mt-2.5 flex min-h-8 items-center justify-between gap-3">
+                  <span className="min-w-0 text-xs font-bold">
+                    <CommentStateText c={c} />
+                  </span>
+                  <CommentAction c={c} />
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] border-collapse text-[13.5px]">
               <thead>
                 <tr className="border-b border-neutral-300 text-left text-xs font-bold text-neutral-600">
@@ -186,25 +211,10 @@ export default function AdminMeetingReview({ d }: { d: AdminMeetingReviewDetail 
                     <td className="px-3 py-3 whitespace-nowrap">{moodLabel(c.mood)}</td>
                     <td className="w-[52%] px-3 py-3 leading-relaxed text-neutral-900 break-keep">{c.comment}</td>
                     <td className="px-3 py-3 whitespace-nowrap text-xs font-bold">
-                      {c.state === 'public' ? (
-                        <span className="text-primary-600">공개 중</span>
-                      ) : c.state === 'admin_hidden' ? (
-                        <span className="text-neutral-700">
-                          운영자가 내림{c.hiddenAt ? ` · ${formatKSTDateTime(c.hiddenAt)}` : ''}
-                        </span>
-                      ) : c.state === 'member_unpublished' ? (
-                        <span className="text-neutral-500">
-                          회원이 내림{c.unpublishedAt ? ` · ${formatKSTDateTime(c.unpublishedAt)}` : ''}
-                        </span>
-                      ) : (
-                        <span className="text-neutral-500">운영자만</span>
-                      )}
+                      <CommentStateText c={c} />
                     </td>
                     <td className="px-3 py-3 text-right">
-                      {c.state === 'public' && <ReviewHideButton reviewId={c.id} nickname={c.nickname} action="hide" />}
-                      {c.state === 'admin_hidden' && (
-                        <ReviewHideButton reviewId={c.id} nickname={c.nickname} action="unhide" />
-                      )}
+                      <CommentAction c={c} />
                     </td>
                   </tr>
                 ))}
@@ -216,6 +226,56 @@ export default function AdminMeetingReview({ d }: { d: AdminMeetingReviewDetail 
       <p className="mt-7 text-[12.5px] text-neutral-500">칭찬은 이 화면에 없다 — 받은 사람만 본다.</p>
     </div>
   )
+}
+
+type FirstTimer = AdminMeetingReviewDetail['firstTimers'][number]
+type CommentRow = AdminMeetingReviewDetail['comments'][number]
+
+function firstTimerMoodText(f: FirstTimer): string {
+  return f.didNotAttend ? '못 갔어요' : f.mood === null ? '안 남김' : moodLabel(f.mood)
+}
+
+function firstTimerMoodTone(f: FirstTimer): string {
+  return f.mood === null ? 'text-neutral-400' : f.mood <= 2 ? 'font-extrabold text-neutral-900' : ''
+}
+
+function ReregText({ r }: { r: FirstTimer['rereg'] }) {
+  if (r.kind === 'yes') {
+    return (
+      <span className="font-bold text-primary-600">
+        했어요 · {formatMonthDay(r.meetingDate)} {r.region ?? ''}
+      </span>
+    )
+  }
+  if (r.kind === 'pending') {
+    return <span>아직 · {r.daysLeft === 0 ? '오늘까지' : `${r.daysLeft}일 남음`}</span>
+  }
+  return <span className="text-neutral-500">안 했어요</span>
+}
+
+function CommentStateText({ c }: { c: CommentRow }) {
+  if (c.state === 'public') return <span className="text-primary-600">공개 중</span>
+  if (c.state === 'admin_hidden') {
+    return (
+      <span className="text-neutral-700">
+        운영자가 내림{c.hiddenAt ? ` · ${formatKSTDateTime(c.hiddenAt)}` : ''}
+      </span>
+    )
+  }
+  if (c.state === 'member_unpublished') {
+    return (
+      <span className="text-neutral-500">
+        회원이 내림{c.unpublishedAt ? ` · ${formatKSTDateTime(c.unpublishedAt)}` : ''}
+      </span>
+    )
+  }
+  return <span className="text-neutral-500">운영자만</span>
+}
+
+function CommentAction({ c }: { c: CommentRow }) {
+  if (c.state === 'public') return <ReviewHideButton reviewId={c.id} nickname={c.nickname} action="hide" />
+  if (c.state === 'admin_hidden') return <ReviewHideButton reviewId={c.id} nickname={c.nickname} action="unhide" />
+  return null
 }
 
 function SecHead({ title, count, hint }: { title: string; count: string; hint: string }) {

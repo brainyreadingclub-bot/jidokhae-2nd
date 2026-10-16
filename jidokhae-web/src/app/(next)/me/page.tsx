@@ -102,7 +102,7 @@ export default async function MePage() {
       />
       <RowItem emoji="⚙️" tone="yellow" title="프로필 · 설정" sub="닉네임 · 연락처 · 지역" href="/me/profile" />
       {/* 회원 의견 통로 (보관함 I-001) — 오류 화면에도 같은 입구가 있다 */}
-      <RowItem emoji="💬" tone="blue" title="불편한 점 알려 주기" sub="운영진이 읽어요" href="/me/feedback" />
+      <RowItem emoji="✉️" tone="blue" title="불편한 점 알려 주기" sub="운영진이 읽어요" href="/me/feedback" />
 
       {/* 운영 입구 — admin·editor에게만 (2026-10-08).
           5탭에는 구 헤더의 「운영자」 꼬리표가 없어, 모임 상세를 거치지 않으면 /admin으로 갈 길이 없었다.

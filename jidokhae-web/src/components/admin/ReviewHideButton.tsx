@@ -48,7 +48,7 @@ export default function ReviewHideButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-8 items-center rounded-lg border border-neutral-300 bg-white px-3 text-xs font-bold text-neutral-800 hover:bg-neutral-50"
+        className="inline-flex h-8 flex-none items-center whitespace-nowrap rounded-lg border border-neutral-300 bg-white px-3 text-xs font-bold text-neutral-800 hover:bg-neutral-50"
       >
         {hide ? '내리기' : '내림 풀기'}
       </button>

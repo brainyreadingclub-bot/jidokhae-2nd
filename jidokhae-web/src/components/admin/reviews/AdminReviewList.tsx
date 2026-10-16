@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { formatKoreanDate, formatMonthDay } from '@/lib/kst'
-import { regretLabel } from '@/lib/review-rules'
+import { regretLabel, type ReviewWindow } from '@/lib/review-rules'
 import type { AdminReviewOverview } from '@/lib/review-admin'
 
 /** 운영자 「모임 후기」 목록 화면 (시안 A1) — 표현만. 조회·권한은 page가 한다 */
@@ -81,7 +81,38 @@ export default function AdminReviewList({
             최근 {rangeDays}일 안에 열린 정기모임이 없다.
           </p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
+          <>
+          {/* 모바일 카드 목록 — 표(980px)는 폰에서 「받는 기간」 뒤 숫자가 전부 화면 밖이었다(390 실측) */}
+          <ul className="mt-3 space-y-2 md:hidden">
+            {rows.map(({ meeting: m, window, deadline, summary: s, firstTimers, publicComments }) => (
+              <li key={m.id}>
+                <Link
+                  href={`/admin/reviews/${m.id}`}
+                  className="block rounded-[var(--radius-md)] border border-neutral-200 bg-white p-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 text-sm font-bold text-primary-700 break-keep">
+                      {formatKoreanDate(m.date)} {m.region ?? ''} 정기모임
+                    </span>
+                    <WindowPill window={window} deadline={deadline} />
+                  </div>
+                  <dl className="mt-2 grid grid-cols-3 gap-y-1.5 text-xs">
+                    <Stat label="참여" value={String(s.participants)} />
+                    <Stat label="후기" value={String(s.reviewed)} />
+                    <Stat label="못 갔어요" value={String(s.absent)} />
+                    <Stat label="표정 평균" value={s.moodAvg === null ? '—' : s.moodAvg.toFixed(1)} muted={s.moodAvg === null} />
+                    <Stat label="낮은 표정" value={String(s.lowCount)} strong={s.lowCount > 0} />
+                    <Stat label="첫 모임" value={String(firstTimers)} />
+                    <Stat label="공개 소감" value={String(publicComments)} />
+                  </dl>
+                  <p className={`mt-2 text-xs break-keep ${s.regretCounts[0] ? 'text-neutral-700' : 'text-neutral-400'}`}>
+                    많이 나온 아쉬운 점 · {s.regretCounts[0] ? regretLabel(s.regretCounts[0].code) : '—'}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 hidden overflow-x-auto md:block">
             <table className="w-full min-w-[980px] border-collapse text-[13.5px]">
               <thead>
                 <tr className="border-b border-neutral-300 text-left text-xs font-bold text-neutral-600">
@@ -106,13 +137,7 @@ export default function AdminReviewList({
                       </Link>
                     </td>
                     <td className="px-3 py-3">
-                      <span
-                        className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                          window === 'open' ? 'bg-primary-50 text-primary-700' : 'bg-neutral-100 text-neutral-700'
-                        }`}
-                      >
-                        {window === 'open' ? `${formatMonthDay(deadline)}까지` : '마감'}
-                      </span>
+                      <WindowPill window={window} deadline={deadline} />
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums">{s.participants}</td>
                     <td className="px-3 py-3 text-right tabular-nums">{s.reviewed}</td>
@@ -134,11 +159,39 @@ export default function AdminReviewList({
               </tbody>
             </table>
           </div>
+          </>
         )}
         <p className="mt-6 text-[12.5px] text-neutral-500 break-keep">
           낮은 표정 = 「별로였어요」·「아쉬웠어요」. 칭찬은 받은 사람만 보고, 운영자 화면에도 개수를 두지 않는다.
         </p>
       </section>
+    </div>
+  )
+}
+
+function WindowPill({ window, deadline }: { window: ReviewWindow; deadline: string }) {
+  return (
+    <span
+      className={`inline-flex flex-none whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+        window === 'open' ? 'bg-primary-50 text-primary-700' : 'bg-neutral-100 text-neutral-700'
+      }`}
+    >
+      {window === 'open' ? `${formatMonthDay(deadline)}까지` : '마감'}
+    </span>
+  )
+}
+
+function Stat({ label, value, muted, strong }: { label: string; value: string; muted?: boolean; strong?: boolean }) {
+  return (
+    <div>
+      <dt className="text-neutral-500">{label}</dt>
+      <dd
+        className={`text-[14px] tabular-nums ${
+          muted ? 'text-neutral-400' : strong ? 'font-extrabold text-neutral-900' : 'font-semibold text-neutral-800'
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   )
 }
