@@ -21,12 +21,18 @@ export default async function MyRegistrationContent({
 
   if (!user) redirect('/auth/login')
 
-  const { data: registrations, error } = await supabase
-    .from('registrations')
-    .select('*, meetings(*)')
-    .eq('user_id', user.id)
-    .in('status', ['confirmed', 'cancelled', 'waitlisted', 'waitlist_cancelled', 'waitlist_refunded', 'pending_transfer'])
-    .order('created_at', { ascending: false })
+  // is_free(운영진 등 입금 자체가 없는 참석자) — 「입금 전 취소」·「입금하셨다면…」을 붙이지 않는다.
+  // 받을 돈이 없는 사람에게 돌려받을 수 있다는 말을 하지 않는다(정산 목록과 같은 기준, 2026-10-16)
+  const [{ data: registrations, error }, { data: freeRow }] = await Promise.all([
+    supabase
+      .from('registrations')
+      .select('*, meetings(*)')
+      .eq('user_id', user.id)
+      .in('status', ['confirmed', 'cancelled', 'waitlisted', 'waitlist_cancelled', 'waitlist_refunded', 'pending_transfer'])
+      .order('created_at', { ascending: false }),
+    supabase.from('profiles').select('is_free').eq('id', user.id).maybeSingle(),
+  ])
+  const isFreeMember = (freeRow as { is_free: boolean | null } | null)?.is_free === true
 
   if (error) {
     throw new Error(`신청 내역 조회 실패: ${error.message}`)
@@ -65,7 +71,7 @@ export default async function MyRegistrationContent({
 
   function getBadge(reg: RegistrationWithMeeting): { label: string; color: 'success' | 'gray' } {
     // 계좌이체 입금 확인 전 취소 — 카드에 「입금하셨다면 운영진이 확인 후 돌려드려요」가 같이 붙는다 (refund.ts isCancelledBeforeDeposit)
-    if (isCancelledBeforeDeposit(reg)) return { label: '입금 전 취소', color: 'gray' }
+    if (!isFreeMember && isCancelledBeforeDeposit(reg)) return { label: '입금 전 취소', color: 'gray' }
     if (reg.status === 'cancelled') return { label: '취소됨', color: 'gray' }
     if (reg.status === 'waitlisted') return { label: '대기 중', color: 'gray' }
     if (reg.status === 'waitlist_cancelled') return { label: '대기 취소됨', color: 'gray' }
@@ -81,7 +87,7 @@ export default async function MyRegistrationContent({
       {upcoming.length > 0 ? (
         <div className="flex flex-col gap-3">
           {upcoming.map((reg) => (
-            <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} />
+            <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} isFreeMember={isFreeMember} />
           ))}
         </div>
       ) : (
@@ -110,7 +116,7 @@ export default async function MyRegistrationContent({
               전부 눌렸다(prod 실측 1.3px). 블록 배치 + space-y로 간격만 준다 */}
           <div className="mt-3 max-h-[420px] space-y-3 overflow-y-auto pr-1">
             {past.map((reg) => (
-              <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} />
+              <RegistrationCard key={reg.id} registration={reg} badge={getBadge(reg)} isFreeMember={isFreeMember} />
             ))}
           </div>
         </details>
