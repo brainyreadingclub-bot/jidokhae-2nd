@@ -6,6 +6,7 @@ import { getMeeting } from '@/lib/meeting'
 import { getTopicCountsForAdmin } from '@/lib/discussion'
 import { NO_TOPICS } from '@/lib/topic-status'
 import AdminMeetingOverview from '@/components/admin/AdminMeetingOverview'
+import { registrantProfileColumns } from '@/lib/admin-access'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
@@ -32,7 +33,8 @@ export default async function AdminMeetingDetailPage({ params }: Props) {
     supabase.rpc('get_confirmed_counts', { meeting_ids: [id] }),
     supabase
       .from('registrations')
-      .select('*, profiles(nickname, real_name, phone)')
+      // 전화번호는 총괄만 — 운영진이면 아예 읽지 않는다(「환불 필요」 줄에 뜨던 번호, 2026-10-16)
+      .select(`*, profiles(${registrantProfileColumns(profile.role)})`)
       .eq('meeting_id', id)
       .order('created_at', { ascending: false }),
     isDiscussion ? getTopicCountsForAdmin([id]) : Promise.resolve(null),
@@ -46,7 +48,7 @@ export default async function AdminMeetingDetailPage({ params }: Props) {
     (countsResult.data as { meeting_id: string; confirmed_count: number }[] | null)
       ?.find((c) => c.meeting_id === id)?.confirmed_count ?? 0,
   )
-  const registrations = (regsResult.data ?? []) as RegistrationWithProfile[]
+  const registrations = (regsResult.data ?? []) as unknown as RegistrationWithProfile[]
 
   return (
     <AdminMeetingOverview
