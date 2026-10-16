@@ -5,6 +5,9 @@ import { getUser } from '@/lib/auth'
 import { getSiteSettings } from '@/lib/site-settings'
 import RegistrationDoneView from '@/components/next/RegistrationDoneView'
 import { showsDepositGuide } from '@/lib/transfer-rules'
+import { loadMyCalendarEvent } from '@/lib/calendar-event-server'
+import { buildGoogleCalendarUrl } from '@/lib/calendar-event'
+import { KAKAO_CHANNEL_ADD_URL } from '@/lib/kakao-channel'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -25,7 +28,11 @@ export default async function NextRegistrationDonePage({ params, searchParams }:
 
   if (!meeting) notFound()
 
-  const profile = user ? await getProfile(user.id) : null
+  const [profile, mine] = await Promise.all([
+    user ? getProfile(user.id) : null,
+    // 달력은 실제 신청 행으로 판정한다 — 주소창의 `type`만 믿고 상세 주소를 넣지 않는다
+    user && type !== 'waitlisted' ? loadMyCalendarEvent(id, user.id) : null,
+  ])
   // 입금자명 "M/D 닉네임" — 상세와 같은 규칙 (은행 12자 한도 + 운영자 식별)
   const [, mm, dd] = meeting.date.split('-')
   const depositorName = profile ? `${Number(mm)}/${Number(dd)} ${profile.nickname ?? ''}` : ''
@@ -52,6 +59,9 @@ export default async function NextRegistrationDonePage({ params, searchParams }:
         bankAccount: settings.bank_account ?? '',
         bankHolder: settings.bank_holder ?? '',
         depositorName,
+        googleCalendarUrl: mine ? buildGoogleCalendarUrl(mine.event) : null,
+        channelUrl: KAKAO_CHANNEL_ADD_URL,
+        paymentMethod: mine?.paymentMethod ?? (type === 'pending_transfer' ? 'transfer' : paymentId ? 'card' : 'unknown'),
       }}
     />
   )
