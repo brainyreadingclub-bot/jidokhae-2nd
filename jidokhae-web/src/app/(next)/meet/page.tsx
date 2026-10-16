@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/auth'
 import { getKSTToday, getDaysUntil } from '@/lib/kst'
 import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
-import { shouldMaskConfirmedCount } from '@/lib/visibility'
+import { getSeatStatus, resolveSeatThresholds } from '@/lib/seat-status'
+import { getSiteSettings } from '@/lib/site-settings'
 import { getProfile } from '@/lib/profile'
 import { resolveHomeUpcomingClick } from '@/lib/home-upcoming'
 import { recordAppEvent } from '@/lib/app-events'
@@ -26,6 +27,8 @@ export default async function NextMeetPage({
   const profile = user ? await getProfile(user.id) : null
   const isPrivileged = profile?.role === 'admin' || profile?.role === 'editor'
   const kstToday = getKSTToday()
+  // 자리 문구 기준 비율 — 실서비스에선 레이아웃의 next_ui 조회와 같은 요청이라 cache()가 그대로 돌려준다
+  const seatThresholds = resolveSeatThresholds(await getSiteSettings())
   const supabase = await createClient()
 
   const { data: meetings, error: meetingsError } = await supabase
@@ -94,16 +97,20 @@ export default async function NextMeetPage({
   const regular: MeetData['regular'] = upcoming
     .filter((m) => m.meeting_type !== 'discussion')
     .map((m) => {
-      const count = countMap.get(m.id) ?? 0
-      const masked = shouldMaskConfirmedCount(count, m.capacity, isPrivileged)
+      // 자리 상태 공통 규칙(seat-status.ts) — 위 마스킹 규칙도 그 안에서 지킨다
+      const seat = getSeatStatus({
+        capacity: m.capacity,
+        confirmed: countMap.get(m.id) ?? 0,
+        isPrivileged,
+        thresholds: seatThresholds,
+      })
       return {
         id: m.id,
         date: m.date,
         time: m.time,
         venueName: m.location,
-        confirmedLabel: masked
-          ? `${m.capacity}명 모집 중`
-          : `${count}/${m.capacity}명`,
+        confirmedLabel: seat.label,
+        seatEmphasis: seat.tone === 'emphasis',
         fee: m.fee,
       }
     })

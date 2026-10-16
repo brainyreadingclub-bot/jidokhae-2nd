@@ -23,7 +23,7 @@ export type UpcomingRegular = {
   time: string
   region: string
   venueName: string
-  /** 남은 자리 (3 이하일 때만). null = 넉넉함 — 표시 안 함. 마감이면 0이라 표시 안 함 */
+  /** 남은 자리 — `getSeatStatus`가 「n자리 남았어요」일 때만 수, 그 밖(넉넉함·가림·마감)은 null */
   seatsLeft: number | null
   /** 모임 상세 버튼과 같은 판정 (`toUpcomingAction(getButtonState(...))`) */
   action: UpcomingAction
@@ -80,8 +80,9 @@ export default function UpcomingRegulars({ items }: { items: UpcomingRegular[] }
                 </span>
                 <span className="mt-0.5 block truncate text-xs text-tg-600">
                   {formatKoreanTime(m.time)}
+                  {/* 자리 상태 공통 규칙(seat-status.ts) — 빨강·주황 없이 진한 회색 굵게 (문구표준 §2) */}
                   {m.seatsLeft !== null && m.seatsLeft > 0 && (
-                    <b className="font-bold text-accent-500"> · {m.seatsLeft}자리 남음</b>
+                    <b className="font-bold text-tg-800"> · {m.seatsLeft}자리 남았어요</b>
                   )}
                 </span>
               </span>

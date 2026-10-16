@@ -7,6 +7,7 @@ import { getKSTToday, getButtonState, type ButtonState } from '@/lib/kst'
 import { getDiscussionApplyBlock } from '@/lib/discussion-gate'
 import { isNextUiEnabled } from '@/lib/next-ui'
 import { getSiteSettings, DEFAULT_PAYMENT_MODE } from '@/lib/site-settings'
+import { getDetailSeatLabel, resolveSeatThresholds } from '@/lib/seat-status'
 import { getDisplayFee } from '@/lib/staff-slot'
 import { isPresenterRow } from '@/lib/presenter-rules'
 import type { Meeting } from '@/types/meeting'
@@ -52,6 +53,8 @@ export type MeetingDetailData = {
   isEditorOrAdmin: boolean
   /** 운영자 또는 정원을 차지한 본인 — 카운트 마스킹 해제 */
   showAccurateCount: boolean
+  /** 「참여」 칸 문구 — 자리 상태 공통 규칙(`getDetailSeatLabel`). 토론모임은 옛 규칙 그대로 */
+  seatLabel: string
   /** 자격 잠금 안내에서 보낼 곳 — next_ui ON이면 모임 탭, OFF면 구 홈. 없는 화면으로 보내지 않는다 */
   regularListHref: string
   participantNicknames: string[]
@@ -231,6 +234,13 @@ export async function loadMeetingDetail(id: string): Promise<MeetingDetailData> 
     hasPendingTransfer,
     isEditorOrAdmin,
     showAccurateCount,
+    seatLabel: getDetailSeatLabel({
+      meetingType: typedMeeting.meeting_type,
+      capacity: typedMeeting.capacity,
+      confirmed: confirmedCount,
+      isPrivileged: showAccurateCount,
+      thresholds: resolveSeatThresholds(settings),
+    }),
     regularListHref,
     participantNicknames,
     depositorName,

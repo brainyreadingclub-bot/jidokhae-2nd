@@ -6,7 +6,8 @@ import { listAppNotifications } from '@/lib/app-notifications'
 import { getTopicsWithStats } from '@/lib/discussion'
 import { isDiscussionApplyOpen, canWriteAnswer } from '@/lib/discussion-rules'
 import { isDiscussionMeetingEnabled, canApplyToDiscussion } from '@/lib/discussion-gate'
-import { shouldMaskConfirmedCount } from '@/lib/visibility'
+import { getSeatStatus, resolveSeatThresholds } from '@/lib/seat-status'
+import { getSiteSettings } from '@/lib/site-settings'
 import { pickUpcomingRegulars, toUpcomingAction } from '@/lib/home-upcoming'
 import { PARTICIPATED_STATUSES } from '@/lib/registration-status'
 import HomeView, { type HomeData } from '@/components/next/HomeView'
@@ -154,12 +155,17 @@ export default async function NextHomePage() {
       .map((r) => r.meetings!.region as string),
   )
   const regularPicks = pickUpcomingRegulars(regularCandidates, homeRegions)
+  // 실서비스에선 레이아웃의 플래그 조회(next_ui)와 같은 요청이라 cache()가 그대로 돌려준다 — 조회가 늘지 않는다
+  const seatThresholds = resolveSeatThresholds(await getSiteSettings())
   const upcomingRegular: HomeData['upcoming'] = regularPicks.map((m) => {
     const count = countMap.get(m.id) ?? 0
-    const left = m.capacity - count
-    // 3자리 이하일 때만 말한다. 신청자 3명 미만 마스킹(visibility.ts)도 그대로 지킨다
-    const seatsLeft =
-      left <= 3 && !shouldMaskConfirmedCount(count, m.capacity, false) ? left : null
+    // 자리 상태 공통 규칙(seat-status.ts) — 「n자리 남았어요」일 때만 말한다. 3명 미만 가리기도 그 안에서 지킨다
+    const seatsLeft = getSeatStatus({
+      capacity: m.capacity,
+      confirmed: count,
+      isPrivileged: false,
+      thresholds: seatThresholds,
+    }).seatsLeft
     return {
       id: m.id,
       date: m.date,
