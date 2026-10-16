@@ -3,15 +3,18 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { isTopicPublishLate, topicStatusLabel } from '@/lib/topic-status'
+import { topicPostedTitle } from '@/lib/topic-notification'
+import { SAVE_FAILURE_MESSAGE, type SaveFailure } from '@/lib/topic-input'
 import type { DiscussionTopic } from '@/types/discussion'
 
 /**
- * 발제문 관리 — 1차 (2026-10-10 시안 `docs/설계/mockups/2026-10-10-발제문-새방식/`, 2026-10-12 알림 방식 변경).
- * 운영자가 하나씩 직접 써서 등록하면 **「작성 중」으로 저장**된다(회원에게 안 보임).
- * 목록 위 「발제 공개하기」 → 확인 창 → 작성 중 전부 공개 + 신청자 알림 한 번(api/admin/topics/publish).
- * 공개 뒤에 고치면 알림 없음. 공개 뒤 새로 쓴 발제는 다시 작성 중 → 또 공개하면 그것만 + 알림 한 번.
+ * 발제문 관리 — 1차 (2026-10-10 시안 `docs/설계/mockups/2026-10-10-발제문-새방식/`, 2026-10-12 알림 방식 변경)
+ *   + 2차 발제자 링크(시안 O1~O6).
+ * 운영자가 쓴 것도, 발제자 링크로 받은 것도 **「작성 중」으로 저장**된다(회원에게 안 보임).
+ * 목록 위 「발제 공개하기」 → 확인 창 → 작성 중 **전부** 공개 + 신청자 알림 한 번(api/admin/topics/publish).
+ * 골라서 공개는 하지 않는다(2026-10-12 대표님) — 내보내지 않을 발제는 지운다.
+ * 공개 뒤에 고치면 알림 없음. 공개 뒤 새로 들어온 발제는 다시 작성 중 → 또 공개하면 그것만 + 알림 한 번.
  * 작성 중이 남은 채 모임 사흘 전(D-3)이 되면 「공개 안 한 발제가 있어요」를 띄운다.
- * 발제자 링크는 2차다 — 여기 넣지 않는다(2차도 같은 작성 중 → 공개하기 흐름에 들어온다).
  *
  * 폰: 화면 아래 고정 바에 지금 할 일 하나(발제 쓰기 / 발제 추가 / 취소·등록). 목록 수정·삭제는 44px 「⋮」.
  *     확인 창은 아래에서 올라오는 시트. 큰 화면(lg~)은 제자리 버튼 + 가운데 창(ModalOverlay 문법).
@@ -28,6 +31,10 @@ type Props = {
   answerCounts: Record<string, number>
   applicantCount: number
   lastPublishedLabel: string | null
+  /** 발제자 링크(2차). null = 토론모임이 아니거나 링크 표가 아직 없음(SQL 실행 전) → 링크 칸을 감춘다 */
+  link: { token: string | null; open: boolean; closesLabel: string } | null
+  /** 「10월 27일 (화)」 — 링크 시트의 「모임이 끝나면 닫혀요」 */
+  meetingDateLabel: string
   /** 모임일 − 오늘(한국 날짜). 「공개 안 한 발제가 있어요」 판정 */
   daysUntil: number
 }
@@ -58,10 +65,13 @@ function PlusIcon() {
 
 export default function TopicsManager({
   meetingId,
+  meetingTitle,
   topics,
   answerCounts,
   applicantCount,
   lastPublishedLabel,
+  link,
+  meetingDateLabel,
   daysUntil,
 }: Props) {
   const router = useRouter()
@@ -69,9 +79,10 @@ export default function TopicsManager({
   const [menuFor, setMenuFor] = useState<DiscussionTopic | null>(null)
   const [deleteFor, setDeleteFor] = useState<DiscussionTopic | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [publishOpen, setPublishOpen] = useState(false)
+  const [linkOpen, setLinkOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [publishOpen, setPublishOpen] = useState(false)
   /** 저장·공개 직후 한 번 — 그 결과(회원에게 보이나, 알림이 갔나)를 그 자리에서 말한다 */
   const [savedNote, setSavedNote] = useState<string | null>(null)
 
@@ -81,10 +92,11 @@ export default function TopicsManager({
     return () => clearTimeout(t)
   }, [savedNote])
 
+  const drafts = topics.filter((t) => t.published_at === null)
   const published = topics.filter((t) => t.published_at !== null)
-  const drafts = topics.length - published.length
-  const counts = { draft: drafts, published: published.length }
+  const counts = { draft: drafts.length, published: published.length }
   const late = isTopicPublishLate(counts, daysUntil)
+  const linkReceived = topics.filter((t) => t.source === 'link').length
   const nextNo = (topics.at(-1)?.topic_no ?? 0) + 1
   const noTopics = topics.length === 0
   const editTopic = editing && editing !== 'new' ? topics.find((t) => t.id === editing) : undefined
@@ -124,7 +136,7 @@ export default function TopicsManager({
       })
       const json = await res.json().catch(() => ({}))
       if (json.status !== 'success') throw new Error(json.message ?? '잠시 후 다시 시도해 주세요')
-      const n = Number(json.data?.published ?? drafts)
+      const n = Number(json.data?.published ?? drafts.length)
       setSavedNote(
         applicantCount > 0
           ? `발제 ${n}개를 공개했어요 · 신청자 ${applicantCount}명에게 알림을 한 번 보냈어요`
@@ -145,6 +157,8 @@ export default function TopicsManager({
   if (editing !== null && (editing === 'new' || editTopic)) {
     return (
       <TopicForm
+        // 새로 불러오면(updated_at이 바뀌면) 폼을 새 값으로 다시 연다
+        key={editTopic ? `${editTopic.id}:${editTopic.updated_at}` : 'new'}
         meetingId={meetingId}
         topic={editTopic}
         nextNo={nextNo}
@@ -159,6 +173,7 @@ export default function TopicsManager({
           )
           router.refresh()
         }}
+        onReload={() => router.refresh()}
         onCancel={() => setEditing(null)}
         onDelete={editTopic ? () => setDeleteFor(editTopic) : undefined}
         deleteSheet={
@@ -178,15 +193,23 @@ export default function TopicsManager({
 
   // ── 목록 ──
   const pendingNote =
-    drafts > 0
-      ? `작성 중 ${drafts}개 — 공개하기 전에는 회원에게 안 보여요`
+    drafts.length > 0
+      ? `작성 중 ${drafts.length}개 — 공개하기 전에는 회원에게 안 보여요`
       : published.length > 0 && lastPublishedLabel
         ? `마지막 공개 ${lastPublishedLabel} · 고쳐도 알림은 다시 가지 않아요`
         : null
 
+  const linkSub = !link
+    ? ''
+    : link.open
+      ? `링크로 ${linkReceived}개 받았어요 · ${link.closesLabel}에 닫혀요`
+      : linkReceived > 0
+        ? `닫혀 있어요 · 링크로 ${linkReceived}개 받았어요`
+        : '발제자가 로그인 없이 써요. 공개는 여기서 해요'
+
   return (
     <div className="pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-0">
-      {/* 상태 + 미리보기 + (큰 화면) 발제 추가 */}
+      {/* 상태 — 「작성 중 N개」는 여기 한 번만(대표님 1번) */}
       <div className="my-4 flex min-h-14 items-center justify-between gap-3 border-y border-surface-300 py-3 lg:my-6 lg:gap-4 lg:py-3.5">
         <div className="min-w-0 text-sm text-neutral-700">
           <b className="font-extrabold text-neutral-900">{topicStatusLabel(counts)}</b>
@@ -222,10 +245,24 @@ export default function TopicsManager({
         </p>
       )}
 
-      {drafts > 0 && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 rounded-[var(--radius-md)] border border-surface-300 bg-white px-4 py-3">
+      {/* 발제자 링크 칸 (시안 O1·O3) */}
+      {link && (
+        <div className="mb-2 flex max-w-3xl items-center gap-3 rounded-[var(--radius-md)] border border-surface-300 bg-white px-4 py-3.5">
+          <div className="min-w-0 flex-1">
+            <b className="block text-sm font-extrabold text-neutral-900">발제자 링크</b>
+            <span className="mt-0.5 block break-keep text-[12.5px] leading-relaxed text-neutral-600">{linkSub}</span>
+          </div>
+          <button type="button" onClick={() => setLinkOpen(true)} className={`flex-none !h-11 ${btnLine}`}>
+            {link.open ? '링크 보기' : '링크 보내기'}
+          </button>
+        </div>
+      )}
+
+      {/* 발제 공개하기 — 운영자가 쓴 것·링크로 받은 것 가리지 않고 작성 중 전부 (2026-10-12 대표님) */}
+      {drafts.length > 0 && (
+        <div className="mt-4 mb-4 flex max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-2.5 rounded-[var(--radius-md)] border border-surface-300 bg-white px-4 py-3">
           <p className="min-w-0 break-keep text-[13px] leading-relaxed text-neutral-700">
-            <b className="font-extrabold text-neutral-900">작성 중 {drafts}개</b> · 공개하면 신청자에게 알림이 한 번 가요
+            <b className="font-extrabold text-neutral-900">작성 중 {drafts.length}개</b> · 공개하면 신청자에게 알림이 한 번 가요
           </p>
           <button
             type="button"
@@ -238,37 +275,50 @@ export default function TopicsManager({
       )}
 
       {savedNote && (
-        <p role="status" className="mb-4 rounded-[10px] bg-primary-50 px-3.5 py-2.5 text-xs font-semibold text-primary-700">
+        <p role="status" className="my-4 rounded-[10px] bg-primary-50 px-3.5 py-2.5 text-xs font-semibold text-primary-700">
           {savedNote}
         </p>
       )}
 
       {error && (
-        <p className="mb-4 rounded-[10px] bg-accent-50 px-3.5 py-2.5 text-xs font-semibold text-accent-700">
+        <p className="my-4 rounded-[10px] bg-accent-50 px-3.5 py-2.5 text-xs font-semibold text-accent-700">
           {error}
         </p>
       )}
 
       {noTopics ? (
         <p className="mt-7 text-center text-[13px] leading-relaxed text-neutral-600">
-          써서 등록하면 「작성 중」으로 저장돼요
+          {link ? '직접 쓰거나 발제자에게 링크를 보내 받아요. 둘 다 「작성 중」으로 들어와요' : '써서 등록하면 「작성 중」으로 저장돼요'}
           <br />
           「발제 공개하기」를 누르면 회원에게 보이고, 신청자에게 알림이 한 번 가요
         </p>
       ) : (
-        <ul className="max-w-3xl">
-          {topics.map((t) => (
-            <li key={t.id} className="border-t border-surface-300 first:border-t-0">
-              <TopicRow
-                topic={t}
-                answerCount={answerCounts[t.id] ?? 0}
-                onMenu={() => setMenuFor(t)}
-                onEdit={() => setEditing(t.id)}
-                onDelete={() => setDeleteFor(t)}
+        <div className="max-w-3xl">
+          {drafts.length > 0 && (
+            <>
+              <p className="mt-5 text-xs font-bold text-neutral-600">작성 중 · 회원에게 안 보여요</p>
+              <TopicList
+                list={drafts}
+                answerCounts={answerCounts}
+                onMenu={setMenuFor}
+                onEdit={(t) => setEditing(t.id)}
+                onDelete={setDeleteFor}
               />
-            </li>
-          ))}
-        </ul>
+            </>
+          )}
+          {published.length > 0 && (
+            <>
+              {drafts.length > 0 && <p className="mt-5 text-xs font-bold text-neutral-600">공개됨</p>}
+              <TopicList
+                list={published}
+                answerCounts={answerCounts}
+                onMenu={setMenuFor}
+                onEdit={(t) => setEditing(t.id)}
+                onDelete={setDeleteFor}
+              />
+            </>
+          )}
+        </div>
       )}
 
       {/* 폰 고정 바 — 지금 할 일 하나 */}
@@ -284,7 +334,7 @@ export default function TopicsManager({
                 {topicStatusLabel(counts)}
               </b>
               <span className="block truncate">
-                {drafts > 0 ? '공개 전이라 회원에게 안 보여요' : '고쳐도 알림은 다시 안 가요'}
+                {drafts.length > 0 ? '공개 전이라 회원에게 안 보여요' : '고쳐도 알림은 다시 안 가요'}
               </span>
             </div>
             <button type="button" onClick={() => setEditing('new')} className={`flex-none ${btnBigPrimary}`}>
@@ -340,35 +390,286 @@ export default function TopicsManager({
       )}
 
       {publishOpen && (
-        <Sheet onClose={() => !busy && setPublishOpen(false)}>
-          <h3 className="text-[17px] font-extrabold leading-snug tracking-tight text-neutral-900">
-            발제를 공개할까요?
-          </h3>
-          <p className="mt-2 break-keep text-sm leading-relaxed text-neutral-700">
-            작성 중 <b className="text-neutral-900">{drafts}개</b>를 공개하고 신청자에게 알림 한 번 보내요.
-          </p>
-          <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-neutral-600">
-            {applicantCount > 0 ? `지금 신청자 ${applicantCount}명` : '지금은 신청자가 없어 실제로 가는 알림은 없어요'}
-            {' · '}공개한 뒤에 고쳐도 알림은 다시 가지 않아요
-          </p>
-          <div className="mt-5 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setPublishOpen(false)}
-              disabled={busy}
-              className={`flex-[0_0_34%] lg:flex-1 ${btnBigLine}`}
-            >
-              취소
-            </button>
-            <button type="button" onClick={confirmPublish} disabled={busy} className={`flex-1 ${btnBigPrimary}`}>
-              {busy ? '공개하는 중…' : '공개하기'}
-            </button>
-          </div>
-        </Sheet>
+        <PublishSheet
+          meetingTitle={meetingTitle}
+          draftCount={drafts.length}
+          applicantCount={applicantCount}
+          more={published.length > 0}
+          busy={busy}
+          onClose={() => !busy && setPublishOpen(false)}
+          onConfirm={confirmPublish}
+        />
+      )}
+
+      {linkOpen && link && (
+        <LinkSheet
+          meetingId={meetingId}
+          link={link}
+          meetingDateLabel={meetingDateLabel}
+          onClose={() => setLinkOpen(false)}
+          onChanged={() => router.refresh()}
+        />
       )}
 
       {previewOpen && <TopicsPreview topics={topics} onClose={() => setPreviewOpen(false)} />}
     </div>
+  )
+}
+
+function TopicList({
+  list,
+  answerCounts,
+  onMenu,
+  onEdit,
+  onDelete,
+}: {
+  list: DiscussionTopic[]
+  answerCounts: Record<string, number>
+  onMenu: (t: DiscussionTopic) => void
+  onEdit: (t: DiscussionTopic) => void
+  onDelete: (t: DiscussionTopic) => void
+}) {
+  return (
+    <ul>
+      {list.map((t) => (
+        <li key={t.id} className="border-t border-surface-300 first:border-t-0">
+          <TopicRow
+            topic={t}
+            answerCount={answerCounts[t.id] ?? 0}
+            onMenu={() => onMenu(t)}
+            onEdit={() => onEdit(t)}
+            onDelete={() => onDelete(t)}
+          />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/* ─────────────── 공개 확인 — 작성 중 전부 (2026-10-12 대표님) ─────────────── */
+
+/**
+ * 골라서 공개하지 않는다 — 작성 중 전부를 한 번에 공개하고 알림은 한 번.
+ * 내보내지 않을 발제(링크로 받은 것 포함)는 공개 전에 지운다.
+ * more = 이미 공개된 발제가 있나 → 서버(api/admin/topics/publish)의 「더 올라왔어요」 판정과 같다.
+ */
+function PublishSheet({
+  meetingTitle,
+  draftCount,
+  applicantCount,
+  more,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  meetingTitle: string
+  draftCount: number
+  applicantCount: number
+  more: boolean
+  busy: boolean
+  onClose: () => void
+  onConfirm: () => void
+}) {
+  return (
+    <Sheet onClose={onClose}>
+      <h3 className="text-[17px] font-extrabold leading-snug tracking-tight text-neutral-900">
+        발제를 공개할까요?
+      </h3>
+      <p className="mt-2 break-keep text-sm leading-relaxed text-neutral-700">
+        작성 중 <b className="text-neutral-900">{draftCount}개</b>를 공개하고 신청자에게 알림 한 번 보내요.
+      </p>
+      <p className="mt-1.5 break-keep text-[13px] leading-relaxed text-neutral-600">
+        {applicantCount > 0 ? `지금 신청자 ${applicantCount}명` : '지금은 신청자가 없어 실제로 가는 알림은 없어요'}
+        {' · '}공개한 뒤에 고쳐도 알림은 다시 가지 않아요
+      </p>
+      {applicantCount > 0 && (
+        <>
+          <p className="mt-3 text-xs font-bold text-neutral-600">회원 알림함에 이렇게 떠요</p>
+          {/* 실제 알림 줄 모양(NotificationList) 그대로 — 36px 타일 · 13px 제목 · tg-600 부제 */}
+          <div className="mt-1.5 flex items-start gap-2.5 rounded-[14px] bg-brand-bg px-3 py-3">
+            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[12px] bg-white text-sm" aria-hidden>
+              📖
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-bold leading-snug tracking-tight text-tg-900">
+                {topicPostedTitle(draftCount, more)}
+              </span>
+              <span className="mt-0.5 block truncate text-xs text-tg-600">{meetingTitle}</span>
+            </span>
+          </div>
+        </>
+      )}
+      <div className="mt-5 flex gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={busy}
+          className={`flex-[0_0_34%] lg:flex-1 ${btnBigLine}`}
+        >
+          취소
+        </button>
+        <button type="button" onClick={onConfirm} disabled={busy} className={`flex-1 ${btnBigPrimary}`}>
+          {busy ? '공개하는 중…' : '공개하기'}
+        </button>
+      </div>
+    </Sheet>
+  )
+}
+
+/* ─────────────── 발제자 링크 (시안 O6) ─────────────── */
+
+function LinkSheet({
+  meetingId,
+  link,
+  meetingDateLabel,
+  onClose,
+  onChanged,
+}: {
+  meetingId: string
+  link: { token: string | null; open: boolean; closesLabel: string }
+  meetingDateLabel: string
+  onClose: () => void
+  onChanged: () => void
+}) {
+  const [token, setToken] = useState<string | null>(link.open ? link.token : null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [confirm, setConfirm] = useState<'close' | 'rotate' | null>(null)
+  const url = token ? `${typeof window !== 'undefined' ? window.location.origin : ''}/t/${token}` : ''
+
+  async function call(action: 'open' | 'rotate' | 'close') {
+    setBusy(true)
+    setError(null)
+    setCopied(false)
+    try {
+      const res = await fetch('/api/admin/topics/link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meeting_id: meetingId, action }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (json.status !== 'success') {
+        setError(json.message ?? '잠시 후 다시 시도해 주세요')
+        return
+      }
+      setToken(json.data.token)
+      setConfirm(null)
+      onChanged()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  async function share() {
+    // 카카오톡 공유 SDK는 없다 — 폰의 공유 창(카톡 포함)을 띄우고, 안 되면 복사
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: '발제 쓰기 링크', url })
+        return
+      } catch {
+        /* 닫기를 누른 경우 등 — 복사로 넘어가지 않는다 */
+        return
+      }
+    }
+    await copy()
+  }
+
+  if (confirm) {
+    return (
+      <Sheet onClose={() => setConfirm(null)}>
+        <h3 className="text-[17px] font-extrabold leading-snug tracking-tight text-neutral-900">
+          {confirm === 'close' ? '링크를 지금 닫을까요?' : '새 링크로 바꿀까요?'}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+          {confirm === 'close'
+            ? '닫으면 발제자가 더는 쓰거나 고칠 수 없어요. 이미 받은 발제는 그대로 있어요.'
+            : '지금 주소는 바로 닫히고, 새 주소를 다시 보내야 해요. 이미 받은 발제는 그대로 있어요.'}
+        </p>
+        {error && <p className="mt-3 text-xs font-semibold text-accent-600">{error}</p>}
+        <div className="mt-5 flex gap-2">
+          <button type="button" onClick={() => setConfirm(null)} className={`flex-[0_0_34%] lg:flex-1 ${btnBigLine}`}>
+            취소
+          </button>
+          <button
+            type="button"
+            onClick={() => call(confirm)}
+            disabled={busy}
+            className={`flex-1 ${confirm === 'close' ? btnBigDanger : btnBigPrimary}`}
+          >
+            {busy ? '처리하는 중…' : confirm === 'close' ? '지금 닫기' : '새 링크로 바꾸기'}
+          </button>
+        </div>
+      </Sheet>
+    )
+  }
+
+  return (
+    <Sheet onClose={onClose}>
+      <h3 className="text-[17px] font-extrabold tracking-tight text-neutral-900">발제자 링크</h3>
+      <p className="mt-2 break-keep text-sm leading-relaxed text-neutral-700">
+        받은 사람은 로그인 없이 발제를 쓸 수 있어요. 쓴 발제는 <b className="text-neutral-900">작성 중</b>으로만
+        들어오고, 공개는 운영자가 해요.
+      </p>
+      {token ? (
+        <>
+          <div className="mt-3.5 flex items-center rounded-[var(--radius-md)] bg-surface-200 px-3.5 py-3 text-[13px] text-neutral-800">
+            <span className="min-w-0 flex-1 truncate">{url.replace(/^https?:\/\//, '')}</span>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={copy} className={`flex-1 ${btnBigLine}`}>
+              {copied ? '복사했어요' : '링크 복사'}
+            </button>
+            <button type="button" onClick={share} className={`flex-1 ${btnBigPrimary}`}>
+              카톡으로 보내기
+            </button>
+          </div>
+          <p className="mt-3 text-[13px] leading-relaxed text-neutral-700">
+            <b className="text-neutral-900">{meetingDateLabel} 모임이 끝나면 자동으로 닫혀요</b>
+            <br />
+            정확히는 {link.closesLabel}예요
+          </p>
+          {error && <p className="mt-3 text-xs font-semibold text-accent-600">{error}</p>}
+          <div className="mt-3.5 flex gap-1 border-t border-surface-300 pt-1.5">
+            <button
+              type="button"
+              onClick={() => setConfirm('rotate')}
+              className="flex min-h-11 flex-1 items-center justify-center text-[13px] font-semibold text-neutral-600"
+            >
+              새 링크로 바꾸기
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirm('close')}
+              className="flex min-h-11 flex-1 items-center justify-center text-[13px] font-semibold text-error"
+            >
+              지금 닫기
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          {error && <p className="mt-3 text-xs font-semibold text-accent-600">{error}</p>}
+          <div className="mt-5 flex gap-2">
+            <button type="button" onClick={onClose} className={`flex-[0_0_34%] lg:flex-1 ${btnBigLine}`}>
+              닫기
+            </button>
+            <button type="button" onClick={() => call('open')} disabled={busy} className={`flex-1 ${btnBigPrimary}`}>
+              {busy ? '만드는 중…' : '링크 만들기'}
+            </button>
+          </div>
+        </>
+      )}
+    </Sheet>
   )
 }
 
@@ -397,13 +698,16 @@ function DeleteSheet({
         {topic.topic_no}번 발제 「{topic.title}」을 삭제할까요?
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-        {answerCount > 0 ? (
+        {topic.published_at === null ? (
+          '작성 중이라 회원에게 보인 적 없는 발제예요. 되돌릴 수 없어요.'
+        ) : answerCount > 0 ? (
           <>
-            회원 화면에서도 사라지고, 달린 <b className="text-neutral-900">답변 {answerCount}개</b>와 그
-            답글·공감도 함께 지워져요. 되돌릴 수 없어요.
+            이미 공개된 발제예요. 회원 화면에서도 사라지고, 달린{' '}
+            <b className="text-neutral-900">답변 {answerCount}개</b>와 그 답글·공감도 함께 지워져요. 되돌릴 수
+            없어요.
           </>
         ) : (
-          '회원 화면에서도 사라져요. 아직 달린 답변은 없어요. 되돌릴 수 없어요.'
+          '이미 공개된 발제예요. 회원 화면에서도 사라져요. 아직 달린 답변은 없어요. 되돌릴 수 없어요.'
         )}
       </p>
       <div className="mt-5 flex gap-2">
@@ -485,28 +789,40 @@ function TopicRow({
         {t.topic_no}
       </span>
       <div className="min-w-0 flex-1">
-        <b className="block break-keep text-[14.5px] font-extrabold tracking-tight text-neutral-900">
-          {t.title}
-          {t.published_at === null && (
-            <span className="ml-1.5 inline-block rounded-md bg-neutral-100 px-1.5 py-0.5 align-[2px] text-[11px] font-bold text-neutral-700">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+          <b className="min-w-0 break-keep text-[14.5px] font-extrabold tracking-tight text-neutral-900">{t.title}</b>
+          {t.published_at === null ? (
+            <span className="flex-none rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-bold text-neutral-700">
               작성 중
             </span>
+          ) : (
+            <span className="flex-none rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary-700">
+              공개됨
+            </span>
           )}
-        </b>
+          {t.source === 'link' && (
+            <span className="flex-none text-[11px] font-semibold text-neutral-600">링크로 받음</span>
+          )}
+        </div>
         {t.quote && (
           <p className="mt-1.5 whitespace-pre-line break-keep break-words text-[13px] leading-relaxed text-neutral-700">
             “{t.quote}”
-            {t.quote_page && (
-              <span className="ml-1 whitespace-nowrap text-neutral-600">{t.quote_page}쪽</span>
+            {/* 쪽수 없음은 오류가 아니다(선택 칸) — 작성 중에만 회색으로 알린다 */}
+            {(t.quote_page || t.published_at === null) && (
+              <span className="ml-1 whitespace-nowrap text-neutral-600">
+                {t.quote_page ? `${t.quote_page}쪽` : '· 쪽수 없음'}
+              </span>
             )}
           </p>
         )}
         <p className="mt-1 line-clamp-2 whitespace-pre-line break-keep break-words text-[13px] leading-relaxed text-neutral-800 lg:line-clamp-none">
           {t.question}
         </p>
-        <p className="mt-1 text-xs text-neutral-600">
-          {t.published_at === null ? '회원에게 안 보여요' : `답변 ${answerCount}개`}
-        </p>
+        {t.published_at !== null && (
+          <p className="mt-1 text-xs text-neutral-600">
+            답변 {answerCount}개
+          </p>
+        )}
       </div>
       {/* 폰: ⋮ 하나 (44px, 좌우 음수 마진 없음 — 오른쪽 여백을 지킨다) */}
       <button
@@ -541,6 +857,7 @@ function TopicForm({
   topic,
   nextNo,
   onDone,
+  onReload,
   onCancel,
   onDelete,
   deleteSheet,
@@ -549,6 +866,8 @@ function TopicForm({
   topic?: DiscussionTopic
   nextNo: number
   onDone: (kind: 'created' | 'edited-published' | 'edited-draft') => void
+  /** 그새 다른 곳에서 고쳤을 때 「새로 불러오기」 — 화면 데이터를 다시 받는다(폼은 key로 다시 열린다) */
+  onReload: () => void
   onCancel: () => void
   onDelete?: () => void
   deleteSheet: React.ReactNode
@@ -562,12 +881,31 @@ function TopicForm({
   })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // 저장 실패 이유(덮어쓰기 방지 — 대표님 6번). 쓰던 글은 그대로 둔다
+  const [failure, setFailure] = useState<SaveFailure | null>(null)
+  const [copied, setCopied] = useState(false)
   const ready = form.title.trim() !== '' && form.question.trim() !== ''
+
+  async function copyText() {
+    const lines = [form.title.trim()]
+    if (form.quote.trim()) {
+      lines.push(`"${form.quote.trim()}"${form.quote_page.trim() ? ` (${form.quote_page.trim()}쪽)` : ''}`)
+    }
+    lines.push(form.question.trim())
+    try {
+      await navigator.clipboard.writeText(lines.filter(Boolean).join('\n'))
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
 
   async function save() {
     if (busy || !ready) return
     setBusy(true)
     setError(null)
+    setFailure(null)
+    setCopied(false)
     try {
       const body = {
         title: form.title.trim(),
@@ -580,13 +918,20 @@ function TopicForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
           topic
-            ? { id: topic.id, topic_no: Number(form.topic_no), ...body }
+            ? {
+                id: topic.id,
+                topic_no: Number(form.topic_no),
+                // 연 시각 그대로일 때만 저장 — 발제자와 동시에 고쳐도 덮어쓰지 않는다
+                expected_updated_at: topic.updated_at,
+                ...body,
+              }
             : { meeting_id: meetingId, ...body },
         ),
       })
       const json = await res.json().catch(() => ({}))
       if (json.status !== 'success') {
-        setError(json.message ?? '잠시 후 다시 시도해 주세요')
+        if (json.code && json.code in SAVE_FAILURE_MESSAGE) setFailure(json.code as SaveFailure)
+        else setError(json.message ?? '잠시 후 다시 시도해 주세요')
         return
       }
       onDone(!topic ? 'created' : topic.published_at !== null ? 'edited-published' : 'edited-draft')
@@ -690,6 +1035,28 @@ function TopicForm({
         />
       </div>
       {error && <p className="mt-3 text-xs font-semibold text-accent-600">{error}</p>}
+      {failure && (
+        <div role="alert" className="mt-4 rounded-[var(--radius-md)] bg-accent-50 px-4 py-3 text-[13px] leading-relaxed text-neutral-800">
+          <p className="font-bold text-neutral-900">
+            {failure === 'conflict' ? '그새 다른 곳에서 고쳤어요. 새로 불러올까요?' : SAVE_FAILURE_MESSAGE[failure]}
+          </p>
+          <p className="mt-0.5 text-xs text-neutral-600">
+            {failure === 'conflict'
+              ? '새로 불러오면 지금 쓴 글이 바뀌어요 — 먼저 복사해 두세요'
+              : '쓴 글은 지우지 않았어요'}
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            <button type="button" onClick={copyText} className={`!h-11 ${btnLine}`}>
+              {copied ? '복사했어요' : '쓴 내용 복사'}
+            </button>
+            {failure === 'conflict' && (
+              <button type="button" onClick={onReload} className={`!h-11 ${btnLine}`}>
+                새로 불러오기
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 큰 화면 — 폼 끝 제자리 버튼 (MeetingForm과 같은 자리) */}
       <div className="mt-6 hidden justify-end gap-2 lg:flex">

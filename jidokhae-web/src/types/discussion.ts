@@ -14,6 +14,8 @@ export type DiscussionTopic = {
    * 선택(?)인 이유: 그 SQL을 돌리기 전에는 칸이 없다
    */
   notified_at?: string | null
+  /** 'admin' 운영자가 씀 | 'link' 발제자 링크로 받음 — migration-topics-presenter-link.sql (실행 전에는 없다) */
+  source?: 'admin' | 'link'
   created_at: string
   updated_at: string
 }

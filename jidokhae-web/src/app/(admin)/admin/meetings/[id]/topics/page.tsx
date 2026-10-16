@@ -2,13 +2,15 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/admin'
 import { formatKoreanDate, formatKSTDateTime, getDaysUntil, getKSTToday } from '@/lib/kst'
+import { isLinkOpen, linkClosesAtLabel } from '@/lib/presenter-link'
 import TopicsManager from '@/components/admin/TopicsManager'
 import type { DiscussionTopic } from '@/types/discussion'
 import type { Meeting } from '@/types/meeting'
 
 /**
- * 발제문 관리 (admin·editor — (admin) 레이아웃이 역할 검사). 2026-10-09 시안 B.
- * 하나씩 써서 「작성 중」 저장 → 「발제 공개하기」 한 번 → 신청자 알림 한 번 (2026-10-12).
+ * 발제문 관리 (admin·editor — (admin) 레이아웃이 역할 검사). 2026-10-10 시안 O1~O6, 2026-10-12 공개 방식 변경.
+ * 운영자가 쓴 것도 발제자 링크로 받은 것도 「작성 중」으로 들어오고, 「발제 공개하기」 한 번이
+ * 작성 중 전부를 공개하고 신청자 알림을 한 번 보낸다(api/admin/topics/publish).
  * 스텝(is_staff)의 진입은 2단계에서 별도 경로로 — API는 이미 큐레이터를 허용한다.
  * 🔒 작성 중 발제를 읽는 화면이다 — service_role로 전부 읽는다(회원 화면은 공개된 것만).
  */
@@ -52,6 +54,19 @@ export default async function AdminTopicsPage({
       )
     for (const a of (answers ?? []) as { topic_id: string }[]) {
       answerCounts[a.topic_id] = (answerCounts[a.topic_id] ?? 0) + 1
+    }
+  }
+  // 발제자 링크 — 표가 아직 없으면(SQL 실행 전) 오류를 삼키고 링크 칸만 감춘다
+  let link: { token: string | null; open: boolean; closesLabel: string } | null = null
+  if (m.meeting_type === 'discussion') {
+    const { data: row, error: linkError } = await admin
+      .from('topic_presenter_links')
+      .select('token, closed_at')
+      .eq('meeting_id', id)
+      .maybeSingle()
+    if (!linkError) {
+      const open = isLinkOpen(row, m, getKSTToday())
+      link = { token: open ? (row?.token ?? null) : null, open, closesLabel: linkClosesAtLabel(m.date) }
     }
   }
   const lastPublished = list
@@ -103,6 +118,8 @@ export default async function AdminTopicsPage({
         meetingTitle={m.title}
         topics={list}
         answerCounts={answerCounts}
+        link={link}
+        meetingDateLabel={formatKoreanDate(m.date)}
         applicantCount={applicantCount}
         lastPublishedLabel={lastPublished ? formatKSTDateTime(lastPublished) : null}
         daysUntil={getDaysUntil(m.date, getKSTToday())}
