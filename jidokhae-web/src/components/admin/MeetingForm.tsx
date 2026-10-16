@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { VALID_REGIONS } from '@/lib/regions'
 import BookPicker, { type PickedBook } from '@/components/admin/BookPicker'
+import { MEETING_KINDS, MEETING_KIND_OPTIONS, type MeetingKind } from '@/lib/meeting-kinds'
 
 type MeetingValues = {
   title: string
@@ -17,7 +18,7 @@ type MeetingValues = {
   fee: string
   region: string
   is_featured: boolean
-  meeting_type: 'regular' | 'discussion'
+  meeting_type: MeetingKind
   selection_reason: string
 }
 
@@ -197,10 +198,8 @@ export default function MeetingForm({ mode, meetingId, initialValues, confirmedC
 
       <Field label="모임 유형" required>
         <div className="grid grid-cols-2 gap-2">
-          {([
-            { value: 'regular', label: '정기모임' },
-            { value: 'discussion', label: '토론모임' },
-          ] as const).map((opt) => {
+          {/* 선택지는 종류 규칙표(meeting-kinds.ts)가 단일 소스 — 작업실·별책부록(2026-10-16) */}
+          {MEETING_KIND_OPTIONS.map((kind) => ({ value: kind, label: MEETING_KINDS[kind].label })).map((opt) => {
             const selected = values.meeting_type === opt.value
             return (
               <button
