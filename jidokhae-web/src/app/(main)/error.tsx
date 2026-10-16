@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import ErrorFeedbackLink from '@/components/next/ErrorFeedbackLink'
 
 /**
  * `(main)` 라우트 그룹 에러 경계 — `(next)/error.tsx`와 같은 모양으로 맞췄다 (2026-10-14 화면 점검 30번).
@@ -33,6 +34,7 @@ export default function MainError({
       >
         다시 시도
       </button>
+      <ErrorFeedbackLink />
     </div>
   )
 }

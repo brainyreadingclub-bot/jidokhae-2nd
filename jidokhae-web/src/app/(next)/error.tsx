@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import ErrorFeedbackLink from '@/components/next/ErrorFeedbackLink'
 
 /**
  * `(next)` 라우트 그룹 에러 경계.
@@ -34,6 +35,7 @@ export default function NextError({
       >
         다시 시도
       </button>
+      <ErrorFeedbackLink />
     </div>
   )
 }
