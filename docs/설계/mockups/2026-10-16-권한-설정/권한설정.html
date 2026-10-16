@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>권한 설정 — 시안 (2026-10-16)</title>
+<link rel="stylesheet" href="_admin.css">
+<style>
+.ph,.sec{max-width:1040px}
+.ph{margin-bottom:28px}
+.ph .h1{margin-top:4px}
+.ph p{margin-top:8px;font-size:13px;color:var(--n600);line-height:1.6}
+
+.sec{margin-bottom:32px}
+.sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.sec-h h2{font-size:16px;font-weight:800;color:var(--n900);letter-spacing:-.01em}
+.sec-h h2 small{font-size:13px;font-weight:600;color:var(--n500);margin-left:6px}
+.sec-h .note{font-size:12px;color:var(--n600)}
+
+/* 검색 */
+.search{position:relative;width:280px}
+.search input{width:100%;height:40px;border:1px solid var(--n300);border-radius:10px;padding:0 12px 0 36px;font:inherit;font-size:14px;background:#fff;color:var(--n900)}
+.search svg{position:absolute;left:12px;top:12px;color:var(--n500)}
+
+/* 사람 표 */
+.tbl{width:100%;border:1px solid var(--s300);border-radius:var(--r-md);overflow:hidden;background:#fff}
+.tr{display:grid;grid-template-columns:minmax(0,1.4fr) 90px 120px 130px 100px;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--s300)}
+.tr:first-child{border-top:0}
+.tr.head{background:var(--s100);font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--n600);padding-top:10px;padding-bottom:10px}
+.tr .nm{font-size:14px;font-weight:700;color:var(--n900);display:flex;align-items:center;gap:6px;min-width:0}
+.tr .nm .me{font-size:11px;font-weight:700;color:var(--n500)}
+.tr .rg{font-size:13px;color:var(--n700)}
+.tr .dt{font-size:13px;color:var(--n700)}
+.tr .dt.none{color:var(--n500)}
+.tr .act{text-align:right}
+.tr .act .fixed{font-size:12px;color:var(--n500)}
+.tr.found{background:var(--p50)}
+.found-cap{padding:8px 16px;font-size:12px;font-weight:700;color:var(--p600);background:var(--p50);border-bottom:1px solid var(--p100)}
+
+/* 역할 알약 */
+.role{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.role.admin{background:var(--p700);color:#fff}
+.role.editor{background:var(--p50);color:var(--p700);border:1px solid var(--p200)}
+.role.staff{background:#fff;color:var(--p600);border:1px solid var(--p300)}
+.role.member{background:var(--n100);color:var(--n600);border:1px solid var(--n200)}
+
+/* 사다리 */
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.rung{border:1px solid var(--s300);border-radius:var(--r-md);padding:12px 14px;background:#fff}
+.rung .role{margin-bottom:6px}
+.rung p{font-size:12px;color:var(--n700);line-height:1.55}
+.rung .arrow{display:none}
+
+/* 표 */
+.mx{width:100%;border:1px solid var(--s300);border-radius:var(--r-md);overflow:hidden;background:#fff}
+.mx-row{display:grid;grid-template-columns:minmax(0,1fr) 96px 96px 96px 150px;align-items:center;border-top:1px solid var(--s200)}
+.mx-row > div{padding:10px 12px;font-size:13px}
+.mx-row > div:not(:first-child){text-align:center}
+.mx-row.head{background:var(--s100);border-top:0}
+.mx-row.head > div{padding:10px 12px;font-size:12px;font-weight:800;color:var(--n800)}
+.mx-grp{padding:14px 12px 6px;font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--p500);border-top:1px solid var(--s300);background:#fff}
+.mx-grp:first-of-type{border-top:0}
+.f{color:var(--n900);font-weight:600;line-height:1.45}
+.f small{display:block;font-size:11px;font-weight:500;color:var(--n500);margin-top:1px}
+.ok{color:var(--p500)}
+.lk{color:var(--n400)}
+.part{font-size:12px;color:var(--n700);line-height:1.4}
+.tbd{display:inline-block;margin-left:4px;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:800;color:var(--a600);background:var(--a50);vertical-align:1px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--n600);align-items:center;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+
+/* 폰용 역할 보기 */
+.mxm{display:none}
+.chips{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+.chip{flex:none;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--s300);background:#fff;font-size:13px;font-weight:700;color:var(--n700)}
+.chip.on{background:var(--p700);border-color:var(--p700);color:#fff}
+.lst{border:1px solid var(--s300);border-radius:var(--r-md);background:#fff;padding:4px 14px;margin-bottom:10px}
+.lst h3{font-size:12px;font-weight:800;color:var(--n800);padding:10px 0 6px;display:flex;align-items:center;gap:6px}
+.lst h3 b{font-weight:700;color:var(--n500)}
+.lst li{list-style:none;display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--s200);font-size:13px;color:var(--n900);line-height:1.5}
+.lst li svg{flex:none;margin-top:3px}
+.lst li .part{display:block;font-size:12px;color:var(--n600)}
+
+/* 기록 */
+.log{border:1px solid var(--s300);border-radius:var(--r-md);background:#fff}
+.lg{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--s200);font-size:13px}
+.lg:first-child{border-top:0}
+.lg .when{color:var(--n600)}
+.lg .who{color:var(--n900)}
+.lg .who b{font-weight:700}
+.lg .chg{display:flex;align-items:center;gap:6px}
+.foot{margin-top:8px;font-size:12px;color:var(--n500);line-height:1.6}
+
+/* 확인 창 */
+.modal.wide{max-width:460px;padding:24px 24px 20px}
+.modal .sub{margin-top:6px;font-size:13px;color:var(--n600)}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--s300);border-radius:var(--r-md);padding:12px 14px}
+.opt .rd{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--n300);margin-top:1px}
+.opt.on{border-color:var(--p500);background:var(--p50)}
+.opt.on .rd{border:5px solid var(--p500)}
+.opt b{display:block;font-size:14px;font-weight:800;color:var(--n900)}
+.opt span{display:block;margin-top:2px;font-size:12px;color:var(--n600);line-height:1.5}
+.opt .now{font-size:11px;font-weight:700;color:var(--n500);margin-left:6px;display:inline}
+.gain{margin-top:16px;border-top:1px solid var(--s300);padding-top:14px}
+.gain h4{font-size:12px;font-weight:800;color:var(--n800);margin-bottom:6px}
+.gain ul{list-style:none}
+.gain li{display:flex;gap:8px;font-size:13px;line-height:1.5;color:var(--n900);padding:3px 0}
+.gain li svg{flex:none;margin-top:3px}
+.gain li em{font-style:normal;color:var(--n600);font-size:12px}
+.gain .none{font-size:13px;color:var(--n600)}
+.warn{margin-top:12px;border-radius:10px;background:var(--a50);padding:10px 12px;font-size:12px;line-height:1.6;color:var(--a700)}
+.modal .keep{margin-top:8px;font-size:12px;color:var(--n600);line-height:1.6}
+
+body:not([data-state=change]) .s-change{display:none}
+body[data-state=change] .s-list-only{display:none}
+
+@media (max-width:1023px){
+  .search{width:100%}
+  .sec-h{align-items:stretch;flex-direction:column}
+  .tr.head{display:none}
+  .tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"nm act" "meta act";gap:4px 12px;padding:12px 14px}
+  .tr .nm{grid-area:nm}
+  .tr .act{grid-area:act}
+  .tr .rg,.tr .dt,.tr .rl{display:none}
+  .tr .meta{grid-area:meta;display:flex !important;gap:6px;align-items:center;font-size:12px;color:var(--n600);flex-wrap:wrap}
+  .ladder{grid-template-columns:1fr 1fr}
+  .mx{display:none}
+  .mxm{display:block}
+  .legend{display:none}
+  .lg{grid-template-columns:1fr;gap:4px;padding:12px 14px}
+  .modal.wide{max-height:calc(100vh - 40px);overflow:auto}
+  .dim{align-items:flex-end;padding:0}
+  .dim .modal{border-radius:var(--r-lg) var(--r-lg) 0 0;max-width:none}
+}
+.tr .meta{display:none}
+</style>
+</head>
+<body data-active="권한 설정" data-default="list">
+<div class="main">
+  <div class="mhead"></div>
+  <div class="cap"><div class="page">
+
+    <div class="ph">
+      <div class="eyebrow">시스템 · 총괄만</div>
+      <h1 class="h1">권한 설정</h1>
+      <p>누가 무엇을 할 수 있는지 보고 바꿉니다. 총괄은 SQL로만 바꿉니다.</p>
+    </div>
+
+    <!-- ① 운영진·스텝 명단 -->
+    <section class="sec">
+      <div class="sec-h">
+        <h2>운영진 · 스텝<small>6명</small></h2>
+        <label class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input class="s-list-only" placeholder="닉네임으로 회원 찾기">
+          <input class="s-change" value="회원G">
+        </label>
+      </div>
+
+      <div class="tbl">
+        <div class="tr head"><div>회원</div><div>지역</div><div>역할</div><div>지정한 날</div><div></div></div>
+
+        <div class="s-change">
+          <div class="found-cap">찾은 회원 1명</div>
+          <div class="tr found">
+            <div class="nm">회원G</div>
+            <div class="rg">포항</div>
+            <div class="rl"><span class="role member">회원</span></div>
+            <div class="dt none">—</div>
+            <div class="meta"><span class="role member">회원</span><span>포항</span></div>
+            <div class="act"><span class="btn line sm">바꾸기</span></div>
+          </div>
+        </div>
+
+        <div class="tr">
+          <div class="nm">회원A <span class="me">나</span></div>
+          <div class="rg">포항</div>
+          <div class="rl"><span class="role admin">총괄</span></div>
+          <div class="dt none">기록 전</div>
+          <div class="meta"><span class="role admin">총괄</span><span>포항</span></div>
+          <div class="act"><span class="fixed">SQL로만</span></div>
+        </div>
+        <div class="tr">
+          <div class="nm">회원B</div>
+          <div class="rg">경주</div>
+          <div class="rl"><span class="role editor">운영진</span></div>
+          <div class="dt">2026.10.02</div>
+          <div class="meta"><span class="role editor">운영진</span><span>경주 · 10.02부터</span></div>
+          <div class="act"><span class="btn line sm">바꾸기</span></div>
+        </div>
+        <div class="tr">
+          <div class="nm">회원C</div>
+          <div class="rg">포항</div>
+          <div class="rl"><span class="role editor">운영진</span></div>
+          <div class="dt none">기록 전</div>
+          <div class="meta"><span class="role editor">운영진</span><span>포항</span></div>
+          <div class="act"><span class="btn line sm">바꾸기</span></div>
+        </div>
+        <div class="tr">
+          <div class="nm">회원D</div>
+          <div class="rg">경주</div>
+          <div class="rl"><span class="role editor">운영진</span></div>
+          <div class="dt none">기록 전</div>
+          <div class="meta"><span class="role editor">운영진</span><span>경주</span></div>
+          <div class="act"><span class="btn line sm">바꾸기</span></div>
+        </div>
+        <div class="tr">
+          <div class="nm">회원E</div>
+          <div class="rg">포항</div>
+          <div class="rl"><span class="role editor">운영진</span></div>
+          <div class="dt none">기록 전</div>
+          <div class="meta"><span class="role editor">운영진</span><span>포항</span></div>
+          <div class="act"><span class="btn line sm">바꾸기</span></div>
+        </div>
+        <div class="tr">
+          <div class="nm">회원F</div>
+          <div class="rg">경주</div>
+          <div class="rl"><span class="role staff">스텝</span></div>
+          <div class="dt">2026.10.16</div>
+          <div class="meta"><span class="role staff">스텝</span><span>경주 · 10.16부터</span></div>
+          <div class="act"><span class="btn line sm">바꾸기</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ② 역할별 할 수 있는 일 -->
+    <section class="sec">
+      <div class="sec-h">
+        <h2>역할별로 할 수 있는 일</h2>
+        <div class="legend">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>할 수 있음</span>
+          <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--n400)" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>잠김</span>
+          <span>글자 = 일부만</span>
+        </div>
+      </div>
+
+      <div class="ladder">
+        <div class="rung"><span class="role member">회원</span><p>신청·결제, 신청한 모임의 발제 답변</p></div>
+        <div class="rung"><span class="role staff">스텝</span><p>회원 + 정기모임 할인, 토론·발제 관리</p></div>
+        <div class="rung"><span class="role editor">운영진</span><p>스텝 + 모임 만들기·고치기, 회원 목록</p></div>
+        <div class="rung"><span class="role admin">총괄</span><p>전부 — 돈, 전화번호, 설정, 권한</p></div>
+      </div>
+
+      <div class="mx" id="mx"></div>
+      <div class="mxm">
+        <div class="chips" id="chips"></div>
+        <div id="mlists"></div>
+      </div>
+    </section>
+
+    <!-- ③ 바꾼 기록 -->
+    <section class="sec">
+      <div class="sec-h"><h2>바꾼 기록</h2></div>
+      <div class="log">
+        <div class="lg">
+          <div class="when">10.16 14:20</div>
+          <div class="who"><b>회원A</b>가 <b>회원F</b>의 역할을 바꿨어요</div>
+          <div class="chg"><span class="role member">회원</span><span>→</span><span class="role staff">스텝</span></div>
+        </div>
+        <div class="lg">
+          <div class="when">10.02 11:05</div>
+          <div class="who"><b>회원A</b>가 <b>회원B</b>의 역할을 바꿨어요</div>
+          <div class="chg"><span class="role member">회원</span><span>→</span><span class="role editor">운영진</span></div>
+        </div>
+      </div>
+      <p class="foot">기록은 이 화면이 생긴 뒤부터 쌓이고, 1년 뒤 지워집니다.</p>
+    </section>
+
+  </div></div>
+</div>
+
+<!-- 바꾸기 확인 창 -->
+<div class="dim s-change">
+  <div class="modal wide">
+    <h3>회원G의 역할</h3>
+    <p class="sub">포항 · 지금 <b>회원</b></p>
+
+    <div class="opts">
+      <div class="opt"><span class="rd"></span><div><b>회원<span class="now">지금</span></b><span>신청·결제, 신청한 모임의 발제 답변</span></div></div>
+      <div class="opt on"><span class="rd"></span><div><b>스텝</b><span>정기모임 할인과 토론·발제 관리</span></div></div>
+      <div class="opt"><span class="rd"></span><div><b>운영진</b><span>모임 만들기·고치기, 회원 목록까지</span></div></div>
+    </div>
+
+    <div class="gain">
+      <h4>스텝이 되면 새로 열리는 일</h4>
+      <ul>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>정기모임 참가비 50% 할인 <em>(모임당 2명)</em></span></li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>발제문 쓰기·고치기·공개</span></li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>모든 토론모임의 답변 읽기 <em>(신청 안 한 모임도)</em></span></li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>답변 「모임에서 이어가요」 고정</span></li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>토론모임 참여 자격 면제</span></li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>반짝모임 신고 처리 <em>(11월 뒤)</em></span></li>
+      </ul>
+      <div class="warn">답변에는 사적인 이야기가 담겨요. 믿고 맡길 분만 지정해 주세요.</div>
+      <p class="keep">운영 화면은 발제문만 열려요. 돈·전화번호·회원 목록·설정은 계속 잠겨 있어요.<br>스텝을 풀어도 이미 신청한 모임의 할인은 그대로예요.</p>
+    </div>
+
+    <div class="row">
+      <span class="btn line">취소</span>
+      <span class="btn primary">스텝으로 바꾸기</span>
+    </div>
+  </div>
+</div>
+
+<script src="_chrome.js"></script>
+<script>
+(function () {
+  var Y = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--p500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+  var L = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--n400)" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+  // [기능, 보조설명, 총괄, 운영진, 스텝, 회원] — 1=할 수 있음, 0=잠김, 문자열=일부만
+  var G = [
+    ['모임', [
+      ['모임 만들기·고치기', '', 1, 1, 0, 0],
+      ['신청자 명단', '실명·닉네임', 1, 1, 0, '신청한 모임 닉네임만'],
+      ['모임 삭제', '신청자 전액 환불', 1, 0, 0, 0],
+      ['발제자 지정·빼기', '', 1, 0, 0, 0],
+    ]],
+    ['토론 · 발제', [
+      ['발제문 쓰기·고치기·공개', '', 1, 1, 1, 0],
+      ['발제 답변 전부 읽기', '신청 안 한 모임도', 1, 1, 1, '신청한 모임, 내 답 쓴 뒤'],
+      ['답변 「모임에서 이어가요」 고정', '', 1, 1, 1, 0],
+      ['토론모임 참여 자격 면제', '', 1, 1, 1, '정기 1회 이상'],
+      ['반짝모임 신고 처리', '11월 뒤', 1, 1, 1, 0],
+    ]],
+    ['돈', [
+      ['정기모임 참가비 50% 할인', '모임당 2명', 1, 1, 1, 0],
+      ['대시보드 이번 달 매출', '', 1, 'tbd', 0, 0],
+      ['입금 확인 · 환불 완료 표시', '', 1, 0, 0, 0],
+      ['정산 · 지역별 매출', '', 1, 0, 0, 0],
+    ]],
+    ['회원 정보', [
+      ['회원 목록', '닉네임·실명·지역', 1, 1, 0, 0],
+      ['회원 전화번호 · 이메일', '', 1, 0, 0, '본인 것만'],
+      ['알림톡 이력', '', 1, 0, 0, 0],
+    ]],
+    ['알리기 · 설정', [
+      ['배너 · 한 줄 관리', '', 1, 1, 0, 0],
+      ['전 회원 공지 보내기', '', 1, 0, 0, 0],
+      ['사이트 설정 · 기능 스위치 · 공간', '', 1, 0, 0, 0],
+      ['권한 바꾸기', '', 1, 0, 0, 0],
+    ]],
+  ]
+  function cell(v) {
+    if (v === 1) return Y
+    if (v === 0) return L
+    if (v === 'tbd') return L + '<span class="tbd">정할 것</span>'
+    return '<span class="part">' + v + '</span>'
+  }
+  var h = '<div class="mx-row head"><div>기능</div><div>총괄</div><div>운영진</div><div>스텝</div><div>회원</div></div>'
+  G.forEach(function (g) {
+    h += '<div class="mx-grp">' + g[0] + '</div>'
+    g[1].forEach(function (r) {
+      h += '<div class="mx-row"><div class="f">' + r[0] + (r[1] ? '<small>' + r[1] + '</small>' : '') + '</div>' +
+        '<div>' + cell(r[2]) + '</div><div>' + cell(r[3]) + '</div><div>' + cell(r[4]) + '</div><div>' + cell(r[5]) + '</div></div>'
+    })
+  })
+  document.getElementById('mx').innerHTML = h
+
+  // 폰 — 역할 칩 + 할 수 있는 일 / 잠긴 일
+  var roles = ['총괄', '운영진', '스텝', '회원']
+  var pick = 2
+  function draw() {
+    document.getElementById('chips').innerHTML = roles.map(function (r, i) {
+      return '<button class="chip' + (i === pick ? ' on' : '') + '" data-i="' + i + '">' + r + '</button>'
+    }).join('')
+    var can = [], part = [], no = []
+    G.forEach(function (g) {
+      g[1].forEach(function (r) {
+        var v = r[2 + pick]
+        var name = r[0] + (r[1] ? ' <span class="part">' + r[1] + '</span>' : '')
+        if (v === 1) can.push('<li>' + Y + '<span>' + name + '</span></li>')
+        else if (v === 0) no.push('<li>' + L + '<span>' + name + '</span></li>')
+        else if (v === 'tbd') no.push('<li>' + L + '<span>' + r[0] + '<span class="tbd">정할 것</span></span></li>')
+        else part.push('<li>' + Y + '<span>' + r[0] + '<span class="part">' + v + '</span></span></li>')
+      })
+    })
+    var out = '<div class="lst"><h3>할 수 있는 일 <b>' + (can.length + part.length) + '</b></h3><ul>' + can.join('') + part.join('') + '</ul></div>'
+    if (no.length) out += '<div class="lst"><h3>잠긴 일 <b>' + no.length + '</b></h3><ul>' + no.join('') + '</ul></div>'
+    document.getElementById('mlists').innerHTML = out
+    Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (b) {
+      b.onclick = function () { pick = +b.getAttribute('data-i'); draw() }
+    })
+  }
+  draw()
+})()
+</script>
+</body>
+</html>
