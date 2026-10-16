@@ -252,14 +252,23 @@ type CancelledBeforeDepositRegRow = {
   cancelled_at: string | null
   cancel_type: string | null
   paid_amount: number | null
-  profiles: { nickname: string | null } | null
+  profiles: { nickname: string | null; is_free: boolean | null } | null
   meetings: { id: string | null; title: string | null; date: string | null; meeting_type: string | null; status: string | null } | null
+}
+
+/**
+ * 무료 회원(`is_free` — 운영진 등 입금 자체가 없는 참석자)의 건인가.
+ * 입금 확인 대기(`getPendingDeposits`)와 같은 기준으로 「입금 전 취소」 목록에서도 뺀다 —
+ * 받을 돈이 애초에 없어 통장 대조 대상이 아니다 (2026-10-15 발견, 2026-10-16 수정)
+ */
+export function isFreeMemberRow(r: { profiles: { is_free: boolean | null } | null }): boolean {
+  return r.profiles?.is_free === true
 }
 
 export async function getCancelledBeforeDeposit(supabase: SupabaseClient): Promise<CancelledBeforeDepositRow[]> {
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, cancelled_at, cancel_type, paid_amount, profiles(nickname), meetings(id, title, date, meeting_type, status)')
+    .select('id, cancelled_at, cancel_type, paid_amount, profiles(nickname, is_free), meetings(id, title, date, meeting_type, status)')
     .eq('status', 'cancelled')
     .eq('payment_method', 'transfer')
     .eq('refunded_amount', 0)
@@ -268,7 +277,7 @@ export async function getCancelledBeforeDeposit(supabase: SupabaseClient): Promi
 
   if (error) throw error
 
-  return ((data ?? []) as unknown as CancelledBeforeDepositRegRow[]).map((r) => {
+  return ((data ?? []) as unknown as CancelledBeforeDepositRegRow[]).filter((r) => !isFreeMemberRow(r)).map((r) => {
     const paidAmount = r.paid_amount ?? 0
     const refundIfDeposited = r.meetings?.date
       ? recommendedTransferRefund({

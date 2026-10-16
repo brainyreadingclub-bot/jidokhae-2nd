@@ -10,6 +10,7 @@ import {
   elapsedDaysKST,
   formatKSTDateTime,
   sortDepositRows,
+  isFreeMemberRow,
   getPendingRefunds,
   type DepositRow,
 } from '@/lib/settlement'
@@ -205,5 +206,14 @@ describe('getPendingRefunds', () => {
       ]),
     )
     expect(row.refundAmount).toBe(10000)
+  })
+})
+
+describe('isFreeMemberRow — 무료 회원은 「입금 전 취소」 목록에서 뺀다 (2026-10-16)', () => {
+  it('is_free=true만 뺀다', () => {
+    expect(isFreeMemberRow({ profiles: { is_free: true } })).toBe(true)
+    expect(isFreeMemberRow({ profiles: { is_free: false } })).toBe(false)
+    expect(isFreeMemberRow({ profiles: { is_free: null } })).toBe(false)
+    expect(isFreeMemberRow({ profiles: null })).toBe(false)
   })
 })
