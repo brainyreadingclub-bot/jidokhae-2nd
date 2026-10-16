@@ -10,9 +10,11 @@ import { isCancelledBeforeDeposit } from '@/lib/refund'
 type Props = {
   registration: RegistrationWithMeeting
   badge: { label: string; color: 'success' | 'gray' }
+  /** 본인 `profiles.is_free` — 입금이 없는 참석자라 「입금하셨다면…」을 붙이지 않는다 */
+  isFreeMember?: boolean
 }
 
-export default function RegistrationCard({ registration, badge }: Props) {
+export default function RegistrationCard({ registration, badge, isFreeMember = false }: Props) {
   const meeting = registration.meetings
   const isDeleted =
     meeting.status === 'deleted' || meeting.status === 'deleting'
@@ -88,7 +90,7 @@ export default function RegistrationCard({ registration, badge }: Props) {
           </div>
         )}
         {/* 입금 확인 전에 취소된 계좌이체 — 혹시 입금했어도 돌려받는다는 걸 알린다. 0원 모임 취소(결제 금액 0)에는 붙이지 않는다 (2026-10-15 대표님 1안) */}
-        {isCancelledBeforeDeposit(registration) && (
+        {!isFreeMember && isCancelledBeforeDeposit(registration) && (
           <p className="mt-1.5 text-caption text-neutral-600 break-keep">입금하셨다면 운영진이 확인 후 돌려드려요</p>
         )}
       </div>
