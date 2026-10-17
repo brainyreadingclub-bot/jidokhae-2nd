@@ -5,6 +5,9 @@ import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_CATEGORY_LABELS,
   FEEDBACK_DAILY_LIMIT,
+  countRecentFeedback,
+  feedbackAlert,
+  feedbackAlertSince,
   listMemberFeedback,
   resolveFeedbackInput,
   sanitizeFeedbackPath,
@@ -177,5 +180,47 @@ describe('listMemberFeedback', () => {
     await expect(
       listMemberFeedback(listClient({ error: { code: '500', message: 'boom' } })),
     ).rejects.toThrow('의견 목록 조회 실패')
+  })
+})
+
+describe('feedbackAlert — 대시보드 「새 회원 의견 N건」', () => {
+  it('0건·셀 수 없음이면 줄을 안 띄운다', () => {
+    expect(feedbackAlert(0, 'admin')).toEqual({ show: false })
+    expect(feedbackAlert(null, 'admin')).toEqual({ show: false })
+    expect(feedbackAlert(0, 'editor')).toEqual({ show: false })
+  })
+
+  it('총괄 — 누르면 회원 의견 목록으로', () => {
+    expect(feedbackAlert(3, 'admin')).toEqual({ show: true, text: '새 회원 의견 3건', href: '/admin/feedback', note: null })
+  })
+
+  it('운영진 — 건수는 보이지만 목록(총괄 전용)으로 가는 길은 없다', () => {
+    expect(feedbackAlert(2, 'editor')).toEqual({ show: true, text: '새 회원 의견 2건', href: null, note: '총괄이 확인해요' })
+  })
+
+  it('세는 창은 7×24시간', () => {
+    expect(feedbackAlertSince(Date.parse('2026-10-17T05:00:00Z'))).toBe('2026-10-10T05:00:00.000Z')
+  })
+})
+
+describe('countRecentFeedback', () => {
+  function countClient(result: { count?: number | null; error?: { code: string; message: string } | null }) {
+    const gte = vi.fn().mockResolvedValue({ count: result.count ?? null, error: result.error ?? null })
+    const select = vi.fn().mockReturnValue({ gte })
+    return { client: { from: vi.fn().mockReturnValue({ select }) } as unknown as SupabaseClient, select, gte }
+  }
+
+  it('건수만 센다(본문을 읽지 않는다)', async () => {
+    const { client, select, gte } = countClient({ count: 4 })
+    await expect(countRecentFeedback(client, Date.parse('2026-10-17T05:00:00Z'))).resolves.toBe(4)
+    expect(select).toHaveBeenCalledWith('id', { count: 'exact', head: true })
+    expect(gte).toHaveBeenCalledWith('created_at', '2026-10-10T05:00:00.000Z')
+  })
+
+  it('표가 없거나 조회가 실패하면 null — 대시보드를 깨지 않는다', async () => {
+    const missing = countClient({ error: { code: '42P01', message: 'relation "member_feedback" does not exist' } })
+    await expect(countRecentFeedback(missing.client, 0)).resolves.toBeNull()
+    const boom = countClient({ error: { code: '500', message: 'boom' } })
+    await expect(countRecentFeedback(boom.client, 0)).resolves.toBeNull()
   })
 })

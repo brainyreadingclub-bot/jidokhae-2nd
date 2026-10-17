@@ -14,6 +14,9 @@ import {
 } from '@/lib/kst'
 import { getMissAlerts } from '@/lib/alimtalk-miss-server'
 import AlimtalkMissAlerts from '@/components/admin/AlimtalkMissAlerts'
+import FeedbackAlertLine from '@/components/admin/FeedbackAlertLine'
+import { countRecentFeedback, feedbackAlert } from '@/lib/member-feedback'
+import { createServiceClient } from '@/lib/supabase/admin'
 import {
   getMonthlyRevenue,
   getUpcomingMeetings,
@@ -40,7 +43,7 @@ export default async function AdminDashboardHub() {
   const monthRange = getMonthRange(currentMonth)
   const weekLater = getWeekLater(kstToday)
 
-  const [revenue, upcoming, memberStats, alerts, transferAlerts, missAlerts] = await Promise.all([
+  const [revenue, upcoming, memberStats, alerts, transferAlerts, missAlerts, recentFeedback] = await Promise.all([
     // 이번 달 순매출은 총괄만 (2026-10-16 대표님 결정) — 운영진이면 읽지도 않는다
     isAdmin ? getMonthlyRevenue(supabase, currentMonth, prevMonth) : Promise.resolve(null),
     getUpcomingMeetings(supabase, kstToday, weekLater),
@@ -53,7 +56,10 @@ export default async function AdminDashboardHub() {
       : Promise.resolve({ pendingTransferCount: 0, pendingRefundCount: 0 }),
     // 알림톡 못 받은 회원 — 사람 수만 읽는다(이름·전화번호 없음). 운영진도 본다
     getMissAlerts(kstToday),
+    // 새 회원 의견 — 건수만 센다(본문 안 읽음). 표는 service_role만 읽게 잠겨 있다
+    countRecentFeedback(createServiceClient(), Date.now()),
   ])
+  const feedbackLine = feedbackAlert(recentFeedback, profile.role)
 
   const revenueDelta = revenue ? revenue.netRevenue - revenue.prevNetRevenue : 0
   const hasUrgent =
@@ -62,7 +68,8 @@ export default async function AdminDashboardHub() {
     transferAlerts.pendingTransferCount > 0 ||
     transferAlerts.pendingRefundCount > 0 ||
     missAlerts.meetings.length > 0 ||
-    missAlerts.runStale
+    missAlerts.runStale ||
+    feedbackLine.show
 
   // 오늘 날짜 표기 (간단)
   const [y, m, d] = kstToday.split('-').map((v) => Number(v))
@@ -118,6 +125,7 @@ export default async function AdminDashboardHub() {
             </Link>
           )}
           <AlimtalkMissAlerts alerts={missAlerts} />
+          <FeedbackAlertLine alert={feedbackLine} />
           {alerts.deletingMeetings.map((m) => (
             <Link
               key={m.id}

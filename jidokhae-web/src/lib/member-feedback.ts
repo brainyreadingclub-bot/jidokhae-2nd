@@ -188,3 +188,53 @@ export async function listMemberFeedback(supabase: SupabaseClient): Promise<Feed
   })
   return { status: 'ok', rows, total: count ?? rows.length }
 }
+
+// ─── 대시보드 긴급 칸 「새 회원 의견 N건」 (2026-10-17) ───
+
+/** 「새」 = 최근 이 날수 안에 들어온 글. 읽음 표시가 없어서 기간으로 가른다 */
+export const FEEDBACK_ALERT_DAYS = 7
+
+/** 세기 시작 시각(ISO). 시간대와 무관한 7×24시간 창 */
+export function feedbackAlertSince(nowMs: number): string {
+  return new Date(nowMs - FEEDBACK_ALERT_DAYS * 24 * 60 * 60 * 1000).toISOString()
+}
+
+export type FeedbackAlert =
+  | { show: false }
+  /** `href`가 null이면 목록을 못 여는 사람 — 줄만 보이고 누를 곳은 없다 */
+  | { show: true; text: string; href: string | null; note: string | null }
+
+/**
+ * 대시보드 한 줄 판정 (순수 함수).
+ * - 0건(또는 셀 수 없음 = null)이면 줄을 안 띄운다 — 늘 켜진 경고는 아무도 안 본다
+ * - 운영진에게도 건수는 보인다(숫자에는 개인정보가 없다). 다만 목록은 총괄 전용이라
+ *   (글에 연락처가 들어올 수 있다 — `/admin/feedback` 머리말) 운영진 줄은 누를 곳이 없고 「총괄이 확인해요」만 붙는다
+ */
+export function feedbackAlert(count: number | null, role: string): FeedbackAlert {
+  if (count === null || count <= 0) return { show: false }
+  const text = `새 회원 의견 ${count}건`
+  return role === 'admin'
+    ? { show: true, text, href: '/admin/feedback', note: null }
+    : { show: true, text, href: null, note: '총괄이 확인해요' }
+}
+
+/**
+ * 최근 `FEEDBACK_ALERT_DAYS`일 건수. 셀 수 없으면(표 없음·조회 실패) null — 줄을 안 띄운다.
+ * 건수만 센다(`head: true`) — 글 본문은 읽지 않는다. **throw하지 않는다** (대시보드를 깨지 않게)
+ */
+export async function countRecentFeedback(supabase: SupabaseClient, nowMs: number): Promise<number | null> {
+  try {
+    const { count, error } = await supabase
+      .from('member_feedback')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', feedbackAlertSince(nowMs))
+    if (error) {
+      if (!isMissingTableError(error)) console.error('[member-feedback] 새 의견 세기 실패:', error)
+      return null
+    }
+    return count ?? 0
+  } catch (e) {
+    console.error('[member-feedback] 새 의견 세기 예외:', e)
+    return null
+  }
+}
