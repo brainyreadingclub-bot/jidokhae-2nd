@@ -68,3 +68,12 @@ export function getMeetingKindShortLabel(meetingType: string | null | undefined)
 export function getMeetSection(meetingType: string | null | undefined): MeetSection {
   return ruleOf(meetingType).meetSection
 }
+
+/**
+ * 모임 탭 날짜 행의 종류 표시 (2026-10-17 결정) — 정기와 같은 행에 섞이는 다른 종류(작업실)만
+ * 짧은 이름을 붙인다. 정기 행에는 붙이지 않는다(null) — 모르는 값·null도 정기로 읽는다
+ */
+export function getDateRowKindTag(meetingType: string | null | undefined): string | null {
+  const rule = ruleOf(meetingType)
+  return rule === MEETING_KINDS.regular ? null : rule.shortLabel
+}

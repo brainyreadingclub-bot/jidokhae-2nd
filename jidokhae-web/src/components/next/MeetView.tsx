@@ -24,6 +24,8 @@ export type MeetData = {
     /** 「n자리 남았어요」면 진한 회색 굵게 (빨강·주황 금지 — 자리 상태 공통 규칙) */
     seatEmphasis: boolean
     fee: number
+    /** 정기 행에 섞인 다른 종류의 짧은 이름(작업실). 정기는 null — `getDateRowKindTag()` */
+    kindTag: string | null
   }[]
   discussion: {
     id: string
@@ -121,8 +123,16 @@ export default function MeetView({
                   </span>
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold tracking-tight">
-                    {m.venueName}
+                  {/* 종류 표시 — 작업실만, 회색 글자 태그 한 개 (2026-10-17 결정 — 박스·강조 금지) */}
+                  <span className="flex items-center gap-1.5">
+                    <span className="min-w-0 truncate text-sm font-bold tracking-tight">
+                      {m.venueName}
+                    </span>
+                    {m.kindTag && (
+                      <span className="flex-none rounded-[4px] bg-tg-100 px-1.5 py-px text-[10px] font-semibold text-tg-600">
+                        {m.kindTag}
+                      </span>
+                    )}
                   </span>
                   <span className="mt-0.5 block truncate text-xs text-tg-600">
                     {formatKoreanTime(m.time)} ·{' '}

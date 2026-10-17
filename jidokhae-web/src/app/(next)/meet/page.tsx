@@ -8,7 +8,7 @@ import { getSiteSettings } from '@/lib/site-settings'
 import { getProfile } from '@/lib/profile'
 import { resolveHomeUpcomingClick } from '@/lib/home-upcoming'
 import { recordAppEvent } from '@/lib/app-events'
-import { getMeetSection } from '@/lib/meeting-kinds'
+import { getDateRowKindTag, getMeetSection } from '@/lib/meeting-kinds'
 import MeetView, { type MeetData } from '@/components/next/MeetView'
 import TrackMeetList from '@/components/analytics/TrackMeetList'
 import type { Meeting } from '@/types/meeting'
@@ -114,6 +114,7 @@ export default async function NextMeetPage({
         confirmedLabel: seat.label,
         seatEmphasis: seat.tone === 'emphasis',
         fee: m.fee,
+        kindTag: getDateRowKindTag(m.meeting_type),
       }
     })
 
