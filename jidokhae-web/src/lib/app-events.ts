@@ -34,6 +34,12 @@ export const APP_EVENTS = [
   'topic.answer_submit',
   /** 「응답 후 공개」가 켜진 발제에서 첫 답을 남겨 남의 답이 열렸다. `answerers` = 그때 이미 답한 사람 수 */
   'topic.answers_unlock',
+  /**
+   * 모임 전날 알림 크론이 돌았다 — 모임마다 1행(meeting_id), 내일 모임이 없으면 meeting_id 없이 1행.
+   * `targets` = 보낼 사람 수, `sent`·`skipped`·`failed` = 결과. 사람 없이(user_id 없음) 남는다.
+   * 운영 화면 「알림 못 받은 회원」이 「언제 돌았나 · 누가 대상이었나」를 이걸로 판정한다 (lib/alimtalk-miss.ts)
+   */
+  'cron.meeting_remind_run',
 ] as const
 
 export type AppEventName = (typeof APP_EVENTS)[number]

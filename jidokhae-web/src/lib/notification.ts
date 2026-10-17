@@ -7,6 +7,7 @@
  */
 
 import { sendAlimtalk } from '@/lib/solapi'
+import { describeAlimtalkError, failedFromSendResult } from '@/lib/alimtalk-error'
 import { createServiceClient } from '@/lib/supabase/admin'
 // formatPaidAmount = 낸 돈/낼 돈. 🔴 「무료」 판정은 **모임 참가비**로만 한다 —
 // 결제액으로 판정하면 스텝 할인 0원 같은 건에 「무료」가 붙어 틀린 말이 된다 (kst.ts 주석)
@@ -64,7 +65,7 @@ export async function sendNotification(params: SendNotificationParams) {
 
   // 전화번호 없으면 skip
   if (!params.recipientPhone) {
-    await supabase.from('notifications').insert({
+    const { error: skipError } = await supabase.from('notifications').insert({
       type: params.type,
       recipient_id: params.recipientId,
       recipient_phone: '',
@@ -77,6 +78,10 @@ export async function sendNotification(params: SendNotificationParams) {
       status: 'skipped',
       error_message: '전화번호 없음',
     })
+    // 23505 = 이미 같은 알림 행이 있다(재실행) — 정상. 그 밖의 실패는 기록이 안 남은 것이라 시끄럽게
+    if (skipError && skipError.code !== '23505') {
+      console.error('[notification] 건너뜀 기록 실패:', params.type, skipError)
+    }
     return { status: 'skipped' as const }
   }
 
@@ -115,29 +120,38 @@ export async function sendNotification(params: SendNotificationParams) {
       variables: params.variables,
     })
 
+    // 던지지 않았어도 접수 실패가 섞여 있으면 실패로 적는다 (lib/alimtalk-error.ts)
+    const partialFailure = failedFromSendResult(result)
+    if (partialFailure) throw Object.assign(new Error(partialFailure), { failedMessageList: result.failedMessageList })
+
     // Step 3: UPDATE → sent
-    await supabase
+    const { error: sentError } = await supabase
       .from('notifications')
       .update({
         status: 'sent',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        solapi_message_id: (result as any)?.groupId ?? null,
+        // groupInfo.groupId — 예전 코드는 최상위 groupId를 읽어 늘 null이었다
+        solapi_message_id: result.groupInfo?.groupId ?? null,
         sent_at: new Date().toISOString(),
       })
       .eq('id', notification.id)
+    // 이 UPDATE가 실패하면 행이 「발송 중」에 멈춘다 — 운영 화면이 「발송 중 멈춤」으로 잡지만 로그도 남긴다
+    if (sentError) console.error('[notification] 발송됨 기록 실패:', notification.id, sentError)
 
     return { status: 'sent' as const }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+    // 실패 원문(Solapi 상태 코드·설명)을 남긴다. SDK의 안내 문장만 남기면 원인을 알 수 없다
+    const errorMessage = describeAlimtalkError(error)
+    console.error('[notification] 발송 실패:', params.type, notification.id, errorMessage)
 
     // Step 3: UPDATE → failed
-    await supabase
+    const { error: failedError } = await supabase
       .from('notifications')
       .update({
         status: 'failed',
         error_message: errorMessage,
       })
       .eq('id', notification.id)
+    if (failedError) console.error('[notification] 실패 기록 실패:', notification.id, failedError)
 
     return { status: 'failed' as const, error: errorMessage }
   }
@@ -159,7 +173,11 @@ export async function sendRegistrationConfirmNotification(
     .eq('id', meetingId)
     .single()
 
-  if (!meeting) return
+  if (!meeting) {
+    // 모임을 못 읽으면 보낼 수 없다 — 기록 행이 안 생겨 운영 화면이 「보낸 기록 없음」으로 잡는다. 로그도 남긴다
+    console.error('[notification] 모임 조회 실패로 발송 못 함:', meetingId)
+    return
+  }
 
   // registration 결제 금액 + status 조회 (스텝 할인 시 paid_amount < fee)
   const { data: registration } = await supabase
@@ -219,7 +237,11 @@ export async function sendWaitlistConfirmNotification(
     .eq('id', meetingId)
     .single()
 
-  if (!meeting) return
+  if (!meeting) {
+    // 모임을 못 읽으면 보낼 수 없다 — 기록 행이 안 생겨 운영 화면이 「보낸 기록 없음」으로 잡는다. 로그도 남긴다
+    console.error('[notification] 모임 조회 실패로 발송 못 함:', meetingId)
+    return
+  }
 
   const { data: registration } = await supabase
     .from('registrations')
@@ -264,7 +286,11 @@ export async function sendWaitlistPromotedNotification(
     .eq('id', meetingId)
     .single()
 
-  if (!meeting) return
+  if (!meeting) {
+    // 모임을 못 읽으면 보낼 수 없다 — 기록 행이 안 생겨 운영 화면이 「보낸 기록 없음」으로 잡는다. 로그도 남긴다
+    console.error('[notification] 모임 조회 실패로 발송 못 함:', meetingId)
+    return
+  }
 
   // status도 함께 읽는다. 2026-10-09부터 이 함수를 부르는 쪽(`lib/waitlist.ts`)이
   // **`confirmed`로 올라간 건만** 부르므로 실제로는 "결제완료"로 떨어진다.

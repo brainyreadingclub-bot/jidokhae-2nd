@@ -7,6 +7,8 @@ import { getTopicCountsForAdmin } from '@/lib/discussion'
 import { NO_TOPICS } from '@/lib/topic-status'
 import AdminMeetingOverview from '@/components/admin/AdminMeetingOverview'
 import { registrantProfileColumns } from '@/lib/admin-access'
+import { getMeetingMissReport } from '@/lib/alimtalk-miss-server'
+import { PARTICIPATED_STATUSES } from '@/lib/registration-status'
 import type { RegistrationWithProfile } from '@/types/registration'
 
 type Props = {
@@ -50,6 +52,24 @@ export default async function AdminMeetingDetailPage({ params }: Props) {
   )
   const registrations = (regsResult.data ?? []) as unknown as RegistrationWithProfile[]
 
+  // 알림톡 못 받은 회원 — 이미 불러온 명단으로 판정한다(전화번호도 총괄일 때만 명단에 있다)
+  const participated = new Set<string>(PARTICIPATED_STATUSES)
+  const missReport = await getMeetingMissReport(
+    { id, date: meeting.date },
+    registrations
+      .filter((r) => participated.has(r.status))
+      .map((r) => ({
+        registrationId: r.id,
+        userId: r.user_id,
+        createdAt: r.created_at,
+        paymentMethod: r.payment_method,
+        paymentId: r.payment_id,
+        nickname: r.profiles?.nickname ?? '',
+        realName: r.profiles?.real_name ?? null,
+        phone: profile.role === 'admin' ? (r.profiles?.phone ?? null) : undefined,
+      })),
+  )
+
   return (
     <AdminMeetingOverview
       meeting={meeting}
@@ -57,6 +77,7 @@ export default async function AdminMeetingDetailPage({ params }: Props) {
       registrations={registrations}
       topicCounts={isDiscussion ? (topicCounts?.get(id) ?? NO_TOPICS) : null}
       isAdmin={profile.role === 'admin'}
+      missReport={missReport}
     />
   )
 }
