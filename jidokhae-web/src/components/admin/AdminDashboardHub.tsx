@@ -12,6 +12,8 @@ import {
   getWeekLater,
   formatFee,
 } from '@/lib/kst'
+import { getMissAlerts } from '@/lib/alimtalk-miss-server'
+import AlimtalkMissAlerts from '@/components/admin/AlimtalkMissAlerts'
 import {
   getMonthlyRevenue,
   getUpcomingMeetings,
@@ -38,7 +40,7 @@ export default async function AdminDashboardHub() {
   const monthRange = getMonthRange(currentMonth)
   const weekLater = getWeekLater(kstToday)
 
-  const [revenue, upcoming, memberStats, alerts, transferAlerts] = await Promise.all([
+  const [revenue, upcoming, memberStats, alerts, transferAlerts, missAlerts] = await Promise.all([
     // 이번 달 순매출은 총괄만 (2026-10-16 대표님 결정) — 운영진이면 읽지도 않는다
     isAdmin ? getMonthlyRevenue(supabase, currentMonth, prevMonth) : Promise.resolve(null),
     getUpcomingMeetings(supabase, kstToday, weekLater),
@@ -49,6 +51,8 @@ export default async function AdminDashboardHub() {
     isAdmin
       ? getTransferAlerts(supabase)
       : Promise.resolve({ pendingTransferCount: 0, pendingRefundCount: 0 }),
+    // 알림톡 못 받은 회원 — 사람 수만 읽는다(이름·전화번호 없음). 운영진도 본다
+    getMissAlerts(kstToday),
   ])
 
   const revenueDelta = revenue ? revenue.netRevenue - revenue.prevNetRevenue : 0
@@ -56,7 +60,9 @@ export default async function AdminDashboardHub() {
     alerts.deletingMeetings.length > 0 ||
     alerts.unsettledVenues.length > 0 ||
     transferAlerts.pendingTransferCount > 0 ||
-    transferAlerts.pendingRefundCount > 0
+    transferAlerts.pendingRefundCount > 0 ||
+    missAlerts.meetings.length > 0 ||
+    missAlerts.runStale
 
   // 오늘 날짜 표기 (간단)
   const [y, m, d] = kstToday.split('-').map((v) => Number(v))
@@ -111,6 +117,7 @@ export default async function AdminDashboardHub() {
               <span className="text-xs font-bold">확인하기 →</span>
             </Link>
           )}
+          <AlimtalkMissAlerts alerts={missAlerts} />
           {alerts.deletingMeetings.map((m) => (
             <Link
               key={m.id}

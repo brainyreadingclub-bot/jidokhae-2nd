@@ -4,6 +4,8 @@ import { NO_TOPICS, isTopicPublishLate, type TopicCounts } from '@/lib/topic-sta
 import AdminMeetingSection from '@/components/meetings/AdminMeetingSection'
 import DeleteMeetingButton from '@/components/meetings/DeleteMeetingButton'
 import PresenterPanel, { type PresenterApplicant } from '@/components/admin/PresenterPanel'
+import AlimtalkMissCard from '@/components/admin/AlimtalkMissCard'
+import type { MeetingMissReport } from '@/lib/alimtalk-miss'
 import { isPresenterRow, firstWaitlistedGoesConfirmed } from '@/lib/presenter-rules'
 import type { Meeting } from '@/types/meeting'
 import type { RegistrationWithProfile } from '@/types/registration'
@@ -19,6 +21,7 @@ export default function AdminMeetingOverview({
   registrations,
   topicCounts,
   isAdmin,
+  missReport,
 }: {
   meeting: Meeting
   confirmedCount: number
@@ -26,6 +29,8 @@ export default function AdminMeetingOverview({
   /** 토론모임만. 정기모임은 null — 발제문 칸을 그리지 않는다 */
   topicCounts: TopicCounts | null
   isAdmin: boolean
+  /** 알림톡 못 받은 회원. null = 기록을 못 읽음 */
+  missReport: MeetingMissReport | null
 }) {
   const isDiscussion = meeting.meeting_type === 'discussion'
   const waitlistedCount = registrations.filter((r) => r.status === 'waitlisted').length
@@ -223,6 +228,9 @@ export default function AdminMeetingOverview({
           />
         )}
       </div>
+
+      {/* 알림톡 못 받은 회원 — 신청자 명단 바로 위. 다 받았으면 한 줄 */}
+      <AlimtalkMissCard report={missReport} meetingDate={meeting.date} isAdmin={isAdmin} />
 
       <AdminMeetingSection
         confirmedCount={confirmedCount}

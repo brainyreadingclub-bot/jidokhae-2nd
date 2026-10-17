@@ -21,6 +21,12 @@
  * 2026-10-16: 모임 종류로 템플릿을 고른다 (`lib/remind-template.ts`).
  *   토론모임 → MEETING_REMIND_DISCUSSION_V2. 해당 env가 없으면 전부 종전
  *   SOLAPI_TEMPLATE_REMIND — 배포 순서를 안 탄다.
+ *
+ * 2026-10-17: 돌 때마다 공통 기록표에 「언제 · 누가 대상이었나 · 결과」를 남긴다
+ *   (`cron.meeting_remind_run`). 운영 화면 「알림 못 받은 회원」이 이걸로
+ *   ① 이 시각 전에 신청한 사람만 대상으로 보고 ② 크론이 아예 안 돌았는지(마지막 점검 시각)를 안다.
+ *   응답 JSON은 Vercel 로그에만 남아 일주일이면 사라진다. 명단을 못 읽은 모임을 조용히 건너뛰던
+ *   자리(`if (!registrations) continue`)도 기록에 `query_failed`로 남긴다.
  */
 
 import { NextResponse, type NextRequest } from 'next/server'
@@ -29,6 +35,7 @@ import { getTomorrowKST, formatKoreanDate, formatKoreanTime, formatFee } from '@
 import { sendNotification } from '@/lib/notification'
 import { PARTICIPATED_STATUSES, paymentStatusLabel } from '@/lib/registration-status'
 import { buildRemindVariables, pickRemindTemplate, type RemindVariant } from '@/lib/remind-template'
+import { recordAppEvent } from '@/lib/app-events'
 import type { Meeting } from '@/types/meeting'
 
 type RemindTask = {
@@ -56,13 +63,32 @@ export async function GET(request: NextRequest) {
   const tomorrow = getTomorrowKST()
 
   // 내일 active 모임 조회
-  const { data: meetings } = await supabase
+  const { data: meetings, error: meetingsError } = await supabase
     .from('meetings')
     .select('*')
     .eq('date', tomorrow)
     .eq('status', 'active')
 
+  // 조회 실패를 「내일 모임 없음」으로 덮지 않는다 — 그러면 아무도 안 받았는데 정상처럼 보인다
+  if (meetingsError) {
+    console.error('[meeting-remind] 모임 조회 실패:', meetingsError)
+    await recordAppEvent({
+      event: 'cron.meeting_remind_run',
+      userId: null,
+      props: { date: tomorrow, query_failed: true },
+    })
+    return NextResponse.json(
+      { status: 'error', message: 'meetings query failed', data: { date: tomorrow } },
+      { status: 500 },
+    )
+  }
+
   if (!meetings || meetings.length === 0) {
+    await recordAppEvent({
+      event: 'cron.meeting_remind_run',
+      userId: null,
+      props: { date: tomorrow, meetings: 0, targets: 0 },
+    })
     return NextResponse.json({
       status: 'success',
       message: 'No meetings tomorrow',
@@ -72,17 +98,23 @@ export async function GET(request: NextRequest) {
 
   // 모든 confirmed 신청자 + profile을 한 번에 flatten 수집
   const tasks: RemindTask[] = []
+  /** 명단을 못 읽은 모임 — 기록에 남겨 운영 화면이 「보낸 기록 없음」으로 잡게 한다 */
+  const queryFailed = new Set<string>()
 
   for (const rawMeeting of meetings) {
     const meeting = rawMeeting as Meeting
 
-    const { data: registrations } = await supabase
+    const { data: registrations, error: regsError } = await supabase
       .from('registrations')
       .select('id, user_id, paid_amount, status, profiles(phone, real_name, nickname)')
       .eq('meeting_id', meeting.id)
       .in('status', PARTICIPATED_STATUSES)
 
-    if (!registrations) continue
+    if (regsError || !registrations) {
+      console.error('[meeting-remind] 신청자 조회 실패:', meeting.id, regsError)
+      queryFailed.add(meeting.id)
+      continue
+    }
 
     for (const reg of registrations) {
       // Supabase FK JOIN: many-to-one은 단일 객체지만 타입은 배열로 추론됨
@@ -92,7 +124,11 @@ export async function GET(request: NextRequest) {
         nickname: string
       } | null
 
-      if (!profileData) continue
+      if (!profileData) {
+        // 프로필 없는 신청 — 보낼 수 없다. 조용히 넘기지 않고 로그를 남긴다(운영 화면은 「보낸 기록 없음」으로 잡는다)
+        console.error('[meeting-remind] 프로필 없음:', reg.id)
+        continue
+      }
 
       tasks.push({
         meeting,
@@ -143,19 +179,44 @@ export async function GET(request: NextRequest) {
   let totalSent = 0
   let totalSkipped = 0
   let totalFailed = 0
+  /** 모임별 결과 — 기록표에 모임마다 1행 */
+  const perMeeting = new Map<string, { targets: number; sent: number; skipped: number; failed: number }>()
+  for (const m of meetings) perMeeting.set(m.id, { targets: 0, sent: 0, skipped: 0, failed: 0 })
 
-  for (const r of results) {
+  results.forEach((r, idx) => {
+    const tally = perMeeting.get(tasks[idx].meeting.id)!
+    tally.targets++
     if (r.status === 'fulfilled') {
-      if (r.value.status === 'sent') totalSent++
-      else if (r.value.status === 'skipped') totalSkipped++
-      else totalFailed++
+      if (r.value.status === 'sent') {
+        totalSent++
+        tally.sent++
+      } else if (r.value.status === 'skipped') {
+        totalSkipped++
+        tally.skipped++
+      } else {
+        totalFailed++
+        tally.failed++
+      }
     } else {
       // sendNotification은 에러를 throw하지 않고 { status: 'failed' }로 응답하지만
       // 만약 예기치 못한 throw가 발생하면 여기서 집계
       totalFailed++
+      tally.failed++
       console.error('[meeting-remind] task rejected:', r.reason)
     }
-  }
+  })
+
+  // 절대 throw하지 않는다(lib/app-events.ts). 발송은 이미 끝났다
+  await Promise.all(
+    meetings.map((m) =>
+      recordAppEvent({
+        event: 'cron.meeting_remind_run',
+        userId: null,
+        meetingId: m.id,
+        props: { date: tomorrow, ...perMeeting.get(m.id)!, query_failed: queryFailed.has(m.id) },
+      }),
+    ),
+  )
 
   return NextResponse.json({
     status: totalFailed === 0 ? 'success' : 'partial',
