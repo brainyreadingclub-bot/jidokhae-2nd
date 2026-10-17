@@ -8,6 +8,7 @@
  */
 
 import { getKSTToday, shiftDate } from '@/lib/kst'
+import { getRefundPolicy } from '@/lib/meeting-kinds'
 
 export const REFUND_RULES = [
   { daysBeforeMeeting: 3, rate: 100, label: '모임 3일 전까지', rateLabel: '참가비 100% 환불' },
@@ -28,9 +29,9 @@ export function getRefundRuleText(): string {
     .join(' · ')
 }
 
-/** 취소 모달용 한 줄 요약 — 모임 유형 분기 (토론모임 14/7, 그 외 3/2) */
+/** 취소 모달용 한 줄 요약 — 모임 유형 분기 (토론·별책부록 14/7, 정기·작업실 3/2 — `meeting-kinds.ts`) */
 export function getRefundRuleTextByType(meetingType: string | null | undefined): string {
-  if (meetingType !== 'discussion') return getRefundRuleText()
+  if (getRefundPolicy(meetingType) !== 'discussion') return getRefundRuleText()
   return DISCUSSION_REFUND_RULES
     .map(r => `${r.daysBeforeMeeting}일 전: ${r.rate}%`)
     .concat([`${DISCUSSION_REFUND_DEFAULT_SHORT}: ${DISCUSSION_REFUND_DEFAULT.rate}%`])
@@ -122,7 +123,8 @@ export function calculateDiscussionRefund(
 
 /**
  * 모임 유형 분기 환불 계산 — 단일 진입점.
- * 토론모임(discussion)은 14일 100% / 7일 50%, 그 외(정기 등)는 3일 100% / 2일 50%.
+ * 토론·별책부록(event)은 14일 100% / 7일 50%, 정기·작업실은 3일 100% / 2일 50%.
+ * 종류 → 규칙 묶음은 `meeting-kinds.ts` 표가 정한다(2026-10-16). 모르는 값·null은 정기 규칙.
  * 실환불(cancel.ts)·권장액(mark-refunded)·화면 표시가 전부 이 함수를 거쳐야
  * 유형별 규칙이 어긋나지 않는다 (2026-08-21 배선).
  */
@@ -132,7 +134,7 @@ export function calculateRefundByType(
   paidAmount: number,
   kstToday?: string,
 ): RefundInfo {
-  return meetingType === 'discussion'
+  return getRefundPolicy(meetingType) === 'discussion'
     ? calculateDiscussionRefund(meetingDate, paidAmount, kstToday)
     : calculateRefund(meetingDate, paidAmount, kstToday)
 }
@@ -157,7 +159,7 @@ export function getRefundScheduleByType(
   meetingType: string | null | undefined,
   meetingDate: string,
 ): RefundStep[] {
-  const rules = meetingType === 'discussion' ? DISCUSSION_REFUND_RULES : REFUND_RULES
+  const rules = getRefundPolicy(meetingType) === 'discussion' ? DISCUSSION_REFUND_RULES : REFUND_RULES
   return rules.map((r) => ({
     rate: r.rate,
     daysBefore: r.daysBeforeMeeting,

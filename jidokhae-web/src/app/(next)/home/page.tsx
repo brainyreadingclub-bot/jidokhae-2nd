@@ -186,8 +186,9 @@ export default async function NextHomePage() {
     // 대기 중인 모임은 뺀다 — 이미 줄을 선 모임을 「가장 가까운 모임」으로 다시 권유하지
     // 않는다. `mine`은 confirmed·pending_transfer만 세지만 `myRegMap`은 waitlisted까지
     // 담고 있어, 이 한 줄이 대기 건을 덮는다
+    // 정기만 — 작업실·별책부록을 「가장 가까운 정기 자리」로 권유하지 않는다(기타 모임 틀 §2)
     const regular = upcoming.filter(
-      (m) => m.meeting_type !== 'discussion' && !myRegMap.has(m.id),
+      (m) => m.meeting_type === 'regular' && !myRegMap.has(m.id),
     )
     const pick = regular.find((m) => myRegions.includes(m.region)) ?? regular[0]
     if (pick) {

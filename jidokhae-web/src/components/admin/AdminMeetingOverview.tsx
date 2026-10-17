@@ -9,6 +9,7 @@ import type { MeetingMissReport } from '@/lib/alimtalk-miss'
 import { isPresenterRow, firstWaitlistedGoesConfirmed } from '@/lib/presenter-rules'
 import type { Meeting } from '@/types/meeting'
 import type { RegistrationWithProfile } from '@/types/registration'
+import { getMeetingKindShortLabel } from '@/lib/meeting-kinds'
 
 /**
  * 운영자 모임 상세 화면 본문 (2026-10-09 시안 C). 조회는 페이지가 하고 여기는 그리기만 한다.
@@ -107,7 +108,7 @@ export default function AdminMeetingOverview({
           {meeting.region}
         </span>
         <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-bold text-neutral-700">
-          {isDiscussion ? '토론' : '정기'}
+          {getMeetingKindShortLabel(meeting.meeting_type)}
         </span>
         {meeting.is_featured && (
           <span className="rounded-full bg-accent-100 px-2.5 py-0.5 text-[11px] font-bold text-accent-700">
