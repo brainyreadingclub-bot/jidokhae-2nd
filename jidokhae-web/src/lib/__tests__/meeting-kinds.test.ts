@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   MEETING_KINDS,
   MEETING_KIND_OPTIONS,
+  getDateRowKindTag,
   getMeetSection,
   getMeetingKindLabel,
   getMeetingKindShortLabel,
@@ -117,5 +118,23 @@ describe('혜택·자격은 새 종류에 저절로 붙지 않는다 (2026-10-16
       { status: 'confirmed', meetings: { meeting_type: 'regular', status: 'active', date: '2026-10-20' } },
       TODAY,
     )).toBe(true)
+  })
+})
+
+describe('모임 탭 날짜 행 종류 표시 — 2026-10-17 결정', () => {
+  it('작업실 행에만 「작업실」이 붙는다', () => {
+    expect(getDateRowKindTag('workshop')).toBe('작업실')
+  })
+
+  it('정기 행에는 붙지 않는다 (null·모르는 값도 정기로 읽는다)', () => {
+    expect(getDateRowKindTag('regular')).toBeNull()
+    expect(getDateRowKindTag(null)).toBeNull()
+    expect(getDateRowKindTag(undefined)).toBeNull()
+    expect(getDateRowKindTag('lightning')).toBeNull()
+  })
+
+  it('날짜 행에 섞이는 종류 = 정기·작업실 — 둘 다 표시 규칙이 정해져 있다', () => {
+    const rowKinds = MEETING_KIND_OPTIONS.filter((k) => getMeetSection(k) === 'regular')
+    expect(rowKinds).toEqual(['regular', 'workshop'])
   })
 })
