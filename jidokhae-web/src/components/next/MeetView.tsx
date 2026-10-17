@@ -98,11 +98,11 @@ export default function MeetView({
         </Link>
       )}
 
-      {/* 정기모임 — 날짜 축 행 */}
-      <Sec aside={`${regular.length}건`}>정기모임</Sec>
+      {/* 정기모임·작업실 — 날짜 축 행. 건수는 둘을 합친 수 (2026-10-17 총괄 결정) */}
+      <Sec aside={`${regular.length}건`}>정기모임·작업실</Sec>
       {regular.length === 0 ? (
         <p className="mt-2 rounded-[14px] bg-tg-50 p-4 text-center text-xs text-tg-600">
-          예정된 정기모임이 아직 없어요
+          예정된 모임이 아직 없어요
         </p>
       ) : (
         <div>
